@@ -27,7 +27,7 @@ SET (YURI_INCLUDE ${YURI_INCLUDE}
 		${X11_INCLUDE_DIRS}
 		)
 SET (YURI_SRC ${YURI_SRC} )
-add_definitions("-DYURI_MODULE_IN_TREE")
+add_definitions("-DYURI_MODULE_IN_TREE -DINSTALL_PREFIX=\\\"${CMAKE_INSTALL_PREFIX}\\\"")
 
 add_subdirectory(log)
 add_subdirectory(config)
@@ -35,6 +35,12 @@ add_subdirectory(threads)
 add_subdirectory(graphics)
 add_subdirectory(exception)
 add_subdirectory(io)
+
+#SET (YURI_HEADERS )
+#FOREACH(item ${YURI_SRC})
+#	string(REGEX MATCH ".*[.]h$" tmp ${item}) 
+#	SET(YURI_HEADERS ${YURI_HEADERS} ${tmp})
+#ENDFOREACH(item)
 
 add_library(${LIBNAME} ${YURI_SRC})
 link_directories ( ${YURI_LINK} )
@@ -46,6 +52,8 @@ SET_TARGET_PROPERTIES( ${LIBNAME} PROPERTIES SOVERSION 2 VERSION 2.5.0 )
 install(TARGETS ${LIBNAME} 	RUNTIME DESTINATION bin
 						LIBRARY DESTINATION lib 
 						ARCHIVE DESTINATION lib)
+install(DIRECTORY ../yuri DESTINATION include
+          				FILES_MATCHING PATTERN "*.h")
                
 
 						

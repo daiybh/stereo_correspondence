@@ -511,7 +511,11 @@ void ApplicationBuilder::init()
 	}
 	module_dirs.push_back("./modules/");
 	module_dirs.push_back("./bin/modules/");
+#ifdef INSTALL_PREFIX
+	module_dirs.push_back(INSTALL_PREFIX "/lib/yuri2/");
+#else
 	module_dirs.push_back("/usr/lib/yuri2/");
+#endif
 }
 
 void ApplicationBuilder::init_local_params()
