@@ -30,6 +30,7 @@ public:
 	LogProxy(guarded_stream& str_,bool dummy):stream_(str_),dummy_(dummy) {}
 	LogProxy(const LogProxy& other):stream_(other.stream_),dummy_(other.dummy_) {
 		buffer_.str(other.buffer_.str());
+		const_cast<LogProxy&>(other).dummy_=true;
 	}
 	template<typename T>
 	LogProxy& operator<<(const T& val_)

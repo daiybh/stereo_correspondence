@@ -55,7 +55,7 @@ protected:
 	//char *ids;
 	string ids;
 	debug_flags flags;
-	int default_flags, output_flags;
+	int /*default_flags,*/ output_flags;
 	bool quiet;
 	void set_flag(debug_flags f);
 	EXPORT string print_time();

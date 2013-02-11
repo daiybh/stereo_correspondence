@@ -56,52 +56,52 @@ void usage()
 			<< options << endl;
 }
 
-void list_registered()
+void list_registered(Log l_)
 {
-	l[info]<<"List of registered objects:" << endl;
+	l_[info]<<"List of registered objects:" << endl;
 	string name;
 	shared_ptr<vector<string> > v = yuri::config::RegisteredClass::list_registered();
 	BOOST_FOREACH(name,*v) {
 		if (verbosity>=0)
-			l[fatal] << "..:: " << name << " ::.." << endl;
-		else l[fatal] << name << endl;
+			l_[fatal] << "..:: " << name << " ::.." << endl;
+		else l_[fatal] << name << endl;
 		shared_ptr<Parameters> p = RegisteredClass::get_params(name);
-		if (!p) l[info] << "\t\tclass has no configuration defined!" << endl;
+		if (!p) l_[info] << "\t\tclass has no configuration defined!" << endl;
 		else {
-			if (!p->get_description().empty()) l[info]<< "\t"
+			if (!p->get_description().empty()) l_[info]<< "\t"
 					<< p->get_description() << endl;
 			long fmt;
 			if (p->get_input_formats().size()) {
 				BOOST_FOREACH(fmt,p->get_input_formats()) {
-					l[normal]<< "\t\tSupports input format: " << BasicPipe::get_format_string(fmt) << endl;
+					l_[normal]<< "\t\tSupports input format: " << BasicPipe::get_format_string(fmt) << endl;
 				}
-			} else l[normal] << "\t\tClass does not have any restrictions on input pipes defined." << endl;
+			} else l_[normal] << "\t\tClass does not have any restrictions on input pipes defined." << endl;
 			if (p->get_output_formats().size()) {
 				BOOST_FOREACH(fmt,p->get_output_formats()) {
-					l[normal]<< "\t\tSupports output format: " << BasicPipe::get_format_string(fmt) << endl;
+					l_[normal]<< "\t\tSupports output format: " << BasicPipe::get_format_string(fmt) << endl;
 				}
-			} else l[normal] << "\t\tClass does not have any restrictions on output pipes defined." << endl;
+			} else l_[normal] << "\t\tClass does not have any restrictions on output pipes defined." << endl;
 			if (p->params.size()) {
 				pair<string,shared_ptr<Parameter> > par;
 				BOOST_FOREACH(par,p->params) {
-					l[info] << "\t\t'" << par.first << "' has default value \""
+					l_[info] << "\t\t'" << par.first << "' has default value \""
 							<< par.second->get<string>() << "\"" << endl;
-					if (!par.second->description.empty()) l[info] << "\t\t\t"
+					if (!par.second->description.empty()) l_[info] << "\t\t\t"
 							<< par.second->description << endl;
 				}
-			} else l[info] << "\t\tClass has no parameters" << endl;
+			} else l_[info] << "\t\tClass has no parameters" << endl;
 		}
 	}
 }
-void list_formats()
+void list_formats(Log& l_)
 {
-	l[info] << "List of registered formats:" << endl;
+	l_[info] << "List of registered formats:" << endl;
 	string name;
 	boost::mutex::scoped_lock lock(BasicPipe::format_lock);
 	std::pair<yuri::format_t, yuri::FormatInfo_t > fmtp;
 	BOOST_FOREACH(fmtp, BasicPipe::formats) {
 		yuri::FormatInfo_t fmt = fmtp.second;
-		l[fatal] << fmt->long_name << endl;
+		l_[fatal] << fmt->long_name << endl;
 		if (fmt->short_names.size()) {
 			bool f = true;
 			stringstream ss;
@@ -111,7 +111,7 @@ void list_formats()
 				f=false;
 				ss << s;
 			}
-			l[info] << "" << (ss.str()) << endl;
+			l_[info] << "" << (ss.str()) << endl;
 		}
 		if (fmt->mime_types.size()) {
 			bool f = true;
@@ -122,22 +122,22 @@ void list_formats()
 				f=false;
 				ss << s;
 			}
-			l[info] << "" << (ss.str()) << endl;
+			l_[info] << "" << (ss.str()) << endl;
 		}
 	}
 
 }
 
-void list_converters()
+void list_converters(Log l_)
 {
 	pair<pair<long,long>,vector<shared_ptr<Converter> > > conv;
 	BOOST_FOREACH(conv,RegisteredClass::get_all_converters()) {
-		cout << "Convertors from " << BasicPipe::get_format_string(conv.first.first)
+		l_[info] << "Convertors from " << BasicPipe::get_format_string(conv.first.first)
 		 << " to " << BasicPipe::get_format_string(conv.first.second) << endl;
 		shared_ptr<Converter> c;
 		BOOST_FOREACH(c,conv.second) {
 			if (!c) cout << "??" <<endl;
-			cout << "\t" << c->id << endl;
+			l_[info] << "\t" << c->id << endl;
 		}
 	}
 }
@@ -207,10 +207,13 @@ int main(int argc, char**argv)
 		b->load_modules();
 		l.set_quiet(true);
 		string list_what = vm["list"].as<string>();
-		l[debug] << "Listing " << list_what <<endl;
-		if (iequals(list_what,"classes")) list_registered();
-		else if (iequals(list_what,"formats")) list_formats();
-		else if (iequals(list_what,"converters")) list_converters();
+		Log l_(cout);
+		l_.setFlags(l.get_flags());
+		l_.set_quiet(true);
+		l_[debug] << "Listing " << list_what <<endl;
+		if (iequals(list_what,"classes")) list_registered(l_);
+		else if (iequals(list_what,"formats")) list_formats(l_);
+		else if (iequals(list_what,"converters")) list_converters(l_);
 		else cout << "Wrong value for --list parameter" << endl;
 
 		exit(0);
