@@ -30,7 +30,6 @@ namespace io {
 using yuri::log::Log;
 using yuri::exception::Exception;
 using namespace yuri::config;
-using namespace std;
 
 #ifndef V4L2_CID_ILLUMINATORS_1
 #define V4L2_CID_ILLUMINATORS_1			(V4L2_CID_BASE+37)
@@ -111,12 +110,12 @@ protected:
 	yuri::ushort_t no_buffers;
 	yuri::ushort_t input_number;
 	yuri::size_t buffer_free;
-	shared_ptr<BasicFrame> output_frame;
+	pBasicFrame output_frame;
 	bool combine_frames;
-	vector<yuri::uint_t> supported_formats;
+	std::vector<yuri::uint_t> supported_formats;
 	yuri::size_t number_of_inputs;
-	static map<yuri::format_t,yuri::uint_t> formats_map;
-	static map<string, yuri::uint_t> special_formats;
+	static std::map<yuri::format_t,yuri::uint_t> formats_map;
+	static std::map<std::string, yuri::uint_t> special_formats;
 	yuri::size_t fps;
 	yuri::size_t frame_duration;
 };

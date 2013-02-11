@@ -34,8 +34,8 @@ shared_ptr<Parameters> SimpleRenderer::configure()
 	(*p)["vsync"]["Synchronize to vsync"]=false;
 	(*p)["quality"]["Rendering quality for texture types that have multiple quality settings. Valid range varies, 0 should always be best quality, 1 safe"]=1;
 	(*p)["measure"]["Number of samples to measure read-back time. ) to disable"]=0;
-	(*p)["window_type"]["Type of underlying window. GLX, GTK."]=string("GLX");
-	(*p)["stereo_type"]["Type of stereoscopic output (none, anaglyph, quadbuffer)"]=string("none");
+	(*p)["window_type"]["Type of underlying window. GLX, GTK."]=std::string("GLX");
+	(*p)["stereo_type"]["Type of stereoscopic output (none, anaglyph, quadbuffer)"]=std::string("none");
 	(*p)["correction"]["Amount by which the stereoscopic pair should be corrected."]=0.0;
 	(*p)["flip_y_right"]["Flip right image around Y axis"]=false;
 	(*p)["flip_x_right"]["Flip right image around X axis"]=false;
@@ -47,7 +47,7 @@ shared_ptr<Parameters> SimpleRenderer::configure()
 	return p;
 }
 
-map<string,stereo::_type> SimpleRenderer::stereo_types = boost::assign::map_list_of<string,stereo::_type>
+std::map<std::string,stereo::_type> SimpleRenderer::stereo_types = boost::assign::map_list_of<std::string,stereo::_type>
 	("none",stereo::none)
 	("anaglyph",stereo::anaglyph)
 	("quadbuffer",stereo::quadbuffer);
@@ -85,7 +85,7 @@ SimpleRenderer::~SimpleRenderer()
 void SimpleRenderer::run()
 {
 	IO_THREAD_PRE_RUN
-	set_thread_name(string("Renderer"));
+	set_thread_name( std::string("Renderer"));
 	drawcb.reset(new Callback(SimpleRenderer::draw_gl,get_this_ptr()));
 	initcb.reset(new Callback(SimpleRenderer::init_gl,get_this_ptr()));
 	params["draw_callback"]=drawcb;
@@ -100,7 +100,7 @@ void SimpleRenderer::run()
 
 
 	if (!glx->create()) {
-		log[error] << "Failed to create window" << endl;
+		log[error] << "Failed to create window" << std::endl;
 		throw Exception("Failed to create GLX window");
 	}
 	glx->show();
@@ -206,7 +206,7 @@ void SimpleRenderer::generate_texture(yuri::uint_t index)
 		if (measure) {
 			ptime _end_time=microsec_clock::local_time();
 			if (measurement_frames >= measure) {
-				log[info] << "Generating "<< measurement_frames<< " textures took " << to_simple_string(accumulated_time) << " that is " << (accumulated_time/measurement_frames).total_microseconds() << " us per frame"  << endl;
+				log[info] << "Generating "<< measurement_frames<< " textures took " << to_simple_string(accumulated_time) << " that is " << (accumulated_time/measurement_frames).total_microseconds() << " us per frame"  << std::endl;
 				accumulated_time = boost::posix_time::microseconds(0);
 				measurement_frames=0;
 			}
@@ -219,7 +219,7 @@ void SimpleRenderer::generate_texture(yuri::uint_t index)
 bool SimpleRenderer::prepare_image(yuri::uint_t index)
 {
 	if (!frames[index]) {
-		log[verbose_debug] << "I have empty frame, skipping" << endl;
+		log[verbose_debug] << "I have empty frame, skipping" << std::endl;
 		return false;
 	}
 	switch (frames[index]->get_format()) {
@@ -251,7 +251,7 @@ bool SimpleRenderer::prepare_image(yuri::uint_t index)
 		case YURI_FMT_DXT5_WITH_MIPMAPS:
 			break;
 		default:
-			log[warning] << "Wrong format (" << BasicPipe::get_format_string(frames[index]->get_format()) << ")" << endl;
+			log[warning] << "Wrong format (" << BasicPipe::get_format_string(frames[index]->get_format()) << ")" << std::endl;
 			return false;
 	}
 
@@ -285,7 +285,7 @@ bool SimpleRenderer::set_param(Parameter &parameter)
 			stereo_type = stereo::quadbuffer;
 		}
 	} else if (parameter.name == "stereo_type") {
-		string stype = parameter.get<string>();
+	std::string stype = parameter.get<std::string>();
 		boost::algorithm::to_lower(stype);
 		if (stereo_types.count(stype)) {
 			stereo_type = stereo_types[stype];

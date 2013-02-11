@@ -10,8 +10,9 @@
 namespace yuri {
 
 namespace config {
+using boost::lexical_cast;
 
-template<> shared_ptr<Callback> Parameter::get() throw (Exception)
+template<> shared_ptr<Callback> Parameter::get()
 {
 	if (type!=Callback_functionType) cbval.reset();
 	return cbval;
@@ -35,7 +36,7 @@ Parameter & Parameter::operator= (double fval)
 	this->fval = fval;
 	return *this;
 }
-Parameter & Parameter::operator= (string sval)
+Parameter & Parameter::operator= (std::string sval)
 {
 	type = StringType;
 	this->sval = sval;
@@ -58,7 +59,7 @@ Parameter & Parameter::operator= (float fval)
 Parameter & Parameter::operator= (const char *cval)
 {
 	type = StringType;
-	this->sval = string(cval);
+	this->sval =std::string(cval);
 	return *this;
 }
 
@@ -72,7 +73,7 @@ Parameter & Parameter::operator= (Parameter& par)
 {
 	type = par.type;
 	switch(par.type) {
-		case StringType: sval = par.get<string>(); break;
+		case StringType: sval = par.get<std::string>(); break;
 		case IntegerType: ival = par.get<yuri::ssize_t>(); break;
 		case FloatType: fval = par.get<double>(); break;
 		case BoolType: ival = par.get<bool>(); break;
@@ -119,13 +120,13 @@ shared_ptr<Parameter> Parameter::get_copy()
 	return p;
 }
 
-Parameter& Parameter::operator[] (const string desc)
+Parameter& Parameter::operator[] (const std::string desc)
 {
 	description=desc;
 	return *this;
 }
 
-Parameters& Parameter::push_group(string description0)
+Parameters& Parameter::push_group(std::string description0)
 {
 	type=GroupType;
 	description=description0;
@@ -134,10 +135,10 @@ Parameters& Parameter::push_group(string description0)
 	return *par;
 }
 
-Parameters& Parameter::operator[] (const yuri::size_t index) throw (Exception)
+Parameters& Parameter::operator[] (const yuri::size_t index)
 {
 	if (parameters_vector.size() < index+1) {
-		throw OutOfRange("bad index "+lexical_cast<string>(index)+string(" out of ")+lexical_cast<string>(parameters_vector.size()));
+		throw OutOfRange("bad index "+lexical_cast<std::string>(index)+std::string(" out of ")+lexical_cast<std::string>(parameters_vector.size()));
 	}
 	if (!parameters_vector[index]) {
 		throw Exception("Null pointer in params array, this should never happen");
@@ -158,7 +159,7 @@ Parameters::Parameters(Parameters& p):
 		max_input_pipes(-1), max_output_pipes(-1)
 {
 	*this=p;
-/*	pair<string,shared_ptr<Parameter> > par;
+/*	pair<std::string,shared_ptr<Parameter> > par;
 	BOOST_FOREACH(par,p.params) {
 		shared_ptr<Parameter> p = par.second->get_copy();
 		this->params[par.first]=p;
@@ -167,7 +168,7 @@ Parameters::Parameters(Parameters& p):
 
 Parameters& Parameters::operator=(const Parameters& other)
 {
-	pair<string,shared_ptr<Parameter> > par;
+	pair<std::string,shared_ptr<Parameter> > par;
 	BOOST_FOREACH(par,other.params) {
 		shared_ptr<Parameter> other = par.second->get_copy();
 		this->params[par.first]=other;
@@ -181,13 +182,13 @@ Parameters::~Parameters() {
 //	cout << "Parameters being deleted" << endl;
 }
 
-Parameter& Parameters::operator[] (const string id) throw (Exception)
+Parameter& Parameters::operator[] (const std::string id)
 {
 	if (!is_defined(id)) params[id].reset(new Parameter(id));
 	return *(params[id]);
 }
 
-bool Parameters::is_defined(string id)
+bool Parameters::is_defined(std::string id)
 {
 	if (params.find(id) == params.end()) return false;
 	return true;
@@ -195,13 +196,13 @@ bool Parameters::is_defined(string id)
 
 void Parameters::merge(Parameters &p)
 {
-	pair<string,shared_ptr<Parameter> > par;
+	pair<std::string,shared_ptr<Parameter> > par;
 	BOOST_FOREACH(par,p.params) {
 		(*this)[par.first]=*(par.second);
 	}
 }
 
-void Parameters::set_description(string desc)
+void Parameters::set_description(std::string desc)
 {
 	description = desc;
 }

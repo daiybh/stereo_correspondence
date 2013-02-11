@@ -40,7 +40,7 @@ DummyModule::~DummyModule()
 
 bool DummyModule::step()
 {
-	shared_ptr<BasicFrame> frame = in[0]->pop_frame();
+	pBasicFrame frame = in[0]->pop_frame();
 	if (frame) {
 		yuri::format_t fmt = frame->get_format();
 		if (BasicPipe::get_format_group(fmt)==YURI_TYPE_VIDEO) {

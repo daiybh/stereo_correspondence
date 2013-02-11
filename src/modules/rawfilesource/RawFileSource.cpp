@@ -24,9 +24,9 @@ shared_ptr<BasicIOThread> RawFileSource::generate(Log &_log,pThreadBase parent,P
 shared_ptr<Parameters> RawFileSource::configure()
 {
 	shared_ptr<Parameters> p = BasicIOThread::configure();
-	(*p)["path"]["Path to the file"]=string();
+	(*p)["path"]["Path to the file"]=std::string();
 	(*p)["keep_alive"]["Stay idle after pushing the file (setting to false will cause the object to quit afterward)"]=true;
-	(*p)["output_format"]["Force output format"]=string("single16");
+	(*p)["output_format"]["Force output format"]=std::string("single16");
 	(*p)["width"]["Force output width to"]=0;
 	(*p)["height"]["Force output height to"]=0;
 	(*p)["chunk"]["Chunk size (0 to output whole file at once)"]=0;
@@ -89,12 +89,12 @@ bool RawFileSource::read_chunk()
 	try {
 		bool first_read = false;
 		if (!file.is_open()) {
-			file.open(path.c_str(),ifstream::in);
-			file.seekg(position,ios_base::beg);
+			file.open(path.c_str(),std::ifstream::in);
+			file.seekg(position,std::ios_base::beg);
 			first_read = true;
 		}
 		yuri::size_t length = chunk_size;
-		vector<yuri::size_t> planes=boost::assign::list_of(length);
+		std::vector<yuri::size_t> planes=boost::assign::list_of(length);
 		FormatInfo_t fi = BasicPipe::get_format_info(output_format);
 		if (output_format != YURI_FMT_NONE && fi && !fi->compressed && width && height) {
 
@@ -109,11 +109,11 @@ bool RawFileSource::read_chunk()
 				}
 
 			} else planes=boost::assign::list_of(length);
-			log[debug] << "Guessed size for " << fi->long_name << " is " << length<<endl;
+			log[debug] << "Guessed size for " << fi->long_name << " is " << length<<std::endl;
 		} else if (!chunk_size) {
-			file.seekg(0,ios_base::end);
+			file.seekg(0,std::ios_base::end);
 			length = static_cast<yuri::size_t>(file.tellg()) - position;
-			file.seekg(position,ios_base::beg);
+			file.seekg(position,std::ios_base::beg);
 			planes=boost::assign::list_of(length);
 		}
 		frame.reset(new BasicFrame(planes.size()));
@@ -125,7 +125,7 @@ bool RawFileSource::read_chunk()
 			if (static_cast<yuri::size_t>(file.gcount()) != plane_length ) {
 				if (first_read) {
 					failed_read=true;
-					log[warning]<< "Wrong length of the file (read " << file.gcount() << ", expected " << plane_length << ")" << endl;
+					log[warning]<< "Wrong length of the file (read " << file.gcount() << ", expected " << plane_length << ")" << std::endl;
 				}
 				file.close();
 				frame.reset();++loop_number;
@@ -142,8 +142,8 @@ bool RawFileSource::read_chunk()
 		frame->set_parameters(output_format, width, height);
 	}
 	catch (std::exception &e) {
-		log[error] << "Failed to process file " << params["path"].get<string>()
-				<< " (" << e.what() << ")"<<endl;
+		log[error] << "Failed to process file " << params["path"].get<std::string>()
+				<< " (" << e.what() << ")"<<std::endl;
 		failed_read=true;
 		return false;
 	}
@@ -160,10 +160,10 @@ bool RawFileSource::set_param(Parameter &parameter)
 	} else if (parameter.name == "height") {
 		height=parameter.get<yuri::size_t>();
 	} else if (parameter.name == "output_format") {
-		output_format = BasicPipe::get_format_from_string(parameter.get<string>());
-		log[info] << "output format " << output_format << endl;
+		output_format = BasicPipe::get_format_from_string(parameter.get<std::string>());
+		log[info] << "output format " << output_format << std::endl;
 	} else if (parameter.name == "path") {
-		path=parameter.get<string>();
+		path=parameter.get<std::string>();
 	} else if (parameter.name == "keep_alive") {
 		keep_alive=parameter.get<bool>();
 	} else if (parameter.name == "offset") {

@@ -17,7 +17,6 @@ namespace yuri {
 namespace io {
 
 using namespace yuri::config;
-using boost::shared_array;
 using namespace boost::posix_time;
 
 class RawFileSource: public BasicIOThread
@@ -32,13 +31,13 @@ public:
 protected:
 	virtual bool set_param(Parameter &parameter);
 	bool read_chunk();
-	shared_ptr<BasicFrame> frame;
+	pBasicFrame frame;
 	yuri::size_t position, chunk_size, width, height;
 	yuri::format_t output_format;
 	double fps;
-	string path;
+std::string path;
 	ptime last_send;
-	ifstream file;
+	std::ifstream file;
 	bool keep_alive,loop, failed_read;
 	yuri::usize_t block;
 	yuri::size_t loop_number;

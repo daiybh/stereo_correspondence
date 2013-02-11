@@ -19,9 +19,8 @@ namespace yuri {
 
 namespace io {
 using yuri::log::Log;
-using namespace std;
 using namespace yuri::config;
-using boost::shared_array;
+
 
 class JPEGEncoder: public BasicIOThread {
 public:
@@ -42,8 +41,8 @@ static	int sEmptyBuffer(j_compress_ptr cinfo);
 static	void sTermDestination(j_compress_ptr cinfo);
 	yuri::size_t dumpData();
 protected:
-	shared_ptr<BasicFrame> frame;
-	stringstream temp_data;
+	pBasicFrame frame;
+std::stringstream temp_data;
 	int level;
 	shared_array<char> buffer;
 	long buffer_size, width, height;

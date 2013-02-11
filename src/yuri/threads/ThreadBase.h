@@ -6,8 +6,6 @@ namespace yuri
 {
 namespace threads
 {
-//typedef boost::shared_ptr<class ThreadBase> pThreadBase;
-//typedef class pThreadBase pThreadBase;
 class ThreadBase;
 using boost::weak_ptr;
 typedef weak_ptr<class ThreadBase> pThreadBase;
@@ -21,7 +19,7 @@ typedef weak_ptr<class ThreadBase> pThreadBase;
 #include <map>
 #include <vector>
 #include <sys/time.h>
-#include <boost/thread/thread.hpp>
+
 
 // Types of threads spawned from yuri application.
 // For user defined thread types use ThreadBase::new_thread_id();
@@ -58,10 +56,8 @@ namespace threads
 
 using namespace yuri::threads;
 using namespace yuri::log;
-using namespace boost;
-using namespace std;
 
-typedef yuri::size_t threadId_t;
+
 
 
 class ThreadBase :public boost::enable_shared_from_this<ThreadBase>
@@ -88,7 +84,6 @@ protected:
 	virtual void join_thread(pThreadBase child);
 	virtual void finish_all_threads(bool join=false);
 	virtual void join_all_threads();
-	//template<class T> boost::shared_ptr<T> get_this_ptr() { return boost::dynamic_pointer_cast<T> (shared_from_this()); }
 	virtual bool do_spawn_thread(shared_ptr<ThreadBase>  thread);
 	virtual bool do_add_child(shared_ptr<ThreadBase>  thread, bool spawned=true);
 	virtual void do_finish_thread(pThreadBase child, bool join=false);
@@ -111,8 +106,7 @@ protected:
 	bool end,end_requested;
 	boost::mutex end_lock,finish_lock;
 	boost::timed_mutex children_lock;
-	map<pThreadBase, shared_ptr<ThreadChild> > children;
-	//map<pThreadBase, threadId_t > childMap;
+	std::map<pThreadBase, shared_ptr<ThreadChild> > children;
 	boost::mutex timer_lock;
 	struct timeval tv_start,tv_stop;
 	yuri::size_t elsec,elusec;
@@ -121,7 +115,7 @@ protected:
 	int exitCode;
 	threadId_t lastChild;
 	bool finishWhenChildEnds, quitWhenChildsEnd;
-	vector<pThreadBase> endingChilds;
+	std::vector<pThreadBase> endingChilds;
 	pid_t own_tid;
 public: static long new_thread_id();
 protected: static long last_user_thread_id;

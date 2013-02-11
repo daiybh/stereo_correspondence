@@ -14,7 +14,8 @@ namespace exception {
 NotImplemented::NotImplemented(std::string reason):Exception(reason) {
 }
 
-NotImplemented::~NotImplemented() throw() {
+NotImplemented::~NotImplemented() throw()
+{
 }
 
 }

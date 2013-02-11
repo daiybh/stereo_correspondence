@@ -42,7 +42,7 @@ shared_ptr<Parameters> JPEGEncoder::configure()
 
 JPEGEncoder::JPEGEncoder(Log &_log, pThreadBase parent,int level,
 		long buffer_size)
-	:BasicIOThread(_log,parent,1,1,"JPG Enc"),level(level),buffer(0),
+	:BasicIOThread(_log,parent,1,1,"JPG Enc"),level(level),
 	buffer_size(buffer_size),width(0),height(0)
 {
 }
@@ -55,7 +55,7 @@ bool JPEGEncoder::step()
 {
 	if (!in[0] || !(frame = in[0]->pop_frame()))
 		return true;
-	log[debug] << "Reading packet " << frame->get_size() << " bytes long" << endl;
+	log[debug] << "Reading packet " << frame->get_size() << " bytes long" << std::endl;
 
 
 	//int bpp = colorspace==YURI_COLORSPACE_RGB?3:4;
@@ -94,7 +94,7 @@ bool JPEGEncoder::step()
 			Bpp=2;
 			break;*/
 		default:
-			log[error] << "Unsupported input format " << BasicPipe::get_format_string(frame->get_format())<< endl;
+			log[error] << "Unsupported input format " << BasicPipe::get_format_string(frame->get_format())<< std::endl;
 			return true;
 	}
 
@@ -113,7 +113,7 @@ bool JPEGEncoder::step()
 	boost::posix_time::ptime t2(boost::posix_time::microsec_clock::universal_time());
 		boost::posix_time::time_period tp(t1,t2);
 		log[debug] << "JPEG compression took: " << tp.length().total_microseconds()
-			<< " us" << endl;
+			<< " us" << std::endl;
 	dumpData();
     jpeg_destroy_compress(&cinfo);
 	return true;
@@ -130,9 +130,9 @@ void JPEGEncoder::setDestManager(jpeg_compress_struct* cinfo)
 
 void JPEGEncoder::initDestination(j_compress_ptr cinfo)
 {
-	log[verbose_debug] << "Initializin dest" << endl;
-	temp_data.seekg(0,ios::beg);
-	temp_data.seekp(0,ios::beg);
+	log[verbose_debug] << "Initializin dest" << std::endl;
+	temp_data.seekg(0,std::ios::beg);
+	temp_data.seekp(0,std::ios::beg);
 	temp_data.str().clear();
 	if (!buffer) buffer.reset(new char[buffer_size]);
 	cinfo->dest->next_output_byte=(JOCTET *) buffer.get();
@@ -141,7 +141,7 @@ void JPEGEncoder::initDestination(j_compress_ptr cinfo)
 int JPEGEncoder::emptyBuffer(j_compress_ptr cinfo)
 {
 	log[verbose_debug] << "flushing " << (buffer_size - cinfo->dest->free_in_buffer)
-		<< " bytes" << endl;
+		<< " bytes" << std::endl;
 	temp_data.write((const char*)buffer.get(),
 			(buffer_size - cinfo->dest->free_in_buffer));
 	cinfo->dest->free_in_buffer=buffer_size;
@@ -167,17 +167,17 @@ void JPEGEncoder::sTermDestination(j_compress_ptr cinfo)
 yuri::size_t JPEGEncoder::dumpData()
 {
 	yuri::size_t length = temp_data.tellp();
-	log[verbose_debug] << "Reading " << length << " bytes from stringstream" << endl;
+	log[verbose_debug] << "Reading " << length << " bytes fromstd::stringstream" << std::endl;
 	shared_array<yuri::ubyte_t> mem = allocate_memory_block(length);
-	temp_data.seekg(0,ios::beg);
+	temp_data.seekg(0,std::ios::beg);
 	temp_data.read(reinterpret_cast<char*>(mem.get()),length);
-	temp_data.seekp(0,ios::beg);
+	temp_data.seekp(0,std::ios::beg);
 	temp_data.str().clear();
 	if (!out[0]) {
 		return 0;
 	}
 	else {
-		shared_ptr<BasicFrame> f = allocate_frame_from_memory(mem, length);
+		pBasicFrame f = allocate_frame_from_memory(mem, length);
 		push_video_frame(0,f,width,height,YURI_IMAGE_JPEG);
 	}
 	return length;

@@ -38,7 +38,7 @@ add_subdirectory(io)
 
 #SET (YURI_HEADERS )
 #FOREACH(item ${YURI_SRC})
-#	string(REGEX MATCH ".*[.]h$" tmp ${item}) 
+#std::string(REGEX MATCH ".*[.]h$" tmp ${item}) 
 #	SET(YURI_HEADERS ${YURI_HEADERS} ${tmp})
 #ENDFOREACH(item)
 

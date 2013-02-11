@@ -14,11 +14,10 @@
 namespace yuri {
 
 namespace exception {
-using namespace std;
 class OutOfRange: public yuri::exception::Exception {
 public:
-	OutOfRange():Exception(string("index of of range")) {}
-	OutOfRange(string msg):Exception(msg) {}
+	OutOfRange():Exception(std::string("index of of range")) {}
+	OutOfRange(std::string msg):Exception(msg) {}
 	virtual ~OutOfRange() throw();
 };
 

@@ -18,6 +18,7 @@
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
+using namespace yuri;
 using namespace yuri::io;
 using namespace yuri::log;
 using namespace yuri::config;
@@ -59,8 +60,8 @@ void usage()
 void list_registered(Log l_)
 {
 	l_[info]<<"List of registered objects:" << endl;
-	string name;
-	shared_ptr<vector<string> > v = yuri::config::RegisteredClass::list_registered();
+std::string name;
+	shared_ptr<vector<std::string> > v = yuri::config::RegisteredClass::list_registered();
 	BOOST_FOREACH(name,*v) {
 		if (verbosity>=0)
 			l_[fatal] << "..:: " << name << " ::.." << endl;
@@ -82,10 +83,10 @@ void list_registered(Log l_)
 				}
 			} else l_[normal] << "\t\tClass does not have any restrictions on output pipes defined." << endl;
 			if (p->params.size()) {
-				pair<string,shared_ptr<Parameter> > par;
+				pair<std::string,shared_ptr<Parameter> > par;
 				BOOST_FOREACH(par,p->params) {
 					l_[info] << "\t\t'" << par.first << "' has default value \""
-							<< par.second->get<string>() << "\"" << endl;
+							<< par.second->get<std::string>() << "\"" << endl;
 					if (!par.second->description.empty()) l_[info] << "\t\t\t"
 							<< par.second->description << endl;
 				}
@@ -96,7 +97,7 @@ void list_registered(Log l_)
 void list_formats(Log& l_)
 {
 	l_[info] << "List of registered formats:" << endl;
-	string name;
+std::string name;
 	boost::mutex::scoped_lock lock(BasicPipe::format_lock);
 	std::pair<yuri::format_t, yuri::FormatInfo_t > fmtp;
 	BOOST_FOREACH(fmtp, BasicPipe::formats) {
@@ -104,9 +105,9 @@ void list_formats(Log& l_)
 		l_[fatal] << fmt->long_name << endl;
 		if (fmt->short_names.size()) {
 			bool f = true;
-			stringstream ss;
+		std::stringstream ss;
 			ss << "\tAvailable as: ";
-			BOOST_FOREACH(string s,fmt->short_names) {
+			BOOST_FOREACH(std::string s,fmt->short_names) {
 				if (!f) ss << ", ";
 				f=false;
 				ss << s;
@@ -115,9 +116,9 @@ void list_formats(Log& l_)
 		}
 		if (fmt->mime_types.size()) {
 			bool f = true;
-			stringstream ss;
+		std::stringstream ss;
 			ss << "\tUses mime types: ";
-			BOOST_FOREACH(string s,fmt->mime_types) {
+			BOOST_FOREACH(std::string s,fmt->mime_types) {
 				if (!f) ss << ", ";
 				f=false;
 				ss << s;
@@ -149,10 +150,10 @@ void version()
 }
 int main(int argc, char**argv)
 {
-	vector<string> params;
+	vector<std::string> params;
 	//yuri::uint_t verbosity;
-	string filename;
-	vector<string> arguments;
+std::string filename;
+	vector<std::string> arguments;
 	l.setLabel("[YURI] ");
 	l.setFlags(info);
 	options.add_options()
@@ -161,9 +162,9 @@ int main(int argc, char**argv)
 		("verbose,v","Show verbose output")
 		("quiet,q","Limit output")
 		("verbosity",po::value<int> (&verbosity)->default_value(0),"Verbosity level <-3, 4>")
-		("input-file,f",po::value<string>(&filename),"Input XML file")
-		("parameter,p",po::value<vector<string> >(&arguments),"Parameters to pass to libyuri builder")
-		("list,l",po::value<string>()->implicit_value("classes"),"List registered objects/formats");
+		("input-file,f",po::value<std::string>(&filename),"Input XML file")
+		("parameter,p",po::value<vector<std::string> >(&arguments),"Parameters to pass to libyuri builder")
+		("list,l",po::value<std::string>()->implicit_value("classes"),"List registered objects/formats");
 
 
 
@@ -206,7 +207,7 @@ int main(int argc, char**argv)
 		b->find_modules();
 		b->load_modules();
 		l.set_quiet(true);
-		string list_what = vm["list"].as<string>();
+	std::string list_what = vm["list"].as<std::string>();
 		Log l_(cout);
 		l_.setFlags(l.get_flags());
 		l_.set_quiet(true);

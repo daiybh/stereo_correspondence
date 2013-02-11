@@ -1,13 +1,11 @@
 #ifndef THREADCHILD_H_
 #define THREADCHILD_H_
 #include "boost/thread.hpp"
-#include <boost/shared_ptr.hpp>
+#include <yuri/io/types.h>
 namespace yuri
 {
 namespace threads
 {
-using namespace std;
-using boost::shared_ptr;
 class ThreadBase;
 class ThreadChild
 {

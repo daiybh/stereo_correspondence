@@ -15,7 +15,10 @@ namespace config {
 
 REGISTER("appbuilder",ApplicationBuilder)
 
-shared_ptr<BasicIOThread> ApplicationBuilder::generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception)
+using boost::lexical_cast;
+
+
+shared_ptr<BasicIOThread> ApplicationBuilder::generate(Log &_log,pThreadBase parent,Parameters& parameters)
 {
 	shared_ptr<ApplicationBuilder> app (new ApplicationBuilder(_log,parent,parameters));
 	return app;
@@ -34,8 +37,7 @@ shared_ptr<Parameters> ApplicationBuilder::configure()
 
 
 ApplicationBuilder::ApplicationBuilder(Log &_log, pThreadBase parent, Parameters &p)
-	throw (InitializationFailed):
-	BasicIOThread(_log,parent,0,0,"AppBuilder"),filename(""),
+	:BasicIOThread(_log,parent,0,0,"AppBuilder"),filename(""),
 	document_loaded(false),threads_prepared(false),
 	run_limit(boost::posix_time::pos_infin),start_time(not_a_date_time)
 {
@@ -44,9 +46,8 @@ ApplicationBuilder::ApplicationBuilder(Log &_log, pThreadBase parent, Parameters
 	init();
 }
 
-ApplicationBuilder::ApplicationBuilder(Log &_log, pThreadBase parent, string filename,vector<string> argv)
-	throw (InitializationFailed):
-	BasicIOThread(_log,parent,0,0,"AppBuilder"),filename(filename),document_loaded(false),
+ApplicationBuilder::ApplicationBuilder(Log &_log, pThreadBase parent,std::string filename,std::vector<std::string> argv)
+	:BasicIOThread(_log,parent,0,0,"AppBuilder"),filename(filename),document_loaded(false),
 	threads_prepared(false),run_limit(boost::posix_time::pos_infin),
 	start_time(not_a_date_time)
 
@@ -63,7 +64,7 @@ ApplicationBuilder::~ApplicationBuilder()
 {
 	clear_tree();
 #ifdef __linux__
-	std::string destdir = string("/tmp/")+lexical_cast<std::string>(getpid());
+	std::string destdir =std::string("/tmp/")+lexical_cast<std::string>(getpid());
 	boost::filesystem::path p(destdir);
 	if (boost::filesystem::exists(p)) {
 		boost::filesystem::remove_all(p);
@@ -81,47 +82,47 @@ void ApplicationBuilder::run()
 		run_limit = boost::posix_time::seconds(floor(limit))+
 			boost::posix_time::seconds(floor(1e6*(limit-floor(limit))));
 	}
-	log[debug] << "Got limit " << limit << ", which was converted to " << run_limit << endl;
+	log[debug] << "Got limit " << limit << ", which was converted to " << run_limit <<"\n";
 	start_time=microsec_clock::local_time();
 	try {
 		if (!prepare_threads()) throw (InitializationFailed("Failed to prepare threads!"));
-		log[debug] << "Threads prepared" << endl;
+		log[debug] << "Threads prepared" <<"\n";
 		if (!prepare_links()) throw (InitializationFailed("Failed to prepare links!"));
-		log[debug] << "Links prepared" << endl;
+		log[debug] << "Links prepared" <<"\n";
 		if (!spawn_threads()) throw (InitializationFailed("Failed to spawn threads!"));
-		log[debug] << "Threads spawned" << endl;
+		log[debug] << "Threads spawned" <<"\n";
 		BasicIOThread::run();
 	}
 	catch (Exception &e) {
 		log[error] << "Caught exception when initializing appbuilder ("
-				<< e.what() << ")" << endl;
+				<< e.what() << ")" <<"\n";
 	}
 	try {
-		if (!stop_threads()) log[warning] << "Failed to stop threads!" << endl;
+		if (!stop_threads()) log[warning] << "Failed to stop threads!" <<"\n";
 	}
 	catch (Exception &e) {
 		log[error] << "Caught exception while stopping threads ("
-				<< e.what() << ")" << endl;
+				<< e.what() << ")" <<"\n";
 	}
 	try {
-		if (!delete_threads()) log[warning] << "Failed to delete threads!" << endl;
+		if (!delete_threads()) log[warning] << "Failed to delete threads!" <<"\n";
 	}
 	catch (Exception &e) {
 		log[error] << "Caught exception while deleting threads ("
-				<< e.what() << ")" << endl;
+				<< e.what() << ")" <<"\n";
 	}
 	try {
-		if (!delete_pipes()) log[warning] << "Failed to delete pipes!" << endl;
+		if (!delete_pipes()) log[warning] << "Failed to delete pipes!" <<"\n";
 	}
 	catch (Exception &e) {
 		log[error] << "Caught exception while deleting pipes ("
-				<< e.what() << ")" << endl;
+				<< e.what() << ")" <<"\n";
 	}
 }
 bool ApplicationBuilder::find_modules()
 {
 	log[info] << "Looking for modules ("<<module_dirs.size() <<")!\n";
-	BOOST_FOREACH(string p, module_dirs) {
+	BOOST_FOREACH(std::string p, module_dirs) {
 		boost::filesystem::path p_(p);
 		if (boost::filesystem::exists(p_) &&
 				boost::filesystem::is_directory(p_)) {
@@ -141,7 +142,7 @@ bool ApplicationBuilder::find_modules()
 }
 bool ApplicationBuilder::load_modules()
 {
-	BOOST_FOREACH(string s, modules) {
+	BOOST_FOREACH(std::string s, modules) {
 		try{
 			bool loaded = RegisteredClass::load_module(s);
 			log[info] << "Loading " << s<< ": "<<(loaded?"OK":"Failed") << "\n";
@@ -151,24 +152,24 @@ bool ApplicationBuilder::load_modules()
 	}
 	return true;
 }
-bool ApplicationBuilder::load_file(string path)
+bool ApplicationBuilder::load_file(std::string path)
 {
 	//if (doc) delete doc;
 	clear_tree();
 	document_loaded = false;
-	log[info] << "Loading " << path << endl;
+	log[info] << "Loading " << path <<"\n";
 	//doc.reset(new TiXmlDocument(path));
 	if (! doc.LoadFile(path)) {
-		log[error] <<  "Failed to load file! " << doc.ErrorDesc()<< endl;
+		log[error] <<  "Failed to load file! " << doc.ErrorDesc()<<"\n";
 		return false;
 	}
-	//log[debug] << "Loaded "<< endl;
+	//log[debug] << "Loaded "<<"\n";
 	TiXmlElement * root = doc.RootElement();
 	if (!root) {
 		//doc.reset();;
 		return false;
 	}
-	//log[debug] << "Got root element!" << endl;
+	//log[debug] << "Got root element!" <<"\n";
 	TiXmlElement* node=0;
 	node = root->FirstChildElement("general");
 	if (node) {
@@ -205,9 +206,9 @@ bool ApplicationBuilder::load_file(string path)
 }
 bool ApplicationBuilder::process_module_dir(TiXmlElement &node)
 {
-	string path;
+std::string path;
 	if (node.QueryValueAttribute("path",&path)!=TIXML_SUCCESS) {
-		log[error] << "Failed to load path attribute!" << endl;
+		log[error] << "Failed to load path attribute!" <<"\n";
 		return false;
 	}
 	log[debug] << "Found module dir" << path << "\n";
@@ -216,9 +217,9 @@ bool ApplicationBuilder::process_module_dir(TiXmlElement &node)
 }
 bool ApplicationBuilder::process_module(TiXmlElement &node)
 {
-	string path;
+std::string path;
 	if (node.QueryValueAttribute("path",&path)!=TIXML_SUCCESS) {
-		log[error] << "Failed to load path attribute!" << endl;
+		log[error] << "Failed to load path attribute!" <<"\n";
 		return false;
 	}
 	log[debug] << "Found module " << path << "\n";
@@ -229,118 +230,118 @@ bool ApplicationBuilder::process_module(TiXmlElement &node)
 
 bool ApplicationBuilder::process_node(TiXmlElement &node)
 {
-	string name,cl;
+std::string name,cl;
 	if (node.QueryValueAttribute("name",&name)!=TIXML_SUCCESS) {
-		log[error] << "Failed to load name attribute!" << endl;
+		log[error] << "Failed to load name attribute!" <<"\n";
 		return false;
 	}
 	if (node.QueryValueAttribute("class",&cl)!=TIXML_SUCCESS) {
-		log[error] << "Failed to load class attribute!" << endl;
+		log[error] << "Failed to load class attribute!" <<"\n";
 		return false;;
 	}
-	log[debug] << "Found Node " << name << " of class " << cl << endl;
+	log[debug] << "Found Node " << name << " of class " << cl <<"\n";
 	if (nodes.find(name) != nodes.end()) {
 		log[warning] << "Multiple nodes with name " << name << \
 				" specified! (was " << nodes[name]->type << ", found"
-				<< cl << "). Discarding the the later" <<endl;
+				<< cl << "). Discarding the the later" <<"\n";
 		return false;
 	}
 
 	if (!RegisteredClass::is_registered(cl)) {
 		log[warning] << "Requested node of class " << cl
-				<< " that is not registered! Discarding" << endl;
+				<< " that is not registered! Discarding" <<"\n";
 		return false;
 	}
 	shared_ptr<NodeRecord> n(new NodeRecord(name,cl));
 
 	if (!parse_parameters(node,n->params)) {
-		log[warning] << "Failed to parse parameters. Discarding" << endl;
+		log[warning] << "Failed to parse parameters. Discarding" <<"\n";
 		//delete n;
 		return false;
 	}
-	pair<string,shared_ptr<Parameter> > parameter;
+	std::pair<std::string,shared_ptr<Parameter> > parameter;
 	BOOST_FOREACH(parameter,n->params.params) {
-		string value = parameter.second->get<string>();
+	std::string value = parameter.second->get<std::string>();
 		if (value[0] == '@') {
-			string argname = value.substr(1);
+		std::string argname = value.substr(1);
 			n->variables[parameter.first]=argname;
 		}
 	}
 
-	log[debug] << "Storing node " << name << endl;
+	log[debug] << "Storing node " << name <<"\n";
 	nodes[name]=n;
 	return true;
 }
 
 bool ApplicationBuilder::process_link(TiXmlElement &node)
 {
-	string name,src,target;
+std::string name,src,target;
 	if (node.QueryValueAttribute("name",&name)!=TIXML_SUCCESS) {
-		log[error] << "Failed to load name attribute!" << endl;
+		log[error] << "Failed to load name attribute!" <<"\n";
 		return false;
 	}
 	if (node.QueryValueAttribute("source",&src)!=TIXML_SUCCESS) {
 		log[error] << "Failed to load source attribute for link "
-				<< name << "!" << endl;
+				<< name << "!" <<"\n";
 		return false;
 	}
 	if (node.QueryValueAttribute("target",&target)!=TIXML_SUCCESS) {
 		log[error] << "Failed to load target attribute for link "
-				<< name << "!" << endl;
+				<< name << "!" <<"\n";
 		return false;
 	}
 	int src_ipos = src.find_last_of(':');
 	int target_ipos = target.find_last_of(':');
-	string srcnode = src.substr(0,src_ipos);
-	string targetnode = target.substr(0,target_ipos);
+std::string srcnode = src.substr(0,src_ipos);
+std::string targetnode = target.substr(0,target_ipos);
 	int srci = boost::lexical_cast<int>(src.substr(src_ipos+1));
 	int targeti = boost::lexical_cast<int>(target.substr(target_ipos+1));
 	log[debug] << "link from " <<  srcnode << "[" << srci << "]" <<
-			"to " << targetnode << "[" <<targeti << "]" << endl;
+			"to " << targetnode << "[" <<targeti << "]" <<"\n";
 	if (nodes.find(srcnode)==nodes.end()) {
 		log[warning] << "Source node for the link (" << srcnode
-				<< ") not specified! Discarding link." << endl;
+				<< ") not specified! Discarding link." <<"\n";
 		return false;
 	}
 	if (nodes.find(targetnode)==nodes.end()) {
 		log[warning] << "Target node for the link (" << targetnode
-				<< ") not specified! Discarding link." << endl;
+				<< ") not specified! Discarding link." <<"\n";
 		return false;
 	}
 	shared_ptr<LinkRecord> l(new LinkRecord(name,srcnode,targetnode,srci,targeti));
 	if (!parse_parameters(node,l->params)) {
-		log[warning] << "Failed to parse parameters. Discarding" << endl;
+		log[warning] << "Failed to parse parameters. Discarding" <<"\n";
 		//delete l;
 		return false;
 	}
-	pair<string,shared_ptr<Parameter> > parameter;
+	std::pair<std::string,shared_ptr<Parameter> > parameter;
 	BOOST_FOREACH(parameter,l->params.params) {
-		string value = parameter.second->get<string>();
+	std::string value = parameter.second->get<std::string>();
 		if (value[0] == '@') {
-			string name = value.substr(1);
+		std::string name = value.substr(1);
 			l->variables[parameter.first]=name;
 		}
 	}
-	log[debug] << "Storing link " << name << endl;
+	log[debug] << "Storing link " << name <<"\n";
 	links[name]=l;
 	return true;
 }
 
 bool ApplicationBuilder::process_variable(TiXmlElement &node)
 {
-	string name,def_value;
+std::string name,def_value;
 	if (node.QueryValueAttribute("name",&name)!=TIXML_SUCCESS) {
-		log[error] << "Failed to load name attribute!" << endl;
+		log[error] << "Failed to load name attribute!" <<"\n";
 		return false;
 	}
 	if (node.QueryValueAttribute("default",&def_value)!=TIXML_SUCCESS) {
 		log[error] << "Failed to load default value for variable "
-				<< name << "!" << endl;
+				<< name << "!" <<"\n";
 		return false;
 	}
 
 	shared_ptr<VariableRecord> var(new VariableRecord(name,def_value));
-	log[debug] << "Storing variable " << name << endl;
+	log[debug] << "Storing variable " << name <<"\n";
 	variables[name]=var;
 	return true;
 }
@@ -350,20 +351,20 @@ bool ApplicationBuilder::parse_parameters(TiXmlElement &element,Parameters &para
 {
 	TiXmlElement *node=0;
 	while ((node = dynamic_cast<TiXmlElement*>(element.IterateChildren("parameter",node)))) {
-		string name, value;
+	std::string name, value;
 		if (node->QueryValueAttribute("name",&name)!=TIXML_SUCCESS) {
-			log[error] << "Failed to load name attribute!" << endl;
+			log[error] << "Failed to load name attribute!" <<"\n";
 			return false;
 		}
 		if (node->FirstChild("parameter")) {
 
 			Parameters& par_child = params[name].push_group();
 			log[info] << "Found group parameter " << name << ", added "
-					<< params[name].parameters_vector.size() << ". value" << endl;
+					<< params[name].parameters_vector.size() << ". value" <<"\n";
 			if (!parse_parameters(*node,par_child)) return false;
 		} else {
 			value = node->GetText();
-			log[debug] << "Found parameter " << name << " with value " << value << endl;
+			log[debug] << "Found parameter " << name << " with value " << value <<"\n";
 			params[name]=value;
 		}
 	}
@@ -372,12 +373,12 @@ bool ApplicationBuilder::parse_parameters(TiXmlElement &element,Parameters &para
 
 void ApplicationBuilder::clear_tree()
 {
-	/*pair<string, shared_ptr<NodeRecord> > n;
+	/*pair<std::string, shared_ptr<NodeRecord> > n;
 	BOOST_FOREACH(n,nodes) {
 		delete n.second;
 	}*/
 	nodes.clear();
-	/*pair<string, shared_ptr<LinkRecord> > l;
+	/*pair<std::string, shared_ptr<LinkRecord> > l;
 	BOOST_FOREACH(l,links) {
 		delete l.second;
 	}*/
@@ -387,9 +388,9 @@ void ApplicationBuilder::clear_tree()
 bool ApplicationBuilder::prepare_threads()
 {
 	if (threads_prepared) return true;
-	pair<string,shared_ptr<NodeRecord> > node;
+	std::pair<std::string,shared_ptr<NodeRecord> > node;
 	BOOST_FOREACH(node,nodes) {
-		log[debug] << "Preparing node " << node.first << endl;
+		log[debug] << "Preparing node " << node.first <<"\n";
 		assert(node.second.get());
 		assert(RegisteredClass::is_registered(node.second->type));
 		shared_ptr<Instance> instance = RegisteredClass::prepare_instance(node.second->type);
@@ -398,32 +399,32 @@ bool ApplicationBuilder::prepare_threads()
 		shared_ptr<Parameters> vars = assign_variables(node.second->variables);
 		instance->params->merge(*vars);
 		log[debug] << "Node " << node.first << " of class " << node.second->type
-				<< " will be started with parameters:" << endl;
+				<< " will be started with parameters:" <<"\n";
 		show_params(*instance->params);
 		try {
 			threads[node.first] = instance->create_class(log,get_this_ptr());
 		}
 		catch (InitializationFailed &e) {
-			log[error] << "Failed to create node '" << node.first << "' (" << node.second->type<<"): " << e.what() << endl;
+			log[error] << "Failed to create node '" << node.first << "' (" << node.second->type<<"): " << e.what() <<"\n";
 			return false;
 		}
 		catch (Exception &e) {
-			throw Exception(string("[")+node.first+string("] ")+string(e.what()));
+			throw Exception(std::string("[")+node.first+std::string("] ")+std::string(e.what()));
 		}
 	}
 	threads_prepared = true;
 	return true;
 }
 
-void ApplicationBuilder::show_params(Parameters& _params,string prefix)
+void ApplicationBuilder::show_params(Parameters& _params, std::string prefix)
 {
-	pair<string,shared_ptr<Parameter> > par;
+	std::pair<std::string,shared_ptr<Parameter> > par;
 	BOOST_FOREACH(par,(_params.params)) {
 		if (par.second->type==GroupType) {
 			for (int i=0;;++i) {
 				try {
 					Parameters &p = (*par.second)[i];
-					log[info] << prefix << par.first << "["<<i<<"] is group with following values:" << endl;
+					log[info] << prefix << par.first << "["<<i<<"] is group with following values:" <<"\n";
 					show_params(p,prefix+'\t');
 				}
 				catch (OutOfRange &e) {
@@ -431,16 +432,16 @@ void ApplicationBuilder::show_params(Parameters& _params,string prefix)
 				}
 			}
 		} else {
-			log[debug] << prefix << par.first << " has value " << par.second->get<string>() << endl;
+			log[debug] << prefix << par.first << " has value " << par.second->get<std::string>() <<"\n";
 		}
 	}
 }
 
 bool ApplicationBuilder::prepare_links()
 {
-	pair<string,shared_ptr<LinkRecord> > link;
+	std::pair<std::string,shared_ptr<LinkRecord> > link;
 	BOOST_FOREACH(link,links) {
-		log[debug] << "Preparing link " << link.first << endl;
+		log[debug] << "Preparing link " << link.first <<"\n";
 		assert(link.second.get());
 		shared_ptr<Parameters> params (new Parameters(*default_pipe_param));
 		params->merge(link.second->params);
@@ -456,10 +457,10 @@ bool ApplicationBuilder::prepare_links()
 }
 bool ApplicationBuilder::spawn_threads()
 {
-	pair<string,shared_ptr<BasicIOThread> > thread;
+	std::pair<std::string,shared_ptr<BasicIOThread> > thread;
 	BOOST_FOREACH(thread,threads) {
 		spawn_thread(thread.second);
-		//log[info] << "Thread for object " << thread.first << " spawned as " << lexical_cast<string>(children[thread.second]->thread_ptr->native_handle()) << ", boost id: "<< children[thread.second]->thread_ptr->get_id()<< endl;
+		//log[info] << "Thread for object " << thread.first << " spawned as " << lexical_caststd::string>(children[thread.second]->thread_ptr->native_handle()) << ", boost id: "<< children[thread.second]->thread_ptr->get_id()<<"\n";
 		tids[thread.first]=0;
 	}
 	return true;
@@ -485,21 +486,21 @@ bool ApplicationBuilder::step()
 			log[info] << "Time limit reached (" << to_simple_string(run_limit)
 					<< "), returning. Started " << to_simple_string(start_time.time_of_day())
 					<< ", actual time is " << to_simple_string(microsec_clock::local_time().time_of_day())
-					<< endl;
+					<<"\n";
 			return false;
 		}
 	}
 	fetch_tids();
 	return true;
 }
-shared_ptr<BasicIOThread> ApplicationBuilder::get_node(string id)
+shared_ptr<BasicIOThread> ApplicationBuilder::get_node(std::string id)
 {
 	if (threads.find(id)==threads.end()) {
-		pair<string,shared_ptr<BasicIOThread> > p;
+		std::pair<std::string,shared_ptr<BasicIOThread> > p;
 		BOOST_FOREACH(p,threads) {
-			log[debug] << "I have " << p.first << endl;
+			log[debug] << "I have " << p.first <<"\n";
 		}
-		throw Exception (string(id)+" does not exist");
+		throw Exception(std::string(id)+" does not exist");
 	}
 	return threads[id];
 }
@@ -514,9 +515,9 @@ void ApplicationBuilder::init()
 	#else
 		module_dirs.push_back("/usr/lib/yuri2/");
 	#endif
-	const string filename=params["config"].get<string>();
+	const std::string filename=params["config"].get<std::string>();
 	if (filename!="") {
-		if (!load_file(filename)) throw InitializationFailed(string("Failed to load file ")+filename);
+		if (!load_file(filename)) throw InitializationFailed(std::string("Failed to load file ")+filename);
 	}
 
 }
@@ -538,17 +539,17 @@ void ApplicationBuilder::init_local_params()
 void ApplicationBuilder::fetch_tids()
 {
 #ifdef __linux__
-	pair<std::string,pid_t> tid_record;
+	std::pair<std::string,pid_t> tid_record;
 	bool changed = false;
 	BOOST_FOREACH(tid_record,tids) {
 		if (!tid_record.second) {
 			tids[tid_record.first] = threads[tid_record.first]->get_tid();
-			log[debug] << "Thread " << tid_record.first << " has tid " << tids[tid_record.first] << endl;
+			log[debug] << "Thread " << tid_record.first << " has tid " << tids[tid_record.first] <<"\n";
 			changed = true;
 		}
 	}
 	if (changed) {
-		std::string destdir = string("/tmp/")+lexical_cast<std::string>(getpid());
+		std::string destdir =std::string("/tmp/")+lexical_cast<std::string>(getpid());
 		boost::filesystem::path p(destdir);
 		if (!boost::filesystem::exists(p)) {
 			boost::filesystem::create_directory(p);
@@ -558,7 +559,7 @@ void ApplicationBuilder::fetch_tids()
 				boost::filesystem::path p2 = p / lexical_cast<std::string>(tid_record.second); //(destdir+lexical_cast<std::string>(tid_record.second));
 				if (!boost::filesystem::exists(p2)) {
 					std::ofstream of(p2.string().c_str());
-					of << tid_record.first << std::endl;
+					of << tid_record.first << "\n";
 				}
 			}
 		}
@@ -566,9 +567,9 @@ void ApplicationBuilder::fetch_tids()
 #endif
 }
 
-shared_ptr<Parameters> ApplicationBuilder::assign_variables(map<string,string> vars)
+shared_ptr<Parameters> ApplicationBuilder::assign_variables(std::map<std::string, std::string> vars)
 {
-	pair<string,string> var;
+	std::pair<std::string, std::string> var;
 	shared_ptr<Parameters> var_params(new Parameters());
 	BOOST_FOREACH(var,vars) {
 		if (variables.find(var.second) != variables.end()) {
@@ -578,19 +579,19 @@ shared_ptr<Parameters> ApplicationBuilder::assign_variables(map<string,string> v
 	return var_params;
 }
 
-void ApplicationBuilder::parse_argv(vector<string> argv)
+void ApplicationBuilder::parse_argv(std::vector<std::string> argv)
 {
-	log[debug] << "" << argv.size() << " arguments to parse" << endl;
-	string arg;
+	log[debug] << "" << argv.size() << " arguments to parse" <<"\n";
+std::string arg;
 	BOOST_FOREACH(arg,argv) {
 		size_t delim = arg.find('=');
-		if (delim==string::npos) {
-			log[warning] << "Failed to parse argument '" <<arg<<"'" << endl;
+		if (delim==std::string::npos) {
+			log[warning] << "Failed to parse argument '" <<arg<<"'" <<"\n";
 		} else {
-			string name, value;
+		std::string name, value;
 			name = arg.substr(0,delim);
 			value = arg.substr(delim+1);
-			log[debug] << "Parsed argument " << name << " -> " << value << endl;
+			log[debug] << "Parsed argument " << name << " -> " << value <<"\n";
 			if (variables.find(name) != variables.end()) {
 				variables[name]->value=value;
 			} else {

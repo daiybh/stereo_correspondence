@@ -19,23 +19,23 @@
 namespace yuri {
 
 namespace config {
-using namespace std;
+
 using namespace yuri::io;
 using namespace yuri::threads;
 using namespace boost::posix_time;
 struct NodeRecord {
-	string name, type;
+std::string name, type;
 	Parameters params;
-	map<string,string> variables;
-	NodeRecord(string name,string type):name(name),type(type) {}
+	std::map<std::string, std::string> variables;
+	NodeRecord(std::string name, std::string type):name(name),type(type) {}
 };
 
 struct LinkRecord {
-	string name, source_node, target_node;
+std::string name, source_node, target_node;
 	int source_index, target_index;
 	Parameters params;
-	map<string,string> variables;
-	LinkRecord(string name,string source_node, string target_node,
+	std::map<std::string, std::string> variables;
+	LinkRecord(std::string name, std::string source_node,std::string target_node,
 			int source_index, int target_index):
 		name(name), source_node(source_node), target_node(target_node),
 		source_index(source_index), target_index(target_index) {}
@@ -43,30 +43,30 @@ struct LinkRecord {
 
 struct VariableNodeDependency{
 	weak_ptr<NodeRecord> node;
-	string parameter;
+	std::string parameter;
 };
 struct VariableLinkDependency{
 	weak_ptr<LinkRecord> node;
-	string parameter;
+	std::string parameter;
 };
 struct VariableRecord {
-	string name, def, value;
-	VariableRecord(string name,string def):name(name),def(def),value(def) {}
-	vector<shared_ptr<VariableNodeDependency> > node_dependencies;
-	vector<shared_ptr<VariableLinkDependency> > linkdependencies;
+	std::string name, def, value;
+	VariableRecord(std::string name, std::string def):name(name),def(def),value(def) {}
+	std::vector<shared_ptr<VariableNodeDependency> > node_dependencies;
+	std::vector<shared_ptr<VariableLinkDependency> > linkdependencies;
 };
 
 class ApplicationBuilder: public BasicIOThread {
 public:
-	EXPORT ApplicationBuilder(Log &_log, pThreadBase parent, string filename="", vector<string> argv=vector<string>()) throw (InitializationFailed);
-	EXPORT ApplicationBuilder(Log &_log, pThreadBase parent, Parameters &params) throw (InitializationFailed);
+	EXPORT ApplicationBuilder(Log &_log, pThreadBase parent,std::string filename="", std::vector<std::string> argv=std::vector<std::string>());
+	EXPORT ApplicationBuilder(Log &_log, pThreadBase parent, Parameters &params);
 	virtual ~ApplicationBuilder();
-	EXPORT static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception);
+	EXPORT static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,Parameters& parameters);
 	EXPORT static shared_ptr<Parameters> configure();
 
-	EXPORT bool load_file(string path);
+	EXPORT bool load_file(std::string path);
 	EXPORT void run();
-	EXPORT shared_ptr<BasicIOThread> get_node(string id);
+	EXPORT shared_ptr<BasicIOThread> get_node (std::string id);
 	bool prepare_threads();
 	bool find_modules();
 	bool load_modules();
@@ -90,26 +90,26 @@ protected:
 
 	void init();
 	void init_local_params();
-	void show_params(Parameters& _params, string prefix="\t\t");
+	void show_params(Parameters& _params,std::string prefix="\t\t");
 	void fetch_tids();
-	shared_ptr<Parameters> assign_variables(map<string,string> vars);
-	void parse_argv(vector<string> argv);
+	shared_ptr<Parameters> assign_variables(std::map<std::string, std::string> vars);
+	void parse_argv(std::vector<std::string> argv);
 protected:
-	string filename;
+std::string filename;
 	TiXmlDocument doc;
 
 	bool document_loaded, threads_prepared;
 	boost::posix_time::time_duration run_limit;
 	ptime start_time;
 	shared_ptr<Parameters> default_pipe_param;
-	map<string,shared_ptr<NodeRecord> > nodes;
-	map<string,shared_ptr<LinkRecord> > links;
-	map<string,shared_ptr<BasicIOThread> > threads;
-	map<string,shared_ptr<BasicPipe> > pipes;
-	map<string,shared_ptr<VariableRecord> > variables;
+	std::map<std::string,shared_ptr<NodeRecord> > nodes;
+	std::map<std::string,shared_ptr<LinkRecord> > links;
+	std::map<std::string,shared_ptr<BasicIOThread> > threads;
+	std::map<std::string,shared_ptr<BasicPipe> > pipes;
+	std::map<std::string,shared_ptr<VariableRecord> > variables;
 	std::vector<std::string> modules;
 	std::vector<std::string> module_dirs;
-	map<string,pid_t > tids;
+	std::map<std::string,pid_t > tids;
 
 };
 

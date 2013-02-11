@@ -9,8 +9,6 @@
 #define BASICFRAME_H_
 
 #include <vector>
-#include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
 #include "yuri/io/types.h"
 #include <yuri/config/Config.h>
 #include "pipe_types.h"
@@ -18,10 +16,7 @@
 namespace yuri {
 
 namespace io {
-using namespace std;
-using boost::shared_ptr;
-using boost::shared_array;
-using namespace yuri::exception;
+
 template<typename T> struct Plane
 {
 	Plane():data(),size(0) {}
@@ -40,6 +35,7 @@ template<typename T> struct Plane
 	}
 };
 
+typedef yuri::shared_ptr<struct FrameInfo> pFrameInfo;
 struct FrameInfo {
 	virtual ~FrameInfo() {}
 	std::string format;
@@ -47,6 +43,7 @@ struct FrameInfo {
 	yuri::size_t scale;
 };
 
+typedef yuri::shared_ptr<class BasicFrame> pBasicFrame;
 class BasicFrame {
 public:
 	BasicFrame(yuri::size_t planes = 1);
@@ -66,19 +63,19 @@ public:
 	virtual inline yuri::size_t get_duration() { return duration; }
 
 
-	virtual Plane<yuri::ubyte_t>& operator[](yuri::size_t index) throw (OutOfRange);
-	virtual void set_plane(yuri::size_t index, shared_ptr<Plane<yuri::ubyte_t> > plane)
-				throw (OutOfRange);
-	virtual shared_ptr<BasicFrame> get_copy();
-	virtual shared_ptr<FrameInfo> get_info() {return info;}
-	virtual void set_info(shared_ptr<FrameInfo> i) {info=i;}
+	virtual Plane<yuri::ubyte_t>& operator[](yuri::size_t index);
+	virtual void set_plane(yuri::size_t index, shared_ptr<Plane<yuri::ubyte_t> > plane);
+
+	virtual pBasicFrame get_copy();
+	virtual pFrameInfo get_info() {return info;}
+	virtual void set_info(pFrameInfo i) {info=i;}
 protected:
-	vector<shared_ptr<Plane<yuri::ubyte_t> > > planes;
+	std::vector<shared_ptr<Plane<yuri::ubyte_t> > > planes;
 	yuri::size_t numberPlanes, dts, pts, duration;
 	yuri::format_t format;
 	yuri::size_t width, height;
 	yuri::usize_t samples, channels;
-	shared_ptr<FrameInfo> info;
+	pFrameInfo info;
 };
 
 }

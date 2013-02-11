@@ -52,7 +52,7 @@ protected:
 	/**\brief Global mutex protecting the pool */
 	static boost::mutex mem_lock;
 	/**\brief Global memory pool */
-	static map<yuri::size_t, vector<yuri::ubyte_t* > > memory_pool;
+	static std::map<yuri::size_t, std::vector<yuri::ubyte_t* > > memory_pool;
 	/**\brief Size of the blocks this object allocates */
 	yuri::size_t block_size;
 	/**\brief Number of the blocks this object allocates */

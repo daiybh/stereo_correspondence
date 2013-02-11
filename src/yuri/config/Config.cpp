@@ -135,7 +135,7 @@ bool Config::read_config_file(std::string filename)
 		}
 	}
 #else
-	log[warning] << "NOT reading config file " << filename << ", missing libconfig support" << endl;
+	log[warning] << "NOT reading config file " << filename << ", missing libconfig support\n";
 	return false;
 #endif
 	return true;

@@ -14,7 +14,7 @@ REGISTER("fixed_memory_allocator",FixedMemoryAllocator)
 IO_THREAD_GENERATOR(FixedMemoryAllocator)
 
 boost::mutex FixedMemoryAllocator::mem_lock;
-map<yuri::size_t, vector<yuri::ubyte_t* > > FixedMemoryAllocator::memory_pool;
+std::map<yuri::size_t, std::vector<yuri::ubyte_t* > > FixedMemoryAllocator::memory_pool;
 
 shared_ptr<Parameters> FixedMemoryAllocator::configure()
 {
@@ -48,9 +48,9 @@ bool FixedMemoryAllocator::allocate_blocks(yuri::size_t size, yuri::size_t count
 bool FixedMemoryAllocator::do_allocate_blocks(yuri::size_t size, yuri::size_t count)
 {
 	yuri::ubyte_t *tmp;
-	if (!memory_pool.count(size)) memory_pool[size]=vector<yuri::ubyte_t*>();
+	if (!memory_pool.count(size)) memory_pool[size]=std::vector<yuri::ubyte_t*>();
 	for (yuri::size_t i=0;i<count;++i) {
-		//std::cerr << "Allocating " << size << std::endl;
+		//std::cerr << "Allocating " << size << "\n";
 		tmp = new yuri::ubyte_t[size];
 		if (!tmp) return false;
 		memory_pool[size].push_back(tmp);
@@ -76,7 +76,7 @@ shared_array<yuri::ubyte_t> FixedMemoryAllocator::get_block(yuri::size_t size)
 	}
 	shared_array<yuri::ubyte_t>  tmp(memory_pool[size].back(),Deleter(size,memory_pool[size].back()));
 	memory_pool[size].pop_back();
-	//std::cout << "Serving page of " << size << ". have " << memory[size].size() << " in cache" << std::endl;
+	//std::cout << "Serving page of " << size << ". have " << memory[size].size() << " in cache" << "\n";
 	return tmp;
 }
 /** \brief Returns block to the pool.
@@ -92,9 +92,9 @@ shared_array<yuri::ubyte_t> FixedMemoryAllocator::get_block(yuri::size_t size)
 bool FixedMemoryAllocator::return_memory(yuri::size_t size, yuri::ubyte_t * mem)
 {
 	boost::mutex::scoped_lock l(mem_lock);
-	if (!memory_pool.count(size)) memory_pool[size]=vector<yuri::ubyte_t*>();
+	if (!memory_pool.count(size)) memory_pool[size]=std::vector<yuri::ubyte_t*>();
 	memory_pool[size].push_back(mem);
-	//std::cout << "Returning page of " << size << ". have " << memory[size].size() << " in cache" << std::endl;
+	//std::cout << "Returning page of " << size << ". have " << memory[size].size() << " in cache" << "\n";
 	return true;
 }
 /**\brief Removes blocks from the memory pool
@@ -128,15 +128,15 @@ FixedMemoryAllocator::FixedMemoryAllocator(Log &_log, pThreadBase parent, Parame
 	latency=1e5;//100ms
 	if (!count || !block_size) {
 		log[error] << "Wrong parameters specified. "
-				"Please provide count and size parameters." << endl;
+				"Please provide count and size parameters." << "\n";
 		throw InitializationFailed("Wrong arguments");
 	} else {
 		if (!allocate_blocks(block_size,count)) {
-			log[error] << "Failed to pre-allocate requested blocks" << endl;
+			log[error] << "Failed to pre-allocate requested blocks" << "\n";
 			throw InitializationFailed("Failed to allocate memory");
 		}
 	}
-	log[info] << "Preallocated " << count << " block of " << block_size << " bytes." << endl;
+	log[info] << "Preallocated " << count << " block of " << block_size << " bytes." << "\n";
 }
 /** \brief Destructor tries to remove all blocks with the size the user requested.
  *

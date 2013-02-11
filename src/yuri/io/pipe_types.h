@@ -8,35 +8,30 @@
 #ifndef PIPE_TYPES_H_
 #define PIPE_TYPES_H_
 #include <string>
-#include <map>
 #include <vector>
 #include "yuri/io/types.h"
 
-using std::string;
-using std::map;
-using std::vector;
-using boost::shared_ptr;
 namespace yuri {
 typedef shared_ptr<struct FormatInfo> FormatInfo_t;
 
 typedef struct FormatInfo {
-	static FormatInfo_t raw_format(string name, vector<string> shortnames,
+	static FormatInfo_t raw_format (std::string name, std::vector<std::string> shortnames,
 			bool compressed=false, size_t bpp=0,
-			vector<yuri::size_t> component_depths=vector<yuri::size_t>(),
-			vector<string> components=vector<string>(),
-			vector<yuri::size_t> xsub = vector<yuri::size_t>(1,1),
-			vector<yuri::size_t> ysub = vector<yuri::size_t>(1,1));
-	static FormatInfo_t image_format(string name, vector<string> shortnames,
-				vector<string> mime_types);
-	static FormatInfo_t video_format(string name, vector<string> shortnames,
-				vector<string> mime_types);
+			std::vector<yuri::size_t> component_depths=std::vector<yuri::size_t>(),
+			std::vector<std::string> components=std::vector<std::string>(),
+			std::vector<yuri::size_t> xsub = std::vector<yuri::size_t>(1,1),
+			std::vector<yuri::size_t> ysub = std::vector<yuri::size_t>(1,1));
+	static FormatInfo_t image_format (std::string name, std::vector<std::string> shortnames,
+				std::vector<std::string> mime_types);
+	static FormatInfo_t video_format (std::string name, std::vector<std::string> shortnames,
+				std::vector<std::string> mime_types);
 protected:
-	FormatInfo(yuri::format_t type, string name, vector<string> shortnames,
+	FormatInfo(yuri::format_t type,std::string name, std::vector<std::string> shortnames,
 			bool compressed=false, size_t bpp=0,
-			vector<yuri::size_t> component_depths=vector<yuri::size_t>(),
-			vector<string> components=vector<string>(),
-			vector<yuri::size_t> xsub = vector<yuri::size_t>(1,1),
-			vector<yuri::size_t> ysub = vector<yuri::size_t>(1,1)
+			std::vector<yuri::size_t> component_depths=std::vector<yuri::size_t>(),
+			std::vector<std::string> components=std::vector<std::string>(),
+			std::vector<yuri::size_t> xsub = std::vector<yuri::size_t>(1,1),
+			std::vector<yuri::size_t> ysub = std::vector<yuri::size_t>(1,1)
 			)
 	:type(type),long_name(name),short_names(shortnames),bpp(bpp),
 	 components(components), compressed(compressed),
@@ -44,7 +39,7 @@ protected:
 	{
 		planes = plane_x_subs.size();
 		if (!compressed) {
-			if (!component_depths.size()) component_depths=vector<yuri::size_t>(planes,bpp/planes);
+			if (!component_depths.size()) component_depths=std::vector<yuri::size_t>(planes,bpp/planes);
 		}
 		assert(planes == plane_y_subs.size());
 	}
@@ -52,9 +47,9 @@ public:
 	/// \brief Type of the format
 	yuri::format_t type;
 	/// \brief Name of the format
-	string long_name;
-	/// \brief vector of short names that could be used to represent the format
-	vector<string> short_names;
+std::string long_name;
+	/// \brief std::vector of short names that could be used to represent the format
+	std::vector<std::string> short_names;
 	/// \brief Bits per pixel (summed from all planes)
 	yuri::size_t bpp;
 	/// \brief Number of image planes
@@ -75,17 +70,17 @@ public:
 	 * If there's exactly 1 plane the components specify one or more bytes, as found in the byte stream.
 	 * Does not mean anything when using compressed images
 	 */
-	vector<string> components;
+	std::vector<std::string> components;
 	/// \brief Is bytestream compressed or custom
 	bool compressed;
 	/// \brief bitdepths of individual components
-	vector<yuri::size_t> component_depths;
+	std::vector<yuri::size_t> component_depths;
 	/// \brief Subsampling in X direction
-	vector<yuri::size_t> plane_x_subs;
+	std::vector<yuri::size_t> plane_x_subs;
 	/// \brief Subsampling in Y direction
-	vector<yuri::size_t> plane_y_subs;
+	std::vector<yuri::size_t> plane_y_subs;
 	/// \brief Mime types for this format
-	vector<string> mime_types;
+	std::vector<std::string> mime_types;
 } FormatInfo;
 
 }

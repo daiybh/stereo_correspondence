@@ -13,7 +13,6 @@
 namespace yuri {
 
 namespace exception {
-using namespace std;
 
 class InitializationFailed: public yuri::exception::Exception {
 public:

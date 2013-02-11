@@ -51,13 +51,13 @@ void Dup::connect_out(int index, shared_ptr<BasicPipe> p)
 
 bool Dup::step()
 {
-	shared_ptr<BasicFrame> f;
+	pBasicFrame f;
 	if (!in[0]) return true;
 	while ((f = in[0]->pop_frame()).get()) {
-		log[verbose_debug] << "Read frame with format: " << BasicPipe::get_format_string(f->get_format()) << endl;
+		log[verbose_debug] << "Read frame with format: " << BasicPipe::get_format_string(f->get_format()) << std::endl;
 		const int ports = out_ports;
 		if (ports) for (int i = 0; i < ports; ++i) {
-			shared_ptr<BasicFrame> f2;
+			pBasicFrame f2;
 			if (i != ports - 1 && hard_dup) f2 = f->get_copy();
 			else f2 = f;
 			push_raw_frame(i,f2);

@@ -27,14 +27,11 @@ namespace graphics
 using namespace yuri::log;
 using yuri::threads::ThreadBase;
 using yuri::threads::pThreadBase;
-using boost::shared_ptr;
-using boost::shared_array;
-
 
 class GLXWindow: public WindowBase
 {
 protected:
-	static map<GLXContext,shared_ptr<GLXWindow> > used_contexts;
+	static std::map<GLXContext,shared_ptr<GLXWindow> > used_contexts;
 	static boost::mutex contexts_map_mutex;
 public:
 	static void add_used_context(GLXContext ctx,shared_ptr<GLXWindow> win);

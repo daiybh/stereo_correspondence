@@ -13,13 +13,13 @@ namespace yuri {
 namespace graphics {
 mutex GL::big_gpu_lock;
 
-string GL::simple_vertex_shader(
+std::string GL::simple_vertex_shader(
 		"void main()\n"
 		"{\n"
 		"gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
 		"gl_TexCoord[0] = gl_MultiTexCoord0;\n"
 		"}\n");
-string GL::fragment_shader_yuv422_very_lq(
+std::string GL::fragment_shader_yuv422_very_lq(
 		"uniform sampler2D tex0;\n"
 		"void main()\n"
 		"{\n"
@@ -31,7 +31,7 @@ string GL::fragment_shader_yuv422_very_lq(
 
 /*
  *
- * string GL::simple_vertex_shader =
+ *std::string GL::simple_vertex_shader =
 	"#version 150\n"
 	"in vec3 position;\n"
 	"in vec3 normal;\n"
@@ -67,14 +67,14 @@ string GL::fragment_shader_yuv422_very_lq(
  *
  */
 
-string GL::simple_fragment_shader(
+std::string GL::simple_fragment_shader(
 		"uniform sampler2D tex0;\n"
 		"void main()\n"
 		"{\n"
 		"gl_FragColor = texture2D(tex0, gl_TexCoord[0].st);\n"
 		"}\n");
 
-string GL::fragment_shader_yuv422_lq(
+std::string GL::fragment_shader_yuv422_lq(
 		"uniform sampler2D tex0, tex1;\n"
 		"void main()\n"
 		"{\n"
@@ -84,7 +84,7 @@ string GL::fragment_shader_yuv422_lq(
 		"float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;\n"
 		"gl_FragColor = vec4(r, g, b, 1.0);\n"
 		"}\n");
-string GL::fragment_shader_yuv444(
+std::string GL::fragment_shader_yuv444(
 		"uniform sampler2D tex0;\n"
 		"void main()\n"
 		"{\n"
@@ -93,7 +93,7 @@ string GL::fragment_shader_yuv444(
 		"float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;\n"
 		"gl_FragColor = vec4(r, g, b, 1.0);\n"
 		"}\n");
-string GL::fragment_shader_yuv_planar(
+std::string GL::fragment_shader_yuv_planar(
 		"uniform sampler2D tex0;\n"
 		"uniform sampler2D tex1;\n"
 		"uniform sampler2D tex2;\n"
@@ -120,7 +120,7 @@ GL::~GL() {
 
 }
 
-void GL::generate_texture(uint tid, shared_ptr<BasicFrame> frame)
+void GL::generate_texture(uint tid, pBasicFrame frame)
 {
 	assert(frame);
 	GLdouble &tx = textures[tid].tx;
@@ -128,7 +128,7 @@ void GL::generate_texture(uint tid, shared_ptr<BasicFrame> frame)
 
 	if (textures[tid].tid[0]==(GLuint)-1) {
 		textures[tid].gen_texture(0);
-		log[info] << "Generated texture " << textures[tid].tid[0] << endl;
+		log[info] << "Generated texture " << textures[tid].tid[0] <<"\n";
 	}
 
 	GLuint &tex = textures[tid].tid[0];
@@ -163,7 +163,7 @@ void GL::generate_texture(uint tid, shared_ptr<BasicFrame> frame)
 	glSampleCoverage(0.1,GL_TRUE);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//log[info] << "wh: " << wh << ", tx: " << tx << ", format: " << frame->get_format() << endl;
+	//log[info] << "wh: " << wh << ", tx: " << tx << ", format: " << frame->get_format() <<"\n";
 	FormatInfo_t fi = yuri::io::BasicPipe::get_format_info(frame->get_format());
 	switch (frame->get_format()) {
 		case YURI_FMT_RGB:
@@ -174,7 +174,7 @@ void GL::generate_texture(uint tid, shared_ptr<BasicFrame> frame)
 			switch (bpp) {
 			case 24: fmt=GL_RGB;break;
 			case 32: fmt=GL_RGBA;break;
-			default:log[warning] <<"Bad input frame"<<endl;fmt=GL_RGB;break;
+			default:log[warning] <<"Bad input frame"<<"\n";fmt=GL_RGB;break;
 			}
 			if (wh != textures[tid].wh) {
 				yuri::ubyte_t *image = new yuri::ubyte_t[(wh * wh * bpp) >> 3];
@@ -260,7 +260,7 @@ void GL::generate_texture(uint tid, shared_ptr<BasicFrame> frame)
 					prepare_texture(tid,1,(*frame)[0].data.get(),w, h,GL_LUMINANCE8_ALPHA8,GL_LUMINANCE_ALPHA,true);
 				}
 			}
-			string fs;
+		std::string fs;
 			if (!lq_422 || frame->get_format()==YURI_FMT_YUV444) fs = fragment_shader_yuv444;
 			else if (lq_422==1) fs = fragment_shader_yuv422_lq;
 			else fs = fragment_shader_yuv422_very_lq;
@@ -342,15 +342,15 @@ void GL::generate_texture(uint tid, shared_ptr<BasicFrame> frame)
 
 				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 //				GLenum e = glGetError();
-//				log[error] << "compressed texture, " << e << endl;
+//				log[error] << "compressed texture, " << e <<"\n";
 				delete[] image;
 				textures[tid].wh = wh;
 			}
-			//log[info] << "Allocating s3tc " << w << "x" << h << ", size: " << (w*h>>1) << endl;
+			//log[info] << "Allocating s3tc " << w << "x" << h << ", size: " << (w*h>>1) <<"\n";
 			glBindTexture(GL_TEXTURE_2D, tex);
 			yuri::size_t remaining=(*frame)[0].size, w2=w, h2=h, next_level = fsize, offset = 0, level =0;
 			while (next_level <= remaining) {
-				log[debug] << "next_level: " << next_level << ", rem: " << remaining << endl;
+				log[debug] << "next_level: " << next_level << ", rem: " << remaining <<"\n";
 				glCompressedTexSubImage2D(GL_TEXTURE_2D, level++, 0, 0, w2, h2,	format, next_level, (*frame)[0].data.get()+offset);
 				w2>>=1;h2>>=1;remaining-=next_level;
 				offset+=next_level;
@@ -365,16 +365,16 @@ void GL::generate_texture(uint tid, shared_ptr<BasicFrame> frame)
 	} /*else {
 		log[debug] << "Frame with unsupported format! (" <<
 				BasicPipe::get_format_string(frame->get_format()) <<
-				")" << endl;
+				")" <<"\n";
 	}
 	log[debug] << "Generated texture " << wh << "x" << wh << " from image " <<
-			w << "x" << h << " (" << tx << ", " << ty << ")" << endl;
+			w << "x" << h << " (" << tx << ", " << ty << ")" <<"\n";
 	 */
 	glPopClientAttrib();
 }
 void GL::generate_empty_texture(yuri::uint_t tid, yuri::format_t fmt, yuri::size_t w, yuri::size_t h)
 {
-	shared_ptr<BasicFrame> dummy = BasicIOThread::allocate_empty_frame(fmt,w,h);
+	pBasicFrame dummy = BasicIOThread::allocate_empty_frame(fmt,w,h);
 	generate_texture(tid,dummy);
 }
 void GL::setup_ortho(GLdouble left, GLdouble right,	GLdouble bottom,
@@ -517,7 +517,7 @@ void GL::set_lq422(yuri::uint_t q)
 {
 	if (q>2) lq_422=2;
 	else lq_422 = q;
-	log[info] << "Rendering in quality " << lq_422 << endl;
+	log[info] << "Rendering in quality " << lq_422 <<"\n";
 }
 bool GL::prepare_texture(yuri::uint_t tid, yuri::uint_t texid, yuri::ubyte_t *data,
 		yuri::size_t w, yuri::size_t h, GLenum tex_mode, GLenum data_mode, bool update)
@@ -528,7 +528,7 @@ bool GL::prepare_texture(yuri::uint_t tid, yuri::uint_t texid, yuri::ubyte_t *da
 	glBindTexture(GL_TEXTURE_2D, textures[tid].tid[texid]);
 	err = glGetError();
 	if (err) {
-		log[error]<< "Error " << err << " while binding texture" << endl;
+		log[error]<< "Error " << err << " while binding texture" <<"\n";
 		return false;
 	}
 	if (!update) {
@@ -538,7 +538,7 @@ bool GL::prepare_texture(yuri::uint_t tid, yuri::uint_t texid, yuri::ubyte_t *da
 	}
 	err = glGetError();
 	if (err) {
-		log[error] << "Error " << err /*<< ":" << glGetString(err) */<< " uploading tex. data" << endl;
+		log[error] << "Error " << err /*<< ":" << glGetString(err) */<< " uploading tex. data" <<"\n";
 		return false;
 	}
 	if (!update) {
@@ -549,7 +549,7 @@ bool GL::prepare_texture(yuri::uint_t tid, yuri::uint_t texid, yuri::ubyte_t *da
 		glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAX_ANISOTROPY_EXT,32.0);
 		err = glGetError();
 		if (err) {
-			log[error] << "Error " << err << " setting texture params" << endl;
+			log[error] << "Error " << err << " setting texture params" <<"\n";
 			return false;
 		}
 	}

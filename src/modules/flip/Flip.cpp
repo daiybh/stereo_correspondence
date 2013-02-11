@@ -41,7 +41,7 @@ Flip::~Flip() {
 
 bool Flip::step()
 {
-	shared_ptr<BasicFrame> frame;
+	pBasicFrame frame;
 	if (!in[0] || !(frame = in[0]->pop_frame()))
 		return true;
 
@@ -49,7 +49,7 @@ bool Flip::step()
 	yuri::size_t	h = frame->get_height();
 
 
-	shared_ptr<BasicFrame> frame_out = frame->get_copy();
+	pBasicFrame frame_out = frame->get_copy();
 	FormatInfo_t info = BasicPipe::get_format_info(frame->get_format());
 	assert(info && info->planes==1);
 
@@ -60,7 +60,7 @@ bool Flip::step()
 		Bpp*=2;
 		swap_l=true;
 	}
-	if (flip_y) log[warning] << "Flip_y not supported!!" << endl;
+	if (flip_y) log[warning] << "Flip_y not supported!!" << std::endl;
 	if (flip_x) {
 		yuri::ubyte_t *base_ptr =  PLANE_RAW_DATA(frame_out,0);
 //		yuri::size_t cnt = 0;
@@ -84,7 +84,7 @@ bool Flip::step()
 				//std::swap(*in_ptr++,*out_ptr--);
 			}
 		}
-//		log[yuri::log::info] << "swapped " << cnt << " values" << endl;
+//		log[yuri::log::info] << "swapped " << cnt << " values" << std::endl;
 	}
 
 	push_raw_video_frame(0,frame_out);
@@ -95,7 +95,7 @@ bool Flip::set_param(Parameter &parameter)
 {
 	if (parameter.name== "flip_x") {
 		flip_x=parameter.get<bool>();
-		log[info] << "flip_x is: " << flip_x<<endl;
+		log[info] << "flip_x is: " << flip_x<<std::endl;
 	} else if (parameter.name== "flip_y") {
 		flip_y=parameter.get<bool>();
 	} else  return BasicIOThread::set_param(parameter);

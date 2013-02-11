@@ -43,7 +43,7 @@ public:
 
 	LogProxy& operator<<(iomanip_t manip)
 	{
-		// We can't call endl on stringstream, so let's filter it out
+		// We can't call endl onstd::stringstream, so let's filter it out
 		if (manip==static_cast<iomanip_t>(std::endl)) return *this << "\n";
 		else return *this << manip;
 	}

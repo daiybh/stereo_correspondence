@@ -22,7 +22,7 @@ shared_ptr<Parameters> PNGEncode::configure()
 }
 
 PNGEncode::PNGEncode(Log &_log, pThreadBase parent, Parameters& parameters) IO_THREAD_CONSTRUCTOR:
-	BasicIOThread(_log, parent, 1, 1,"PNGEncode"), memory(0), memSize(0)
+	BasicIOThread(_log, parent, 1, 1,"PNGEncode"), memSize(0)
 {
 	IO_THREAD_INIT("PNGEncode")
 }
@@ -38,7 +38,7 @@ bool PNGEncode::step() {
 	int pngcolortype = 0;
 	if (!in[0] || !(frame = in[0]->pop_frame()))
 		return true;
-	log[verbose_debug] << "Reading packet " << frame->get_size() << " bytes long" << endl;
+	log[verbose_debug] << "Reading packet " << frame->get_size() << " bytes long" << std::endl;
 	int bpp = 0;
 	int width = frame->get_width();
 	int height = frame->get_height();
@@ -59,13 +59,13 @@ bool PNGEncode::step() {
 	}
 	if (!bpp) {
 		log[error] << "Unknown BPP (colorspace: " << colorspace
-				<< ", not processing" << endl;
+				<< ", not processing" << std::endl;
 		frame.reset();
 		return true;
 	}
 	if (static_cast<yuri::size_t>(bpp * width * height) != frame->get_size()) {
 		log[error] << "Wrong frame size!! (got:" << frame->get_size()
-				<< ", expected: " << bpp * width * height << ")" << endl;
+				<< ", expected: " << bpp * width * height << ")" << std::endl;
 		frame.reset();
 		return true;
 	}
@@ -109,9 +109,9 @@ bool PNGEncode::step() {
 			boost::posix_time::microsec_clock::universal_time());
 	boost::posix_time::time_period tp(t1, t2);
 	log[debug] << "Compression took: " << tp.length().total_microseconds()
-			<< " us" << endl;
+			<< " us" << std::endl;
 	if (position || out[0]) {
-		shared_ptr<BasicFrame> out_frame = allocate_frame_from_memory(memory.get(),position);
+		pBasicFrame out_frame = allocate_frame_from_memory(memory.get(),position);
 		push_video_frame(0,out_frame,YURI_IMAGE_PNG,frame->get_width(),frame->get_height());
 	}
 	return true;
@@ -141,7 +141,7 @@ void PNGEncode::handleWarning(png_structp pngPtr, png_const_charp error_msg) {
 	png->printError(warning, error_msg);
 }
 void PNGEncode::printError(int type, const char * msg) {
-	log[(yuri::log::debug_flags) type] << msg << endl;
+	log[(yuri::log::debug_flags) type] << msg << std::endl;
 }
 
 }

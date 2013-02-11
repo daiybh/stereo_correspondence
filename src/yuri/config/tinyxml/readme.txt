@@ -106,7 +106,7 @@ operator<<, and operator>>. Many API methods have both 'const char*' and
 'const std::string&' forms.
 
 When STL support is compiled out, no STL files are included whatsoever. All
-the string classes are implemented by TinyXML itself. API methods
+thestd::string classes are implemented by TinyXML itself. API methods
 all use the 'const char*' form for input.
 
 Use the compile time #define:

@@ -10,7 +10,7 @@ namespace log
 int Log::uids=0;
 
 namespace {
-std::map<_debug_flags,string> level_names=boost::assign::map_list_of<_debug_flags,string>
+std::map<_debug_flags, std::string> level_names=boost::assign::map_list_of<_debug_flags, std::string>
 	(fatal,"FATAL ERROR")
 	(error,"ERROR")
 	(warning,"WARNING")
@@ -20,7 +20,7 @@ std::map<_debug_flags,string> level_names=boost::assign::map_list_of<_debug_flag
 	(verbose_debug,"VERBOSE_DEBUG")
 	(trace,"TRACE");
 
-std::map<_debug_flags,string> level_colors=boost::assign::map_list_of<_debug_flags,string>
+std::map<_debug_flags, std::string> level_colors=boost::assign::map_list_of<_debug_flags, std::string>
 (fatal,"\033[4;31;42m") // Red, underscore, bg
 (error,"\033[31m") // Red
 (warning,"\033[35m")
@@ -113,7 +113,7 @@ std::string Log::print_level()
 		return level_names[f]+" ";
 	}
 //	std::cout << "Flag not found:" << f << endl;
-	return string();
+	return std::string();
 }
 }
 }

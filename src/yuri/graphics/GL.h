@@ -40,9 +40,8 @@ struct _texture_info {
 		char n[]="texX\0x00";
 		for (int i=0;i<8;++i) {
 			n[3]='0'+i;
-			string name = string(n);//string("tex")+string('0'+i,1);
+			std::string name = std::string(n);
 			texture_units[i]=shader->get_uniform(name);
-			//std::cerr << "Loaded uniform " << name << " as " << texture_units[i] << endl;
 		}
 	}
 	void bind_texture_units() {
@@ -66,7 +65,7 @@ struct _texture_info {
 			}
 		}
 	}
-	void finish_update(Log &log,yuri::format_t fmt, string vs, string fs){
+	void finish_update(Log &log,yuri::format_t fmt,std::string vs,std::string fs){
 		format = fmt;
 		if (!shader) {
 			shader.reset(new GLProgram(log));
@@ -82,8 +81,8 @@ class GL {
 public:
 	GL(Log &log_);
 	virtual ~GL();
-	map<uint,_texture_info> textures;
-	void generate_texture(uint tid, shared_ptr<BasicFrame> frame);
+	std::map<uint,_texture_info> textures;
+	void generate_texture(uint tid, pBasicFrame frame);
 	void generate_empty_texture(yuri::uint_t tid, yuri::format_t fmt, yuri::size_t w, yuri::size_t h);
 	void setup_ortho(GLdouble left=0.0, GLdouble right=1.0f,
 			GLdouble bottom=0.0, GLdouble top=1.0,
@@ -101,7 +100,7 @@ public:
 	Log log;
 	static mutex big_gpu_lock;
 protected:
-	static string simple_vertex_shader, simple_fragment_shader,
+	static std::string simple_vertex_shader, simple_fragment_shader,
 		fragment_shader_yuv444,
 		fragment_shader_yuv422_lq, fragment_shader_yuv422_very_lq,
 		fragment_shader_yuv_planar;

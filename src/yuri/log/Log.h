@@ -6,14 +6,11 @@
 #include <string>
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/shared_ptr.hpp>
 #include "LogProxy.h"
 #include "yuri/io/types.h"
 namespace yuri
 {
 namespace log {
-using namespace std;
-using boost::shared_ptr;
 
 enum _debug_flags {
 	fatal 			=	1L << 0,
@@ -49,17 +46,17 @@ public:
 protected:
 	static int uids;
 	int uid;
-	shared_ptr<guarded_stream> out;
+	yuri::shared_ptr<guarded_stream> out;
 	int id;
 	boost::mutex lock;
 	//char *ids;
-	string ids;
+	std::string ids;
 	debug_flags flags;
 	int /*default_flags,*/ output_flags;
 	bool quiet;
 	void set_flag(debug_flags f);
-	EXPORT string print_time();
-	EXPORT string print_level();
+	EXPORT std::string print_time();
+	EXPORT std::string print_level();
 
 };
 

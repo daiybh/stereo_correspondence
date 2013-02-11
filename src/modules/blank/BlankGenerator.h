@@ -25,11 +25,11 @@ public:
 	virtual ~BlankGenerator();
 	void run();
 	bool set_param(Parameter &p);
-	shared_ptr<BasicFrame> generate_frame();
+	pBasicFrame generate_frame();
 protected:
-	shared_ptr<BasicFrame> generate_frame_yuv422();
-	shared_ptr<BasicFrame> generate_frame_rgb();
-	map<yuri::format_t,shared_ptr<BasicFrame> > blank_frames;
+	pBasicFrame generate_frame_yuv422();
+	pBasicFrame generate_frame_rgb();
+	std::map<yuri::format_t,pBasicFrame > blank_frames;
 	ptime next_time;
 	float fps;
 	yuri::ushort_t width;

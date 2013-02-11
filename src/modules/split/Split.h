@@ -17,7 +17,7 @@ namespace yuri {
 namespace io {
 
 using namespace yuri::config;
-using boost::shared_array;
+
 class Split: public BasicIOThread {
 public:
 	Split(Log &_log, pThreadBase parent, Parameters &params);

@@ -11,7 +11,7 @@ namespace yuri {
 
 namespace config {
 
-Instance::Instance(string id, generator_t generator, shared_ptr<Parameters> par):id(id),
+Instance::Instance(std::string id, generator_t generator, shared_ptr<Parameters> par):id(id),
 		generator(generator)
 {
 	if (par.get()) params.reset(new Parameters(*par));
@@ -32,7 +32,7 @@ shared_ptr<BasicIOThread> Instance::create_class(yuri::log::Log& log_,yuri::thre
 	return thread;
 }
 
-Parameter& Instance::operator[] (const string id)
+Parameter& Instance::operator[] (const std::string id)
 {
 	return (*params)[id];
 }

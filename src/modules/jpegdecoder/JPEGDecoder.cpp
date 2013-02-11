@@ -43,7 +43,7 @@ bool JPEGDecoder::step() {
 		return true;
 	bool decompressed = false;
 	aborted = false;
-	//log[debug] << "Reading packet " << frame->get_size() << " bytes long" << endl;
+	//log[debug] << "Reading packet " << frame->get_size() << " bytes long" << std::endl;
 
 	struct jpeg_decompress_struct cinfo;
 	cinfo.client_data=reinterpret_cast<void*>(this);
@@ -57,11 +57,11 @@ bool JPEGDecoder::step() {
 	int bpp;
 	int linesize;
 	shared_array<yuri::ubyte_t> mem;
-	shared_ptr<BasicFrame> out_frame (new BasicFrame(1));
+	pBasicFrame out_frame (new BasicFrame(1));
 	//while (cinfo.next_scanline < cinfo.image_height) {
 	try {
 		if (jpeg_read_header(&cinfo,true)!=JPEG_HEADER_OK) {
-			log[warning] << "Unrecognized file header!!" << endl;
+			log[warning] << "Unrecognized file header!!" << std::endl;
 			return true;
 		}
 
@@ -75,7 +75,7 @@ bool JPEGDecoder::step() {
 		linesize = width*bpp;
 		colorspace= (bpp==3?YURI_FMT_RGB24:bpp==4?YURI_FMT_RGB32:YURI_FMT_NONE);
 		log[verbose_debug] << "Allocating " << linesize * height << " bytes for image "
-			<< width << "x" << height << " @ " << 8*bpp << "bpp" << endl;
+			<< width << "x" << height << " @ " << 8*bpp << "bpp" << std::endl;
 		mem=allocate_memory_block(linesize * height);
 		(*out_frame)[0].set(mem,linesize * height);
 		JSAMPROW row_pointer;
@@ -88,7 +88,7 @@ bool JPEGDecoder::step() {
 			completed += processed;
 			if (static_cast<int>(completed) >= height) break;
 			if (!processed) {
-				log[error] << "No lines processed ... corrupt file?" << endl;
+				log[error] << "No lines processed ... corrupt file?" << std::endl;
 				break;
 			}
 		}
@@ -105,7 +105,7 @@ bool JPEGDecoder::step() {
 		}
 	}
 	catch (yuri::exception::Exception &e) {
-		log[error] << "Decoding failed!: " << e.what() << endl;
+		log[error] << "Decoding failed!: " << e.what() << std::endl;
 		jpeg_abort(reinterpret_cast<j_common_ptr>(&cinfo));
 		return true;
 	}
@@ -136,7 +136,7 @@ void JPEGDecoder::setDestManager(jpeg_decompress_struct* cinfo)
 }
 
 /// Check if there's valid JPEG magic
-bool JPEGDecoder::validate(shared_ptr<BasicFrame> frame)
+bool JPEGDecoder::validate(pBasicFrame frame)
 {
 	if (!frame || (*frame)[0].size<4) return false;
 	uint8_t *magic = (uint8_t*)  ((*frame)[0].data.get());
@@ -144,7 +144,7 @@ bool JPEGDecoder::validate(shared_ptr<BasicFrame> frame)
 		 magic[1] == 0xd8 ) return true;
 		/*(magic[2] == 0xff) || (magic[2] == 0x00))
 			return true;*/
-	cout << "Magic: " << hex << (uint)magic[0] << (uint)magic[1] << dec << endl;
+//	cout << "Magic: " << hex << (uint)magic[0] << (uint)magic[1] << dec << std::endl;
 
 	return false;
 }

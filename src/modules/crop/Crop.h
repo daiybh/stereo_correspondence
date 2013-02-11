@@ -16,7 +16,7 @@ namespace yuri {
 
 namespace io {
 using namespace yuri::config;
-using boost::shared_array;
+
 class Crop: public yuri::io::BasicIOThread {
 public:
 	virtual ~Crop();

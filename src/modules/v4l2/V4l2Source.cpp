@@ -8,7 +8,7 @@
 #include "V4l2Source.h"
 #include <boost/algorithm/string.hpp>
 #include <yuri/config/RegisteredClass.h>
-#include <cstring>
+#include <string>
 #include <boost/assign.hpp>
 namespace yuri {
 
@@ -27,18 +27,18 @@ shared_ptr<Parameters> V4l2Source::configure()
 	shared_ptr<Parameters> p = BasicIOThread::configure();
 	(*p)["width"]["Width of the input image. Note that actual resolution from camera may differ."]=640;
 	(*p)["height"]["Height of the input image. Note that actual resolution from camera may differ."]=480;
-	(*p)["path"]["Path to the camera device. usially /dev/video0 or similar."]=string();
+	(*p)["path"]["Path to the camera device. usially /dev/video0 or similar."]=std::string();
 	(*p)["method"]["Method used to get images from camera. Possible values are: none, mmap, user, read. For experts only"]="none";
-	string fmts;
-	pair<yuri::format_t,yuri::uint_t> f;
+std::string fmts;
+	std::pair<yuri::format_t,yuri::uint_t> f;
 	BOOST_FOREACH(f,formats_map) {
 		FormatInfo_t pf = BasicPipe::get_format_info(f.first);
 		if (!pf) continue;
-		if (!fmts.empty()) fmts+=string(", ");
+		if (!fmts.empty()) fmts+std::string(", ");
 		fmts+=pf->short_names[0];
 	}
 
-	(*p)["format"][string("Format to capture in. Possible values are (")+fmts+")"]="YUV422";
+	(*p)["format"][std::string("Format to capture in. Possible values are (")+fmts+")"]="YUV422";
 	(*p)["input"]["Input number to tune"]=0;
 	(*p)["illumination"]["Enable illumination (if present)"]=true;
 	(*p)["combine"]["Combine frames (if camera sends them in chunks)."]=false;
@@ -46,7 +46,7 @@ shared_ptr<Parameters> V4l2Source::configure()
 	return p;
 }
 
-map<yuri::format_t, yuri::uint_t> V4l2Source::formats_map=
+std::map<yuri::format_t, yuri::uint_t> V4l2Source::formats_map=
 		boost::assign::map_list_of<yuri::format_t,yuri::uint_t>
 		(YURI_FMT_RGB,V4L2_PIX_FMT_RGB24)
 		(YURI_FMT_RGBA, V4L2_PIX_FMT_RGB32)
@@ -59,7 +59,7 @@ map<yuri::format_t, yuri::uint_t> V4l2Source::formats_map=
 		(YURI_IMAGE_JPEG, V4L2_PIX_FMT_JPEG);
 
 
-map<string, yuri::uint_t> V4l2Source::special_formats=boost::assign::map_list_of<string,yuri::uint_t>
+std::map<std::string, yuri::uint_t> V4l2Source::special_formats=boost::assign::map_list_of<std::string,yuri::uint_t>
 	("S920", V4L2_PIX_FMT_SN9C20X_I420)
 	("BA81", V4L2_PIX_FMT_SBGGR8);
 
@@ -307,7 +307,7 @@ bool V4l2Source::read_frame()
 {
 	int res=0;
 	struct v4l2_buffer buf;
-	shared_ptr<BasicFrame> frame;
+	pBasicFrame frame;
 	switch (method) {
 		case METHOD_READ:
 					res=read(fd,buffers[0].start,imagesize);
@@ -340,12 +340,12 @@ bool V4l2Source::read_frame()
 										buf.memory = V4L2_MEMORY_MMAP;
 										buf.index = i;
 										if ( xioctl(fd,VIDIOC_QUERYBUF,&buf) < 0) {
-											log[error] << "Failed to query buffer " << i << "(" << strerror(errno) << endl;
+											log[error] << "Failed to query buffer " << i << "(" << strerror(errno) << std::endl;
 											continue;
 										}
 										if ((buf.flags & (V4L2_BUF_FLAG_QUEUED | V4L2_BUF_FLAG_MAPPED | V4L2_BUF_FLAG_DONE)) == V4L2_BUF_FLAG_MAPPED) {
 											if (xioctl(fd,VIDIOC_QBUF,&buf)<0) {
-												log[error] << "Failed to queue buffer " << i << "(" << strerror(errno) << endl;
+												log[error] << "Failed to queue buffer " << i << "(" << strerror(errno) << std::endl;
 												return false;
 											}
 										}
@@ -435,7 +435,7 @@ yuri::uint_t V4l2Source::yuri_format_to_v4l2(yuri::format_t fmt)  throw (Excepti
 
 yuri::format_t V4l2Source::v4l2_format_to_yuri(yuri::uint_t fmt)  throw (Exception)
 {
-	pair<yuri::format_t, yuri::uint_t> f;
+	std::pair<yuri::format_t, yuri::uint_t> f;
 	BOOST_FOREACH(f,formats_map) {
 		if (f.second==fmt) return f.first;
 	}
@@ -446,9 +446,9 @@ yuri::format_t V4l2Source::v4l2_format_to_yuri(yuri::uint_t fmt)  throw (Excepti
 bool V4l2Source::set_param(Parameter &param)
 {
 	if (param.name == "path") {
-		filename = param.get<string>();
+		filename = param.get<std::string>();
 	} else if (param.name == "format") {
-		string format = param.get<string>();
+	std::string format = param.get<std::string>();
 		yuri::format_t fmt = BasicPipe::get_format_from_string(format,YURI_TYPE_VIDEO);
 		if (fmt && formats_map.count(fmt)) {
 			pixelformat = formats_map[fmt];
@@ -456,7 +456,7 @@ bool V4l2Source::set_param(Parameter &param)
 			// Process special formats....
 //			else if (boost::iequals(format,"S920")) pixelformat = V4L2_PIX_FMT_SN9C20X_I420;
 //			else if (boost::iequals(format,"BA81")) pixelformat = V4L2_PIX_FMT_SBGGR8;
-			log[warning] << "Unsupported format specified. Trying YUV422"<<endl;
+			log[warning] << "Unsupported format specified. Trying YUV422"<<std::endl;
 			pixelformat = V4L2_PIX_FMT_YUYV;
 		}
 
@@ -465,8 +465,8 @@ bool V4l2Source::set_param(Parameter &param)
 	} else if (param.name == "height") {
 		height = param.get<yuri::size_t>();
 	} else if (param.name == "method") {
-		string method_s;
-		method_s = param.get<string>();
+	std::string method_s;
+		method_s = param.get<std::string>();
 		if (boost::iequals(method_s,"user")) method = METHOD_USER;
 		else if (boost::iequals(method_s,"mmap")) method = METHOD_MMAP;
 		else if (boost::iequals(method_s,"read")) method = METHOD_READ;
@@ -485,7 +485,7 @@ bool V4l2Source::set_param(Parameter &param)
 }
 bool V4l2Source::prepare_frame(yuri::ubyte_t *data, yuri::size_t size)
 {
-	//shared_ptr<BasicFrame>  frame;
+	//pBasicFrame  frame;
 	yuri::format_t fmt = v4l2_format_to_yuri(pixelformat);
 	if (!fmt) return false;
 	FormatInfo_t fi = BasicPipe::get_format_info(fmt);
@@ -497,8 +497,8 @@ bool V4l2Source::prepare_frame(yuri::ubyte_t *data, yuri::size_t size)
 			buffer_free = frame_size;
 		}
 		yuri::size_t frame_position = frame_size - buffer_free;
-		log[verbose_debug] << "Allocating " << fi->planes << " (got " << output_frame->get_planes_count() << ")" << endl;
-		log[verbose_debug] << "Frame " << width << ", " << height << ", size: " << size<< endl;
+		log[verbose_debug] << "Allocating " << fi->planes << " (got " << output_frame->get_planes_count() << ")" << std::endl;
+		log[verbose_debug] << "Frame " << width << ", " << height << ", size: " << size<< std::endl;
 		if (fi->planes==1) {
 //			assert((*frame)[0].get_size()>=size);
 			//yuri::size_t cp = size;
@@ -512,7 +512,7 @@ bool V4l2Source::prepare_frame(yuri::ubyte_t *data, yuri::size_t size)
 				yuri::size_t cols = width / fi->plane_x_subs[i];
 				yuri::size_t rows = height / fi->plane_y_subs[i];
 				yuri::size_t plane_size = (cols*rows*fi->component_depths[i])>>3;
-				//if(size<offset+plane_size) return shared_ptr<BasicFrame>();
+				//if(size<offset+plane_size) return pBasicFrame();
 				if (plane_size > frame_position) {
 					plane_size -= frame_position;
 					frame_position = 0;
@@ -526,7 +526,7 @@ bool V4l2Source::prepare_frame(yuri::ubyte_t *data, yuri::size_t size)
 				if (plane_size > buffer_free) {
 					plane_size = buffer_free;
 				}
-				log[info] << "Copying " << plane_size << " bytes, have " << size-offset <<", free buffer: " << buffer_free<< endl;
+				log[info] << "Copying " << plane_size << " bytes, have " << size-offset <<", free buffer: " << buffer_free<< std::endl;
 				memcpy((*output_frame)[i].data.get(),data+offset,plane_size);
 				offset+=plane_size;
 				buffer_free-=plane_size;
@@ -540,7 +540,7 @@ bool V4l2Source::prepare_frame(yuri::ubyte_t *data, yuri::size_t size)
 	// If we're no combining frames, we have to discard incomplete ones
 	if (buffer_free && !combine_frames) {
 		buffer_free = 0;
-		log[warning] << "Discarding incomplete frame (missing " << buffer_free << " bytes)" << endl;
+		log[warning] << "Discarding incomplete frame (missing " << buffer_free << " bytes)" << std::endl;
 		output_frame.reset();
 	}
 	return true;
@@ -586,7 +586,7 @@ bool V4l2Source::enum_inputs() throw(Exception)
 		log[info] << "Input " << input_info.index << ": " << input_info.name <<
 				", type: " << (input_info.type==V4L2_INPUT_TYPE_CAMERA?"camera":"tuner")
 				<< ", status: " << (!input_info.status?"OK":(input_info.status==V4L2_IN_ST_NO_POWER?"No power":(input_info.status==V4L2_IN_ST_NO_SIGNAL?"No signal":"No color")))
-				<< endl;
+				<< std::endl;
 		input_info.index++;
 	}
 	number_of_inputs = input_info.index;
@@ -598,16 +598,16 @@ bool V4l2Source::set_input() throw(Exception)
 	if (input_number && input_number >= number_of_inputs) {
 		// User is trying to set input not supported by the device. Let's only warn him here, the error will be returned later
 		log[warning] << "The device reports that it does not support requested input "
-				<< input_number << ". Trying to set it anyway" << endl;
+				<< input_number << ". Trying to set it anyway" << std::endl;
 	}
-	log[debug] << "Setting input to " << input_number << endl;
+	log[debug] << "Setting input to " << input_number << std::endl;
 	int inp = input_number;
 	if (!xioctl (fd, VIDIOC_S_INPUT, &inp)) {
 		log[debug] <<"VIDIOC_S_INPUT failed, input was NOT set. " << std::endl;
 		// Let's assume that default input is 0. So not being able to set 0 is not really an error
 		if (input_number) throw Exception("Failed to set input ");
 	} else {
-		log[info] << "Input set to " << input_number << endl;
+		log[info] << "Input set to " << input_number << std::endl;
 	}
 	return true;
 
@@ -622,12 +622,12 @@ bool V4l2Source::set_cropping() throw(Exception)
 		crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		crop.c = cropcap.defrect; /* reset to default */
 		log[info] << "Selected input have pixel with aspect ratio " <<
-				cropcap.pixelaspect.numerator << "/" << cropcap.pixelaspect.denominator << endl;
+				cropcap.pixelaspect.numerator << "/" << cropcap.pixelaspect.denominator << std::endl;
 		if (xioctl (fd, VIDIOC_S_CROP, &crop) == -1) {
 			log[warning] <<"VIDIOC_S_CROP failed, ignoring :)" << std::endl;
 		}
 	} else {
-		log[warning] << "Failed to query cropping info, ignoring" << endl;
+		log[warning] << "Failed to query cropping info, ignoring" << std::endl;
 	}
 	return true;
 }
@@ -638,7 +638,7 @@ bool V4l2Source::enum_formats() throw (Exception)
 	fmts.index=0;
 	fmts.type=V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	while (!xioctl(fd,VIDIOC_ENUM_FMT,&fmts)) {
-		log[info] << "Supported format " << fmts.index << ": " << fmts.description << endl;
+		log[info] << "Supported format " << fmts.index << ": " << fmts.description << std::endl;
 		fmts.index++;
 		supported_formats.push_back(fmts.pixelformat);
 	}
@@ -664,7 +664,7 @@ bool V4l2Source::set_format() throw (Exception)
 		log[warning] << "Failed to verify if input format was set correctly !" << std::endl;
 	}
 	if (fmt.fmt.pix.pixelformat != pixelformat) {
-		log[error] << "Failed to set requested input format!" << endl;
+		log[error] << "Failed to set requested input format!" << std::endl;
 		throw Exception("Failed to set input format");
 	}
 	log[info] << "Video dimensions: " << fmt.fmt.pix.width << "x" << fmt.fmt.pix.height << std::endl;
@@ -674,7 +674,7 @@ bool V4l2Source::set_format() throw (Exception)
 		(char)(fmt.fmt.pix.pixelformat>>16 & 0xFF) <<
 		(char)(fmt.fmt.pix.pixelformat>>24 & 0xFF)
 		<< std::endl;
-	log[info] << "Colorspace " << fmt.fmt.pix.colorspace << endl;
+	log[info] << "Colorspace " << fmt.fmt.pix.colorspace << std::endl;
 	imagesize=fmt.fmt.pix.sizeimage;
 	width=fmt.fmt.pix.width;
 	height=fmt.fmt.pix.height;
@@ -695,22 +695,22 @@ bool V4l2Source::enum_frame_intervals() throw (Exception)
 		case V4L2_FRMIVAL_TYPE_CONTINUOUS:
 			log[info] << "Supports continuous frame_intervals from"
 				<< frmvalen.stepwise.min.numerator << "/" << frmvalen.stepwise.min.denominator
-				<< "s to " << frmvalen.stepwise.max.numerator << "/" << frmvalen.stepwise.max.denominator <<"s"<< endl;
+				<< "s to " << frmvalen.stepwise.max.numerator << "/" << frmvalen.stepwise.max.denominator <<"s"<< std::endl;
 			break;
 		case V4L2_FRMIVAL_TYPE_STEPWISE:
 			log[info] << "Supports stepwise frame_intervals from"
 				<< frmvalen.stepwise.min.numerator << "/" << frmvalen.stepwise.min.denominator
 				<< "s to " << frmvalen.stepwise.max.numerator << "/" << frmvalen.stepwise.max.denominator
-				<< "s with step " << frmvalen.stepwise.step.numerator << "/" << frmvalen.stepwise.step.denominator<<"s"<< endl;
+				<< "s with step " << frmvalen.stepwise.step.numerator << "/" << frmvalen.stepwise.step.denominator<<"s"<< std::endl;
 			break;
 		case V4L2_FRMIVAL_TYPE_DISCRETE:
-			if (!frmvalen.index) log[info] << "Supports discrete frame_intervals:" << endl;
-			log[info] << "\t"<<frmvalen.index<<": "<< frmvalen.discrete.numerator << "/" << frmvalen.discrete.denominator << "s" << endl;
+			if (!frmvalen.index) log[info] << "Supports discrete frame_intervals:" << std::endl;
+			log[info] << "\t"<<frmvalen.index<<": "<< frmvalen.discrete.numerator << "/" << frmvalen.discrete.denominator << "s" << std::endl;
 			frmvalen.index++;
 			break;
 		}
 		if (!frmvalen.index) break;
-		//log[info] << "Supported frame_interval " << fmts.index << ": " << fmts.description << endl;
+		//log[info] << "Supported frame_interval " << fmts.index << ": " << fmts.description << std::endl;
 
 		//supported_formats.push_back(fmts.pixelformat);
 	}
@@ -737,7 +737,7 @@ bool V4l2Source::set_frame_params() throw (Exception)
 		return false;
 	}
 	log[info] << "Driver reports current frame interval " << strp.parm.capture.timeperframe.numerator << "/"
-			<< strp.parm.capture.timeperframe.denominator << "s" << endl;
+			<< strp.parm.capture.timeperframe.denominator << "s" << std::endl;
 	frame_duration = 1e6*strp.parm.capture.timeperframe.numerator/strp.parm.capture.timeperframe.denominator;
 	return true;
 }
@@ -798,26 +798,26 @@ bool V4l2Source::enable_iluminator() throw(Exception)
 		queryctrl.id=V4L2_CID_ILLUMINATORS_1;
 
 		if (xioctl (fd, VIDIOC_QUERYCTRL, &queryctrl)<0) {
-		        log[error] << "Illuminator is not supported" << endl;
+		        log[error] << "Illuminator is not supported" << std::endl;
 		} else if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED) {
-			log[error] << "Illuminator is disabled" << endl;
+			log[error] << "Illuminator is disabled" << std::endl;
 		} else {
-			log[debug] << "Trying to enable illuminator " << queryctrl.name << endl;
+			log[debug] << "Trying to enable illuminator " << queryctrl.name << std::endl;
 			memset (&control, 0, sizeof (control));
 			control.id = V4L2_CID_ILLUMINATORS_1;
 			control.value = queryctrl.maximum;
 			if (xioctl (fd, VIDIOC_S_CTRL, &control)<0) {
-				log[error]<< "Failed to enable illuminator" << endl;
+				log[error]<< "Failed to enable illuminator" << std::endl;
 			} else {
 				control.value = 0;
 				if (xioctl (fd, VIDIOC_G_CTRL, &control)>=0) {
 					if (control.value) {
-						log[info] << "Illuminator enabled." <<endl;
+						log[info] << "Illuminator enabled." <<std::endl;
 					} else {
-						log[error] << "Illuminator set, but camera reports it's not..." << endl;
+						log[error] << "Illuminator set, but camera reports it's not..." << std::endl;
 					}
 				} else {
-					log[info]<<"Illuminator enabled, but failed to query it's status."<<endl;
+					log[info]<<"Illuminator enabled, but failed to query it's status."<<std::endl;
 				}
 			}
 		}

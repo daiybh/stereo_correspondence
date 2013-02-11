@@ -42,7 +42,7 @@ Crop::~Crop() {
 
 bool Crop::step()
 {
-	shared_ptr<BasicFrame> frame;
+	pBasicFrame frame;
 	if (!in[0] || !(frame = in[0]->pop_frame()))
 		return true;
 
@@ -59,19 +59,19 @@ bool Crop::step()
 	} else if (y + h > static_cast<yuri::ssize_t>(frame->get_height())) {
 		h = frame->get_width() - y;
 	}
-	log[verbose_debug] << "X: " << x << ", Y: " << y << ", W: " << w<< ", H: " << h <<endl;
+	log[verbose_debug] << "X: " << x << ", Y: " << y << ", W: " << w<< ", H: " << h <<std::endl;
 	if (!x && !y && w==static_cast<yuri::ssize_t>(frame->get_width())
 			&& h==static_cast<yuri::ssize_t>(frame->get_height())) {
-		log[verbose_debug] << "Passing thru" << endl;
+		log[verbose_debug] << "Passing thru" << std::endl;
 		push_raw_video_frame(0,frame);
 		return true;
 	}
 
-	shared_ptr<BasicFrame> frame_out = allocate_empty_frame(frame->get_format(),w, h);
+	pBasicFrame frame_out = allocate_empty_frame(frame->get_format(),w, h);
 	FormatInfo_t info = BasicPipe::get_format_info(frame->get_format());
 	assert(info && info->planes==1);
 	yuri::size_t Bpp = info->bpp >> 3;
-	log[verbose_debug] << "size: " << w <<"x"<<h<<"+"<<x<<"+"<<y<<" at "<<Bpp<<"Bpp"<<endl;
+	log[verbose_debug] << "size: " << w <<"x"<<h<<"+"<<x<<"+"<<y<<" at "<<Bpp<<"Bpp"<<std::endl;
 	yuri::ubyte_t  *out_ptr=(*frame_out)[0].data.get();
 	for (int i=y;i<(h+y);++i) {
 		yuri::ubyte_t *ptr = (*frame)[0].data.get()+(i*frame->get_width()+x)*Bpp;

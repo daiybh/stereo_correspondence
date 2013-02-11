@@ -45,12 +45,12 @@ public:
 	bool set_param(Parameter &parameter);
 protected:
 	shared_ptr<Callback> drawcb, initcb;
-	vector<shared_ptr<BasicFrame> > frames;
+	std::vector<pBasicFrame > frames;
 	mutex draw_lock;
 	//GLuint tid;
 	yuri::size_t c;
 	//float tx, ty;
-	vector<bool> changed;
+	std::vector<bool> changed;
 	bool keep_aspect;
 	bool flip_x, flip_y, flip_x_right, flip_y_right;
 	yuri::ubyte_t quality;
@@ -70,7 +70,7 @@ protected:
 	stereo::_type stereo_type;
 	float stereo_correction;
 	bool swap_eyes;
-	static map<string,stereo::_type> stereo_types;
+	static std::map<std::string,stereo::_type> stereo_types;
 };
 
 }

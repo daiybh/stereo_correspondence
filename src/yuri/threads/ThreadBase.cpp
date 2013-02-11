@@ -27,20 +27,20 @@ ThreadBase::ThreadBase(Log &_log, pThreadBase parent):log(_log),parent(parent),
 	join_timeout(boost::posix_time::milliseconds(750)),exitCode(YURI_EXIT_OK),
 	lastChild(0),finishWhenChildEnds(false),quitWhenChildsEnd(true),own_tid(0)
 {
-	log[debug] << "Parent " << (void *)(parent.lock().get()) << std::endl;
+	log[debug] << "Parent " << (void *)(parent.lock().get()) << "\n";
 }
 
 ThreadBase::~ThreadBase()
 {
 	log[verbose_debug] << "ThreadBase::~ThreadBase run " <<
 		(double)((double)elsec * 1000.0 + ((double)elusec / 1000.0))
-		<< "ms " << std::endl;
+		<< "ms " << "\n";
 	join_all_threads();
 }
 
 void ThreadBase::operator()()
 {
-	log[verbose_debug] << "Starting thread" << std::endl;
+	log[verbose_debug] << "Starting thread" << "\n";
 	start_timer();
 	run();
 	pause_timer();
@@ -52,8 +52,8 @@ void ThreadBase::finish()
 {
 	boost::mutex::scoped_lock l(end_lock);
 	// Death of a child is fatal
-	log[verbose_debug] << "finish()" << std::endl;
-	log[debug] << "Finishind all threads" << std::endl;
+	log[verbose_debug] << "finish()" << "\n";
+	log[debug] << "Finishind all threads" << "\n";
 	finish_all_threads();
 	end=true;
 }
@@ -68,7 +68,7 @@ bool ThreadBase::still_running()
 void ThreadBase::child_ends(pThreadBase child, int code)
 {
 	log[verbose_debug] << "Received childs_end() from child with code "
-			<< code << std::endl;
+			<< code << "\n";
 	// Death of a child is by default fatal
 	if (finishWhenChildEnds) request_end();
 	else switch (code) {
@@ -84,13 +84,13 @@ void ThreadBase::child_ends(pThreadBase child, int code)
 /// if there's no parent, it is finished immediately
 void ThreadBase::request_end()
 {
-	log[verbose_debug] << "request_end()" << std::endl;
+	log[verbose_debug] << "request_end()" << "\n";
 	boost::mutex::scoped_lock l(end_lock);
 	if (end || end_requested) return;
 	end_requested=true;
-	log[verbose_debug] << "end_request placed" << std::endl;
+	log[verbose_debug] << "end_request placed" << "\n";
 	l.unlock();
-	log[debug] << "I " << (parent.lock()?"":"don't ") << "have parent!" << std::endl;
+	log[debug] << "I " << (parent.lock()?"":"don't ") << "have parent!" << "\n";
 	if (!parent.expired()) {
 		shared_ptr<ThreadBase> par =  parent.lock();
 		if (par) par->child_ends(get_this_ptr(),exitCode);
@@ -143,7 +143,7 @@ void ThreadBase::join_thread(pThreadBase child)
 void ThreadBase::finish_all_threads(bool join)
 {
 	boost::timed_mutex::scoped_lock l(children_lock);
-	log[debug] << "Finishing all childs" << std::endl;
+	log[debug] << "Finishing all childs" << "\n";
 	for (std::map<pThreadBase,shared_ptr<ThreadChild> >::iterator i = children.begin();
 		i != children.end(); ++i) {
 		do_finish_thread((*i).first,join);
@@ -155,14 +155,14 @@ void ThreadBase::finish_all_threads(bool join)
 /// \bug There may be problem with iteration over the std::map container while removing elements from it.
 void ThreadBase::join_all_threads()
 {
-	log[debug] << "Joining all childs" << std::endl;
+	log[debug] << "Joining all childs" << "\n";
 	boost::timed_mutex::scoped_lock l(children_lock);
 	std::map<pThreadBase,shared_ptr<ThreadChild> >::iterator i;
 	int s = children.size();
-	log[debug] << s << std::endl;
+	log[debug] << s << "\n";
 	while (children.size()) {
 		log[verbose_debug] << "There's " << children.size() << "threads left "
-			<< std::endl;
+			<< "\n";
 		i=children.begin();
 		do_join_thread((*i).first,true);
 	}
@@ -201,9 +201,9 @@ bool ThreadBase::do_add_child(shared_ptr<ThreadBase> thread, bool spawned)
 
 void ThreadBase::do_finish_thread(pThreadBase child, bool join)
 {
-	log[debug] << "Finishing child" << std::endl;
+	log[debug] << "Finishing child" << "\n";
 	if (children.find(child)==children.end()) {
-		log[warning] << "Trying to finish unregistered child. " << std::endl;
+		log[warning] << "Trying to finish unregistered child. " << "\n";
 		return;
 	}
 	if (!children[child]->finished) {
@@ -216,16 +216,16 @@ void ThreadBase::do_finish_thread(pThreadBase child, bool join)
 		if 	(children[child]->spawned) do_join_thread(child,false);
 		else log[warning] <<
 			"Requested to join object that is not separate thread!" <<
-			std::endl;
+			"\n";
 	}
 }
 
 void ThreadBase::do_join_thread(pThreadBase child, bool check)
 {
-	log[debug] << "Joining child (" <<children.size() << ")" << std::endl;
+	log[debug] << "Joining child (" <<children.size() << ")" << "\n";
 	if (check) {
 		if (children.find(child)==children.end()) {
-			log[warning] << "Trying to join unregistered child. " << std::endl;
+			log[warning] << "Trying to join unregistered child. " << "\n";
 			//delete thread;
 			return;
 		}
@@ -236,20 +236,20 @@ void ThreadBase::do_join_thread(pThreadBase child, bool check)
 	}
 	if (!children[child]->spawned) {
 		log[warning] << "Requested to join object that is not separate thread!"
-			<< std::endl;
+			<< "\n";
 	} else {
 		if (!children[child]->thread_ptr->timed_join(join_timeout)) {
 			log[warning] << "Failed to join thread " <<
 				children[child]->thread_ptr->get_id() << " with " <<
 				join_timeout.total_milliseconds() << "ms timeout." <<
-				"Detaching thread." << std::endl;
+				"Detaching thread." << "\n";
 			children[child]->thread_ptr->detach();
 		}
 	}
-	log[debug] << "Deleting child" << std::endl;
+	log[debug] << "Deleting child" << "\n";
 	children.erase(child);
 	//delete thread;
-	log[debug] << "Child joined (" << children.size() << " left)" << std::endl;
+	log[debug] << "Child joined (" << children.size() << " left)" << "\n";
 }
 
 void ThreadBase::start_timer()
@@ -288,7 +288,7 @@ void ThreadBase::do_request_finish_thread(pThreadBase child)
 {
 	assert(!child.expired());
 	/*if (childMap.find(child)==childMap.end()) {
-		log[warning] << "Requested to finish non-registered child!" << endl;
+		log[warning] << "Requested to finish non-registered child!" << "\n";
 		return;
 	}*/
 	endingChilds.push_back(child);
@@ -299,7 +299,7 @@ void ThreadBase::do_pending_requests()
 	while (!endingChilds.empty()) {
 		pThreadBase child = endingChilds.back();
 		endingChilds.pop_back();
-		log[debug] << "Killing child " << endl;
+		log[debug] << "Killing child " << "\n";
 		finish_thread(child,true);
 	}
 }
@@ -331,14 +331,14 @@ pid_t ThreadBase::retrieve_tid()
 	own_tid = syscall(SYS_gettid);
 	return own_tid;
 #else
-	log[warning] << "TID not supported under this platform"<< endl;
+	log[warning] << "TID not supported under this platform"<< "\n";
 	return 0;
 #endif
 }
 
 void ThreadBase::print_id(_debug_flags f)
 {
-	log[f] << "Started as thread " << retrieve_tid() <<endl;
+	log[f] << "Started as thread " << retrieve_tid() <<"\n";
 }
 
 bool ThreadBase::bind_to_cpu(yuri::uint_t cpu)
@@ -350,16 +350,16 @@ bool ThreadBase::bind_to_cpu(yuri::uint_t cpu)
 	pthread_t thread = pthread_self();
 	int ret = pthread_setaffinity_np(thread,sizeof(cpu_set_t),&cpus);
 	if (ret) {
-		log[error] << "Failed to set CPU affinity. Error " << ret << endl;
+		log[error] << "Failed to set CPU affinity. Error " << ret << "\n";
 		return false;
 	}
 	std::string cpu_s = "";
 	for (int i = 0; i< CPU_SETSIZE; ++i) {
-		if (CPU_ISSET(i,&cpus)) cpu_s += boost::lexical_cast<std::string>(i)+ string(" ");
+		if (CPU_ISSET(i,&cpus)) cpu_s += boost::lexical_cast<std::string>(i)+std::string(" ");
 	}
-	log[info] << "CPU affinity set for CPUS: " << cpu_s << endl;
+	log[info] << "CPU affinity set for CPUS: " << cpu_s << "\n";
 #else
-	log[warning] << "Setting CPU affinity not supported under this platform" << endl;
+	log[warning] << "Setting CPU affinity not supported under this platform" << "\n";
 #endif
 	return true;
 }
@@ -368,7 +368,7 @@ void ThreadBase::set_thread_name(std::string name)
 {
 #ifdef __linux__
 	int ret = prctl(PR_SET_NAME,name.c_str(),0,0,0);
-	log[info] << "Name set to " << name << " (result " << ret << ")"<<endl;
+	log[info] << "Name set to " << name << " (result " << ret << ")"<<"\n";
 #endif
 }
 

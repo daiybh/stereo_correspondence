@@ -995,7 +995,7 @@ bool TiXmlDocument::LoadFile( FILE* file, TiXmlEncoding encoding )
 	Clear();
 	location.Clear();
 
-	// Get the file size, so we can pre-allocate the string. HUGE speed impact.
+	// Get the file size, so we can pre-allocate thestd::string. HUGE speed impact.
 	long length = 0;
 	fseek( file, 0, SEEK_END );
 	length = ftell( file );

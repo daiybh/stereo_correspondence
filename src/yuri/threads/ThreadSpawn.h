@@ -8,8 +8,6 @@ namespace yuri
 
 namespace threads
 {
-using namespace std;
-using boost::shared_ptr;
 
 class ThreadBase;
 class ThreadSpawn

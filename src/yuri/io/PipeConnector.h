@@ -16,8 +16,6 @@ namespace yuri {
 namespace io {
 
 using namespace yuri::threads;
-using boost::shared_ptr;
-using boost::weak_ptr;
 
 class BasicIOThread;
 

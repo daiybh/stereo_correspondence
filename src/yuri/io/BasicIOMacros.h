@@ -25,7 +25,7 @@
 		obj.reset(new cls(_log,parent,parameters)); \
 	} \
 	catch (std::exception &e) { \
-		throw yuri::exception::InitializationFailed(string(string(#cls) + "constuctor failed: ") + e.what()); \
+		throw yuri::exception::InitializationFailed(std::string(#cls) + "constuctor failed: " + e.what()); \
 	} \
 	return obj; \
 }

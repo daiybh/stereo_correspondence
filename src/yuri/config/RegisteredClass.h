@@ -31,7 +31,7 @@ void 		yuri_module_register() {yuri::config::RegisteredClassSpecialized<classnam
 namespace yuri {
 namespace config {
 
-using namespace std;
+
 using namespace yuri::io;
 using namespace yuri::exception;
 using namespace yuri::threads;
@@ -41,40 +41,40 @@ using boost::mutex;
 class Instance;
 class RegisteredClass {
 public:
-	typedef map<string,shared_ptr<RegisteredClass> > register_map_t;
-	RegisteredClass(string id) throw (Exception);
+	typedef std::map<std::string,shared_ptr<RegisteredClass> > register_map_t;
+	RegisteredClass(std::string id) throw (Exception);
 	virtual ~RegisteredClass();
 
-	static bool is_registered(string id);
-	static shared_ptr<vector<string> > list_registered();
-	static shared_ptr<Parameters> get_params(string id) throw (Exception);
-	static shared_ptr<Instance> prepare_instance(string id);
+	static bool is_registered(std::string id);
+	static shared_ptr<std::vector<std::string> > list_registered();
+	static shared_ptr<Parameters> get_params(std::string id);
+	static shared_ptr<Instance> prepare_instance(std::string id);
 	static shared_ptr<Instance> get_converter(long format_in, long format_out);
 
 	static void reload_converters();
-	static map<pair<long,long>, vector<shared_ptr<Converter > > > get_all_converters();
-	static vector<shared_ptr<Converter > > get_converters(long in, long out);
-	static vector<shared_ptr<Converter > > get_converters(pair<long, long> fmts);
+	static std::map<std::pair<long,long>, std::vector<shared_ptr<Converter > > > get_all_converters();
+	static std::vector<shared_ptr<Converter > > get_converters(long in, long out);
+	static std::vector<shared_ptr<Converter > > get_converters(std::pair<long, long> fmts);
 
 	virtual shared_ptr<Instance> _prepare_instance() = 0;
 	virtual shared_ptr<Parameters> _get_params() = 0;
 	virtual shared_ptr<Instance> _prepare_converter(shared_ptr<Instance> inst,
 			long format_in, long format_out) = 0;
-	static bool load_module(string path);
+	static bool load_module(std::string path);
 protected:
 	static register_map_t *registeredClasses;
-	static void add_to_register(string id, RegisteredClass*r) throw (Exception);
-	static bool do_is_registered(string id);
-	static shared_ptr<vector<string> > do_list_registered();
-	static shared_ptr<Parameters> do_get_params(string id) throw (Exception);
-	static shared_ptr<Instance> do_prepare_instance(string id);
-	static void do_add_to_register(string id, RegisteredClass*r) throw (Exception);
-	static map<pair<long,long>, vector<shared_ptr<Converter> > > converters;
+	static void add_to_register(std::string id, RegisteredClass*r);
+	static bool do_is_registered(std::string id);
+	static shared_ptr<std::vector<std::string> > do_list_registered();
+	static shared_ptr<Parameters> do_get_params(std::string id);
+	static shared_ptr<Instance> do_prepare_instance(std::string id);
+	static void do_add_to_register(std::string id, RegisteredClass*r);
+	static std::map<std::pair<long,long>, std::vector<shared_ptr<Converter> > > converters;
 	static mutex converters_mutex;
 	static mutex *reg_mutex;
 	static void do_reload_converters();
 	static bool conv_sort(shared_ptr<Converter> a, shared_ptr<Converter> b);
-	string id;
+	std::string id;
 	shared_ptr<Parameters> params;
 	//generator_t generator;
 	//configurator_t configurator;
@@ -83,7 +83,7 @@ protected:
 
 template<class T> class RegisteredClassSpecialized:public RegisteredClass {
 public:
-	RegisteredClassSpecialized(string id) throw (Exception):
+	RegisteredClassSpecialized(std::string id):
 		RegisteredClass(id) {}
 
 	typedef T type_id;

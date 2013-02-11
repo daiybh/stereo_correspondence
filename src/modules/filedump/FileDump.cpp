@@ -15,7 +15,7 @@ shared_ptr<BasicIOThread> FileDump::generate(Log &_log,pThreadBase parent,Parame
 		dump.reset(new FileDump(_log,parent,parameters));
 	}
 	catch (std::exception &e) {
-		throw InitializationFailed(string("Filedump constuctor failed: ") + e.what());
+		throw InitializationFailed(std::string("Filedump constuctor failed: ") + e.what());
 	}
 	return dump;
 }
@@ -24,7 +24,7 @@ shared_ptr<Parameters> FileDump::configure()
 	shared_ptr<Parameters> p (new Parameters());
 	p->set_description("Outputs frames to a file. It either dump all frames to one file of every frame to separate file. ");
 	(*p)["sequence"]["Number of digits in sequence number. Set to 0 to disable sequence and output all frames to one file."]=0;
-	(*p)["filename"]["Required parameter. Path of file to dump to"]=string();
+	(*p)["filename"]["Required parameter. Path of file to dump to"]=std::string();
 	(*p)["frame_limit"]["Maximal number of frames to dump. 0 for unlimited"]=0;
 	return p;
 }
@@ -36,7 +36,7 @@ FileDump::FileDump(Log &log_,pThreadBase parent, Parameters &parameters):
 {
 	params.merge(*configure());
 	params.merge(parameters);
-	filename = params["filename"].get<string>();
+	filename = params["filename"].get<std::string>();
 	seq_chars = params["sequence"].get<int>();
 	dump_limit = params["frame_limit"].get<yuri::size_t>();
 	if (!seq_chars)
@@ -51,7 +51,7 @@ FileDump::~FileDump()
 bool FileDump::step()
 {
 	if (!in[0]) return true;
-	shared_ptr<BasicFrame> f;
+	pBasicFrame f;
 	while ((f = in[0]->pop_frame()).get()) {
 		if (seq_chars) {
 			std::stringstream ss;
@@ -60,9 +60,9 @@ bool FileDump::step()
 				<< filename.substr(filename.find_last_of('.'));
 			dump_file.open(ss.str().c_str(), std::ios::binary | std::ios::out);
 		}
-		log[debug]<<"Dumping " << f->get_planes_count() << " planes" << endl;
+		log[debug]<<"Dumping " << f->get_planes_count() << " planes" << std::endl;
 		for (yuri::size_t i=0; i<f->get_planes_count();++i) {
-			//log[debug]<<"Dumping plane " << i << ", size: " << (*f)[i].get_size() << endl;
+			//log[debug]<<"Dumping plane " << i << ", size: " << (*f)[i].get_size() << std::endl;
 			dump_file.write((const char *)(*f)[i].data.get(),(*f)[i].size);
 		}
 		if (seq_chars) {
@@ -70,7 +70,7 @@ bool FileDump::step()
 		}
 		// The comparison is evaluated FIRST in order to have dumped_frames counted even if dump_limit is zero
 		if (++dumped_frames >= dump_limit && dump_limit) {
-			log[debug] << "Maximal number of frames reached, quitting." << endl;
+			log[debug] << "Maximal number of frames reached, quitting." << std::endl;
 			exitCode = YURI_EXIT_FINISHED;
 			request_end();
 			break;

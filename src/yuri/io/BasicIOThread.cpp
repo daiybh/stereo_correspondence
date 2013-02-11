@@ -7,7 +7,7 @@ namespace io
 {
 
 #ifdef BASICIOTHREAD_ENABLE_PORT_LOCK
-#define DEBUG_LOCKS log[verbose_debug] << "Locking ports, " << __FILE__ << ":" << __LINE__ << " with lock @ " << (void*)(&port_lock) << std::endl;
+#define DEBUG_LOCKS log[verbose_debug] << "Locking ports, " << __FILE__ << ":" << __LINE__ << " with lock @ " << (void*)(&port_lock) << "\n";
 #endif
 
 /*shared_ptr<BasicIOThread> BasicIOThread::generate(Log &_log,pThreadBase parent,
@@ -37,32 +37,32 @@ shared_array<yuri::ubyte_t> BasicIOThread::allocate_memory_block(yuri::size_t si
 	else mem = FixedMemoryAllocator::get_block(size);
 	return mem;
 }
-shared_ptr<BasicFrame> BasicIOThread::allocate_frame_from_memory(const yuri::ubyte_t *mem, yuri::size_t size, bool large)
+pBasicFrame BasicIOThread::allocate_frame_from_memory(const yuri::ubyte_t *mem, yuri::size_t size, bool large)
 {
 	shared_array<yuri::ubyte_t> smem = allocate_memory_block(size,large);
 	memcpy(smem.get(),mem,size);
 	return allocate_frame_from_memory(smem,size,large);
 }
 
-shared_ptr<BasicFrame> BasicIOThread::allocate_frame_from_memory(shared_array<yuri::ubyte_t> mem, yuri::size_t size, bool /*large*/)
+pBasicFrame BasicIOThread::allocate_frame_from_memory(shared_array<yuri::ubyte_t> mem, yuri::size_t size, bool /*large*/)
 {
-	shared_ptr<BasicFrame> f(new BasicFrame());
+	pBasicFrame f(new BasicFrame());
 	f->set_planes_count(1);
 	(*f)[0].set(mem,size);
 	return f;
 }
-shared_ptr<BasicFrame> BasicIOThread::duplicate_frame(shared_ptr<BasicFrame> frame)
+pBasicFrame BasicIOThread::duplicate_frame(pBasicFrame frame)
 {
-	shared_ptr<BasicFrame> f = frame->get_copy();
+	pBasicFrame f = frame->get_copy();
 	return f;
 }
 
-BasicIOThread::BasicIOThread(Log &log_,pThreadBase parent, yuri::sint_t inp, yuri::sint_t outp,string id):
+BasicIOThread::BasicIOThread(Log &log_,pThreadBase parent, yuri::sint_t inp, yuri::sint_t outp, std::string id):
 	ThreadBase(log_,parent),in_ports(inp),out_ports(outp),latency(200000),
 	active_pipes(0),cpu_affinity(-1),fps_stats(0),pts_base(boost::posix_time::not_a_date_time)
 {
 	params.merge(*configure());
-	log.setLabel(string("[")+id+"] ");
+	log.setLabel(std::string("[")+id+"] ");
 	resize(inp,outp);
 }
 
@@ -84,19 +84,19 @@ void BasicIOThread::run()
 			boost::this_thread::interruption_point();
 			if (in_ports && !pipes_data_available()) {
 #ifdef __linux__
-				//log[verbose_debug] << "Requesting notifications" << std::endl;
+				//log[verbose_debug] << "Requesting notifications" << "\n";
 				request_notifications();
-				//log[verbose_debug] << "Polling" << std::endl;
+				//log[verbose_debug] << "Polling" << "\n";
 				if (!(ret=poll(pipe_fds.get(),active_pipes,latency/1000))) continue;
 				if (ret < 0) {
 					switch (errno) {
 						case EBADF: log[warning] << "Wrong fd set in fdset, file: "
-						<< __FILE__ << ", line " << __LINE__ <<std::endl;
+						<< __FILE__ << ", line " << __LINE__ <<"\n";
 						break;
 						case EINTR: continue;
 						default: log[warning] << "Error " << errno <<" ("<<
 						strerror(errno)<< ") while reading from socket in file: "
-						 << __FILE__ << ", line " << __LINE__ <<std::endl;
+						 << __FILE__ << ", line " << __LINE__ <<"\n";
 						break;
 					}
 					continue;
@@ -106,13 +106,13 @@ void BasicIOThread::run()
 				ThreadBase::sleep(latency>>2);
 #endif
 			}
-			log[verbose_debug] << "Stepping" << std::endl;
+			log[verbose_debug] << "Stepping" << "\n";
 			if (!step()) break;
 		}
 	}
 	catch (boost::thread_interrupted &e)
 	{
-		log[debug] << "Thread interrupted" << std::endl;
+		log[debug] << "Thread interrupted" << "\n";
 	}
 	IO_THREAD_POST_RUN
 }
@@ -126,7 +126,7 @@ void BasicIOThread::connect_in(yuri::sint_t index,shared_ptr<BasicPipe> pipe)
 #endif
 	if (in[index]) {
 		log[debug] << "Disconnecting already connected pipe from in port "
-				<< index << std::endl;
+				<< index << "\n";
 		//in[index]->cancel_notifications(); // Just in case
 	}
 	in[index]=PipeConnector(pipe,get_this_ptr());
@@ -143,7 +143,7 @@ void BasicIOThread::connect_out(yuri::sint_t index,shared_ptr<BasicPipe> pipe)
 	DEBUG_LOCKS
 	boost::mutex::scoped_lock l(port_lock);
 #endif
-	if (out[index]) log[debug] << "Disconnecting already connected pipe from out port " << index << std::endl;
+	if (out[index]) log[debug] << "Disconnecting already connected pipe from out port " << index << "\n";
 	out[index]=PipeConnector(pipe,get_this_ptr());
 }
 
@@ -154,7 +154,7 @@ void BasicIOThread::resize(yuri::sint_t inp, yuri::sint_t outp)
 	DEBUG_LOCKS
 	boost::mutex::scoped_lock l(port_lock);
 #endif
-	log[debug] << "Resizing to " << inp << " input ports and " << outp << " output ports." << std::endl;
+	log[debug] << "Resizing to " << inp << " input ports and " << outp << " output ports." << "\n";
 	in_ports=inp;
 	out_ports=outp;
 	//shared_ptr<BasicPipe> null_pipe;
@@ -169,7 +169,7 @@ void BasicIOThread::resize(yuri::sint_t inp, yuri::sint_t outp)
 	pipe_fds.reset(new struct pollfd[inp]);
 	for (yuri::sint_t i=0;i<inp;++i) pipe_fds[i].events=0;
 #endif
-	log[debug] << "Konec resize" << endl;
+	log[debug] << "Konec resize" << "\n";
 }
 
 void BasicIOThread::close_pipes()
@@ -179,7 +179,7 @@ void BasicIOThread::close_pipes()
 	DEBUG_LOCKS
 	boost::mutex::scoped_lock l(port_lock);
 #endif
-	log[debug] << "Closing pipes!" << std::endl;
+	log[debug] << "Closing pipes!" << "\n";
 	for (yuri::sint_t i=0;i<out_ports;++i) {
 		shared_ptr<BasicPipe> p=out[i];
 		if (!p.get()) continue;
@@ -214,7 +214,7 @@ int BasicIOThread::set_fds()
 			//in[i]->get_notification_fd();
 			pipe_fds[active_pipes].fd=in[i]->get_notification_fd();
 //			log[verbose_debug] << "Got fd " << pipe_fds[active_pipes].fd
-//				<< " from pipe " << active_pipes<< std::endl;
+//				<< " from pipe " << active_pipes<< "\n";
 			pipe_fds[active_pipes].events=POLLIN|POLLPRI;
 #endif
 			++active_pipes;
@@ -227,7 +227,7 @@ void BasicIOThread::request_notifications()
 {
 	/*for (int i=0;i<in_ports;++i) {
 			if (in[i]) {
-				log[verbose_debug] << "Requesting notifications from pipe " << i << std::endl;
+				log[verbose_debug] << "Requesting notifications from pipe " << i << "\n";
 				in[i]->request_notify();
 			}
 	}*/
@@ -244,7 +244,7 @@ bool BasicIOThread::pipes_data_available()
 		if (in[i]) {
 			if (in[i]->is_closed()) in[i].reset();
 			else if (!in[i]->is_empty()) {
-				//log[verbose_debug] << "Data available in pipe " << i << std::endl;
+				//log[verbose_debug] << "Data available in pipe " << i << "\n";
 				return true;
 			}
 		}
@@ -259,7 +259,7 @@ void BasicIOThread::read_notification()
 	for (yuri::uint_t i=0;i<active_pipes;++i) {
 #ifdef __linux__
 		if (pipe_fds[i].revents&(POLLIN|POLLPRI)) {
-			//log[verbose_debug] << "Reading notification from pipe " << i << std::endl;
+			//log[verbose_debug] << "Reading notification from pipe " << i << "\n";
 			dummy = read(pipe_fds[i].fd,&c,1);
 			pipe_fds[i].revents=0;
 
@@ -269,7 +269,7 @@ void BasicIOThread::read_notification()
 	}
 }
 
-bool BasicIOThread::push_raw_frame(yuri::sint_t index, shared_ptr<BasicFrame> frame)
+bool BasicIOThread::push_raw_frame(yuri::sint_t index, pBasicFrame frame)
 {
 	assert(frame.get());
 	if (index >= out_ports) return false;
@@ -280,7 +280,7 @@ bool BasicIOThread::push_raw_frame(yuri::sint_t index, shared_ptr<BasicFrame> fr
 			boost::posix_time::ptime end_time = boost::posix_time::microsec_clock::local_time();
 			boost::posix_time::time_duration delta= end_time - first_frame[index];
 			double fps = 1.0e6 * static_cast<double>(streamed_frames[index]) / static_cast<double>(delta.total_microseconds());
-			log[info] << "(output " << index << ") Streamed " << streamed_frames[index] << " in " << to_simple_string(delta) << ". That's " << fps << "fps" <<endl;
+			log[info] << "(output " << index << ") Streamed " << streamed_frames[index] << " in " << to_simple_string(delta) << ". That's " << fps << "fps" <<"\n";
 			streamed_frames[index]=0;
 		}
 		if (!streamed_frames[index]) first_frame[index] = boost::posix_time::microsec_clock::local_time();
@@ -288,7 +288,7 @@ bool BasicIOThread::push_raw_frame(yuri::sint_t index, shared_ptr<BasicFrame> fr
 	}
 	return true;
 }
-bool BasicIOThread::push_raw_video_frame(yuri::sint_t index, shared_ptr<BasicFrame> frame)
+bool BasicIOThread::push_raw_video_frame(yuri::sint_t index, pBasicFrame frame)
 {
 	assert(frame.get());
 	if (index >= out_ports) return false;
@@ -297,7 +297,7 @@ bool BasicIOThread::push_raw_video_frame(yuri::sint_t index, shared_ptr<BasicFra
 	return push_raw_frame(index,frame);
 }
 
-bool BasicIOThread::push_raw_audio_frame(yuri::sint_t index, shared_ptr<BasicFrame> frame)
+bool BasicIOThread::push_raw_audio_frame(yuri::sint_t index, pBasicFrame frame)
 {
 	assert(frame.get());
 	if (index >= out_ports) return false;
@@ -307,7 +307,7 @@ bool BasicIOThread::push_raw_audio_frame(yuri::sint_t index, shared_ptr<BasicFra
 }
 
 
-bool BasicIOThread::push_video_frame (yuri::sint_t index, shared_ptr<BasicFrame> frame, yuri::format_t format, yuri::size_t width, yuri::size_t height, yuri::size_t pts, yuri::size_t duration, yuri::size_t dts)
+bool BasicIOThread::push_video_frame (yuri::sint_t index, pBasicFrame frame, yuri::format_t format, yuri::size_t width, yuri::size_t height, yuri::size_t pts, yuri::size_t duration, yuri::size_t dts)
 {
 	assert(frame.get());
 //	log[verbose_debug] << "Setting format " << BasicPipe::get_format_string(format) << endl;
@@ -316,7 +316,7 @@ bool BasicIOThread::push_video_frame (yuri::sint_t index, shared_ptr<BasicFrame>
 	return push_raw_video_frame(index,frame);
 }
 
-bool BasicIOThread::push_video_frame (yuri::sint_t index, shared_ptr<BasicFrame> frame, yuri::format_t format, yuri::size_t width, yuri::size_t height)
+bool BasicIOThread::push_video_frame (yuri::sint_t index, pBasicFrame frame, yuri::format_t format, yuri::size_t width, yuri::size_t height)
 {
 	assert(frame.get());
 	// TODO: Set up values for PTS DTS and duration
@@ -324,15 +324,15 @@ bool BasicIOThread::push_video_frame (yuri::sint_t index, shared_ptr<BasicFrame>
 	return push_raw_video_frame(index,timestamp_frame(frame));
 }
 
-bool BasicIOThread::push_audio_frame (yuri::sint_t index, shared_ptr<BasicFrame> frame, yuri::format_t format, yuri::usize_t channels, yuri::usize_t samples, yuri::size_t pts, yuri::size_t duration, yuri::size_t dts)
+bool BasicIOThread::push_audio_frame (yuri::sint_t index, pBasicFrame frame, yuri::format_t format, yuri::usize_t channels, yuri::usize_t samples, yuri::size_t pts, yuri::size_t duration, yuri::size_t dts)
 {
 	assert(frame.get());
-//	log[verbose_debug] << "Setting format " << BasicPipe::get_format_string(format) << endl;
+//	log[verbose_debug] << "Setting format " << BasicPipe::get_format_string(format) << "\n";
 	frame->set_parameters(format,0,0,channels,samples);
 	frame->set_time(pts,dts,duration);
 	return push_raw_audio_frame(index,frame);
 }
-shared_ptr<BasicFrame> BasicIOThread::timestamp_frame(shared_ptr<BasicFrame> frame)
+pBasicFrame BasicIOThread::timestamp_frame(pBasicFrame frame)
 {
 	if (pts_base==boost::posix_time::not_a_date_time) pts_base=boost::posix_time::microsec_clock::local_time();
 	boost::posix_time::time_duration pts = boost::posix_time::microsec_clock::local_time() - pts_base;
@@ -340,13 +340,13 @@ shared_ptr<BasicFrame> BasicIOThread::timestamp_frame(shared_ptr<BasicFrame> fra
 	return frame;
 }
 // TODO Stub, not implemented!!!!!!
-shared_ptr<BasicFrame> BasicIOThread::get_frame_as(yuri::sint_t index, yuri::format_t format)
+pBasicFrame BasicIOThread::get_frame_as(yuri::sint_t index, yuri::format_t format)
 {
-	shared_ptr<BasicFrame> frame;
+	pBasicFrame frame;
 	if (index>=in_ports || !in[index] || in[index]->is_empty()) return frame;
 	if (format == YURI_FMT_NONE) return in[index]->pop_frame();
 
-	return shared_ptr<BasicFrame>();
+	return pBasicFrame();
 }
 void BasicIOThread::set_affinity(yuri::ssize_t affinity)
 {
@@ -354,7 +354,7 @@ void BasicIOThread::set_affinity(yuri::ssize_t affinity)
 }
 bool BasicIOThread::set_params(Parameters &parameters)
 {
-	pair<string,shared_ptr<Parameter> > par;
+	std::pair<std::string,shared_ptr<Parameter> > par;
 	BOOST_FOREACH(par,(parameters.params)) {
 		if (par.second && !set_param(*(par.second))) return false;
 	}
@@ -383,9 +383,9 @@ bool BasicIOThread::set_param(Parameter &parameter)
 	return true;
 }
 
-shared_ptr<BasicFrame> BasicIOThread::allocate_empty_frame(yuri::format_t format, yuri::size_t width, yuri::size_t height, bool large)
+pBasicFrame BasicIOThread::allocate_empty_frame(yuri::format_t format, yuri::size_t width, yuri::size_t height, bool large)
 {
-	shared_ptr<BasicFrame> pic;
+	pBasicFrame pic;
 	FormatInfo_t fmt = BasicPipe::get_format_info(format);
 	assert(fmt->planes && !fmt->compressed); // Just to make sure the format is valid
 	pic.reset(new BasicFrame(fmt->planes));
@@ -400,7 +400,7 @@ shared_ptr<BasicFrame> BasicIOThread::allocate_empty_frame(yuri::format_t format
 	return pic;
 }
 
-bool BasicIOThread::connect_threads(shared_ptr<BasicIOThread> src, yuri::sint_t s_idx, shared_ptr<BasicIOThread> target, yuri::sint_t t_idx, Log &log, string name, shared_ptr<Parameters> params)
+bool BasicIOThread::connect_threads(shared_ptr<BasicIOThread> src, yuri::sint_t s_idx, shared_ptr<BasicIOThread> target, yuri::sint_t t_idx, Log &log,std::string name, shared_ptr<Parameters> params)
 {
 	shared_ptr<Parameters> p = BasicPipe::configure();
 	if (params) p->merge(*params);

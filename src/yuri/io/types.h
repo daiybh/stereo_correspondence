@@ -8,6 +8,11 @@
 #ifndef TYPES_H_
 #define TYPES_H_
 #include <boost/cstdint.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/shared_array.hpp>
+#include <boost/smart_ptr.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/thread/thread.hpp>
 
 #ifdef __WIN32__
 #ifdef BUILDDLL
@@ -32,6 +37,18 @@ typedef boost::uint8_t ubyte_t;
 typedef boost::int8_t sbyte_t;
 
 typedef ssize_t format_t;
+typedef size_t threadId_t;
+
+#if 1
+using boost::shared_ptr;
+using boost::shared_array;
+using boost::weak_ptr;
+using boost::make_shared;
+using boost::mutex;
+using boost::dynamic_pointer_cast;
+#else
+using std::shared_ptr;
+#endif
 
 }
 #ifdef __GNUC__

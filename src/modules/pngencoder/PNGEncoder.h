@@ -16,7 +16,6 @@ namespace yuri {
 namespace io {
 using yuri::log::Log;
 using namespace yuri::config;
-using namespace std;
 
 class PNGEncode: public BasicIOThread {
 public:
@@ -34,7 +33,7 @@ protected:
 	static void handleWarning(png_structp png_ptr, png_const_charp error_msg);
 	void printError(int type, const char * msg);
 	long position;
-	shared_ptr<BasicFrame> frame;
+	pBasicFrame frame;
 	shared_array<yuri::ubyte_t> memory;
 	long memSize;
 };

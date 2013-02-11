@@ -203,7 +203,7 @@ public:
 	virtual ~TiXmlBase()			{}
 
 	/**	All TinyXml classes can print themselves to a filestream
-		or the string class (TiXmlString in non-STL mode, std::string
+		or thestd::string class (TiXmlString in non-STL mode, std::string
 		in STL mode.) Either or both cfile and str can be null.
 		
 		This is a formatted print, and will insert 
@@ -257,7 +257,7 @@ public:
 								TiXmlParsingData* data, 
 								TiXmlEncoding encoding /*= TIXML_ENCODING_UNKNOWN */ ) = 0;
 
-	/** Expands entities in a string. Note this should not contian the tag's '<', '>', etc, 
+	/** Expands entities in astd::string. Note this should not contian the tag's '<', '>', etc, 
 		or they will be transformed into entities!
 	*/
 	static void EncodeString( const TIXML_STRING& str, TIXML_STRING* out );
@@ -304,7 +304,7 @@ protected:
 	static bool StreamTo( std::istream * in, int character, TIXML_STRING * tag );
 	#endif
 
-	/*	Reads an XML name into the string provided. Returns
+	/*	Reads an XML name into thestd::string provided. Returns
 		a pointer just past the last character of the name,
 		or 0 if the function has an error.
 	*/
@@ -314,7 +314,7 @@ protected:
 		Wickedly complex options, but it keeps the (sensitive) code in one place.
 	*/
 	static const char* ReadText(	const char* in,				// where to start
-									TIXML_STRING* text,			// the string read
+									TIXML_STRING* text,			// thestd::string read
 									bool ignoreWhiteSpace,		// whether to keep the white space
 									const char* endTag,			// what ends this text
 									bool ignoreCase,			// whether to ignore case in the end tag
@@ -480,7 +480,7 @@ public:
 		Element:	name of the element
 		Comment:	the comment text
 		Unknown:	the tag contents
-		Text:		the text string
+		Text:		the textstd::string
 		@endverbatim
 
 		The subclasses will wrap this function.
@@ -503,7 +503,7 @@ public:
 		Element:	name of the element
 		Comment:	the comment text
 		Unknown:	the tag contents
-		Text:		the text string
+		Text:		the textstd::string
 		@endverbatim
 	*/
 	void SetValue(const char * _value) { value = _value;}
@@ -817,10 +817,10 @@ public:
 	int				IntValue() const;									///< Return the value of this attribute, converted to an integer.
 	double			DoubleValue() const;								///< Return the value of this attribute, converted to a double.
 
-	// Get the tinyxml string representation
+	// Get the tinyxmlstd::string representation
 	const TIXML_STRING& NameTStr() const { return name; }
 
-	/** QueryIntValue examines the value string. It is an alternative to the
+	/** QueryIntValue examines the valuestd::string. It is an alternative to the
 		IntValue() method with richer error checking.
 		If the value is an integer, it is stored in 'value' and 
 		the call returns TIXML_SUCCESS. If it is not
@@ -830,7 +830,7 @@ public:
 		which is the opposite of almost all other TinyXml calls.
 	*/
 	int QueryIntValue( int* _value ) const;
-	/// QueryDoubleValue examines the value string. See QueryIntValue().
+	/// QueryDoubleValue examines the valuestd::string. See QueryIntValue().
 	int QueryDoubleValue( double* _value ) const;
 
 	void SetName( const char* _name )	{ name = _name; }				///< Set the name of this attribute.
@@ -1018,7 +1018,7 @@ public:
 		attribute into the specified type. Very easy, very powerful, but
 		be careful to make sure to call this with the correct type.
 		
-		NOTE: This method doesn't work correctly for 'string' types that contain spaces.
+		NOTE: This method doesn't work correctly for std::string' types that contain spaces.
 
 		@return TIXML_SUCCESS, TIXML_WRONG_TYPE, or TIXML_NO_ATTRIBUTE
 	*/
@@ -1092,7 +1092,7 @@ public:
 		and accessing it directly.
 	
 		If the first child of 'this' is a TiXmlText, the GetText()
-		returns the character string of the Text node, else null is returned.
+		returns the characterstd::string of the Text node, else null is returned.
 
 		This is a convenient method for getting the text of simple contained text:
 		@verbatim
@@ -1306,9 +1306,9 @@ public:
 
 	virtual ~TiXmlDeclaration()	{}
 
-	/// Version. Will return an empty string if none was found.
+	/// Version. Will return an emptystd::string if none was found.
 	const char *Version() const			{ return version.c_str (); }
-	/// Encoding. Will return an empty string if none was found.
+	/// Encoding. Will return an emptystd::string if none was found.
 	const char *Encoding() const		{ return encoding.c_str (); }
 	/// Is this a standalone document?
 	const char *Standalone() const		{ return standalone.c_str (); }
@@ -1463,7 +1463,7 @@ public:
 	/// Contains a textual (english) description of the error if one occurs.
 	const char * ErrorDesc() const	{ return errorDesc.c_str (); }
 
-	/** Generally, you probably want the error string ( ErrorDesc() ). But if you
+	/** Generally, you probably want the errorstd::string ( ErrorDesc() ). But if you
 		prefer the ErrorId, this function will fetch it.
 	*/
 	int ErrorId()	const				{ return errorId; }
@@ -1519,7 +1519,7 @@ public:
 	/** Write the document to standard out using formatted printing ("pretty print"). */
 	void Print() const						{ Print( stdout, 0 ); }
 
-	/* Write the document to a string using formatted printing ("pretty print"). This
+	/* Write the document to astd::string using formatted printing ("pretty print"). This
 		will allocate a character array (new char[]) and return it as a pointer. The
 		calling code pust call delete[] on the return char* to avoid a memory leak.
 	*/
@@ -1753,17 +1753,17 @@ public:
 	virtual bool Visit( const TiXmlUnknown& unknown );
 
 	/** Set the indent characters for printing. By default 4 spaces
-		but tab (\t) is also useful, or null/empty string for no indentation.
+		but tab (\t) is also useful, or null/emptystd::string for no indentation.
 	*/
 	void SetIndent( const char* _indent )			{ indent = _indent ? _indent : "" ; }
-	/// Query the indention string.
+	/// Query the indentionstd::string.
 	const char* Indent()							{ return indent.c_str(); }
-	/** Set the line breaking string. By default set to newline (\n). 
+	/** Set the line breakingstd::string. By default set to newline (\n). 
 		Some operating systems prefer other characters, or can be
-		set to the null/empty string for no indenation.
+		set to the null/emptystd::string for no indenation.
 	*/
 	void SetLineBreak( const char* _lineBreak )		{ lineBreak = _lineBreak ? _lineBreak : ""; }
-	/// Query the current line breaking string.
+	/// Query the current line breakingstd::string.
 	const char* LineBreak()							{ return lineBreak.c_str(); }
 
 	/** Switch over to "stream printing" which is the most dense formatting without 
@@ -1774,7 +1774,7 @@ public:
 													}	
 	/// Return the result.
 	const char* CStr()								{ return buffer.c_str(); }
-	/// Return the length of the result string.
+	/// Return the length of the resultstd::string.
 	size_t Size()									{ return buffer.size(); }
 
 	#ifdef TIXML_USE_STL

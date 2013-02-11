@@ -12,6 +12,7 @@ namespace yuri {
 
 namespace io {
 
+using namespace yuri::exception;
 BasicFrame::BasicFrame(yuri::size_t planes):
 		numberPlanes(0),dts(0),pts(0),duration(0),format(YURI_FMT_NONE),
 		width(0),height(0),samples(1),channels(1)
@@ -23,7 +24,7 @@ BasicFrame::~BasicFrame() {
 	//if(info) delete info;
 }
 
-Plane<yuri::ubyte_t> &BasicFrame::operator[](yuri::size_t index) throw (OutOfRange)
+Plane<yuri::ubyte_t> &BasicFrame::operator[](yuri::size_t index)
 {
 	if (index >= numberPlanes)
 		throw OutOfRange();
@@ -91,15 +92,15 @@ yuri::usize_t BasicFrame::get_channel_count()
 {
 	return channels;
 }
-void BasicFrame::set_plane(yuri::size_t index, shared_ptr<Plane<yuri::ubyte_t> > plane) throw (OutOfRange)
+void BasicFrame::set_plane(yuri::size_t index, shared_ptr<Plane<yuri::ubyte_t> > plane)
 {
 	if (index >= numberPlanes) throw OutOfRange("Plane number out of range");
 	planes[index] = plane;
 }
 
-shared_ptr<BasicFrame> BasicFrame::get_copy()
+pBasicFrame BasicFrame::get_copy()
 {
-	shared_ptr<BasicFrame> tmp ( new BasicFrame(numberPlanes));
+	pBasicFrame tmp ( new BasicFrame(numberPlanes));
 	tmp->set_parameters(format, width, height);
 	tmp->set_time(pts,dts,duration);
 	for (yuri::size_t i = 0; i < numberPlanes; ++i) {

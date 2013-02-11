@@ -18,7 +18,6 @@ namespace yuri {
 
 namespace io {
 using yuri::log::Log;
-using namespace std;
 using namespace yuri::config;
 
 class JPEGDecoder:public BasicIOThread {
@@ -28,7 +27,7 @@ public:
 	static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception);
 	static shared_ptr<Parameters> configure();
 
-	static bool validate(shared_ptr<BasicFrame> f);
+	static bool validate(pBasicFrame f);
 	virtual bool step();
 	void forceLineWidthMult(int mult) { if (mult>1)line_width_mult = mult; else mult=1; }
 protected:
@@ -42,7 +41,7 @@ protected:
 	static void termSource(jpeg_decompress_struct* cinfo);
 	static void errorExit(jpeg_common_struct* cinfo);
 	void abort();
-	shared_ptr<BasicFrame> frame;
+	pBasicFrame frame;
 	int line_width_mult;
 	bool aborted;
 

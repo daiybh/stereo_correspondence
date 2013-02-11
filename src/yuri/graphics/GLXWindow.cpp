@@ -115,14 +115,14 @@ bool GLXWindow::load_config()
 
 	config->get_value(prefix+".name",winname,prefix);
 */
-	screen = params["display"].get<string>();
+	screen = params["display"].get<std::string>();
 	use_stereo = params["stereo"].get<bool>();
 	show_cursor = params["cursor"].get<bool>();
 	x = params["x"].get<yuri::ssize_t>();
 	y = params["y"].get<yuri::ssize_t>();
 	width = params["width"].get<yuri::size_t>();
 	height = params["height"].get<yuri::size_t>();
-	//string s = params["key_callback"].get<string>();
+	//std::string s = params["key_callback"].get<std::string>();
 	//keyCallback = config->get_callback(s);
 	return true;
 }

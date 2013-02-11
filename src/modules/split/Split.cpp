@@ -45,7 +45,7 @@ Split::~Split() {
 
 bool Split::step()
 {
-	shared_ptr<BasicFrame> frame;
+	pBasicFrame frame;
 	if (!in[0] || !(frame = in[0]->pop_frame()))
 		return true;
 
@@ -53,11 +53,11 @@ bool Split::step()
 	left = (frame->get_width() / 2)&~0x1;
 	right = frame->get_width() - left;
 	yuri::size_t height = frame->get_height();
-	shared_ptr<BasicFrame> frame_out1 = allocate_empty_frame(frame->get_format(),left, height);
-	shared_ptr<BasicFrame> frame_out2 = allocate_empty_frame(frame->get_format(),right, height);
+	pBasicFrame frame_out1 = allocate_empty_frame(frame->get_format(),left, height);
+	pBasicFrame frame_out2 = allocate_empty_frame(frame->get_format(),right, height);
 	FormatInfo_t info = BasicPipe::get_format_info(frame->get_format());
 	yuri::size_t Bpp = info->bpp >> 3;
-	//log[verbose_debug] << "size: " << dest_w <<"x"<<dest_h<<"+"<<dest_x<<"+"<<dest_y<<" at "<<Bpp<<"Bpp"<<endl;
+	//log[verbose_debug] << "size: " << dest_w <<"x"<<dest_h<<"+"<<dest_x<<"+"<<dest_y<<" at "<<Bpp<<"Bpp"<<std::endl;
 	yuri::ubyte_t *out_ptr1=(*frame_out1)[0].data.get();
 	yuri::ubyte_t *out_ptr2=(*frame_out2)[0].data.get();
 	yuri::ubyte_t *ptr = (*frame)[0].data.get();

@@ -39,7 +39,7 @@ distribution.
 
 // Note tha "PutString" hardcodes the same list. This
 // is less flexible than it appears. Changing the entries
-// or order will break putstring.	
+// or order will break pustd::string.	
 TiXmlBase::Entity TiXmlBase::entity[ TiXmlBase::NUM_ENTITY ] = 
 {
 	{ "&amp;",  5, '&' },
@@ -1367,7 +1367,7 @@ const char* TiXmlComment::Parse( const char* p, TiXmlParsingData* data, TiXmlEnc
 	              they may appear within the document type declaration at places allowed by the grammar. 
 				  They are not part of the document's character data; an XML processor MAY, but need not, 
 				  make it possible for an application to retrieve the text of comments. For compatibility, 
-				  the string "--" (double-hyphen) MUST NOT occur within comments.] Parameter entity 
+				  thestd::string "--" (double-hyphen) MUST NOT occur within comments.] Parameter entity 
 				  references MUST NOT be recognized within comments.
 
 				  An example of a comment:
@@ -1429,13 +1429,13 @@ const char* TiXmlAttribute::Parse( const char* p, TiXmlParsingData* data, TiXmlE
 	if ( *p == SINGLE_QUOTE )
 	{
 		++p;
-		end = "\'";		// single quote in string
+		end = "\'";		// single quote instd::string
 		p = ReadText( p, &value, false, end, false, encoding );
 	}
 	else if ( *p == DOUBLE_QUOTE )
 	{
 		++p;
-		end = "\"";		// double quote in string
+		end = "\"";		// double quote instd::string
 		p = ReadText( p, &value, false, end, false, encoding );
 	}
 	else

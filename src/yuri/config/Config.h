@@ -17,17 +17,6 @@
 #include "yuri/exception/OutOfRange.h"
 #include "Callback.h"
 #include <boost/shared_ptr.hpp>
-//include "RegisteredClass.h"
-
-
-//define REGISTER(name,generator,configurator) yuri::config::RegisteredClass* #name_c=new yuri::config::RegisteredClass(name,generator,configurator);
-
-//define REGISTER_CLASS static yuri::config::RegisteredClass _reg
-//define REGISTER(c,name,generator,configurator) yuri::config::RegisteredClass  c::_reg(name,generator,configurator)
-
-//define NAMEGEN(a,b) a ## b
-//define REGISTER(c,name,generator,configurator) yuri::config::RegisteredClassTemplate<c>  NAMEGEN(_reg_,c) (name,generator,configurator)
-
 
 namespace yuri
 {
@@ -35,7 +24,6 @@ namespace config
 {
 
 using namespace yuri::log;
-using boost::shared_ptr;
 class Config
 {
 public:
@@ -54,7 +42,6 @@ protected:
 	bool read_config_file(std::string filename);
 	const char * get_env(std::string path);
 	Log log;
-	//libconfig::Config *config;
 	boost::mutex config_mutex;
 	std::map<std::string,shared_ptr<Callback> > callbacks;
 #ifdef YURI_HAVE_LIBCONFIG
