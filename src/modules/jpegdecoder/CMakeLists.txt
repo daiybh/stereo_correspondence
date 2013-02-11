@@ -1,5 +1,3 @@
-find_package(JPEG)
-
 # Set name of the module
 SET (MODULE jpegdecoder)
 

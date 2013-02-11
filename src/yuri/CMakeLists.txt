@@ -6,7 +6,7 @@ SET (YURI_SRC )
 find_package( Boost 1.46 COMPONENTS thread system filesystem REQUIRED)
 find_package( X11  REQUIRED)
 find_package( OpenGL REQUIRED)
-CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
+
 CHECK_INCLUDE_FILES (stdint.h HAVE_STDINT_H)
 
 IF (NOT HAVE_STDINT_H)
