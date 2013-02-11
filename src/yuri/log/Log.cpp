@@ -30,17 +30,17 @@ std::map<_debug_flags,string> level_colors=boost::assign::map_list_of<_debug_fla
 (verbose_debug,"\033[36m")
 (trace,"\033[4;36m");
 }
-Log::Log(std::ostream &out):out(new guarded_stream(out)),
+Log::Log(std::ostream &out):uid(uids++),out(new guarded_stream(out)),
 #ifdef USE_MPI_
 id(-1),
 #else
 id(0),
 #endif
-ids("")
+ids(""),flags(normal),output_flags(normal),quiet(false)
 {
-	uid=uids++;
-	flags=normal;
-	output_flags = normal ;//| debug | warning | error | fatal | info;
+//	uid=uids++;
+//	flags=normal;
+//	output_flags = normal ;//| debug | warning | error | fatal | info;
 
 }
 
@@ -54,14 +54,16 @@ void Log::setID(int id)
 	this->id=id;
 }
 
-Log::Log(const Log &log):out(log.out)
+Log::Log(const Log &log):uid(uids++),out(log.out),id(log.id),ids(""),flags(log.flags),
+		output_flags(log.output_flags),quiet(log.quiet)
 {
-	this->uid=uids++;
-	this->id=log.id;
-	this->ids="";
-	this->output_flags=log.output_flags;
+//	this->uid=uids++;
+//	this->id=log.id;
+//	this->ids="";
+//	this->output_flags=log.output_flags;
 	(*this)[verbose_debug] << "Copying logger "	<< log.uid << " -> " << uid	<< std::endl;
-	this->flags=log.flags;
+//	this->flags=log.flags;
+//	quiet=log.quiet;
 
 }
 
