@@ -15,8 +15,12 @@ IF(JPEG_FOUND)
 	add_subdirectory(jpegencoder)
 ENDIF()
 
-
 CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
 IF(HAVE_VIDEODEV2_H)
 	add_subdirectory(v4l2)
+ENDIF()
+
+find_package(PNG)
+IF(PNG_FOUND)
+	add_subdirectory(pngencoder)
 ENDIF()
