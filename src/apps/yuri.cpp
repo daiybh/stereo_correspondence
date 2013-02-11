@@ -36,7 +36,7 @@ static void sigHandler(int sig, siginfo_t *siginfo, void *context);
 static struct sigaction act;
 
 
-void sigHandler(int sig, siginfo_t *siginfo, void *context)
+void sigHandler(int /*sig*/, siginfo_t */*siginfo*/, void */*context*/)
 {
 	if (b)
 		b->request_end();

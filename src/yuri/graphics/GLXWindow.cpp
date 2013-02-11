@@ -1,5 +1,6 @@
 #include "GLXWindow.h"
 #include "yuri/graphics/GL.h"
+#include <X11/XKBlib.h>
 #include <GL/glxext.h>
 
 using namespace std;
@@ -333,7 +334,8 @@ std::string GLXWindow::do_get_keyname(int key)
 {
 	assert(display);
 	assert(win);
-	std::string keyname = XKeysymToString(XKeycodeToKeysym(display.get(), key, 0));
+	std::string keyname = XKeysymToString(XkbKeycodeToKeysym(display.get(), key, 0, 0));
+	//std::string keyname = XKeysymToString(XKeycodeToKeysym(display.get(), key, 0));
 	return keyname;
 }
 
@@ -388,6 +390,9 @@ bool GLXWindow::set_vsync(bool state)
 #else
 	return false;
 #endif
+#else
+	(void)state;
+	return false;
 #endif
 }
 } // End of graphics

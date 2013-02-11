@@ -44,7 +44,7 @@ shared_ptr<BasicFrame> BasicIOThread::allocate_frame_from_memory(const yuri::uby
 	return allocate_frame_from_memory(smem,size,large);
 }
 
-shared_ptr<BasicFrame> BasicIOThread::allocate_frame_from_memory(shared_array<yuri::ubyte_t> mem, yuri::size_t size, bool large)
+shared_ptr<BasicFrame> BasicIOThread::allocate_frame_from_memory(shared_array<yuri::ubyte_t> mem, yuri::size_t size, bool /*large*/)
 {
 	shared_ptr<BasicFrame> f(new BasicFrame());
 	f->set_planes_count(1);
@@ -117,7 +117,7 @@ void BasicIOThread::run()
 	IO_THREAD_POST_RUN
 }
 
-void BasicIOThread::connect_in(yuri::sint_t index,shared_ptr<BasicPipe> pipe) throw (OutOfRange)
+void BasicIOThread::connect_in(yuri::sint_t index,shared_ptr<BasicPipe> pipe)
 {
 	if (index < 0 || static_cast<yuri::uint_t>(index) >= in.size()) throw OutOfRange("Input pipe out of Range");
 #ifdef BASICIOTHREAD_ENABLE_PORT_LOCK
@@ -136,7 +136,7 @@ void BasicIOThread::connect_in(yuri::sint_t index,shared_ptr<BasicPipe> pipe) th
 	set_fds();
 
 }
-void BasicIOThread::connect_out(yuri::sint_t index,shared_ptr<BasicPipe> pipe) throw (OutOfRange)
+void BasicIOThread::connect_out(yuri::sint_t index,shared_ptr<BasicPipe> pipe)
 {
 	if (index < 0 || static_cast<yuri::uint_t>(index) >= out.size()) throw OutOfRange("Output pipe out of Range");
 #ifdef BASICIOTHREAD_ENABLE_PORT_LOCK

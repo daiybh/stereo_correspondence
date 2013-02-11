@@ -23,7 +23,7 @@ public:
 	IO_THREAD_GENERATOR_DECLARATION
 	static shared_ptr<Parameters> configure();
 
-	virtual void connect_out(int index,shared_ptr<BasicPipe> pipe) throw (OutOfRange);
+	virtual void connect_out(int index,shared_ptr<BasicPipe> pipe);
 	virtual bool step();
 	virtual bool set_param(Parameter &parameter);
 protected:

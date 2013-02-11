@@ -47,20 +47,21 @@ bool Crop::step()
 		return true;
 
 	yuri::ssize_t x = dest_x, y = dest_y, w = dest_w, h = dest_h;
-	if (x >= frame->get_width() || y >= frame->get_height())
+	if (x >= static_cast<yuri::ssize_t>(frame->get_width()) || y >= static_cast<yuri::ssize_t>(frame->get_height()))
 		return true;
 	if (w < 0) {
 		w = frame->get_width() - x;
-	} else 	if (x + w > frame->get_width()) {
+	} else 	if (x + w > static_cast<yuri::ssize_t>(frame->get_width())) {
 		w = frame->get_width() - x;
 	}
 	if (h < 0) {
-		h = frame->get_height() - y;
-	} else if (y + h > frame->get_height()) {
+		h = static_cast<yuri::ssize_t>(frame->get_height()) - y;
+	} else if (y + h > static_cast<yuri::ssize_t>(frame->get_height())) {
 		h = frame->get_width() - y;
 	}
 	log[verbose_debug] << "X: " << x << ", Y: " << y << ", W: " << w<< ", H: " << h <<endl;
-	if (!x && !y && w==frame->get_width() && h==frame->get_height()) {
+	if (!x && !y && w==static_cast<yuri::ssize_t>(frame->get_width())
+			&& h==static_cast<yuri::ssize_t>(frame->get_height())) {
 		log[verbose_debug] << "Passing thru" << endl;
 		push_raw_video_frame(0,frame);
 		return true;

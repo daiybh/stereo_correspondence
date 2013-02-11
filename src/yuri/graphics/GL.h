@@ -58,11 +58,11 @@ struct _texture_info {
 	inline void gen_texture(int id) {
 		if (tid[id]==(GLuint)-1) glGenTextures(1,tid+id);
 	}
-	void set_tex_coords(float *v) {
-		glTexCoord2fv(v);
+	void set_tex_coords(double  *v) {
+		glTexCoord2dv(v);
 		for (int i=0;i<8;++i) {
 			if (tid[i]!=(GLuint)-1) {
-				glMultiTexCoord2fv(GL_TEXTURE0+i,v);
+				glMultiTexCoord2dv(GL_TEXTURE0+i,v);
 			}
 		}
 	}

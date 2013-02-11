@@ -123,7 +123,7 @@ void SimpleRenderer::run()
 	IO_THREAD_POST_RUN
 }
 
-void SimpleRenderer::init_gl(pThreadBase global, pThreadBase data)
+void SimpleRenderer::init_gl(pThreadBase global, pThreadBase /*data*/)
 {
 	if (global.expired()) return;
 	shared_ptr<WindowBase> win = dynamic_pointer_cast<WindowBase>(global.lock());

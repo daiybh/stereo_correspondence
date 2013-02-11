@@ -45,8 +45,8 @@ public:
 		{ boost::mutex::scoped_lock l(port_lock); return in_ports; }
 	virtual inline yuri::sint_t get_no_out_ports()
 		{ boost::mutex::scoped_lock l(port_lock); return out_ports; }
-	virtual void connect_in(yuri::sint_t index,shared_ptr<BasicPipe> pipe) throw (OutOfRange);
-	virtual void connect_out(yuri::sint_t index,shared_ptr<BasicPipe> pipe) throw (OutOfRange);
+	virtual void connect_in(yuri::sint_t index,shared_ptr<BasicPipe> pipe);
+	virtual void connect_out(yuri::sint_t index,shared_ptr<BasicPipe> pipe);
 	virtual void close_pipes();
 	virtual void set_latency(yuri::size_t lat) { latency=lat; }
 	virtual bool pipes_data_available();

@@ -230,8 +230,8 @@ void GL::generate_texture(uint tid, shared_ptr<BasicFrame> frame)
 				yuri::ubyte_t *img = new yuri::ubyte_t [w*h*3];
 				yuri::ubyte_t *p = (*frame)[0].data.get();
 				yuri::ubyte_t *ty = img, *tu=img+1, *tv=img+2;
-				yuri::ubyte_t y,u,v;
-				for (int i=0;i<w*h/2;++i) {
+//				yuri::ubyte_t y,u,v;
+				for (int i=0;i<static_cast<int>(w*h/2);++i) {
 					/* *t++=*p++;
 					u = *t++ = *p++;
 					y = *p++;
@@ -358,7 +358,7 @@ void GL::generate_texture(uint tid, shared_ptr<BasicFrame> frame)
 			}
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAX_LEVEL, level-1);
-			GLenum e = glGetError();
+			/*GLenum e = */glGetError();
 			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,
 								simple_fragment_shader);
 		} break;
@@ -428,7 +428,7 @@ void GL::draw_texture(uint tid, shared_ptr<WindowBase> win,  GLdouble width,
 	}
 	glActiveTexture(GL_TEXTURE0);
 	glBegin(GL_QUADS);
-	float tex_coords[][2]={	{x_0, y_1},
+	double tex_coords[][2]={	{x_0, y_1},
 							{x_1, y_1},
 							{x_1, y_0},
 							{x_0, y_0}};
@@ -452,11 +452,11 @@ void GL::draw_texture(uint tid, shared_ptr<WindowBase> win,  GLdouble width,
 			h = win->get_height()*textures[tid].tx/textures[tid].ty;
 			lx = 0.5f - (h/(2.0f*win->get_width()));
 		}
-		GLdouble vx_0, vx_1, vy_0, vy_1;
-		vx_0 = x + lx/width;
-		vx_1 = x + width - lx/width;
-		vy_0 = y + ly/height;
-		vy_1 = y + height- lx/height;
+//		GLdouble vx_0, vx_1, vy_0, vy_1;
+//		vx_0 = x + lx/width;
+//		vx_1 = x + width - lx/width;
+//		vy_0 = y + ly/height;
+//		vy_1 = y + height- lx/height;
 		glTexCoord2f(x_0, y_1);
 		glVertex2f(lx, ly);
 		glTexCoord2f(x_1, y_1);

@@ -27,11 +27,11 @@ public:
 	virtual inline int get_height() { return height; }
 	virtual inline int get_x() { return x; }
 	virtual inline int get_y() { return y; }
-	virtual bool resize(unsigned int w, unsigned int h) {return false;}
-	virtual void show(bool value=true) {};
+	virtual bool resize(unsigned int, unsigned int) {return false;}
+	virtual void show(bool /*value*/=true) {};
 	virtual bool create()=0;
 	virtual void swap_buffers() {}
-	virtual bool check_key(int keysym) { return false; }
+	virtual bool check_key(int /*keysym*/) { return false; }
 	virtual void exec(shared_ptr<yuri::config::Callback>) { }
 	virtual bool have_stereo() { return false; }
 	virtual inline std::string getName() { return name; }

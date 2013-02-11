@@ -33,7 +33,7 @@ Dup::~Dup() {
 }
 
 
-void Dup::connect_out(int index, shared_ptr<BasicPipe> p) throw (OutOfRange)
+void Dup::connect_out(int index, shared_ptr<BasicPipe> p)
 {
 	if (out_ports<index) {
 		log[warning]
@@ -53,11 +53,9 @@ bool Dup::step()
 {
 	shared_ptr<BasicFrame> f;
 	if (!in[0]) return true;
-	long type;
 	while ((f = in[0]->pop_frame()).get()) {
 		log[verbose_debug] << "Read frame with format: " << BasicPipe::get_format_string(f->get_format()) << endl;
 		const int ports = out_ports;
-		type = in[0]->get_type();
 		if (ports) for (int i = 0; i < ports; ++i) {
 			shared_ptr<BasicFrame> f2;
 			if (i != ports - 1 && hard_dup) f2 = f->get_copy();
