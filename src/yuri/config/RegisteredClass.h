@@ -19,8 +19,15 @@
 #include "yuri/config/Parameters.h"
 #include "yuri/config/Instance.h"
 
+#ifdef YURI_MODULE_IN_TREE
 #define REGISTER(name,classname) namespace { yuri::config::RegisteredClassSpecialized<classname>  __reg__ (name); }
-
+#else
+#define REGISTER(name,classname) \
+extern "C" { \
+std::string yuri_module_get_name() {return name;}\
+void 		yuri_module_register() {yuri::config::RegisteredClassSpecialized<classname>  *__reg__ = new yuri::config::RegisteredClassSpecialized<classname>(name);(void)__reg__;}\
+}
+#endif
 namespace yuri {
 namespace config {
 

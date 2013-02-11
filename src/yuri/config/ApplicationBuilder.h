@@ -68,14 +68,18 @@ public:
 	EXPORT void run();
 	EXPORT shared_ptr<BasicIOThread> get_node(string id);
 	bool prepare_threads();
-
+	bool find_modules();
+	bool load_modules();
 protected:
+	bool process_module_dir(TiXmlElement &element);
+	bool process_module(TiXmlElement &element);
 	bool process_node(TiXmlElement &element);
 	bool process_link(TiXmlElement &element);
 	bool process_variable(TiXmlElement &element);
 	bool parse_parameters(TiXmlElement &element,Parameters &params);
 	void clear_tree();
 	//bool check_links();
+
 
 	bool prepare_links();
 	bool spawn_threads();
@@ -84,7 +88,7 @@ protected:
 	bool delete_pipes();
 	bool step();
 
-	void init() throw(Exception);
+	void init();
 	void init_local_params();
 	void show_params(Parameters& _params, string prefix="\t\t");
 	void fetch_tids();
@@ -103,6 +107,8 @@ protected:
 	map<string,shared_ptr<BasicIOThread> > threads;
 	map<string,shared_ptr<BasicPipe> > pipes;
 	map<string,shared_ptr<VariableRecord> > variables;
+	std::vector<std::string> modules;
+	std::vector<std::string> module_dirs;
 	map<string,pid_t > tids;
 
 };

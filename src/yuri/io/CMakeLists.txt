@@ -8,8 +8,6 @@ SET(YURI_SRC ${YURI_SRC}
 	io/BasicPipe.h
 	io/BlankGenerator.cpp
 	io/BlankGenerator.h
-	io/Crop.cpp
-	io/Crop.h
 	io/Dup.cpp
 	io/Dup.h
 	io/FileDump.cpp
@@ -24,7 +22,5 @@ SET(YURI_SRC ${YURI_SRC}
 	io/SimpleRenderer.cpp
 	io/SimpleRenderer.h
 	io/types.h
-	io/V4l2Source.cpp
-	io/V4l2Source.h
 	PARENT_SCOPE)
 	

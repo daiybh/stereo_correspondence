@@ -12,7 +12,8 @@ OPTION (BUILD_SHARED_LIBS "Build shared libraries." ON)
 SET(LIBNAME yuri_light)
 
 include_directories( ${CMAKE_SOURCE_DIR}/src )
-
+SET (BIN_DIR ${CMAKE_BINARY_DIR}/bin)
+SET (MODULE_DIR ${BIN_DIR}/modules)
 add_subdirectory(src)
 
 

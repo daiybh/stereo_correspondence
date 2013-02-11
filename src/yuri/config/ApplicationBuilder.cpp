@@ -118,7 +118,38 @@ void ApplicationBuilder::run()
 				<< e.what() << ")" << endl;
 	}
 }
+bool ApplicationBuilder::find_modules()
+{
+	BOOST_FOREACH(string p, module_dirs) {
+		boost::filesystem::path p_(p);
+		if (boost::filesystem::exists(p_) &&
+				boost::filesystem::is_directory(p_)) {
+			log[debug] << "Looking for modules in " << p << "\n";
+			for (boost::filesystem::directory_iterator dit(p_);
+					dit !=boost::filesystem::directory_iterator(); ++dit) {
+				boost::filesystem::directory_entry d = *dit;
+				const std::string name = d.path().filename().native();
+				if (name.substr(0,16)=="libyuri2_module_") {
+					log[info] << "\tFound module " << name << "\n";
+					modules.push_back(d.path().native());
+				} else log[info] << "" << name.substr(0,13) << "\n";
+			}
+		}
+	}
+	return true;
+}
+bool ApplicationBuilder::load_modules()
+{
+	BOOST_FOREACH(string s, modules) {
+		try{
+			bool loaded = RegisteredClass::load_module(s);
+			log[info] << "Loading " << s<< ": "<<(loaded?"OK":"Failed") << "\n";
+		}
+		catch (yuri::exception::Exception &) {}
 
+	}
+	return true;
+}
 bool ApplicationBuilder::load_file(string path)
 {
 	//if (doc) delete doc;
@@ -143,6 +174,19 @@ bool ApplicationBuilder::load_file(string path)
 		parse_parameters(*node,params);
 	}
 	init_local_params();
+
+	node=0;
+	while ((node = dynamic_cast<TiXmlElement*>(root->IterateChildren("module_dir",node)))) {
+		if (!process_module_dir(*node)) continue;
+	}
+	find_modules();
+	node=0;
+	while ((node = dynamic_cast<TiXmlElement*>(root->IterateChildren("module",node)))) {
+		if (!process_module(*node)) continue;
+	}
+
+	load_modules();
+
 	node=0;
 	while ((node = dynamic_cast<TiXmlElement*>(root->IterateChildren("variable",node)))) {
 		if (!process_variable(*node)) continue;
@@ -158,6 +202,29 @@ bool ApplicationBuilder::load_file(string path)
 	}
 	return (document_loaded = true);
 }
+bool ApplicationBuilder::process_module_dir(TiXmlElement &node)
+{
+	string path;
+	if (node.QueryValueAttribute("path",&path)!=TIXML_SUCCESS) {
+		log[error] << "Failed to load path attribute!" << endl;
+		return false;
+	}
+	log[debug] << "Found module dir" << path << "\n";
+	module_dirs.push_back(path);
+	return true;
+}
+bool ApplicationBuilder::process_module(TiXmlElement &node)
+{
+	string path;
+	if (node.QueryValueAttribute("path",&path)!=TIXML_SUCCESS) {
+		log[error] << "Failed to load path attribute!" << endl;
+		return false;
+	}
+	log[debug] << "Found module " << path << "\n";
+	modules.push_back(path);
+	return true;
+}
+
 
 bool ApplicationBuilder::process_node(TiXmlElement &node)
 {
@@ -436,12 +503,15 @@ shared_ptr<BasicIOThread> ApplicationBuilder::get_node(string id)
 	return threads[id];
 }
 
-void ApplicationBuilder::init()  throw (Exception)
+void ApplicationBuilder::init()
 {
 	string filename=params["config"].get<string>();
 	if (filename!="") {
 		if (!load_file(filename)) throw InitializationFailed(string("Failed to load file ")+filename);
 	}
+	module_dirs.push_back("./modules/");
+	module_dirs.push_back("./bin/modules/");
+	module_dirs.push_back("/usr/lib/yuri2/");
 }
 
 void ApplicationBuilder::init_local_params()

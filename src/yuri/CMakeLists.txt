@@ -27,7 +27,7 @@ SET (YURI_INCLUDE ${YURI_INCLUDE}
 		${X11_INCLUDE_DIRS}
 		)
 SET (YURI_SRC ${YURI_SRC} )
-
+add_definitions("-DYURI_MODULE_IN_TREE")
 
 add_subdirectory(log)
 add_subdirectory(config)
@@ -46,5 +46,6 @@ SET_TARGET_PROPERTIES( ${LIBNAME} PROPERTIES SOVERSION 2 VERSION 2.5.0 )
 install(TARGETS ${LIBNAME} 	RUNTIME DESTINATION bin
 						LIBRARY DESTINATION lib 
 						ARCHIVE DESTINATION lib)
+               
 
 						

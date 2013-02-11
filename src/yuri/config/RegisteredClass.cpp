@@ -224,6 +224,20 @@ bool RegisteredClass::load_module(string path)
 #ifdef __linux__
 	void *handle=dlopen(path.c_str(),RTLD_LAZY);
 	if (!handle) return false;
+	std::string (*get_name)(void) = reinterpret_cast<std::string (*)(void)>(dlsym(handle,"yuri_module_get_name"));
+	void (*register_module)(void) = reinterpret_cast<void (*)(void)>(dlsym(handle,"yuri_module_register"));
+
+	if (!get_name) std::cout << "missing get_name()\n";
+	if (!register_module) std::cout << "Missing register_module\n";
+//	if (RegisteredClass::is_registered(get_name())) std::cout << "Already registered module\n";
+	if (!get_name || !register_module ||
+			RegisteredClass::is_registered(get_name())) {
+		std::cout << "Not a valid module\n";
+		dlclose(handle);
+		return false;
+	}
+	register_module();
+
 	return true;
 #else
 	return false;

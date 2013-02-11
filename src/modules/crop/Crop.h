@@ -8,7 +8,7 @@
 #ifndef CROP_H_
 #define CROP_H_
 
-#include "BasicIOThread.h"
+#include "yuri/io/BasicIOThread.h"
 #include "yuri/config/RegisteredClass.h"
 
 

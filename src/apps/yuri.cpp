@@ -202,6 +202,9 @@ int main(int argc, char**argv)
 		return 1;
 	}
 	if (vm.count("list")) {
+		b.reset( new ApplicationBuilder (l,pThreadBase()));
+		b->find_modules();
+		b->load_modules();
 		l.set_quiet(true);
 		string list_what = vm["list"].as<string>();
 		l[debug] << "Listing " << list_what <<endl;
