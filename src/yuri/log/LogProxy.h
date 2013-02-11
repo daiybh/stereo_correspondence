@@ -10,9 +10,6 @@
 #include <ostream>
 #include <sstream>
 #include <boost/thread.hpp>
-#if __cplusplus >=201103L
-#include <future>
-#endif
 namespace yuri {
 namespace log {
 struct guarded_stream {

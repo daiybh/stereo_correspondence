@@ -8,7 +8,7 @@
 #ifndef DUP_H_
 #define DUP_H_
 
-#include "BasicIOThread.h"
+#include "yuri/io/BasicIOThread.h"
 #include <yuri/config/Config.h>
 #include <yuri/config/Parameters.h>
 #include <yuri/config/RegisteredClass.h>

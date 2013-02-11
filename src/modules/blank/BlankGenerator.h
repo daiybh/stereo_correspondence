@@ -8,7 +8,7 @@
 #ifndef BLANKGENERATOR_H_
 #define BLANKGENERATOR_H_
 
-#include "BasicIOThread.h"
+#include "yuri/io/BasicIOThread.h"
 #include "yuri/config/RegisteredClass.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 

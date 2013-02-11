@@ -1,6 +1,6 @@
 #ifndef NULL_H_
 #define NULL_H_
-#include <yuri/config/RegisteredClass.h>
+#include "yuri/config/RegisteredClass.h"
 
 namespace yuri
 {
