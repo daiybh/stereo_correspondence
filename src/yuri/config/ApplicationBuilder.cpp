@@ -129,7 +129,7 @@ bool ApplicationBuilder::find_modules()
 					dit !=boost::filesystem::directory_iterator(); ++dit) {
 				boost::filesystem::directory_entry d = *dit;
 				const std::string name = d.path().filename().native();
-				if (name.substr(0,16)=="libyuri2_module_") {
+				if (name.substr(0,13)=="yuri2_module_") {
 					log[info] << "\tFound module " << name << "\n";
 					modules.push_back(d.path().native());
 				} else log[info] << "" << name.substr(0,13) << "\n";
