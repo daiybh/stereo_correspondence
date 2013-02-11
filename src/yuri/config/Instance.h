@@ -34,7 +34,7 @@ public:
 
 template<typename T> void Instance::add_parameter(string name, T val)
 {
-	(*params)[id]=val;
+	(*params)[name]=val;
 }
 
 }

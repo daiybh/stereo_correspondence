@@ -233,7 +233,7 @@ void GLXWindow::swap_buffers()
 	glXSwapBuffers(display.get(), win);
 }
 
-void GLXWindow::show()
+void GLXWindow::show(bool /*value*/)
 {
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
 	boost::mutex::scoped_lock l(global_mutex);

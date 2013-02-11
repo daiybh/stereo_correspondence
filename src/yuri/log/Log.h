@@ -7,7 +7,7 @@
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/shared_ptr.hpp>
-#include "NullLog.h"
+#include "LogProxy.h"
 #include "yuri/io/types.h"
 namespace yuri
 {
@@ -33,24 +33,23 @@ enum _debug_flags {
 
 typedef _debug_flags  debug_flags;
 
-class Log: ostringstream
+class Log
 {
 public:
 	EXPORT Log(std::ostream &out);
 	EXPORT Log(const Log& log);
 	EXPORT virtual ~Log();
 	EXPORT void setID(int id);
-	EXPORT template <class T> std::ostream& operator<<(T &t);
+//	EXPORT template <class T> std::ostream& operator<<(T &t);
 	EXPORT void setLabel(std::string s);
 	EXPORT void setFlags(int f) { output_flags=f; }
-	EXPORT Log &operator[](debug_flags f);
+	EXPORT LogProxy operator[](debug_flags f);
 	EXPORT int get_flags() { return output_flags; }
 	EXPORT void set_quiet(bool q) {quiet =q;}
 protected:
 	static int uids;
 	int uid;
-	ostream &out;
-	shared_ptr<ostream> null;
+	shared_ptr<guarded_stream> out;
 	int id;
 	boost::mutex lock;
 	//char *ids;
@@ -65,18 +64,18 @@ protected:
 };
 
 
-template <class T> std::ostream &Log::operator <<(T &t)
-{
-	boost::mutex::scoped_lock l(lock);
-	if (flags > (output_flags & flag_mask)) {
-		if (null) return *null;
-		else return *this;
-	}
-	if (!quiet) {
-		return out << ((output_flags&show_level)?print_level():"") << id << ":" << uid << ": "  << ids << print_time() << t;
-	}
-	else return out << t;
-}
+//template <class T> std::ostream &Log::operator <<(T &t)
+//{
+//	boost::mutex::scoped_lock l(lock);
+//	if (flags > (output_flags & flag_mask)) {
+//		if (null) return *null;
+//		else return *this;
+//	}
+//	if (!quiet) {
+//		return out << ((output_flags&show_level)?print_level():"") << id << ":" << uid << ": "  << ids << print_time() << t;
+//	}
+//	else return out << t;
+//}
 
 }
 }

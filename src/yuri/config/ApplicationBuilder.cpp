@@ -120,11 +120,12 @@ void ApplicationBuilder::run()
 }
 bool ApplicationBuilder::find_modules()
 {
+	log[info] << "Looking for modules ("<<module_dirs.size() <<")!\n";
 	BOOST_FOREACH(string p, module_dirs) {
 		boost::filesystem::path p_(p);
 		if (boost::filesystem::exists(p_) &&
 				boost::filesystem::is_directory(p_)) {
-			log[debug] << "Looking for modules in " << p << "\n";
+			log[info] << "Looking for modules in " << p << "\n";
 			for (boost::filesystem::directory_iterator dit(p_);
 					dit !=boost::filesystem::directory_iterator(); ++dit) {
 				boost::filesystem::directory_entry d = *dit;
@@ -505,17 +506,19 @@ shared_ptr<BasicIOThread> ApplicationBuilder::get_node(string id)
 
 void ApplicationBuilder::init()
 {
-	string filename=params["config"].get<string>();
+	log[info] << "Populating default module paths\n";
+		module_dirs.push_back("./modules/");
+		module_dirs.push_back("./bin/modules/");
+	#ifdef INSTALL_PREFIX
+		module_dirs.push_back(INSTALL_PREFIX "/lib/yuri2/");
+	#else
+		module_dirs.push_back("/usr/lib/yuri2/");
+	#endif
+	const string filename=params["config"].get<string>();
 	if (filename!="") {
 		if (!load_file(filename)) throw InitializationFailed(string("Failed to load file ")+filename);
 	}
-	module_dirs.push_back("./modules/");
-	module_dirs.push_back("./bin/modules/");
-#ifdef INSTALL_PREFIX
-	module_dirs.push_back(INSTALL_PREFIX "/lib/yuri2/");
-#else
-	module_dirs.push_back("/usr/lib/yuri2/");
-#endif
+
 }
 
 void ApplicationBuilder::init_local_params()

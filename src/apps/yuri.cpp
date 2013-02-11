@@ -28,7 +28,7 @@ namespace po = boost::program_options;
 static shared_ptr<ApplicationBuilder> b;
 static po::options_description options("General options");
 static int verbosity;
-static Log l(cout);
+static Log l(clog);
 
 
 #ifdef __linux__
@@ -221,7 +221,7 @@ int main(int argc, char**argv)
 	}*/
 
 	if (filename.empty()) {
-		l << "No input file specified" << endl;
+		l[fatal] << "No input file specified" << endl;
 		usage();
 		return -1;
 	}

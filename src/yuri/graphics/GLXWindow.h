@@ -51,7 +51,7 @@ public:
 	virtual void setHideDecoration(bool value);
 	virtual void addAttributes(int no,GLint *attrs);
 	virtual void addAttribute(GLint attr);
-	virtual void show();
+	virtual void show(bool /*value*/=true);
 
 	inline Display *getDisplay() { return display.get(); }
 	inline Window getWindow() { return win; }

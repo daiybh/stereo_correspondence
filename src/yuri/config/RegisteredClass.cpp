@@ -225,7 +225,7 @@ bool RegisteredClass::load_module(string path)
 	void *handle=dlopen(path.c_str(),RTLD_LAZY);
 	if (!handle) return false;
 	// The ugly cast to uintptr_t is here for the sole purpose of silencing g++ warnings.
-	std::string (*get_name)(void) = reinterpret_cast<std::string (*)(void)>(reinterpret_cast<uintptr_t>(dlsym(handle,"yuri_module_get_name")));
+	const char * (*get_name)(void) = reinterpret_cast<const char * (*)(void)>(reinterpret_cast<uintptr_t>(dlsym(handle,"yuri_module_get_name")));
 	void (*register_module)(void) = reinterpret_cast<void (*)(void)>(reinterpret_cast<uintptr_t>(dlsym(handle,"yuri_module_register")));
 
 	if (!get_name || !register_module ||
