@@ -11,7 +11,7 @@ SET (SRC JPEGDecoder.cpp
 
 # You shouldn't need to edit anything below this line 
 add_library(${MODULE} MODULE ${SRC})
-include_directories(${JPEG_LIBRARIES})
+include_directories(${JPEG_INCLUDE_DIR})
 target_link_libraries(${MODULE} ${LIBNAME} ${JPEG_LIBRARIES})
 install(TARGETS ${MODULE} LIBRARY DESTINATION ${TARGET_MODULE_PATH}) 
 
