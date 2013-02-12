@@ -9,7 +9,7 @@
 #endif
 
 #include "yuri/config/ApplicationBuilder.h"
-//#include "yuri/version.h"
+#include "yuri/version.h"
 #include <iostream>
 #include <memory>
 #include <exception>
@@ -144,8 +144,8 @@ void list_converters(Log l_)
 }
 void version()
 {
-	l[fatal] << "yuri version " << YURI_VERSION << endl;
-	//l[fatal] << "libyuri version " << yuri::get_yuri_version() << endl;
+	//l[fatal] << "yuri version " << YURI_VERSION << endl;
+	l[fatal] << "libyuri version " << yuri::yuri_version << endl;
 
 }
 int main(int argc, char**argv)

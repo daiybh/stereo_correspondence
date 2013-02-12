@@ -66,12 +66,20 @@ ENDIF()
 #std::string(REGEX MATCH ".*[.]h$" tmp ${item}) 
 #	SET(YURI_HEADERS ${YURI_HEADERS} ${tmp})
 #ENDFOREACH(item)
+
+
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/version.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" @ONLY)
+SET(YURI_SRC ${YURI_SRC} "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" ${CMAKE_CURRENT_SOURCE_DIR}/version.h )
+
 IF(${CORE_CUDA})
 	MESSAGE("Building CUDA library!")
 	cuda_add_library(${LIBNAME} ${YURI_SRC})
 ELSE()
 	add_library(${LIBNAME} ${YURI_SRC})
 ENDIF()
+
+
+
 
 IF(UNIX)
 target_link_libraries ( ${LIBNAME} ${YURI_LIBS} rt)
