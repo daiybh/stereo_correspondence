@@ -11,8 +11,6 @@ SET(YURI_SRC ${YURI_SRC}
 	io/PipeConnector.cpp
 	io/PipeConnector.h
 	io/pipe_types.h
-	io/SimpleRenderer.cpp
-	io/SimpleRenderer.h
 	io/types.h
 	PARENT_SCOPE)
 	

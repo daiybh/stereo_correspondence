@@ -7,6 +7,7 @@ add_subdirectory(flip)
 add_subdirectory(null)
 add_subdirectory(rawfilesource)
 add_subdirectory(split)
+add_subdirectory(simplerenderer)
 
 
 find_package(JPEG)
