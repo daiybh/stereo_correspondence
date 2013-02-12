@@ -1,5 +1,5 @@
 #include "AVDecoder.h"
-
+#include "yuri/config/RegisteredClass.h"
 namespace yuri
 {
 namespace video

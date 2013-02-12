@@ -1,7 +1,6 @@
 #ifndef DECODER_H_
 #define DECODER_H_
 #include "yuri/libav/AVCodecBase.h"
-#include "../avscaler/AVScaler.h"
 #include <yuri/config/Config.h>
 namespace yuri
 {
@@ -37,7 +36,7 @@ protected:
 	shared_ptr<AVFrame> frame;
 	float time_step;
 	yuri::size_t last_pts, first_pts;
-	shared_ptr<AVScaler> scaler;
+//	shared_ptr<AVScaler> scaler;
 	long decoding_format;
 	shared_ptr<BasicFrame> input_frame;
 	shared_ptr<BasicFrame> output_frame;
