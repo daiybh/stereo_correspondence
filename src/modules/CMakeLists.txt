@@ -11,17 +11,25 @@ add_subdirectory(simplerenderer)
 
 
 find_package(JPEG)
+find_package(PNG)
+find_package(CURL)
+CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
+
+
 IF(JPEG_FOUND)
 	add_subdirectory(jpegdecoder)
 	add_subdirectory(jpegencoder)
 ENDIF()
 
-CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
 IF(HAVE_VIDEODEV2_H)
 	add_subdirectory(v4l2)
 ENDIF()
 
-find_package(PNG)
 IF(PNG_FOUND)
 	add_subdirectory(pngencoder)
 ENDIF()
+
+IF(CURL_FOUND)
+	add_subdirectory(fetcher)
+ENDIF()
+
