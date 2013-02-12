@@ -52,6 +52,7 @@ void sigHandler(int /*sig*/, siginfo_t */*siginfo*/, void */*context*/)
 
 void usage()
 {
+	l.set_quiet(true);
 	l[fatal]
 			<< "Usage:	yuri [options] [-i] <file> [[-p] params...]" << endl << endl
 			<< options << endl;
