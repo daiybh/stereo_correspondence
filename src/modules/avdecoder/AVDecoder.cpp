@@ -203,12 +203,12 @@ float AVDecoder::get_fps()
 	return (float)cc->time_base.den/(float)cc->time_base.num;
 }
 
-void AVDecoder::force_synchronous_scaler(int w, int h, PixelFormat fmt)
-{
-	if (!scaler) scaler.reset(new AVScaler(log,get_this_ptr()));
-	scaler->set_output_format(w,h,fmt);
-	add_child(scaler);
-}
+//void AVDecoder::force_synchronous_scaler(int w, int h, PixelFormat fmt)
+//{
+//	if (!scaler) scaler.reset(new AVScaler(log,get_this_ptr()));
+//	scaler->set_output_format(w,h,fmt);
+//	add_child(scaler);
+//}
 
 bool AVDecoder::step()
 {

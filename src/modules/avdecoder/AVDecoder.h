@@ -23,7 +23,7 @@ public:
 	bool init_decoder(AVCodecContext *cc);
 	//virtual void run();
 	float get_fps();
-	void force_synchronous_scaler(int w, int h, PixelFormat fmt);
+//	void force_synchronous_scaler(int w, int h, PixelFormat fmt);
 	//virtual void connect_out(int index,Pipe *pipe);
 	//virtual boost::thread* spawn_thread();
 	bool regenerate_contexts(long format,yuri::size_t width, size_t height);
