@@ -15,7 +15,9 @@ find_package(JPEG)
 find_package(PNG)
 find_package(CURL)
 CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
-
+#pkg_check_modules(libavcodec libavcodec) #Already checked by core
+pkg_check_modules(libavformat libavformat) 
+pkg_check_modules(libswscale libswscale)
 
 IF(JPEG_FOUND)
 	add_subdirectory(jpegdecoder)
@@ -34,3 +36,14 @@ IF(CURL_FOUND)
 	add_subdirectory(fetcher)
 ENDIF()
 
+IF(CORE_LIBAV)
+	add_subdirectory(avencoder)
+	
+	IF (${libavformat_FOUND})
+		add_subdirectory(tsmuxer)
+	ENDIF()
+	IF (${libswscale_FOUND})
+		add_subdirectory(avscaler)
+		add_subdirectory(avdecoder)
+	ENDIF()
+ENDIF()

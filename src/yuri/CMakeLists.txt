@@ -6,6 +6,8 @@ SET (YURI_SRC )
 find_package( Boost 1.46 COMPONENTS thread system filesystem REQUIRED)
 find_package( X11  REQUIRED)
 find_package( OpenGL REQUIRED)
+pkg_check_modules(libav libavcodec)
+
 
 CHECK_INCLUDE_FILES (stdint.h HAVE_STDINT_H)
 
@@ -16,15 +18,18 @@ ENDIF()
 
 SET (YURI_LINK ${YURI_LINK} 
 		${Boost_LIBRARY_DIRS} 
-		${X11_LIBRARY_DIRS})
+		${X11_LIBRARY_DIRS}
+		${libav_LIBRARY_DIRS})
 		
 SET (YURI_LIBS ${YURI_LIBS} 
 		${Boost_LIBRARIES}  
 		${X11_LIBRARIES}
-		${OPENGL_gl_LIBRARY})
+		${OPENGL_gl_LIBRARY}
+		${libav_LIBRARIES})
 SET (YURI_INCLUDE ${YURI_INCLUDE} 
 		${Boost_INCLUDE_DIRS}  
 		${X11_INCLUDE_DIRS}
+		${libav_INCLUDE_DIRS}
 		)
 SET (YURI_SRC ${YURI_SRC} )
 add_definitions("-DYURI_MODULE_IN_TREE -DINSTALL_PREFIX=\\\"${CMAKE_INSTALL_PREFIX}\\\"")
@@ -35,6 +40,11 @@ add_subdirectory(threads)
 add_subdirectory(graphics)
 add_subdirectory(exception)
 add_subdirectory(io)
+
+IF(${libav_FOUND})
+	add_subdirectory(libav)
+	SET(CORE_LIBAV TRUE PARENT_SCOPE)
+ENDIF()
 
 #SET (YURI_HEADERS )
 #FOREACH(item ${YURI_SRC})

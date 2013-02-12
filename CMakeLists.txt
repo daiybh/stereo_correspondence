@@ -15,5 +15,6 @@ include_directories( ${CMAKE_SOURCE_DIR}/src )
 SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 SET (MODULE_DIR ${EXECUTABLE_OUTPUT_PATH}/modules)
 SET (TARGET_MODULE_PATH lib/yuri2/)
+SET(CORE_LIBAV FALSE)
 add_subdirectory(src)
 

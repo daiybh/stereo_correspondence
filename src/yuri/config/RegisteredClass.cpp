@@ -229,9 +229,16 @@ bool RegisteredClass::load_module(std::string path)
 	const char * (*get_name)(void) = reinterpret_cast<const char * (*)(void)>(reinterpret_cast<uintptr_t>(dlsym(handle,"yuri_module_get_name")));
 	void (*register_module)(void) = reinterpret_cast<void (*)(void)>(reinterpret_cast<uintptr_t>(dlsym(handle,"yuri_module_register")));
 
-	if (!get_name || !register_module ||
-			RegisteredClass::is_registered(get_name())) {
-		std::cout << "Not a valid module\n";
+	bool valid = true;
+	if (!get_name || !register_module) {
+		valid = false;
+		std::cerr << "Module doesn't export libyuri2 interface\n";
+	}
+	if (valid && RegisteredClass::is_registered(get_name())) {
+		std::cerr << "Module already registered\n";
+		valid = false;
+	}
+	if (!valid) {//	std::cout << "Not a valid module\n";
 		dlclose(handle);
 		return false;
 	}
