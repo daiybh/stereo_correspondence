@@ -4,6 +4,8 @@ ENABLE_LANGUAGE(C)
 
 INCLUDE(FindPkgConfig)
 INCLUDE(CheckIncludeFiles)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
+include(cuda_module)
 
 IF (UNIX)
 add_definitions("-Wall -pedantic -Wextra")
