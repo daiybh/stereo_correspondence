@@ -46,7 +46,8 @@ protected:
 	virtual bool step();
 protected:
 	PixelFormat f_in, f_out;
-	long format_in, format_out, w_in, h_in, w_out, h_out;
+	yuri::format_t format_in, format_out;
+	yuri::ssize_t w_in, h_in, w_out, h_out;
 	bool scaling, transforming, valid_contexts;
 	boost::mutex scaler_lock;
 	shared_ptr<SwsContext> scale_ctx, transform_ctx;

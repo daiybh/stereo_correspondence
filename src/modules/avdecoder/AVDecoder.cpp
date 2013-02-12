@@ -112,8 +112,9 @@ bool AVDecoder::decode_frame()
 			avcodec_decode_video2(cc,frame.get(),&got_px,&pkt);
 			//frame->pts=f->get_pts();
 			if (frame->pts<1) frame->pts=pkt.pts;
-			if (first_pts < 0) first_pts = frame->pts;
-			if (first_pts < 0) first_pts = 0;
+			// BUG: Following expressions are meaningless...
+			//if (first_pts < 0) first_pts = frame->pts;
+			//if (first_pts < 0) first_pts = 0;
 			if (frame->pts < 0) {
 				frame->pts=last_pts;
 			} else last_pts=frame->pts;
@@ -158,7 +159,7 @@ void AVDecoder::do_output_frame()
 			output_frame->set_planes_count(i+1);
 			yuri::size_t line_size = width/fmt->plane_x_subs[i];
 			plane_size = line_size*height/fmt->plane_y_subs[i];
-			assert(line_size <= frame->linesize[i]);
+			assert(line_size <= static_cast<yuri::size_t>(frame->linesize[i]));
 			shared_array<yuri::ubyte_t> smem = allocate_memory_block(plane_size);
 			yuri::ubyte_t *src=frame->data[i], *dest=smem.get();
 			log[verbose_debug] << "Copying plane " << i << ", size: "  << plane_size << endl;
@@ -185,7 +186,7 @@ void AVDecoder::do_output_frame()
 		boost::posix_time::ptime t = boost::posix_time::microsec_clock::local_time();
 		yuri::size_t pts_diff = pts - first_out_pts;
 		boost::posix_time::time_duration delta = t - first_time;
-		if (delta.total_microseconds() > pts_diff) {
+		if (static_cast<yuri::usize_t>(delta.total_microseconds()) > pts_diff) {
 //			log[info] << "TMS: " << delta.total_microseconds() << ", ptd: " << pts_diff << endl;
 			do_out=true;
 		}

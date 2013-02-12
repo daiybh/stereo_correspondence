@@ -17,8 +17,8 @@ shared_ptr<BasicIOThread> AVScaler::generate(Log &_log,pThreadBase parent,Parame
 	if (format == YURI_FMT_NONE) throw InitializationFailed(
 		string("Wrong output format ")+parameters["format"].get<string>());
 	shared_ptr<AVScaler> s(new AVScaler(_log,parent));
-	s->set_output_format(parameters["width"].get<int>(),
-			parameters["height"].get<int>(),
+	s->set_output_format(parameters["width"].get<yuri::ssize_t>(),
+			parameters["height"].get<yuri::ssize_t>(),
 			format);
 	return s;
 }
@@ -217,11 +217,11 @@ bool AVScaler::do_check_input_frame()
 {
 	assert(frame);
 	bool changed = false;
-	if (w_in != frame->get_width()) {
+	if (static_cast<yuri::usize_t>(w_in) != frame->get_width()) {
 		w_in = frame->get_width();
 		changed=true;
 	}
-	if (h_in != frame->get_height()) {
+	if (static_cast<yuri::usize_t>(h_in) != frame->get_height()) {
 		h_in = frame->get_height();
 		changed=true;
 	}

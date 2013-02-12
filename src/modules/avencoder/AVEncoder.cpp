@@ -1,5 +1,7 @@
 #include "AVEncoder.h"
-
+extern "C" {
+#include "libavutil/pixdesc.h"
+}
 namespace yuri
 {
 
@@ -67,13 +69,13 @@ bool AVEncoder::init_encoder()
 	yuri::format_t fmt;
 	while (*p!=PIX_FMT_NONE) {
 		fmt = yuri_pixelformat_from_av(*p);
-		log[info] << "Codec supports format " << avcodec_get_pix_fmt_name(*p) <<
+		log[info] << "Codec supports format " << av_get_pix_fmt_name(*p) <<
 				(fmt==YURI_FMT_NONE?" [Not supported in libyuri]":" [OK]") << endl;
 		if (fmt!=YURI_FMT_NONE) {
 			log[info] << "\tMaps to libyuri format " << BasicPipe::get_format_string(fmt)<<endl;;
 			supported_formats_for_current_codec.insert(fmt);
 		}
-		*p++;
+		(void)*p++;
 	}
 	const AVProfile *prof = c->profiles;
 	if (!prof) {

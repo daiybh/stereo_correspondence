@@ -14,7 +14,7 @@ namespace video {
 REGISTER("tsmuxer",TSMuxer)
 
 
-shared_ptr<BasicIOThread> TSMuxer::generate(Log &_log,pThreadBase parent,Parameters& parameters)
+shared_ptr<BasicIOThread> TSMuxer::generate(Log &_log,pThreadBase parent,Parameters& /*parameters*/)
 	throw (Exception)
 {
 	shared_ptr<TSMuxer> s(new TSMuxer(_log,parent));
@@ -93,7 +93,8 @@ bool TSMuxer::reconfigure(shared_ptr<BasicFrame> frame)
 		return false;
 	}
 	if (!format_context->nb_streams) {
-		shared_ptr<AVStream> s(av_new_stream(format_context.get(),0));
+		shared_ptr<AVStream> s(avformat_new_stream(format_context.get(),0));
+		s->id = 0;
 		streams.push_back(s);
 		s->codec->codec_id = CODEC_ID_MPEG2VIDEO;
 		s->codec->codec_type = AVMEDIA_TYPE_VIDEO;
@@ -143,7 +144,7 @@ int64_t TSMuxer::seek_buffer(void* opaque, int64_t offset, int whence)
 	return muxer->_seek_buffer(offset, whence);
 }
 
-int TSMuxer::_read_buffer(yuri::ubyte_t* buf, int size)
+int TSMuxer::_read_buffer(yuri::ubyte_t* /*buf*/, int /*size*/)
 {
 	log[error] << "TSMuxer::_read_buffer() not implemented" << endl;
 	return -1;
