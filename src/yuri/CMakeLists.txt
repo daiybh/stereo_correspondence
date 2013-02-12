@@ -7,7 +7,7 @@ find_package( Boost 1.46 COMPONENTS thread system filesystem REQUIRED)
 find_package( X11  REQUIRED)
 find_package( OpenGL REQUIRED)
 pkg_check_modules(libav libavcodec)
-
+find_package( CUDA)
 
 CHECK_INCLUDE_FILES (stdint.h HAVE_STDINT_H)
 
@@ -32,7 +32,17 @@ SET (YURI_INCLUDE ${YURI_INCLUDE}
 		${libav_INCLUDE_DIRS}
 		)
 SET (YURI_SRC ${YURI_SRC} )
+IF(${CUDA_FOUND})
+	SET(YURI_INCLUDE ${YURI_INCLUDE} ${CUDA_INCLUDE_DIRS})
+	SET(YURI_LIBS ${YURI_LIBS} ${CUDA_LIBRARIES})
+	SET(YURI_LINK ${YURI_LINK} ${CUDA_LIBRARY_DIRS})
+ENDIF()
+
 add_definitions("-DYURI_MODULE_IN_TREE -DINSTALL_PREFIX=\\\"${CMAKE_INSTALL_PREFIX}\\\"")
+link_directories ( ${YURI_LINK} )
+include_directories ( ${YURI_INCLUDE} )
+
+
 
 add_subdirectory(log)
 add_subdirectory(config)
@@ -45,16 +55,24 @@ IF(${libav_FOUND})
 	add_subdirectory(libav)
 	SET(CORE_LIBAV TRUE PARENT_SCOPE)
 ENDIF()
+IF(${CUDA_FOUND})
+	add_subdirectory(cuda)
+	SET(CORE_CUDA TRUE PARENT_SCOPE)
+	SET(CORE_CUDA TRUE)
+ENDIF()
 
 #SET (YURI_HEADERS )
 #FOREACH(item ${YURI_SRC})
 #std::string(REGEX MATCH ".*[.]h$" tmp ${item}) 
 #	SET(YURI_HEADERS ${YURI_HEADERS} ${tmp})
 #ENDFOREACH(item)
+IF(${CORE_CUDA})
+	MESSAGE("Building CUDA library!")
+	cuda_add_library(${LIBNAME} ${YURI_SRC})
+ELSE()
+	add_library(${LIBNAME} ${YURI_SRC})
+ENDIF()
 
-add_library(${LIBNAME} ${YURI_SRC})
-link_directories ( ${YURI_LINK} )
-include_directories ( ${YURI_INCLUDE} )
 IF(UNIX)
 target_link_libraries ( ${LIBNAME} ${YURI_LIBS} rt)
 ENDIF()
