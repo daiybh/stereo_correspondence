@@ -1,3 +1,4 @@
+add_subdirectory(anaglyph)
 add_subdirectory(blank)
 add_subdirectory(crop)
 add_subdirectory(dummy)
