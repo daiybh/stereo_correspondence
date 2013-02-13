@@ -10,19 +10,21 @@
 
 #include "yuri/io/BasicIOThread.h"
 // Libsail has some warnings, let's disable them for the moment (before upstream fixes them)
+// Clang has to be first as it also defines __GNUC__
 #if defined __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
+#pragma clang diagnostic ignored "-Wc++11-extra-semi"
 #elif defined __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-pedantic"
 #endif
 #include "libsage.h"
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#elif defined __clang__
+#if defined __clang__
 #pragma clang diagnostic pop
+#elif defined __GNUC__
+#pragma GCC  diagnostic pop
 #endif
 
 namespace yuri {

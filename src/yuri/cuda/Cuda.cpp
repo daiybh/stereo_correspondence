@@ -79,7 +79,7 @@ bool Cuda::lock_mem(void *mem, yuri::size_t size)
 	log[error] << "Failed to lock memory: "<< cudaGetErrorString(err) << std::endl;
 	return false;
 }
-bool Cuda::unlock_mem(void *mem, yuri::size_t size)
+bool Cuda::unlock_mem(void *mem, yuri::size_t /*size*/)
 {
 	cudaError_t err;
 	if ((err=cudaHostUnregister(mem))==cudaSuccess) {
@@ -160,7 +160,7 @@ bool Cuda::register_texture(GL &gl, yuri::uint_t tid)
 	return false;
 }
 // Mapping texture to array
-bool Cuda::map_texture(GL &gl, yuri::uint_t tid)
+bool Cuda::map_texture(GL &/*gl*/, yuri::uint_t tid)
 {
 //	cudaGraphicsResource *res=textures[tid].resource;
 	cudaError_t ret;
@@ -177,9 +177,9 @@ bool Cuda::map_texture(GL &gl, yuri::uint_t tid)
 	//textures[tid].array = array;
 	return true;
 }
-bool Cuda::unmap_texture(GL &gl, yuri::uint_t tid)
+bool Cuda::unmap_texture(GL &/*gl*/, yuri::uint_t tid)
 {
-	cudaGraphicsResource *res=textures[tid].resource;
+	//cudaGraphicsResource *res=textures[tid].resource;
 	cudaError_t err;
 	textures[tid].array = 0;
 	if ((err=cudaGraphicsUnmapResources (1, &textures[tid].resource,0)) != cudaSuccess) {

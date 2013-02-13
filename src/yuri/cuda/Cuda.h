@@ -9,13 +9,29 @@
 #define CUDA_H_
 #include "yuri/log/Log.h"
 #include <boost/smart_ptr.hpp>
+// cuda_runtime has some warnings about usage of long long, let's disable them for the moment (before upstream fixes them)
+#if defined __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc++11-long-long"
+#elif defined __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wlong-long"
+#endif
 #include <cuda_runtime.h>
+#if defined __clang__
+#pragma clang diagnostic pop
+#elif defined __GNUC__
+#pragma GCC  diagnostic pop
+#endif
+
+
+
 #ifdef YURI_HAVE_X11
 #include "yuri/graphics/GL.h"
 #endif
 
 using yuri::log::Log;
-using std::vector;
+
 #ifdef YURI_HAVE_X11
 using yuri::graphics::GL;
 #endif
