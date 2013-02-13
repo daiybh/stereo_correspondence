@@ -11,28 +11,28 @@ namespace yuri {
 
 namespace io {
 
-REGISTER("pngencoder",PNGEncode)
+REGISTER("pngencoder",PNGEncoder)
 
-IO_THREAD_GENERATOR(PNGEncode)
+IO_THREAD_GENERATOR(PNGEncoder)
 
-shared_ptr<Parameters> PNGEncode::configure()
+shared_ptr<Parameters> PNGEncoder::configure()
 {
 	shared_ptr<Parameters> p = BasicIOThread::configure();
 	return p;
 }
 
-PNGEncode::PNGEncode(Log &_log, pThreadBase parent, Parameters& parameters) IO_THREAD_CONSTRUCTOR:
-	BasicIOThread(_log, parent, 1, 1,"PNGEncode"), memSize(0)
+PNGEncoder::PNGEncoder(Log &_log, pThreadBase parent, Parameters& parameters) IO_THREAD_CONSTRUCTOR:
+	BasicIOThread(_log, parent, 1, 1,"PNGEncoder"), memSize(0)
 {
-	IO_THREAD_INIT("PNGEncode")
+	IO_THREAD_INIT("PNGEncoder")
 }
 
-PNGEncode::~PNGEncode()
+PNGEncoder::~PNGEncoder()
 {
 
 }
 
-bool PNGEncode::step() {
+bool PNGEncoder::step() {
 	png_structp pngPtr = 0;
 	png_infop infoPtr = 0;
 	int pngcolortype = 0;
@@ -85,8 +85,8 @@ bool PNGEncode::step() {
 		return true;
 	}
 
-	png_set_write_fn(pngPtr, (void*) this, PNGEncode::writeData,
-			PNGEncode::flushData);
+	png_set_write_fn(pngPtr, (void*) this, PNGEncoder::writeData,
+			PNGEncoder::flushData);
 
 	if (!memory || memSize != width * height * bpp) {
 		memSize = width * height * bpp;
@@ -117,30 +117,30 @@ bool PNGEncode::step() {
 	return true;
 }
 
-void PNGEncode::writeData(png_structp pngPtr, png_bytep data, png_size_t length) {
-	PNGEncode *png = (PNGEncode*) png_get_io_ptr(pngPtr);
+void PNGEncoder::writeData(png_structp pngPtr, png_bytep data, png_size_t length) {
+	PNGEncoder *png = (PNGEncoder*) png_get_io_ptr(pngPtr);
 	png->writeData(data, length);
 }
-void PNGEncode::flushData(png_structp /*pngPtr*/) {
+void PNGEncoder::flushData(png_structp /*pngPtr*/) {
 
 }
 
-void PNGEncode::writeData(png_bytep data, png_size_t length) {
+void PNGEncoder::writeData(png_bytep data, png_size_t length) {
 	if (!memory)
 		return;
 	memcpy(memory.get() + position, data, length);
 	position += length;
 }
 
-void PNGEncode::handleError(png_structp pngPtr, png_const_charp error_msg) {
-	PNGEncode *png = (PNGEncode*) png_get_io_ptr(pngPtr);
+void PNGEncoder::handleError(png_structp pngPtr, png_const_charp error_msg) {
+	PNGEncoder *png = (PNGEncoder*) png_get_io_ptr(pngPtr);
 	png->printError(error, error_msg);
 }
-void PNGEncode::handleWarning(png_structp pngPtr, png_const_charp error_msg) {
-	PNGEncode *png = (PNGEncode*) png_get_io_ptr(pngPtr);
+void PNGEncoder::handleWarning(png_structp pngPtr, png_const_charp error_msg) {
+	PNGEncoder *png = (PNGEncoder*) png_get_io_ptr(pngPtr);
 	png->printError(warning, error_msg);
 }
-void PNGEncode::printError(int type, const char * msg) {
+void PNGEncoder::printError(int type, const char * msg) {
 	log[(yuri::log::debug_flags) type] << msg << std::endl;
 }
 

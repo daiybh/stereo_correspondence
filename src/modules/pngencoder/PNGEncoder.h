@@ -17,10 +17,10 @@ namespace io {
 using yuri::log::Log;
 using namespace yuri::config;
 
-class PNGEncode: public BasicIOThread {
+class PNGEncoder: public BasicIOThread {
 public:
-	PNGEncode(Log &_log, pThreadBase parent, Parameters& parameters) IO_THREAD_CONSTRUCTOR;
-	virtual ~PNGEncode();
+	PNGEncoder(Log &_log, pThreadBase parent, Parameters& parameters) IO_THREAD_CONSTRUCTOR;
+	virtual ~PNGEncoder();
 	virtual bool step();
 	IO_THREAD_GENERATOR_DECLARATION
 	static shared_ptr<Parameters> configure();

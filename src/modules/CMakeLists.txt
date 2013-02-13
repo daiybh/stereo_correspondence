@@ -47,6 +47,7 @@ ENDIF()
 
 IF(PNG_FOUND)
 	add_subdirectory(pngencoder)
+	add_subdirectory(pngdecoder)
 ENDIF()
 
 IF(CURL_FOUND)
