@@ -31,12 +31,17 @@
 # (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
+SET(SAGE_INSTALL_DIR $ENV{SAGE_DIRECTORY})
+IF("${SAGE_INSTALL_DIR}" STREQUAL "")
+	# No SAGE_DIRECTORY set, so let's try defalt installation path
+	SET(SAGE_INSTALL_DIR "/usr/local/sage") 
+ENDIF()
 find_path(SAGE_SAGE_INCLUDE_DIR libsage.h
-  /usr/local/sage/include             # Default installation folder
+  ${SAGE_INSTALL_DIR}/include
  )
 
   
-  find_library(SAGE_SAIL_LIBRARY sail PATH /usr/local/sage/lib64)
+  find_library(SAGE_SAIL_LIBRARY sail PATH ${SAGE_INSTALL_DIR}/lib64)
   
 
   if (SAGE_SAIL_LIBRARY AND SAGE_SAGE_INCLUDE_DIR)
