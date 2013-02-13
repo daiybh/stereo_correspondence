@@ -11,7 +11,6 @@ add_subdirectory(flip)
 add_subdirectory(null)
 add_subdirectory(rawfilesource)
 add_subdirectory(split)
-add_subdirectory(simplerenderer)
 
 #################################################################
 # Let's check for libraries required 
@@ -72,6 +71,9 @@ IF(${CORE_CUDA})
 ENDIF()
 add_subdirectory(yuriconvert)
 
+IF(${CORE_X11})
+	add_subdirectory(simplerenderer)
+ENDIF()
 IF(${SAGE_FOUND})
 	add_subdirectory(sage)
 ENDIF()
