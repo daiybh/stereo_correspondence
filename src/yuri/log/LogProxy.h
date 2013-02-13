@@ -49,7 +49,7 @@ public:
 	}
 
 	~LogProxy() {
-#if __cplusplus >=201103L
+#if 0 && __cplusplus >=201103L
 		const std::string msg = buffer_.str();
 		if (!dummy_) std::async([&msg,this](){stream_.write(msg);});
 #else

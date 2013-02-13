@@ -7,7 +7,9 @@
 
 #include "Cuda.h"
 //include <cuda.h>
+#ifdef YURI_HAVE_X11
 #include "cuda_gl_interop.h"
+#endif
 
 namespace yuri {
 namespace cuda {
@@ -113,7 +115,9 @@ void Cuda::sync()
 bool Cuda::set_device(yuri::uint_t id)
 {
 	cudaError_t err;
+#ifdef YURI_HAVE_X11
 	boost::mutex::scoped_lock l(GL::big_gpu_lock);
+#endif
 	if ((err=cudaSetDeviceFlags(cudaDeviceMapHost)) != cudaSuccess) {
 		log[warning] << "Failed to set flags for device:"<<cudaGetErrorString(err) << std::endl;
 		return true;
@@ -127,6 +131,7 @@ bool Cuda::set_device(yuri::uint_t id)
 	log[error] << "Failed to set device " << id << ": " << cudaGetErrorString(err) << std::endl;
 	return false;
 }
+#ifdef YURI_HAVE_X11
 bool Cuda::prepare_texture(GL &gl, yuri::uint_t tid, yuri::size_t width, yuri::size_t height)
 {
 	gl.generate_empty_texture(tid,YURI_FMT_RGBA,width,height);
@@ -199,5 +204,6 @@ bool Cuda::copy_to_texture(GL &gl, yuri::uint_t tid, shared_ptr<void> src, yuri:
 	unmap_texture(gl,tid);
 	return true;
 }
+#endif
 } /* namespace graphics */
 } /* namespace yuri */

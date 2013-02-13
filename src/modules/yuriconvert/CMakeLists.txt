@@ -15,7 +15,7 @@ ENDIF()
 
 # You shouldn't need to edit anything below this line 
 
-target_link_libraries(${MODULE} ${LIBNAME})
+target_link_libraries(${MODULE} ${LIBNAME} ${LIBNAME_HELPER_CUDA})
 install(TARGETS ${MODULE} LIBRARY DESTINATION ${TARGET_MODULE_PATH}) 
 
 add_custom_command(TARGET ${MODULE} POST_BUILD

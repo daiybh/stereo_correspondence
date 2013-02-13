@@ -1,4 +1,4 @@
-SET(YURI_SRC ${YURI_SRC} 
+SET(YURI_HELPER_LIBAV_SRC ${YURI_HELPER_LIBAV_SRC} 
 	libav/AVCodecBase.cpp
 	libav/AVCodecBase.h
 	PARENT_SCOPE)

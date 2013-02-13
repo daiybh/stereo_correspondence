@@ -10,12 +10,15 @@
 #include "yuri/log/Log.h"
 #include <boost/smart_ptr.hpp>
 #include <cuda_runtime.h>
+#ifdef YURI_HAVE_X11
 #include "yuri/graphics/GL.h"
+#endif
 
-using boost::shared_ptr;
 using yuri::log::Log;
 using std::vector;
+#ifdef YURI_HAVE_X11
 using yuri::graphics::GL;
+#endif
 namespace yuri {
 namespace graphics {
 
@@ -39,13 +42,14 @@ public:
 	static void sync();
 	static std::string uint_fs, uint_vs;
 	bool set_device(yuri::uint_t id);
+#ifdef YURI_HAVE_X11
 	bool prepare_texture(GL &gl, yuri::uint_t tid, yuri::size_t width, yuri::size_t height);
 	bool register_texture(GL &gl, uint_t tid);
 	bool map_texture(GL &gl, uint_t tid);
 	bool unmap_texture(GL &gl, uint_t tid);
 	bool copy_to_texture(GL &gl, yuri::uint_t tid, shared_ptr<void>src, yuri::size_t size);
 	std::map<yuri::uint_t, _tex_data> textures;
-
+#endif
 protected:
 	Log log;
 };

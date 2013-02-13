@@ -16,7 +16,7 @@ int main(int argc, char** argv)
 		std::cerr << "Usage " << argv[0] <<" <path-to-module>\n";
 		return 1;
 	}
-	void *handle=dlopen(argv[1],RTLD_NOW);
+	void *handle=dlopen(argv[1],RTLD_NOW|RTLD_GLOBAL);
 	if (!handle) {
 		std::cerr << "Failed to open file " << argv[1] <<": "<< dlerror() <<"\n";
 		return 1;

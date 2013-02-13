@@ -1,4 +1,4 @@
-SET(YURI_SRC ${YURI_SRC} 
+SET(YURI_HELPER_X11_SRC ${YURI_HELPER_X11_SRC} 
 	graphics/GL.cpp
 	graphics/GL.h
 	graphics/GLProgram.cpp

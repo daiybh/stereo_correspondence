@@ -9,7 +9,7 @@ SET (SRC AVEncoder.cpp
 
 # You shouldn't need to edit anything below this line 
 add_library(${MODULE} MODULE ${SRC})
-target_link_libraries(${MODULE} ${LIBNAME} ${libavutil_LIBRARIES})
+target_link_libraries(${MODULE} ${LIBNAME}  ${LIBNAME_HELPER_LIBAV} ${libavutil_LIBRARIES})
 install(TARGETS ${MODULE} LIBRARY DESTINATION ${TARGET_MODULE_PATH}) 
 
 add_custom_command(TARGET ${MODULE} POST_BUILD

@@ -10,12 +10,12 @@
 #ifdef YURI_HAVE_LIBMVTP
 #include "libMVTP/MVTPConvert.h"
 #endif
-
+#ifdef YURI_HAVE_CUDA
 	bool YuriConvertRGB24_YUV20(const char *src, char *dest, void *cuda_src, void *cuda_dest,unsigned int num, float Wb, float Wr);
 	bool YuriConvertYUV16_RGB24(const char *src, char *dest, void *cuda_src, void *cuda_dest,unsigned int num, float Wb, float Wr);
 	void *CudaAlloc(unsigned int size);
 	void CudaDealloc(void *mem);
-
+#endif
 namespace yuri {
 
 namespace video {

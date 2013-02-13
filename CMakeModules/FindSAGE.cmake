@@ -36,7 +36,7 @@ find_path(SAGE_SAGE_INCLUDE_DIR libsage.h
  )
 
   
-  find_library(SAGE_SAIL_LIBRARY NAMES sail )
+  find_library(SAGE_SAIL_LIBRARY sail PATH /usr/local/sage/lib64)
   
 
   if (SAGE_SAIL_LIBRARY AND SAGE_SAGE_INCLUDE_DIR)
