@@ -1,24 +1,11 @@
-SET (YURI_LINK )
-SET (YURI_LIBS )
-SET (YURI_INCLUDE )
-SET (YURI_SRC )
-SET (YURI_HELPER_LIBAV_LINK )
-SET (YURI_HELPER_LIBAV_LIBS )
-SET (YURI_HELPER_LIBAV_INCLUDE )
-SET (YURI_HELPER_LIBAV_SRC )
-SET (YURI_HELPER_CUDA_LINK )
-SET (YURI_HELPER_CUDA_LIBS )
-SET (YURI_HELPER_CUDA_INCLUDE )
-SET (YURI_HELPER_CUDA_SRC )
-SET (YURI_HELPER_X11_LINK )
-SET (YURI_HELPER_X11_LIBS )
-SET (YURI_HELPER_X11_INCLUDE )
-SET (YURI_HELPER_X11_SRC )
-
+#################################################################
 # Core library depends only on Boost 
+#################################################################
 find_package( Boost 1.46 COMPONENTS thread system filesystem REQUIRED)
 
-# for helpers
+#################################################################
+# Checking for optional dependencies for helper libraries
+#################################################################
 IF(NOT YURI_DISABLE_X11)
 	find_package( X11 )
 	find_package( OpenGL )
@@ -36,12 +23,16 @@ IF (NOT HAVE_STDINT_H)
 	MESSAGE(FATAL_ERROR "Missing stdint.h. Please update your compile chain")
 ENDIF()
 
-
+#################################################################
+# Set up dependencies for libyuri_core
+#################################################################
 SET (YURI_LINK ${YURI_LINK} ${Boost_LIBRARY_DIRS} )
-		
 SET (YURI_LIBS ${YURI_LIBS}	${Boost_LIBRARIES} )
 SET (YURI_INCLUDE ${YURI_INCLUDE} ${Boost_INCLUDE_DIRS} )  
 
+#################################################################
+# Set up dependencies for helper libraries
+#################################################################
 SET (YURI_HELPER_LIBAV_LINK ${YURI_HELPER_LINK} ${libav_LIBRARY_DIRS})
 SET (YURI_HELPER_X11_LINK ${YURI_HELPER_LINK} ${X11_LIBRARY_DIRS})
 		
@@ -54,21 +45,30 @@ SET (YURI_HELPER_LIBAV_INCLUDE  ${YURI_HELPER_LIBAV_INCLUDE}  ${libav_INCLUDE_DI
 SET (YURI_HELPER_X11_INCLUDE ${YURI_HELPER_X11_INCLUDE} ${X11_INCLUDE_DIRS} )
 
 IF(${CUDA_FOUND})
-	SET(YURI_HELPER_INCLUDE ${YURI_HELPER_INCLUDE} ${CUDA_INCLUDE_DIRS})
-	SET(YURI_HELPER_LIBS ${YURI_HELPER_LIBS} ${CUDA_LIBRARIES})
-	SET(YURI_HELPER_LINK ${YURI_HELPER_LINK} ${CUDA_LIBRARY_DIRS})
+	SET(YURI_HELPER_CUDA_INCLUDE ${YURI_HELPER_CUDA_INCLUDE} ${CUDA_INCLUDE_DIRS})
+	SET(YURI_HELPER_CUDA_LIBS ${YURI_HELPER_CUDA_LIBS} ${CUDA_LIBRARIES})
+	SET(YURI_HELPER_CUDA_LINK ${YURI_HELPER_CUDA_LINK} ${CUDA_LIBRARY_DIRS})
 ENDIF()
 
+#################################################################
+# Adding CXXFLAGS and LDFLAGS for libyuri_core
+#################################################################
 add_definitions("-DYURI_MODULE_IN_TREE -DINSTALL_PREFIX=\\\"${CMAKE_INSTALL_PREFIX}\\\"")
 link_directories ( ${YURI_LINK} ${YURI_HELPER_LIBAV_LINK} ${YURI_HELPER_X11_LINK})
 include_directories ( ${YURI_INCLUDE} ${YURI_HELPER_LIBAV_INCLUDE} ${YURI_HELPER_X11_INCLUDE})
 
+#################################################################
+# Submerge into subdirectories to collect source files
+#################################################################
 add_subdirectory(log)
 add_subdirectory(config)
 add_subdirectory(threads)
 add_subdirectory(exception)
 add_subdirectory(io)
 
+#################################################################
+# Collect sources for helper libraries
+#################################################################
 IF(${libav_FOUND})
 	add_subdirectory(libav)
 	SET(CORE_LIBAV TRUE PARENT_SCOPE)
@@ -90,11 +90,20 @@ IF(${X11_FOUND})
 	ENDIF()
 ENDIF()
 
-
+#################################################################
+# Generate version.cpp with current git revision
+#################################################################
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/version.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" @ONLY)
 SET(YURI_SRC ${YURI_SRC} "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" ${CMAKE_CURRENT_SOURCE_DIR}/version.h )
 
+#################################################################
+# Add target for libyuri_core
+#################################################################
 add_library(${LIBNAME} ${YURI_SRC})
+
+#################################################################
+# Add targets for helper libraries
+#################################################################
 IF(${CORE_CUDA})
 	MESSAGE("Building CUDA helper library!")
 	IF(${CORE_X11})
@@ -135,7 +144,9 @@ IF(UNIX)
 	SET( YURI_LIBS ${YURI_LIBS} rt dl)
 ENDIF()
 
-
+#################################################################
+# Set linking for libyuri_core
+#################################################################
 target_link_libraries ( ${LIBNAME} ${YURI_LIBS})
 
 SET_TARGET_PROPERTIES( ${LIBNAME} PROPERTIES SOVERSION 2 VERSION 2.5.0 )

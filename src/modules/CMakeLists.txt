@@ -1,3 +1,6 @@
+#################################################################
+# Add modules that are compile unconditionally
+#################################################################
 add_subdirectory(anaglyph)
 add_subdirectory(blank)
 add_subdirectory(crop)
@@ -10,7 +13,10 @@ add_subdirectory(rawfilesource)
 add_subdirectory(split)
 add_subdirectory(simplerenderer)
 
-
+#################################################################
+# Let's check for libraries required 
+# for optional modules, respecting YURI_DISABLE_*
+#################################################################
 find_package(JPEG)
 find_package(PNG)
 find_package(CURL)
@@ -27,6 +33,9 @@ IF(NOT YURI_DISABLE_LIBAV)
 	pkg_check_modules(libswscale libswscale)
 ENDIF()
 
+#################################################################
+# Add optional modules based on results of the detection
+#################################################################
 IF(JPEG_FOUND)
 	add_subdirectory(jpegdecoder)
 	add_subdirectory(jpegencoder)
