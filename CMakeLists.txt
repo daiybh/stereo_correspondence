@@ -30,6 +30,7 @@ SET(LIBNAME yuri_core)
 SET(LIBNAME_HELPER_LIBAV yuri_helper_av)
 SET(LIBNAME_HELPER_CUDA yuri_helper_cuda)
 SET(LIBNAME_HELPER_X11 yuri_helper_x11)
+SET(LIBNAME_HELPER_IEEE1394 yuri_helper_ieee1394)
 
 #################################################################
 # Set prefix for modules
@@ -50,6 +51,7 @@ SET (TARGET_MODULE_PATH lib/yuri2/)
 SET(CORE_LIBAV FALSE)
 SET(CORE_CUDA FALSE)
 SET(CORE_X11 FALSE)
+SET(CORE_IEEE1394 FALSE)
 
 #################################################################
 # Add some options to control build
@@ -59,6 +61,7 @@ OPTION (YURI_DISABLE_CUDA "Disable building of CUDA helpers" OFF)
 OPTION (YURI_DISABLE_LIBAV "Disable building of libav helpers and support" OFF)
 OPTION (YURI_DISABLE_SAGE "Disable building of libsage related modules" OFF)
 OPTION (YURI_DISABLE_X11 "Explicitly disable building of X11 helpers and related modules" OFF)
+OPTION (YURI_DISABLE_IEEE1394 "Disable building of IEEE1394 helpers" OFF)
 OPTION (YURI_DISABLE_PNG "Disable building of CUDA helpers" OFF)
 
 #################################################################

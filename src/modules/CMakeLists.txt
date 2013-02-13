@@ -31,7 +31,9 @@ IF(NOT YURI_DISABLE_LIBAV)
 	pkg_check_modules(libavutil libavutil)
 	pkg_check_modules(libswscale libswscale)
 ENDIF()
-
+IF(${CORE_IEEE1394})
+	pkg_check_modules(ieee1394 libiec61883)
+ENDIF()
 #################################################################
 # Add optional modules based on results of the detection
 #################################################################
@@ -76,4 +78,9 @@ IF(${CORE_X11})
 ENDIF()
 IF(${SAGE_FOUND})
 	add_subdirectory(sage)
+ENDIF()
+
+IF(${CORE_IEEE1394})
+	add_subdirectory(dvsource)
+	add_subdirectory(hdvsource)
 ENDIF()

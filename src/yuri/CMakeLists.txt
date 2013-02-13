@@ -23,6 +23,10 @@ IF (NOT HAVE_STDINT_H)
 	MESSAGE(FATAL_ERROR "Missing stdint.h. Please update your compile chain")
 ENDIF()
 
+IF(NOT YURI_DISABLE_IEEE1394)
+	pkg_check_modules(ieee1394 libiec61883 libavc1394)
+ENDIF()
+
 #################################################################
 # Set up dependencies for libyuri_core
 #################################################################
@@ -46,8 +50,14 @@ SET (YURI_HELPER_X11_INCLUDE ${YURI_HELPER_X11_INCLUDE} ${X11_INCLUDE_DIRS} )
 
 IF(${CUDA_FOUND})
 	SET(YURI_HELPER_CUDA_INCLUDE ${YURI_HELPER_CUDA_INCLUDE} ${CUDA_INCLUDE_DIRS})
-	SET(YURI_HELPER_CUDA_LIBS ${YURI_HELPER_CUDA_LIBS} ${CUDA_LIBRARIES})
+	SET(YURI_HELPER_CUDA_LIBS ${LIBNAME} ${YURI_HELPER_CUDA_LIBS} ${CUDA_LIBRARIES})
 	SET(YURI_HELPER_CUDA_LINK ${YURI_HELPER_CUDA_LINK} ${CUDA_LIBRARY_DIRS})
+ENDIF()
+
+IF(${ieee1394_FOUND})
+	SET(YURI_HELPER_IEEE1394_INCLUDE  ${ieee1394_INCLUDE_DIRS})
+	SET(YURI_HELPER_IEEE1394_LIBS ${LIBNAME} ${ieee1394_LIBRARIES})
+	SET(YURI_HELPER_IEEE1394_LINK  ${ieee1394_LIBRARY_DIRS})
 ENDIF()
 
 #################################################################
@@ -89,7 +99,12 @@ IF(${X11_FOUND})
 		add_definitions("-DYURI_HAVE_X11")
 	ENDIF()
 ENDIF()
-
+IF(${ieee1394_FOUND})
+	add_subdirectory(ieee1394)
+	SET(CORE_IEEE1394 TRUE PARENT_SCOPE)
+	SET(CORE_IEEE1394 TRUE)
+	add_definitions("-DYURI_HAVE_IEEE1394")
+ENDIF()
 #################################################################
 # Generate version.cpp with current git revision
 #################################################################
@@ -139,7 +154,15 @@ IF(${CORE_X11})
 						ARCHIVE DESTINATION lib)
 ENDIF()
 
-
+IF(${CORE_IEEE1394})
+	MESSAGE("Building ieee1394 helper library!")
+	add_library(${LIBNAME_HELPER_IEEE1394} ${YURI_HELPER_IEEE1394_SRC})
+	target_link_libraries ( ${LIBNAME_HELPER_IEEE1394} ${YURI_HELPER_IEEE1394_LIBS})
+	SET_TARGET_PROPERTIES( ${LIBNAME_HELPER_IEEE1394} PROPERTIES SOVERSION 2 VERSION 2.5.0 )
+	install(TARGETS ${LIBNAME_HELPER_IEEE1394} 	RUNTIME DESTINATION bin
+						LIBRARY DESTINATION lib 
+						ARCHIVE DESTINATION lib)
+ENDIF()
 IF(UNIX)
 	SET( YURI_LIBS ${YURI_LIBS} rt dl)
 ENDIF()
