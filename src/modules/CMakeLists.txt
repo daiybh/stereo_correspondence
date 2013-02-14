@@ -87,4 +87,6 @@ ENDIF()
 
 IF(${CORE_ASIO})
 	add_subdirectory(vncclient)
+	add_subdirectory(tsrtp_receiver)
+	add_subdirectory(tsrtp_streamer)
 ENDIF()
