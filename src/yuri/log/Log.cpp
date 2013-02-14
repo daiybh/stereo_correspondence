@@ -38,10 +38,6 @@ id(0),
 #endif
 ids(""),flags(normal),output_flags(normal),quiet(false)
 {
-//	uid=uids++;
-//	flags=normal;
-//	output_flags = normal ;//| debug | warning | error | fatal | info;
-
 }
 
 Log::~Log()
@@ -57,20 +53,11 @@ void Log::setID(int id)
 Log::Log(const Log &log):uid(uids++),out(log.out),id(log.id),ids(""),flags(log.flags),
 		output_flags(log.output_flags),quiet(log.quiet)
 {
-//	this->uid=uids++;
-//	this->id=log.id;
-//	this->ids="";
-//	this->output_flags=log.output_flags;
 	(*this)[verbose_debug] << "Copying logger "	<< log.uid << " -> " << uid	<< std::endl;
-//	this->flags=log.flags;
-//	quiet=log.quiet;
-
 }
 
 void Log::setLabel(std::string s)
 {
-	//ids=new char[strlen(s)+1];
-	//strcpy(ids,s);
 	ids=s;
 }
 
@@ -112,7 +99,6 @@ std::string Log::print_level()
 		}
 		return level_names[f]+" ";
 	}
-//	std::cout << "Flag not found:" << f << endl;
 	return std::string();
 }
 }

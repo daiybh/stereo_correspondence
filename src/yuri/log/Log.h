@@ -37,7 +37,6 @@ public:
 	EXPORT Log(const Log& log);
 	EXPORT virtual ~Log();
 	EXPORT void setID(int id);
-//	EXPORT template <class T> std::ostream& operator<<(T &t);
 	EXPORT void setLabel(std::string s);
 	EXPORT void setFlags(int f) { output_flags=f; }
 	EXPORT LogProxy operator[](debug_flags f);
@@ -49,30 +48,15 @@ protected:
 	yuri::shared_ptr<guarded_stream> out;
 	int id;
 	boost::mutex lock;
-	//char *ids;
 	std::string ids;
 	debug_flags flags;
-	int /*default_flags,*/ output_flags;
+	int output_flags;
 	bool quiet;
 	void set_flag(debug_flags f);
 	EXPORT std::string print_time();
 	EXPORT std::string print_level();
 
 };
-
-
-//template <class T> std::ostream &Log::operator <<(T &t)
-//{
-//	boost::mutex::scoped_lock l(lock);
-//	if (flags > (output_flags & flag_mask)) {
-//		if (null) return *null;
-//		else return *this;
-//	}
-//	if (!quiet) {
-//		return out << ((output_flags&show_level)?print_level():"") << id << ":" << uid << ": "  << ids << print_time() << t;
-//	}
-//	else return out << t;
-//}
 
 }
 }
