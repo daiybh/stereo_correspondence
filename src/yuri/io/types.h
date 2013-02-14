@@ -14,12 +14,12 @@
 #include <boost/make_shared.hpp>
 #include <boost/thread/thread.hpp>
 
-#ifdef __WIN32__
-#ifdef BUILDDLL
+#ifdef _WIN32
+#ifdef yuri_core_EXPORTS
 #define EXPORT __declspec(dllexport)
 #else
-//define EXPORT __declspec(dllimport)
-#define EXPORT
+#define EXPORT __declspec(dllimport)
+//#define EXPORT
 #endif
 #else
 #define EXPORT

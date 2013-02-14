@@ -1,8 +1,8 @@
 #include "ThreadBase.h"
 #include <sys/types.h>
-#include <pthread.h>
 #include <string>
 #ifdef __linux__
+#include <pthread.h>
 #include <sys/syscall.h>
 #include <sys/prctl.h>
 #endif
@@ -41,9 +41,9 @@ ThreadBase::~ThreadBase()
 void ThreadBase::operator()()
 {
 	log[verbose_debug] << "Starting thread" << "\n";
-	start_timer();
+	//start_timer();
 	run();
-	pause_timer();
+	//pause_timer();
 	if (!end_requested) request_end();
 }
 
@@ -158,7 +158,7 @@ void ThreadBase::join_all_threads()
 	log[debug] << "Joining all childs" << "\n";
 	boost::timed_mutex::scoped_lock l(children_lock);
 	std::map<pThreadBase,shared_ptr<ThreadChild> >::iterator i;
-	int s = children.size();
+	yuri::size_t s = children.size();
 	log[debug] << s << "\n";
 	while (children.size()) {
 		log[verbose_debug] << "There's " << children.size() << "threads left "
@@ -251,7 +251,7 @@ void ThreadBase::do_join_thread(pThreadBase child, bool check)
 	//delete thread;
 	log[debug] << "Child joined (" << children.size() << " left)" << "\n";
 }
-
+/*
 void ThreadBase::start_timer()
 {
 	boost::mutex::scoped_lock l(timer_lock);
@@ -275,7 +275,7 @@ void ThreadBase::do_add_timer()
 		elsec++;
 	}
 }
-
+*/
 void ThreadBase::request_finish_thread(pThreadBase child)
 {
 	boost::mutex::scoped_lock l2(end_lock);
@@ -319,7 +319,6 @@ weak_ptr<ThreadBase> ThreadBase::get_this_ptr()
 	weak_ptr<ThreadBase> ptr (shared_from_this());
 	return ptr;
 }
-
 pid_t ThreadBase::get_tid()
 {
 	return own_tid;

@@ -7,7 +7,7 @@
 #ifndef YURI_VERSION
 #define YURI_VERSION "Unknown"
 #endif
-
+#define BOOST_LIB_DIAGNOSTIC
 #include "yuri/config/ApplicationBuilder.h"
 #include "yuri/version.h"
 #include <iostream>
@@ -17,19 +17,20 @@
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 
-using namespace std;
+//using namespace std;
 using namespace yuri;
 using namespace yuri::io;
 using namespace yuri::log;
 using namespace yuri::config;
 using boost::iequals;
+using yuri::shared_ptr;
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
 static shared_ptr<ApplicationBuilder> b;
 static po::options_description options("General options");
 static int verbosity;
-static Log l(clog);
+static Log l(std::clog);
 
 
 #ifdef __linux__
@@ -54,56 +55,56 @@ void usage()
 {
 	l.set_quiet(true);
 	l[fatal]
-			<< "Usage:	yuri [options] [-i] <file> [[-p] params...]" << endl << endl
-			<< options << endl;
+			<< "Usage:	yuri [options] [-i] <file> [[-p] params...]" << std::endl << std::endl
+			<< options << std::endl;
 }
 
 void list_registered(Log l_)
 {
-	l_[info]<<"List of registered objects:" << endl;
+	l_[info]<<"List of registered objects:" << std::endl;
 std::string name;
-	shared_ptr<vector<std::string> > v = yuri::config::RegisteredClass::list_registered();
+	shared_ptr<std::vector<std::string> > v = yuri::config::RegisteredClass::list_registered();
 	BOOST_FOREACH(name,*v) {
 		if (verbosity>=0)
-			l_[fatal] << "..:: " << name << " ::.." << endl;
-		else l_[fatal] << name << endl;
+			l_[fatal] << "..:: " << name << " ::.." << std::endl;
+		else l_[fatal] << name << std::endl;
 		shared_ptr<Parameters> p = RegisteredClass::get_params(name);
-		if (!p) l_[info] << "\t\tclass has no configuration defined!" << endl;
+		if (!p) l_[info] << "\t\tclass has no configuration defined!" << std::endl;
 		else {
 			if (!p->get_description().empty()) l_[info]<< "\t"
-					<< p->get_description() << endl;
+					<< p->get_description() << std::endl;
 			long fmt;
 			if (p->get_input_formats().size()) {
 				BOOST_FOREACH(fmt,p->get_input_formats()) {
-					l_[normal]<< "\t\tSupports input format: " << BasicPipe::get_format_string(fmt) << endl;
+					l_[normal]<< "\t\tSupports input format: " << BasicPipe::get_format_string(fmt) << std::endl;
 				}
-			} else l_[normal] << "\t\tClass does not have any restrictions on input pipes defined." << endl;
+			} else l_[normal] << "\t\tClass does not have any restrictions on input pipes defined." << std::endl;
 			if (p->get_output_formats().size()) {
 				BOOST_FOREACH(fmt,p->get_output_formats()) {
-					l_[normal]<< "\t\tSupports output format: " << BasicPipe::get_format_string(fmt) << endl;
+					l_[normal]<< "\t\tSupports output format: " << BasicPipe::get_format_string(fmt) << std::endl;
 				}
-			} else l_[normal] << "\t\tClass does not have any restrictions on output pipes defined." << endl;
+			} else l_[normal] << "\t\tClass does not have any restrictions on output pipes defined." << std::endl;
 			if (p->params.size()) {
-				pair<std::string,shared_ptr<Parameter> > par;
+				std::pair<std::string,shared_ptr<Parameter> > par;
 				BOOST_FOREACH(par,p->params) {
 					l_[info] << "\t\t'" << par.first << "' has default value \""
-							<< par.second->get<std::string>() << "\"" << endl;
+							<< par.second->get<std::string>() << "\"" << std::endl;
 					if (!par.second->description.empty()) l_[info] << "\t\t\t"
-							<< par.second->description << endl;
+							<< par.second->description << std::endl;
 				}
-			} else l_[info] << "\t\tClass has no parameters" << endl;
+			} else l_[info] << "\t\tClass has no parameters" << std::endl;
 		}
 	}
 }
 void list_formats(Log& l_)
 {
-	l_[info] << "List of registered formats:" << endl;
+	l_[info] << "List of registered formats:" << std::endl;
 std::string name;
 	boost::mutex::scoped_lock lock(BasicPipe::format_lock);
 	std::pair<yuri::format_t, yuri::FormatInfo_t > fmtp;
 	BOOST_FOREACH(fmtp, BasicPipe::formats) {
 		yuri::FormatInfo_t fmt = fmtp.second;
-		l_[fatal] << fmt->long_name << endl;
+		l_[fatal] << fmt->long_name << std::endl;
 		if (fmt->short_names.size()) {
 			bool f = true;
 		std::stringstream ss;
@@ -113,7 +114,7 @@ std::string name;
 				f=false;
 				ss << s;
 			}
-			l_[info] << "" << (ss.str()) << endl;
+			l_[info] << "" << (ss.str()) << std::endl;
 		}
 		if (fmt->mime_types.size()) {
 			bool f = true;
@@ -124,7 +125,7 @@ std::string name;
 				f=false;
 				ss << s;
 			}
-			l_[info] << "" << (ss.str()) << endl;
+			l_[info] << "" << (ss.str()) << std::endl;
 		}
 	}
 
@@ -132,29 +133,29 @@ std::string name;
 
 void list_converters(Log l_)
 {
-	pair<pair<long,long>,vector<shared_ptr<Converter> > > conv;
+	std::pair<std::pair<long,long>,std::vector<shared_ptr<Converter> > > conv;
 	BOOST_FOREACH(conv,RegisteredClass::get_all_converters()) {
 		l_[info] << "Convertors from " << BasicPipe::get_format_string(conv.first.first)
-		 << " to " << BasicPipe::get_format_string(conv.first.second) << endl;
+		 << " to " << BasicPipe::get_format_string(conv.first.second) << std::endl;
 		shared_ptr<Converter> c;
 		BOOST_FOREACH(c,conv.second) {
-			if (!c) cout << "??" <<endl;
-			l_[info] << "\t" << c->id << endl;
+			if (!c) std::cout << "??" <<std::endl;
+			l_[info] << "\t" << c->id << std::endl;
 		}
 	}
 }
 void version()
 {
-	//l[fatal] << "yuri version " << YURI_VERSION << endl;
-	l[fatal] << "libyuri version " << yuri::yuri_version << endl;
+	//l[fatal] << "yuri version " << YURI_VERSION << std::endl;
+	l[fatal] << "libyuri version " << yuri::yuri_version << std::endl;
 
 }
 int main(int argc, char**argv)
 {
-	vector<std::string> params;
+	std::vector<std::string> params;
 	//yuri::uint_t verbosity;
-std::string filename;
-	vector<std::string> arguments;
+	std::string filename;
+	std::vector<std::string> arguments;
 	l.setLabel("[YURI] ");
 	l.setFlags(info);
 	options.add_options()
@@ -164,7 +165,7 @@ std::string filename;
 		("quiet,q","Limit output")
 		("verbosity",po::value<int> (&verbosity)->default_value(0),"Verbosity level <-3, 4>")
 		("input-file,f",po::value<std::string>(&filename),"Input XML file")
-		("parameter,p",po::value<vector<std::string> >(&arguments),"Parameters to pass to libyuri builder")
+		("parameter,p",po::value<std::vector<std::string> >(&arguments),"Parameters to pass to libyuri builder")
 		("list,l",po::value<std::string>()->implicit_value("classes"),"List registered objects/formats");
 
 
@@ -179,7 +180,7 @@ std::string filename;
 		po::notify(vm);
 	}
 	catch (po::error &e) {
-		l[fatal] << "Wrong options specified (" << e.what() <<")"<< endl;
+		l[fatal] << "Wrong options specified (" << e.what() <<")"<< std::endl;
 		usage();
 		return 1;
 	}
@@ -189,10 +190,10 @@ std::string filename;
 	if (vm.count("quiet")) verbosity=-1;
 	else if (vm.count("verbose")) verbosity=1;
 
-	//cout << "Verbosity: " << verbosity << endl;
+	//cout << "Verbosity: " << verbosity << std::endl;
 	if (verbosity >=0)	l.setFlags((info<<(verbosity)));
 	else l.setFlags((info>>(-verbosity)));
-	//cout << "Verbosity: " << verbosity << ", flags: " << (l.get_flags()&flag_mask)<<endl;
+	//cout << "Verbosity: " << verbosity << ", flags: " << (l.get_flags()&flag_mask)<<std::endl;
 	if (vm.count("help")) {
 		l.set_quiet(true);
 		usage();
@@ -209,14 +210,14 @@ std::string filename;
 		b->load_modules();
 		l.set_quiet(true);
 	std::string list_what = vm["list"].as<std::string>();
-		Log l_(cout);
+		Log l_(std::cout);
 		l_.setFlags(l.get_flags());
 		l_.set_quiet(true);
-		l_[debug] << "Listing " << list_what <<endl;
+		l_[debug] << "Listing " << list_what <<std::endl;
 		if (iequals(list_what,"classes")) list_registered(l_);
 		else if (iequals(list_what,"formats")) list_formats(l_);
 		else if (iequals(list_what,"converters")) list_converters(l_);
-		else cout << "Wrong value for --list parameter" << endl;
+		else std::cout << "Wrong value for --list parameter" << std::endl;
 
 		exit(0);
 	}
@@ -226,21 +227,21 @@ std::string filename;
 	}*/
 
 	if (filename.empty()) {
-		l[fatal] << "No input file specified" << endl;
+		l[fatal] << "No input file specified" << std::endl;
 		usage();
 		return -1;
 	}
 
-	l[debug] << "Loading file " << filename << endl;
+	l[debug] << "Loading file " << filename << std::endl;
 	try {
 		b.reset( new ApplicationBuilder (l,pThreadBase(),filename,arguments));
 	}
 	catch (Exception &e) {
-		l[fatal] << "failed to initialize application: " << e.what() << endl;
+		l[fatal] << "failed to initialize application: " << e.what() << std::endl;
 		exit(1);
 	}
 	catch (std::exception &e) {
-		l[fatal] << "An error occurred during initialization: " << e.what() << endl;
+		l[fatal] << "An error occurred during initialization: " << e.what() << std::endl;
 		exit(1);
 	}
 #ifdef __linux__
@@ -253,10 +254,10 @@ std::string filename;
 		(*b)();
 	}
 	catch (Exception &e) {
-		l[fatal] << "Application failed to start: " << e.what() << endl;
+		l[fatal] << "Application failed to start: " << e.what() << std::endl;
 	}
 	catch(std::exception &e) {
-		l[fatal] << "An error occurred during execution: " << e.what() << endl;
+		l[fatal] << "An error occurred during execution: " << e.what() << std::endl;
 	}
 	return 0;
 }

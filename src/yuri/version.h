@@ -9,7 +9,7 @@
 #define VERSION_H_
 
 namespace yuri {
-	extern const char *yuri_version;
+	EXPORT const char *yuri_version;
 }
 
 
