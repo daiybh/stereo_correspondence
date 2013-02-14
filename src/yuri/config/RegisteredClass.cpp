@@ -8,6 +8,7 @@
 #include "RegisteredClass.h"
 #ifdef __linux__
 #include <dlfcn.h>
+#elif defined _WIN32
 #else
 #warning "Runtime object loading not supported on this platform"
 #endif

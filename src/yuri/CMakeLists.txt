@@ -31,7 +31,9 @@ ENDIF()
 # Set up dependencies for libyuri_core
 #################################################################
 SET (YURI_LINK ${YURI_LINK} ${Boost_LIBRARY_DIRS} )
+IF(NOT WIN32)
 SET (YURI_LIBS ${YURI_LIBS}	${Boost_LIBRARIES} )
+ENDIF()
 SET (YURI_INCLUDE ${YURI_INCLUDE} ${Boost_INCLUDE_DIRS} )  
 
 #################################################################

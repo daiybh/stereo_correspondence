@@ -15,7 +15,7 @@
 #ifdef __linux__
 #include <sys/socket.h>
 #else
-#ifdef __WIN32__
+#ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
 #else
@@ -44,7 +44,7 @@ struct compare_insensitive {
 			{ return boost::ilexicographical_compare(a,b); }
 };
 
-class BasicPipe {
+class EXPORT BasicPipe {
 public:
 	BasicPipe(Log &log_,std::string name);
 	virtual ~BasicPipe();
@@ -74,18 +74,18 @@ public:
 	virtual void cancel_notifications();
 
 public:
-	EXPORT static shared_ptr<BasicPipe> generator(Log &log, std::string name, Parameters &parameters);
-	EXPORT static shared_ptr<Parameters> configure();
-	EXPORT static std::map<yuri::format_t, const FormatInfo_t> formats;
-	EXPORT static boost::mutex format_lock;
-	EXPORT static std::string get_type_string(yuri::format_t type);
-	EXPORT static std::string get_format_string(yuri::format_t type);
-	EXPORT static std::string get_simple_format_string(yuri::format_t type);
-	EXPORT static yuri::size_t get_bpp_from_format(yuri::format_t type);
-	EXPORT static FormatInfo_t get_format_info(yuri::format_t format);
-	EXPORT static yuri::format_t get_format_group(yuri::format_t format);
-	EXPORT static yuri::format_t get_format_from_string( std::string format, yuri::format_t group=YURI_FMT_NONE);
-	EXPORT static yuri::format_t set_frame_from_mime(pBasicFrame frame, std::string mime);
+	static shared_ptr<BasicPipe> generator(Log &log, std::string name, Parameters &parameters);
+	static shared_ptr<Parameters> configure();
+	static std::map<yuri::format_t, const FormatInfo_t> formats;
+	static boost::mutex format_lock;
+	static std::string get_type_string(yuri::format_t type);
+	static std::string get_format_string(yuri::format_t type);
+	static std::string get_simple_format_string(yuri::format_t type);
+	static yuri::size_t get_bpp_from_format(yuri::format_t type);
+	static FormatInfo_t get_format_info(yuri::format_t format);
+	static yuri::format_t get_format_group(yuri::format_t format);
+	static yuri::format_t get_format_from_string( std::string format, yuri::format_t group=YURI_FMT_NONE);
+	static yuri::format_t set_frame_from_mime(pBasicFrame frame, std::string mime);
 protected:
 	std::queue<pBasicFrame >  frames;
 	Log log;

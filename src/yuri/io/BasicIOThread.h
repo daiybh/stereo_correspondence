@@ -1,8 +1,9 @@
 #ifndef BASICIOTHREAD_H_
 #define BASICIOTHREAD_H_
 
-
+#ifdef __linux__
 #include <sched.h>
+#endif
 
 #include "yuri/threads/ThreadBase.h"
 #include "yuri/io/BasicPipe.h"

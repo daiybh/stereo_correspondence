@@ -56,17 +56,17 @@ struct VariableRecord {
 	std::vector<shared_ptr<VariableLinkDependency> > linkdependencies;
 };
 
-class ApplicationBuilder: public BasicIOThread {
+class EXPORT ApplicationBuilder: public BasicIOThread {
 public:
-	EXPORT ApplicationBuilder(Log &_log, pThreadBase parent,std::string filename="", std::vector<std::string> argv=std::vector<std::string>());
-	EXPORT ApplicationBuilder(Log &_log, pThreadBase parent, Parameters &params);
+	ApplicationBuilder(Log &_log, pThreadBase parent,std::string filename="", std::vector<std::string> argv=std::vector<std::string>());
+	ApplicationBuilder(Log &_log, pThreadBase parent, Parameters &params);
 	virtual ~ApplicationBuilder();
-	EXPORT static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,Parameters& parameters);
-	EXPORT static shared_ptr<Parameters> configure();
+	static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,Parameters& parameters);
+	static shared_ptr<Parameters> configure();
 
-	EXPORT bool load_file(std::string path);
-	EXPORT void run();
-	EXPORT shared_ptr<BasicIOThread> get_node (std::string id);
+	bool load_file(std::string path);
+	void run();
+	shared_ptr<BasicIOThread> get_node (std::string id);
 	bool prepare_threads();
 	bool find_modules();
 	bool load_modules();

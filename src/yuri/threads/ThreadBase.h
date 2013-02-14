@@ -18,8 +18,12 @@ typedef weak_ptr<class ThreadBase> pThreadBase;
 #include <boost/enable_shared_from_this.hpp>
 #include <map>
 #include <vector>
+#ifdef __linux__
 #include <sys/time.h>
-
+#else
+#include <ctime>
+typedef int pid_t;
+#endif
 
 // Types of threads spawned from yuri application.
 // For user defined thread types use ThreadBase::new_thread_id();
@@ -88,9 +92,9 @@ protected:
 	virtual bool do_add_child(shared_ptr<ThreadBase>  thread, bool spawned=true);
 	virtual void do_finish_thread(pThreadBase child, bool join=false);
 	virtual void do_join_thread(pThreadBase child, bool check=true);
-	virtual void start_timer();
+	/*virtual void start_timer();
 	virtual void pause_timer();
-	virtual void do_add_timer();
+	virtual void do_add_timer();*/
 	virtual void request_finish_thread(pThreadBase child);
 	virtual void do_request_finish_thread(pThreadBase child);
 	virtual void do_pending_requests();
@@ -108,7 +112,9 @@ protected:
 	boost::timed_mutex children_lock;
 	std::map<pThreadBase, shared_ptr<ThreadChild> > children;
 	boost::mutex timer_lock;
+#ifdef __linux__
 	struct timeval tv_start,tv_stop;
+#endif
 	yuri::size_t elsec,elusec;
 	bool timer_started;
 	boost::posix_time::time_duration join_timeout;

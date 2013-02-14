@@ -30,7 +30,7 @@ enum _debug_flags {
 
 typedef _debug_flags  debug_flags;
 
-class Log
+EXPORT class Log
 {
 public:
 	EXPORT Log(std::ostream &out);

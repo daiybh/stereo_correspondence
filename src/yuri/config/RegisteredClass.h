@@ -39,7 +39,7 @@ using boost::mutex;
 
 
 class Instance;
-class RegisteredClass {
+class EXPORT RegisteredClass {
 public:
 	typedef std::map<std::string,shared_ptr<RegisteredClass> > register_map_t;
 	RegisteredClass(std::string id) throw (Exception);
