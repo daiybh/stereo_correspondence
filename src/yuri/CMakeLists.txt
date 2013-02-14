@@ -27,6 +27,11 @@ IF(NOT YURI_DISABLE_IEEE1394)
 	pkg_check_modules(ieee1394 libiec61883 libavc1394)
 ENDIF()
 
+# This wont't work as the linking for this program fails with unserolved symbost from libboost_system
+#IF(NOT YURI_DISABLE_ASIO)
+#	CHECK_INCLUDE_FILE_CXX ("boost/asio.hpp" HAVE_BOOST_ASIO_H)
+#ENDIF()
+
 #################################################################
 # Set up dependencies for libyuri_core
 #################################################################
@@ -58,6 +63,11 @@ IF(${ieee1394_FOUND})
 	SET(YURI_HELPER_IEEE1394_INCLUDE  ${ieee1394_INCLUDE_DIRS})
 	SET(YURI_HELPER_IEEE1394_LIBS ${LIBNAME} ${ieee1394_LIBRARIES})
 	SET(YURI_HELPER_IEEE1394_LINK  ${ieee1394_LIBRARY_DIRS})
+ENDIF()
+
+IF(NOT ${YURI_DISABLE_ASIO})
+	MESSAGE("ASIO")
+	SET(YURI_HELPER_ASIO_INCLUDE  ${Boost_INCLUDE_DIRS})
 ENDIF()
 
 #################################################################
@@ -104,6 +114,12 @@ IF(${ieee1394_FOUND})
 	SET(CORE_IEEE1394 TRUE PARENT_SCOPE)
 	SET(CORE_IEEE1394 TRUE)
 	add_definitions("-DYURI_HAVE_IEEE1394")
+ENDIF()
+IF(NOT ${YURI_DISABLE_ASIO})
+	add_subdirectory(asio)
+	SET(CORE_ASIO TRUE PARENT_SCOPE)
+	SET(CORE_ASIO TRUE)
+	add_definitions("-DYURI_HAVE_ASIO")
 ENDIF()
 #################################################################
 # Generate version.cpp with current git revision
@@ -163,6 +179,16 @@ IF(${CORE_IEEE1394})
 						LIBRARY DESTINATION lib 
 						ARCHIVE DESTINATION lib)
 ENDIF()
+IF(${CORE_ASIO})
+	MESSAGE("Building ASIO helper library!")
+	add_library(${LIBNAME_HELPER_ASIO} ${YURI_HELPER_ASIO_SRC})
+	target_link_libraries ( ${LIBNAME_HELPER_ASIO} ${YURI_HELPER_ASIO_LIBS})
+	SET_TARGET_PROPERTIES( ${LIBNAME_HELPER_ASIO} PROPERTIES SOVERSION 2 VERSION 2.5.0 )
+	install(TARGETS ${LIBNAME_HELPER_ASIO} 	RUNTIME DESTINATION bin
+						LIBRARY DESTINATION lib 
+						ARCHIVE DESTINATION lib)
+ENDIF()
+
 IF(UNIX)
 	SET( YURI_LIBS ${YURI_LIBS} rt dl)
 ENDIF()

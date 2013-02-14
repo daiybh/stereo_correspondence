@@ -103,13 +103,13 @@ bool DVSource::analyze_frame(shared_ptr<BasicFrame> frame)
 			return false;
 	}
 	t = data[BLOCKBYTE(0,4)]&0x03;
-	bool iec;
+//	bool iec;
 	switch (t) {
 		case 0: log[verbose_debug] << "Found IEC61834"<< std::endl;
-			iec = true;
+//			iec = true;
 			break;
 		case 1: log[verbose_debug] << "Found SMPTE"<< std::endl;
-			iec = false;
+//			iec = false;
 			break;
 		default:
 			log[debug] << "track application id not recognized" << std::endl;

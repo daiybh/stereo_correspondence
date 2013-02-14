@@ -1,0 +1,7 @@
+
+SET(YURI_HELPER_ASIO_SRC ${YURI_HELPER_ASIO_SRC} 
+	asio/ASIOTCPSocket.cpp
+	asio/ASIOTCPSocket.h
+	asio/ASIOUDPSocket.cpp
+	asio/ASIOUDPSocket.h
+	PARENT_SCOPE)
