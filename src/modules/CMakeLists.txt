@@ -84,3 +84,7 @@ IF(${CORE_IEEE1394})
 	add_subdirectory(dvsource)
 	add_subdirectory(hdvsource)
 ENDIF()
+
+IF(${CORE_ASIO})
+	add_subdirectory(vncclient)
+ENDIF()
