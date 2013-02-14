@@ -34,7 +34,7 @@ std::string fmts;
 	BOOST_FOREACH(f,formats_map) {
 		FormatInfo_t pf = BasicPipe::get_format_info(f.first);
 		if (!pf) continue;
-		if (!fmts.empty()) fmts+std::string(", ");
+		if (!fmts.empty()) fmts+=std::string(", ");
 		fmts+=pf->short_names[0];
 	}
 
