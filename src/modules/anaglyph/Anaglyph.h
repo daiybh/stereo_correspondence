@@ -7,6 +7,7 @@
 #include <yuri/io/BasicIOThread.h>
 #include <yuri/config/Config.h>
 #include "yuri/config/RegisteredClass.h"
+
 #ifndef ANAGLYPH_H_
 #define ANAGLYPH_H_
 
@@ -16,15 +17,15 @@ namespace io {
 using yuri::log::Log;
 using namespace yuri::config;
 using namespace std;
-
 class Anaglyph: public BasicIOThread {
 public:
+	PACK_START
 	struct _rgb {
 		char r,g,b;
-	} __attribute__ ((packed));
-	struct _rgba {
+	} PACK_END;
+	PACK_START struct _rgba {
 			char r,g,b,a;
-	} __attribute__ ((packed));
+	} PACK_END;
 	/// Standard constructor
 	/// @param _log  logger
 	/// @param parent  parent thread
