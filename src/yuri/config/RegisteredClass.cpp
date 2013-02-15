@@ -6,9 +6,10 @@
  */
 
 #include "RegisteredClass.h"
-#ifdef __linux__
+#if defined __linux__
 #include <dlfcn.h>
 #elif defined _WIN32
+#include <windows.h>
 #else
 #warning "Runtime object loading not supported on this platform"
 #endif
@@ -223,7 +224,9 @@ void RegisteredClass::do_add_to_register(std::string id, RegisteredClass*r)
 
 bool RegisteredClass::load_module(std::string path)
 {
-#ifdef __linux__
+	typedef const char * (*get_name_t)(void);
+	typedef void (*register_module_t)(void);
+#if defined __linux__
 	void *handle=dlopen(path.c_str(),RTLD_LAZY);
 	if (!handle) return false;
 	// The ugly cast to uintptr_t is here for the sole purpose of silencing g++ warnings.
@@ -246,6 +249,27 @@ bool RegisteredClass::load_module(std::string path)
 	register_module();
 
 	return true;
+#elif defined _WIN32
+	HINSTANCE handle = LoadLibrary(path.c_str());
+	if (!handle) return false;
+	// The ugly cast to uintptr_t is here for the sole purpose of silencing g++ warnings.
+	get_name_t get_name = reinterpret_cast<get_name_t>(GetProcAddress(handle,"yuri_module_get_name"));
+	register_module_t register_module = reinterpret_cast<register_module_t>(GetProcAddress(handle,"yuri_module_register"));
+
+	bool valid = true;
+	if (!get_name || !register_module) {
+		valid = false;
+		std::cerr << "Module doesn't export libyuri2 interface\n";
+	}
+	if (valid && RegisteredClass::is_registered(get_name())) {
+		std::cerr << "Module already registered\n";
+		valid = false;
+	}
+	if (!valid) {//	std::cout << "Not a valid module\n";
+		FreeLibrary(handle);
+		return false;
+	}
+	register_module();
 #else
 	return false;
 #endif
