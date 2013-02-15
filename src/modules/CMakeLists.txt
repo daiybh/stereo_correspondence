@@ -1,3 +1,7 @@
+find_package( Boost 1.46 )
+include_directories( ${Boost_INCLUDE_DIRS})
+link_directories (${Boost_LIBRARY_DIRS})
+
 #################################################################
 # Add modules that are compile unconditionally
 #################################################################
