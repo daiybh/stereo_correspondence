@@ -1,3 +1,4 @@
+#include "yuri/version.h"
 namespace yuri {
 	const char * yuri_version = "@YURI_GIT_VERSION@";
 }
