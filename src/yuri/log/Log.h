@@ -30,19 +30,18 @@ enum _debug_flags {
 
 typedef _debug_flags  debug_flags;
 
-EXPORT class Log
+class EXPORT Log
 {
 public:
-	EXPORT Log(std::ostream &out);
-	EXPORT Log(const Log& log);
-	EXPORT virtual ~Log();
-	EXPORT void setID(int id);
-//	EXPORT template <class T> std::ostream& operator<<(T &t);
-	EXPORT void setLabel(std::string s);
-	EXPORT void setFlags(int f) { output_flags=f; }
-	EXPORT LogProxy operator[](debug_flags f);
-	EXPORT int get_flags() { return output_flags; }
-	EXPORT void set_quiet(bool q) {quiet =q;}
+	Log(std::ostream &out);
+	Log(const Log& log);
+	virtual ~Log();
+	void setID(int id);
+	void setLabel(std::string s);
+	void setFlags(int f) { output_flags=f; }
+	LogProxy operator[](debug_flags f);
+	int get_flags() { return output_flags; }
+	void set_quiet(bool q) {quiet =q;}
 protected:
 	static int uids;
 	int uid;
@@ -55,24 +54,10 @@ protected:
 	int /*default_flags,*/ output_flags;
 	bool quiet;
 	void set_flag(debug_flags f);
-	EXPORT std::string print_time();
-	EXPORT std::string print_level();
+	std::string print_time();
+	std::string print_level();
 
 };
-
-
-//template <class T> std::ostream &Log::operator <<(T &t)
-//{
-//	boost::mutex::scoped_lock l(lock);
-//	if (flags > (output_flags & flag_mask)) {
-//		if (null) return *null;
-//		else return *this;
-//	}
-//	if (!quiet) {
-//		return out << ((output_flags&show_level)?print_level():"") << id << ":" << uid << ": "  << ids << print_time() << t;
-//	}
-//	else return out << t;
-//}
 
 }
 }

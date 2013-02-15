@@ -18,7 +18,7 @@ using namespace yuri::io;
 using namespace yuri::exception;
 using namespace yuri::log;
 using namespace yuri::threads;
-class Instance {
+class EXPORT Instance {
 public:
 	Instance(std::string id, generator_t generator, shared_ptr<Parameters> par);
 	virtual ~Instance();

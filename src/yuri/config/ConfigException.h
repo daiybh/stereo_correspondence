@@ -7,7 +7,7 @@ namespace yuri
 namespace config
 {
 	
-class ConfigException: yuri::exception::Exception
+class EXPORT ConfigException: yuri::exception::Exception
 {
 public:
 	ConfigException();

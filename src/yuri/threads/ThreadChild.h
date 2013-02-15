@@ -7,7 +7,7 @@ namespace yuri
 namespace threads
 {
 class ThreadBase;
-class ThreadChild
+class EXPORT ThreadChild
 {
 public:
 	ThreadChild(shared_ptr<boost::thread> thread, shared_ptr<ThreadBase> child, bool spawned=false);

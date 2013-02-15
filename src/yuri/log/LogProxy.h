@@ -10,6 +10,7 @@
 #include <ostream>
 #include <sstream>
 #include <boost/thread.hpp>
+#include "yuri/io/types.h"
 namespace yuri {
 namespace log {
 struct guarded_stream {
@@ -23,7 +24,7 @@ private:
 	boost::mutex mutex_;
 };
 
-class LogProxy {
+class EXPORT LogProxy {
 private:
 	typedef std::basic_ostream<char>& (*iomanip_t)(std::basic_ostream<char>&);
 public:

@@ -17,7 +17,7 @@ using namespace yuri::threads;
 
 typedef void (*pCallback)(pThreadBase,pThreadBase);
 
-class Callback
+class EXPORT Callback
 {
 public:
 	Callback(pCallback func,pThreadBase data);

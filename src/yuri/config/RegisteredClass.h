@@ -24,8 +24,8 @@
 #else
 #define REGISTER(name,classname) \
 extern "C" { \
-const char * yuri_module_get_name() {return name;}\
-void 		yuri_module_register() {yuri::config::RegisteredClassSpecialized<classname>  *__reg__ = new yuri::config::RegisteredClassSpecialized<classname>(name);(void)__reg__;}\
+EXPORT const char * yuri_module_get_name() {return name;}\
+EXPORT void 		yuri_module_register() {yuri::config::RegisteredClassSpecialized<classname>  *__reg__ = new yuri::config::RegisteredClassSpecialized<classname>(name);(void)__reg__;}\
 }
 #endif
 namespace yuri {

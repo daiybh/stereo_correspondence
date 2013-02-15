@@ -10,7 +10,7 @@ namespace threads
 {
 
 class ThreadBase;
-class ThreadSpawn
+class EXPORT ThreadSpawn
 {
 public:
 	ThreadSpawn(shared_ptr<ThreadBase> thread);

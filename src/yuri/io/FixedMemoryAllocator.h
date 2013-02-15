@@ -23,7 +23,7 @@ namespace yuri {
 namespace io {
 
 
-class FixedMemoryAllocator: public BasicIOThread {
+class EXPORT FixedMemoryAllocator: public BasicIOThread {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
 	static shared_ptr<Parameters> configure();

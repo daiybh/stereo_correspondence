@@ -24,7 +24,7 @@ namespace config
 {
 
 using namespace yuri::log;
-class Config
+class EXPORT Config
 {
 public:
 	Config(Log &log);
@@ -50,7 +50,8 @@ protected:
 public: static Config* get_config(int index=0);
 protected: static Config* default_config;
 protected: static boost::mutex default_config_mutex;
-protected: static std::string cf, cfs;
+protected: static std::string cf;
+		   static std::string cfs;
 };
 
 template<typename T>  bool

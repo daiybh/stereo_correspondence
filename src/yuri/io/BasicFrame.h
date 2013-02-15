@@ -36,7 +36,7 @@ template<typename T> struct Plane
 };
 
 typedef yuri::shared_ptr<struct FrameInfo> pFrameInfo;
-struct FrameInfo {
+struct EXPORT FrameInfo {
 	virtual ~FrameInfo() {}
 	std::string format;
 	yuri::size_t value;
@@ -44,7 +44,7 @@ struct FrameInfo {
 };
 
 typedef yuri::shared_ptr<class BasicFrame> pBasicFrame;
-class BasicFrame {
+class EXPORT BasicFrame {
 public:
 	BasicFrame(yuri::size_t planes = 1);
 	virtual ~BasicFrame();

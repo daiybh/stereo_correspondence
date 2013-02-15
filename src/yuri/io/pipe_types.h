@@ -14,7 +14,7 @@
 namespace yuri {
 typedef shared_ptr<struct FormatInfo> FormatInfo_t;
 
-typedef struct FormatInfo {
+typedef struct EXPORT FormatInfo {
 	static FormatInfo_t raw_format (std::string name, std::vector<std::string> shortnames,
 			bool compressed=false, size_t bpp=0,
 			std::vector<yuri::size_t> component_depths=std::vector<yuri::size_t>(),

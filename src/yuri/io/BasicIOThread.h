@@ -29,7 +29,7 @@ using yuri::threads::pThreadBase;
 using yuri::log::Log;
 using boost::mutex;
 using namespace yuri::log;
-class BasicIOThread: public ThreadBase
+class EXPORT BasicIOThread: public ThreadBase
 {
 public:
 	static shared_ptr<Parameters> configure();
