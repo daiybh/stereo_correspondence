@@ -4,7 +4,10 @@
  *  Created on: Aug 13, 2010
  *      Author: neneko
  */
-
+#ifdef _WIN32
+#define WIN32_MEAN_AND_LEAN
+#define NOMINMAX
+#endif
 #include "YuriConvert.h"
 #include <boost/assign.hpp>
 #ifdef YURI_HAVE_LIBMVTP
@@ -57,10 +60,13 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V
 #endif
 
 std::map<std::pair<yuri::format_t, yuri::format_t>, YuriConvertor::converter_t>
-YuriConvertor::converters=boost::assign::map_list_of<std::pair<yuri::format_t, yuri::format_t>, YuriConvertor::converter_t>
+YuriConvertor::converters
+#ifndef _WIN32
+=boost::assign::map_list_of<std::pair<yuri::format_t, yuri::format_t>, YuriConvertor::converter_t>
 		(std::make_pair(YURI_FMT_YUV422,	YURI_FMT_V210_MVTP),&YuriConvertor::convert<YURI_FMT_YUV422, 	YURI_FMT_V210_MVTP,	false>)
 		(std::make_pair(YURI_FMT_RGB,		YURI_FMT_V210_MVTP),&YuriConvertor::convert<YURI_FMT_RGB, 		YURI_FMT_V210_MVTP,	false>)
 		(std::make_pair(YURI_FMT_V210_MVTP, YURI_FMT_YUV422),	&YuriConvertor::convert<YURI_FMT_V210_MVTP,	YURI_FMT_YUV422,	false>)
+#endif
 #ifdef YURI_HAVE_LIBMVTP
 		(std::make_pair(YURI_FMT_V210, 		YURI_FMT_V210_MVTP),&YuriConvertor::convert<YURI_FMT_V210,		YURI_FMT_V210_MVTP,	false>)
 		(std::make_pair(YURI_FMT_V210_MVTP, 	YURI_FMT_V210),	    &YuriConvertor::convert<YURI_FMT_V210_MVTP,	YURI_FMT_V210,	false>)
@@ -119,7 +125,7 @@ bool YuriConvertor::step()
 	shared_ptr<BasicFrame> frame = in[0]->pop_frame();
 	if (!frame) return true;
 	shared_ptr<BasicFrame> outframe;
-	std::pair<yuri::format_t, yuri::format_t> conv_pair = std::make_pair<yuri::format_t, yuri::format_t>(frame->get_format(), format);
+	std::pair<yuri::format_t, yuri::format_t> conv_pair = std::make_pair(frame->get_format(), format);
 	YuriConvertor::converter_t converter = 0;
 #ifdef YURI_HAVE_CUDA
 	if (cuda_converters.count(conv_pair)) converter = cuda_converters[conv_pair];
