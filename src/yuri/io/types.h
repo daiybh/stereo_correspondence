@@ -7,6 +7,7 @@
 
 #ifndef TYPES_H_
 #define TYPES_H_
+#define WIN32_MEAN_AND_LEAN
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
@@ -15,14 +16,22 @@
 #include <boost/thread/thread.hpp>
 
 #ifdef _WIN32
+#define PACK_START		__pragma(pack(push,1))
+#define PACK_END		__pragma(pack(pop))
 #ifdef yuri_core_EXPORTS
-#define EXPORT __declspec(dllexport)
+#define EXPORT			__declspec(dllexport)
+#define IMPORT			__declspec(dllimport)
 #else
 #define EXPORT __declspec(dllimport)
+#define IMPORT __declspec(dllexport)
+
 //#define EXPORT
 #endif
 #else
 #define EXPORT
+#define IMPORT
+#define PACK_START
+#define PACK_END		__attribute__((packed))
 #endif
 
 namespace yuri {
