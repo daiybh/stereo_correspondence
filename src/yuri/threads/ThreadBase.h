@@ -64,7 +64,7 @@ using namespace yuri::log;
 
 
 
-class ThreadBase :public boost::enable_shared_from_this<ThreadBase>
+class EXPORT ThreadBase :public boost::enable_shared_from_this<ThreadBase>
 {
 public:
 	//ThreadBase(Log &_log, pThreadBase parent);

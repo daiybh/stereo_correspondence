@@ -19,7 +19,7 @@ using namespace yuri::threads;
 
 class BasicIOThread;
 
-class PipeConnector {
+class EXPORT PipeConnector {
 private:
 	PipeConnector() {}
 public:

@@ -14,7 +14,7 @@ namespace yuri {
 
 namespace exception {
 
-class NotImplemented: public yuri::exception::Exception {
+class EXPORT NotImplemented: public yuri::exception::Exception {
 public:
 	NotImplemented(std::string reason = "Not Implemented");
 	virtual ~NotImplemented() throw();

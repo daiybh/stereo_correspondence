@@ -14,7 +14,7 @@
 namespace yuri {
 
 namespace exception {
-class OutOfRange: public yuri::exception::Exception {
+class EXPORT OutOfRange: public yuri::exception::Exception {
 public:
 	OutOfRange():Exception(std::string("index of of range")) {}
 	OutOfRange(std::string msg):Exception(msg) {}
