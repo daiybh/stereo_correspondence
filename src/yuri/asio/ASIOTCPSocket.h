@@ -1,8 +1,11 @@
-/*
- * ASIOTCPSocket.h
+/*!
+ * @file 		ASIOTCPSocket.cpp
+ * @author 		Zdenek Travnicek
+ * @date 		20.12.2011
+ * @date		16.2.2013
+ * @copyright	Institute of Intermedia, 2011 - 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: Dec 20, 2011
- *      Author: neneko
  */
 
 #ifndef ASIOTCPSOCKET_H_

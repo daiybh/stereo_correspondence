@@ -1,12 +1,14 @@
-/*
- * BasicPipe.cpp
+/*!
+ * @file 		BasicPipe.cpp
+ * @author 		Zdenek Travnicek
+ * @date 		28.7.2010
+ * @date		16.2.2013
+ * @copyright	Institute of Intermedia, 2010 - 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: Jul 28, 2010
- *      Author: neneko
  */
 
 #include "BasicPipe.h"
-//include <linux/fcntl.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>

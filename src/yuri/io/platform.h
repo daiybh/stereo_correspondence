@@ -1,8 +1,11 @@
-/*
- * platform.h
+/*!
+ * @file 		platform.h
+ * @author 		Zdenek Travnicek
+ * @date 		16.2.2013
+ * @copyright	Institute of Intermedia, 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: 16.2.2013
- *      Author: neneko
+ * @brief		Platform detection and platform specific defines
  */
 
 #ifndef PLATFORM_H_

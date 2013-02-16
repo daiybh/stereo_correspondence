@@ -1,8 +1,11 @@
-/*
- * NotImplemented.cpp
+/*!
+ * @file 		NotImplemented.cpp
+ * @author 		Zdenek Travnicek
+ * @date 		26.9.2010
+ * @date		16.2.2013
+ * @copyright	Institute of Intermedia, 2010 - 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: Sep 26, 2010
- *      Author: neneko
  */
 
 #include "NotImplemented.h"

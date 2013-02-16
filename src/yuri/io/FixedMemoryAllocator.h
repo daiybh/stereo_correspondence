@@ -1,10 +1,12 @@
-/*
- * FixedMemoryAllocator.h
+/*!
+ * @file 		FixedMemoryAllocator.h
+ * @author 		Zdenek Travnicek
+ * @date 		28.1.2012
+ * @date		16.2.2013
+ * @copyright	Institute of Intermedia, 2012 - 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: 28.1.2012
- *      Author: neneko
- *
- *  Description: class FixedMemoryAllocator implements effective allocation of
+ * @details		FixedMemoryAllocator implements effective allocation of
  *  equally sized blocks of memory.
  *  It managed pool of allocated blocks and serves them to application,
  *  reclaiming unused blocks back to pool.

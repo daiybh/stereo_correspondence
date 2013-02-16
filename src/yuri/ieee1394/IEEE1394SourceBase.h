@@ -1,8 +1,11 @@
-/*
- * IEEE1394InputBase.h
+/*!
+ * @file 		IEEE1394InputBase.h
+ * @author 		Zdenek Travnicek
+ * @date 		29.5.2009
+ * @date		16.2.2013
+ * @copyright	Institute of Intermedia, 2009 - 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: May 29, 2009
- *      Author: neneko
  */
 
 #ifndef IEEE1394INPUTBASE_H_
@@ -11,9 +14,6 @@
 #include <yuri/io/BasicIOThread.h>
 #include <yuri/exception/Exception.h>
 #include <vector>
-// Dclarations from libiec61883, so we don't have to include it here
-//typedef struct raw1394_handle *raw1394handle_t;
-//typedef uint16_t nodeid_t;
 #include <libiec61883/iec61883.h>
 namespace yuri {
 

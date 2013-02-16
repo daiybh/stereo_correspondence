@@ -1,8 +1,11 @@
-/*
- * BasicIOMacros.h
+/*!
+ * @file 		BasicIOMacros.h
+ * @author 		Zdenek Travnicek
+ * @date 		10.10.2011
+ * @date		16.2.2013
+ * @copyright	Institute of Intermedia, 2011 - 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: 30.10.2011
- *      Author: neneko
  */
 
 #ifndef BASICIOMACROS_H_
