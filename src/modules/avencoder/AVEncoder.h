@@ -40,9 +40,9 @@ protected:
 	float time_step;
 	yuri::size_t width, height;
 	//CodecID codec;
-	static set<yuri::format_t> get_supported_input_formats();
-	static set<yuri::format_t> get_supported_output_formats();
-	set<yuri::format_t> supported_formats_for_current_codec;
+	static std::set<yuri::format_t> get_supported_input_formats();
+	static std::set<yuri::format_t> get_supported_output_formats();
+	std::set<yuri::format_t> supported_formats_for_current_codec;
 };
 
 }

@@ -16,6 +16,7 @@
 	#define YURI_WIN 1
 	#define PACK_START			__pragma(pack(push,1))
 	#define PACK_END			__pragma(pack(pop))
+	#define DEPRECATED
 	#ifdef yuri_core_EXPORTS
 		#define EXPORT			__declspec(dllexport)
 		#define IMPORT			__declspec(dllimport)
@@ -32,6 +33,7 @@
 	#define IMPORT
 	#define PACK_START
 	#define PACK_END			__attribute__((packed))
+	#define DEPRECATED			__attribute__((deprecated))
 #else
 	#error Unsupported platform
 #endif

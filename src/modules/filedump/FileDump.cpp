@@ -73,7 +73,8 @@ bool FileDump::step()
 		log[debug]<<"Dumping " << f->get_planes_count() << " planes" << std::endl;
 		for (yuri::size_t i=0; i<f->get_planes_count();++i) {
 			//log[debug]<<"Dumping plane " << i << ", size: " << (*f)[i].get_size() << std::endl;
-			dump_file.write((const char *)(*f)[i].data.get(),(*f)[i].size);
+//			dump_file.write((const char *)(*f)[i].data.get(),(*f)[i].size);
+			dump_file.write(reinterpret_cast<const char *>(PLANE_RAW_DATA(f,0)),PLANE_SIZE(f,0));
 		}
 		if (seq_chars) {
 			dump_file.close();

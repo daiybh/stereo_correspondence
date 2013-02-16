@@ -22,11 +22,10 @@ namespace video
 {
 using namespace yuri::io;
 using namespace yuri::log;
-using namespace std;
 class AVCodecBase: public BasicIOThread
 {
 public:
-	AVCodecBase(Log &_log, pThreadBase parent, string id="libAV", yuri::sint_t inp = 1, yuri::sint_t outp = 1) IO_THREAD_CONSTRUCTOR;
+	AVCodecBase(Log &_log, pThreadBase parent, std::string id="libAV", yuri::sint_t inp = 1, yuri::sint_t outp = 1) IO_THREAD_CONSTRUCTOR;
 	virtual ~AVCodecBase();
 protected:
 	bool init_codec(AVMediaType codec_type, int width, int height, int bps, int fps, int fps_base);
@@ -41,7 +40,7 @@ protected:
 	static shared_ptr<AVPicture> convert_to_avpicture(shared_ptr<BasicFrame> frame);
 	template<typename T> static void set_av_frame_or_picture(shared_ptr<BasicFrame> frame, shared_ptr<T> av);
 	//static shared_ptr<AVPicture> allocate_avpicture(long format);
-	static CodecID get_codec_from_string(string codec);
+	static CodecID get_codec_from_string(std::string codec);
 	static PixelFormat av_pixelformat_from_yuri(yuri::format_t format) throw (Exception);
 	static yuri::format_t yuri_pixelformat_from_av(PixelFormat format) throw (Exception);
 	static yuri::format_t yuri_format_from_avcodec(CodecID codec) throw (Exception);
@@ -52,10 +51,10 @@ protected:
 protected: 
 	static boost::mutex avcodec_lock;
 	static bool avcodec_initialized;
-	static map<yuri::format_t, CodecID> yuri_codec_map;
-	static map<yuri::format_t, PixelFormat> yuri_pixel_map;
+	static std::map<yuri::format_t, CodecID> yuri_codec_map;
+	static std::map<yuri::format_t, PixelFormat> yuri_pixel_map;
 	// Used to convert between 'identical' format. TODO: needs better solution
-	static map<PixelFormat, PixelFormat> av_identity;
+	static std::map<PixelFormat, PixelFormat> av_identity;
 
 	AVCodecContext* cc;
 	AVCodec *c;
@@ -77,10 +76,9 @@ template<typename T> void AVCodecBase::set_av_frame_or_picture(shared_ptr<BasicF
 	yuri::size_t height = frame->get_height(), no_planes, bpplane;
 	if (frame->get_planes_count() !=  fmt->planes) {
 		// This should never happen. Something has gone wrong.
-		//log[warning] << "fucked up plane numbers" << endl;
-		cout << "fucked up plane numbers (expected: " <<fmt->planes << ", got: " << frame->get_planes_count() << ")"  << endl;
+//		throw("bad plane numbers (expected: " <<fmt->planes << ", got: " << frame->get_planes_count() << ")"  << endl;)
 	}
-	no_planes = min(frame->get_planes_count(), fmt->planes);
+	no_planes = std::min(frame->get_planes_count(), fmt->planes);
 	bpplane = fmt->bpp;
 	for (yuri::size_t i = 0; i < 4; ++i) {
 		if (no_planes>1) bpplane= fmt->component_depths[i];
@@ -88,7 +86,9 @@ template<typename T> void AVCodecBase::set_av_frame_or_picture(shared_ptr<BasicF
 			av->data[i]=0;
 			av->linesize[i]=0;
 		} else {
-			av->data[i]=(uint8_t*)((*frame)[i].data.get());
+//			av->data[i]=(uint8_t*)((*frame)[i].data.get());
+			av->data[i]=reinterpret_cast<uint8_t*>(PLANE_RAW_DATA(frame,i));
+
 			//av->linesize[i]=fmt->bpp*width/fmt->plane_x_subs[i]/8;
 			if (height) {
 				//av->linesize[i]=(*frame)[i].get_size()/(height*fmt->plane_y_subs[i]);

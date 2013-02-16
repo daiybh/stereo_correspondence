@@ -74,8 +74,8 @@ shared_ptr<BasicFrame> Fetcher::fetch()
 				CURLFORM_COPYNAME,iname.c_str(),
 				CURLFORM_CONTENTTYPE,ftype.c_str(),
 				CURLFORM_BUFFER,fname.c_str(),
-				CURLFORM_BUFFERPTR,(*f)[0].data.get(),
-				CURLFORM_BUFFERLENGTH,(*f)[0].size,
+				CURLFORM_BUFFERPTR,PLANE_RAW_DATA(f,0),
+				CURLFORM_BUFFERLENGTH,PLANE_SIZE(f,0),
 				CURLFORM_END))) {
 			log[warning] << "Failed to pack file into httppost structure! "
 				<< "Error code " << printCurlFormaddError(cerror) << endl;
@@ -152,15 +152,19 @@ shared_ptr<BasicFrame> Fetcher::dumpData()
 {
 	yuri::size_t length = temp_data.tellp();
 	shared_ptr<BasicFrame> frame (new BasicFrame(1));
-	shared_array<yuri::ubyte_t> mem = allocate_memory_block(length+1);
-	(*frame)[0].set(mem,length+1);
+	//shared_array<yuri::ubyte_t> mem = allocate_memory_block(length+1);
+	//(*frame)[0].set(mem,length+1);
+//	PLANE_DATA(frame,0).resize(length+1);
 	log[debug] << "Reading " << length << " bytes from stringstream" << endl;
 	//char *mem = new char[length+1];
 	temp_data.seekg(0,ios::beg);
-	temp_data.read(reinterpret_cast<char*>(mem.get()),length);
+//	temp_data.read(reinterpret_cast<char*>(mem.get()),length);
+	const std::string& str = temp_data.str();
+	frame->set_plane(0,reinterpret_cast<const yuri::ubyte_t *>(str.c_str()),str.size()+1);
 	temp_data.seekp(0,ios::beg);
 	temp_data.str().clear();
-	mem[length]=0;
+//	PLANE_DATA(frame,0).push_back(0);
+//	mem[length]=0;
 	/*if (response && osize) {
 		*response=mem;
 		*osize = length;

@@ -34,8 +34,9 @@ VNCClient::VNCClient(Log &log_,pThreadBase parent, Parameters &parameters) IO_TH
 	remaining_rectangles(0)
 {
 	IO_THREAD_INIT("VNCClient")
-	buffer.reset(new yuri::ubyte_t[buffer_size]);
-	buffer_pos = buffer.get();
+//	buffer.reset(new yuri::ubyte_t[buffer_size]);
+	buffer.resize(buffer_size);
+	buffer_pos = &buffer[0];
 	buffer_end = buffer_pos + buffer_size;
 	buffer_free = buffer_size;
 	buffer_valid = 0;
@@ -68,9 +69,9 @@ void VNCClient::run()
 		}
 		if (!buffer_free) {
 			log[error] << "Buffer full. Moving data." << std::endl;
-			yuri::size_t free_beg = buffer_pos - buffer.get();
+			yuri::size_t free_beg = buffer_pos - &buffer[0];
 			yuri::size_t remaining = buffer_valid;
-			yuri::ubyte_t *pos_d = buffer.get(), *pos_s = buffer_pos;
+			yuri::ubyte_t *pos_d = &buffer[0], *pos_s = buffer_pos;
 			yuri::size_t cop;
 			while (remaining) {
 				cop = free_beg>=remaining?remaining:free_beg;
@@ -79,7 +80,7 @@ void VNCClient::run()
 				pos_d+=cop;
 				pos_s+=cop;
 			}
-			buffer_pos = buffer.get();
+			buffer_pos = &buffer[0];
 			buffer_free = buffer_size - buffer_valid;
 			log[error] << "Moved buffer " << free_beg << " bytes back"<< std::endl;
 		}
@@ -90,7 +91,7 @@ void VNCClient::run()
 		}
 		if (!process_data()) need_data=true;
 		if (buffer_valid==0) {
-			buffer_pos = buffer.get();
+			buffer_pos = &buffer[0];
 			buffer_free=buffer_size;
 		}
 	}
@@ -170,7 +171,8 @@ bool VNCClient::handshake()
 			"red @" << static_cast<yuri::ushort_t>(pixel_format.colors[0].shift) << ", max: " <<  pixel_format.colors[0].max <<
 			"green @" << static_cast<yuri::ushort_t>(pixel_format.colors[1].shift) << ", max: " <<  pixel_format.colors[1].max <<
 			"blue @" << static_cast<yuri::ushort_t>(pixel_format.colors[2].shift) << ", max: " <<  pixel_format.colors[2].max << std::endl;
-	image.reset(new yuri::ubyte_t[width*height*3]);
+	//image.reset(new yuri::ubyte_t[width*height*3]);
+	image.resize(width*height*3);
 	request_rect(0,0,width,height,false);
 	set_encodings();
 	//enable_continuous();
@@ -245,7 +247,7 @@ bool VNCClient::process_data()
 				}
 
 				if (buffer_valid < 12 + need) {
-					log[debug] << "Not enough data (need: " << need << ", have: " << buffer_valid << "@ "<< (buffer_pos - buffer.get())<< ")"<<std::endl;
+					log[debug] << "Not enough data (need: " << need << ", have: " << buffer_valid << "@ "<< (buffer_pos - &buffer[0])<< ")"<<std::endl;
 					return false;
 				}
 				switch (enc) {
@@ -254,7 +256,7 @@ bool VNCClient::process_data()
 						yuri::size_t pixel;
 						assert(pixel_format.bpp == 32);
 						for (yuri::ushort_t line=y; line < y+h; ++line) {
-							outpos = image.get()+3*width*line+x*3;
+							outpos = &image[0]+3*width*line+x*3;
 							for (yuri::ushort_t row = x; row < x + w; ++row) {
 								pixel = get_pixel(pos);
 								*outpos++ = (pixel>>pixel_format.colors[2].shift)&pixel_format.colors[2].max;
@@ -271,13 +273,13 @@ bool VNCClient::process_data()
 						tmp = new yuri::ubyte_t[w*h*3];
 						yuri::ubyte_t *b=tmp;
 						for (yuri::ushort_t line=y0; line < y0+h; ++line) {
-							pos = image.get()+3*width*line+x0*3;
+							pos = &image[0]+3*width*line+x0*3;
 							memcpy(b,pos,w*3);
 							b+=w*3;
 						}
 						b = tmp;
 						for (yuri::ushort_t line=y; line < y+h; ++line) {
-							pos = image.get()+3*width*line+x*3;
+							pos = &image[0]+3*width*line+x*3;
 							memcpy(pos,b,w*3);
 							b+=w*3;
 						}
@@ -292,7 +294,8 @@ bool VNCClient::process_data()
 				move_buffer(12+need);
 				if (!--remaining_rectangles) {
 					state = awaiting_data;
-					shared_ptr<BasicFrame> frame = BasicIOThread::allocate_frame_from_memory(image,width*height*3);
+//					shared_ptr<BasicFrame> frame = BasicIOThread::allocate_frame_from_memory(image,width*height*3);
+					shared_ptr<BasicFrame> frame = BasicIOThread::allocate_frame_from_memory(image);
 					push_video_frame(0,frame,YURI_FMT_RGB24,width,height);
 					request_rect(0,0,width,height,true);
 				}

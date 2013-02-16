@@ -60,7 +60,7 @@ protected:
 //	boost::shared_ptr<ASIOAsyncTCPSocket> socket;
 	boost::shared_ptr<ASIOTCPSocket> socket;
 
-	boost::shared_array<yuri::ubyte_t> buffer, image;
+	plane_t buffer, image;
 	yuri::ubyte_t *buffer_pos, *buffer_end;
 	yuri::size_t buffer_size, buffer_free, buffer_valid;
 	yuri::ushort_t server_major, server_minor;

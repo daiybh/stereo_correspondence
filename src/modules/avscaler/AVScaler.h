@@ -40,7 +40,7 @@ public:
 	void out_close() { if (out[0]) out[0]->close(); }
 	//bool out_is_full() { if (out[0]) return out[0]->is_full(); return false; }
 	static void av_ctx_deleter(SwsContext *ctx);
-	static set<long> get_supported_formats();
+	static std::set<long> get_supported_formats();
 protected:
 	void run();
 

@@ -79,13 +79,14 @@ bool JPEGDecoder::step() {
 		colorspace= (bpp==3?YURI_FMT_RGB24:bpp==4?YURI_FMT_RGB32:YURI_FMT_NONE);
 		log[verbose_debug] << "Allocating " << linesize * height << " bytes for image "
 			<< width << "x" << height << " @ " << 8*bpp << "bpp" << std::endl;
-		mem=allocate_memory_block(linesize * height);
-		(*out_frame)[0].set(mem,linesize * height);
+		PLANE_DATA(out_frame,0).resize(linesize * height);
+//		mem=allocate_memory_block(linesize * height);
+//		(*out_frame)[0].set(mem,linesize * height);
 		JSAMPROW row_pointer;
 
 		yuri::size_t completed = 0, processed=0;
 		for (int i=0;i<height;++i) {
-			row_pointer = (JSAMPROW) mem.get() + i*linesize;
+			row_pointer = (JSAMPROW) PLANE_RAW_DATA(out_frame,0) + i*linesize;
 			processed = jpeg_read_scanlines(&cinfo, &row_pointer, 1);
 			if (aborted) throw (yuri::exception::Exception("Decoding failed"));
 			completed += processed;
@@ -129,8 +130,8 @@ void JPEGDecoder::setDestManager(jpeg_decompress_struct* cinfo)
 {
 	cinfo->src = new jpeg_source_mgr;
 	cinfo->src->init_source=initSrc;
-	cinfo->src->next_input_byte=(JOCTET *)((*frame)[0].data.get());
-	cinfo->src->bytes_in_buffer=frame->get_size();
+	cinfo->src->next_input_byte=(JOCTET *)PLANE_RAW_DATA(frame,0);
+	cinfo->src->bytes_in_buffer=PLANE_SIZE(frame,0);
 	cinfo->src->fill_input_buffer=fillInput;
 	cinfo->src->resync_to_restart=resyncData;
 	cinfo->src->skip_input_data=skipData;
@@ -141,8 +142,8 @@ void JPEGDecoder::setDestManager(jpeg_decompress_struct* cinfo)
 /// Check if there's valid JPEG magic
 bool JPEGDecoder::validate(pBasicFrame frame)
 {
-	if (!frame || (*frame)[0].size<4) return false;
-	uint8_t *magic = (uint8_t*)  ((*frame)[0].data.get());
+	if (!frame || PLANE_SIZE(frame,0)<4) return false;
+	uint8_t *magic = reinterpret_cast<uint8_t*>(PLANE_RAW_DATA(frame,0));
 	if  (magic[0] == 0xff &&
 		 magic[1] == 0xd8 ) return true;
 		/*(magic[2] == 0xff) || (magic[2] == 0x00))

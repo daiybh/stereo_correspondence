@@ -59,8 +59,9 @@ bool TSRtpStreamer::step()
 	if (!in[0] || in[0]->is_empty()) return true;
 	shared_ptr<BasicFrame> frame = in[0]->pop_frame();
 	yuri::size_t header_size = sizeof(RTPPacket);
-	shared_array<yuri::ubyte_t> packet = allocate_memory_block(header_size+7*188);
-	RTPPacket *p = (RTPPacket*)packet.get();
+//	shared_array<yuri::ubyte_t> packet = allocate_memory_block(header_size+7*188);
+	plane_t packet(header_size+7*188);
+	RTPPacket *p = reinterpret_cast<RTPPacket*>(&packet[0]);
 	memset(p,0,sizeof(RTPPacket));
 	//p->version = 2;
 	/*p->payload_type = 33;
@@ -72,10 +73,10 @@ bool TSRtpStreamer::step()
 	hdr |= 33 << 16;
 
 
-	yuri::size_t remaining = (*frame)[0].size;
+	yuri::size_t remaining = PLANE_SIZE(frame,0);
 
-	yuri::ubyte_t *data_start = packet.get()+header_size;
-	yuri::ubyte_t *data_ptr = (*frame)[0].data.get();
+	yuri::ubyte_t *data_start = &packet[0]+header_size;
+	yuri::ubyte_t *data_ptr = PLANE_RAW_DATA(frame,0);
 	if (first_packet == not_a_date_time) {
 		first_packet = microsec_clock::local_time();
 		packets_sent=0;
@@ -92,7 +93,7 @@ bool TSRtpStreamer::step()
 		p->bytes[3] = pseq++ & 0xFF;*/
 		yuri::size_t usable=remaining>(7*188)?7*188:remaining;
 		memcpy(data_start,data_ptr,usable);
-		socket->write(packet.get(),usable+header_size);
+		socket->write(&packet[0],usable+header_size);
 		data_ptr+=usable;
 		remaining-=usable;
 	}

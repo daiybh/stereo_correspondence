@@ -107,7 +107,7 @@ pBasicFrame BlankGenerator::generate_frame_yuv422()
 {
 	assert(format==YURI_FMT_YUV422);
 	pBasicFrame frame = BasicIOThread::allocate_empty_frame(YURI_FMT_YUV422,width,height);
-	yuri::ubyte_t *data = (*frame)[0].data.get();
+	yuri::ubyte_t *data = PLANE_RAW_DATA(frame,0);
 	for (yuri::ushort_t y = 0; y<height; ++y) {
 		for (yuri::ushort_t x = 0; x < width; ++x) {
 			*data++=0;
@@ -121,7 +121,7 @@ pBasicFrame BlankGenerator::generate_frame_rgb()
 {
 	assert(format==YURI_FMT_RGB24);
 	pBasicFrame frame = BasicIOThread::allocate_empty_frame(YURI_FMT_RGB,width,height);
-	yuri::ubyte_t *data = (*frame)[0].data.get();
+	yuri::ubyte_t *data = PLANE_RAW_DATA(frame,0);
 	for (yuri::ushort_t y = 0; y<height; ++y) {
 		for (yuri::ushort_t x = 0; x < width; ++x) {
 			*data++=0;

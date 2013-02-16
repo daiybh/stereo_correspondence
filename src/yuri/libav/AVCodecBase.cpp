@@ -19,7 +19,7 @@ namespace video
 
 boost::mutex AVCodecBase::avcodec_lock;
 bool AVCodecBase::avcodec_initialized = false;
-map<yuri::format_t, CodecID> AVCodecBase::yuri_codec_map=boost::assign::map_list_of
+std::map<yuri::format_t, CodecID> AVCodecBase::yuri_codec_map=boost::assign::map_list_of
 		(YURI_VIDEO_MPEG2, 			CODEC_ID_MPEG2VIDEO)
 		(YURI_VIDEO_MPEG1, 			CODEC_ID_MPEG1VIDEO)
 		(YURI_VIDEO_HUFFYUV, 		CODEC_ID_HUFFYUV)
@@ -34,7 +34,7 @@ map<yuri::format_t, CodecID> AVCodecBase::yuri_codec_map=boost::assign::map_list
 		(YURI_VIDEO_THEORA,			CODEC_ID_THEORA)
 		(YURI_VIDEO_VP8,			CODEC_ID_VP8);
 
-map<yuri::format_t, PixelFormat> AVCodecBase::yuri_pixel_map=boost::assign::map_list_of
+std::map<yuri::format_t, PixelFormat> AVCodecBase::yuri_pixel_map=boost::assign::map_list_of
 		(YURI_FMT_RGB,	 			PIX_FMT_RGB24)
 		(YURI_FMT_BGR,	 			PIX_FMT_BGR24)
 		(YURI_FMT_RGBA,	 			PIX_FMT_RGBA)
@@ -42,10 +42,10 @@ map<yuri::format_t, PixelFormat> AVCodecBase::yuri_pixel_map=boost::assign::map_
 		(YURI_FMT_YUV420_PLANAR,	PIX_FMT_YUV420P)
 		(YURI_FMT_YUV422_PLANAR,	PIX_FMT_YUV422P)
 		(YURI_FMT_YUV444_PLANAR,	PIX_FMT_YUV444P);
-map<PixelFormat, PixelFormat> AVCodecBase::av_identity=boost::assign::map_list_of
+std::map<PixelFormat, PixelFormat> AVCodecBase::av_identity=boost::assign::map_list_of
 		(PIX_FMT_YUVJ420P,			PIX_FMT_YUV420P)
 		(PIX_FMT_YUVJ422P,			PIX_FMT_YUV422P);
-AVCodecBase::AVCodecBase(Log &_log, pThreadBase parent, string id, yuri::sint_t inp, yuri::sint_t outp)
+AVCodecBase::AVCodecBase(Log &_log, pThreadBase parent, std::string id, yuri::sint_t inp, yuri::sint_t outp)
 	IO_THREAD_CONSTRUCTOR:
 	BasicIOThread(_log,parent,inp,outp,id),cc(0),c(0),codec_id(CODEC_ID_NONE),
 	current_format(YURI_FMT_NONE),opened(false)
@@ -211,7 +211,7 @@ shared_ptr<AVFrame> AVCodecBase::convert_to_avframe(shared_ptr<BasicFrame> frame
 	set_av_frame_or_picture(frame,frm);
 	return frm;
 }
-CodecID AVCodecBase::get_codec_from_string(string codec)
+CodecID AVCodecBase::get_codec_from_string(std::string codec)
 {
 	yuri::format_t fmt = BasicPipe::get_format_from_string(codec);
 	if (!fmt) return CODEC_ID_NONE;
@@ -226,7 +226,7 @@ PixelFormat AVCodecBase::av_pixelformat_from_yuri(yuri::format_t format) throw (
 }
 yuri::format_t AVCodecBase::yuri_pixelformat_from_av(PixelFormat format)throw (Exception)
 {
-	pair<yuri::format_t, PixelFormat> fp;
+	std::pair<yuri::format_t, PixelFormat> fp;
 	PixelFormat pixfmt = format;
 	if (av_identity.count(format)) pixfmt=av_identity[format];
 	BOOST_FOREACH(fp, yuri_pixel_map) {
@@ -236,7 +236,7 @@ yuri::format_t AVCodecBase::yuri_pixelformat_from_av(PixelFormat format)throw (E
 }
 yuri::format_t AVCodecBase::yuri_format_from_avcodec(CodecID codec) throw (Exception)
 {
-	pair<yuri::format_t, CodecID> fp;
+	std::pair<yuri::format_t, CodecID> fp;
 	BOOST_FOREACH(fp, yuri_codec_map) {
 		if (fp.second==codec) return fp.first;
 	}

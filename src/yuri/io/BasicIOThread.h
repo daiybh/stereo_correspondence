@@ -47,6 +47,9 @@ public:
 	BasicIOThread(Log &log_, pThreadBase parent, yuri::sint_t inp, yuri::sint_t outp, std::string id = "IO");
 
 	virtual ~BasicIOThread();
+/* ****************************************************************************
+ * 							Input/Output
+ **************************************************************************** */
 	virtual inline yuri::sint_t get_no_in_ports()
 		{ boost::mutex::scoped_lock l(port_lock); return in_ports; }
 	virtual inline yuri::sint_t get_no_out_ports()
@@ -57,16 +60,24 @@ public:
 	virtual void set_latency(yuri::size_t lat) { latency=lat; }
 	virtual bool pipes_data_available();
 	virtual void read_notification();
+/* ****************************************************************************
+ * 							Parameters
+ **************************************************************************** */
 	virtual void set_affinity(yuri::ssize_t affinity);
 	virtual bool set_params(Parameters &parameters);
 	virtual bool set_param(Parameter &parameter);
 	template<typename T> bool set_param(std::string name, T value);
-static shared_array<yuri::ubyte_t> allocate_memory_block(yuri::size_t size, bool large=false);
-static pBasicFrame allocate_frame_from_memory(const yuri::ubyte_t *mem, yuri::size_t size, bool large=false);
-static pBasicFrame allocate_frame_from_memory(shared_array<yuri::ubyte_t> mem, yuri::size_t size, bool large=false);
-static pBasicFrame duplicate_frame(pBasicFrame frame);
-static pBasicFrame allocate_empty_frame(yuri::format_t format, yuri::size_t width, yuri::size_t height, bool large=false);
-static bool connect_threads(shared_ptr<BasicIOThread>, yuri::sint_t, shared_ptr<BasicIOThread>, yuri::sint_t, Log &log,std::string name, shared_ptr<Parameters> params = shared_ptr<Parameters>());
+/* ****************************************************************************
+ * 							Data allocation
+ **************************************************************************** */
+//	static BasicFrame::plane_t allocate_memory_block(yuri::size_t size, bool large=false);
+	static pBasicFrame allocate_frame_from_memory(const yuri::ubyte_t *mem, yuri::size_t size, bool large=false);
+	static pBasicFrame allocate_frame_from_memory(const plane_t& mem);
+//	static pBasicFrame allocate_frame_from_memory(shared_array<yuri::ubyte_t> mem, yuri::size_t size, bool large=false);
+	static pBasicFrame duplicate_frame(pBasicFrame frame);
+	static pBasicFrame allocate_empty_frame(yuri::format_t format, yuri::size_t width, yuri::size_t height, bool large=false);
+	static bool connect_threads(shared_ptr<BasicIOThread>, yuri::sint_t, shared_ptr<BasicIOThread>, yuri::sint_t, Log &log,std::string name, shared_ptr<Parameters> params = shared_ptr<Parameters>());
+
 protected:
 	virtual void run();
 	virtual bool step();
@@ -82,14 +93,14 @@ protected:
 	virtual bool push_video_frame (yuri::sint_t index, pBasicFrame frame, yuri::format_t format, yuri::size_t width, yuri::size_t height);
 	virtual bool push_audio_frame (yuri::sint_t index, pBasicFrame frame, yuri::format_t format, yuri::usize_t channels, yuri::usize_t samples, yuri::size_t pts, yuri::size_t duration, yuri::size_t dts);
 	virtual pBasicFrame timestamp_frame(pBasicFrame frame);
-	virtual pBasicFrame get_frame_as(yuri::sint_t index, yuri::format_t format);
+	virtual pBasicFrame get_frame_as(yuri::sint_t index, yuri::format_t format) DEPRECATED;
 
 	Parameters params;
 	std::vector<PipeConnector > in,out;
 	yuri::sint_t in_ports,out_ports;
 	virtual void resize(yuri::sint_t inp, yuri::sint_t outp);
 	yuri::usize_t latency; // Latency in microseconds
-#ifdef __linux__
+#ifdef YURI_LINUX
 	shared_array<struct pollfd> pipe_fds;
 #endif
 	yuri::uint_t active_pipes;

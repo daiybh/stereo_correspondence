@@ -17,33 +17,31 @@ namespace io {
 
 using namespace yuri::exception;
 BasicFrame::BasicFrame(yuri::size_t planes):
-		numberPlanes(0),dts(0),pts(0),duration(0),format(YURI_FMT_NONE),
+		/*numberPlanes(0),*/dts(0),pts(0),duration(0),format(YURI_FMT_NONE),
 		width(0),height(0),samples(1),channels(1)
 {
 	set_planes_count(planes);
 }
 
 BasicFrame::~BasicFrame() {
-	//if(info) delete info;
 }
 
-Plane<yuri::ubyte_t> &BasicFrame::operator[](yuri::size_t index)
+plane_t &BasicFrame::get_plane(yuri::size_t index)
 {
-	if (index >= numberPlanes)
+	if (index >= planes.size())
 		throw OutOfRange();
-	shared_ptr<Plane<yuri::ubyte_t> > p(planes[index]);
-	if (!p.get()) {
-		p = shared_ptr<Plane<yuri::ubyte_t> > (new Plane<yuri::ubyte_t>());
-		planes[index] = p;
-	}
-	return *p;
+	return planes[index];
+}
+
+plane_t &BasicFrame::operator[](yuri::size_t index)
+{
+	return get_plane(index);
 }
 yuri::size_t BasicFrame::get_size()
 {
-	shared_ptr<Plane<yuri::ubyte_t> > plane;
 	yuri::size_t size = 0;
-	BOOST_FOREACH(plane, planes) {
-		size += plane->size;
+	for (std::vector<plane_t>::iterator it=planes.begin();it!=planes.end();++it) {
+		size += it->size();
 	}
 	return size;
 }
@@ -51,12 +49,11 @@ yuri::size_t BasicFrame::get_size()
 void BasicFrame::set_planes_count(yuri::size_t count)
 {
 	planes.resize(count);
-	numberPlanes = count;
 }
 
 yuri::size_t BasicFrame::get_planes_count()
 {
-	return numberPlanes;
+	return planes.size();
 }
 
 void BasicFrame::set_parameters(yuri::format_t format, yuri::size_t width, yuri::size_t height, yuri::size_t channels, yuri::size_t samples)
@@ -95,20 +92,32 @@ yuri::usize_t BasicFrame::get_channel_count()
 {
 	return channels;
 }
-void BasicFrame::set_plane(yuri::size_t index, shared_ptr<Plane<yuri::ubyte_t> > plane)
+void BasicFrame::set_plane(yuri::size_t index, const plane_t& plane)
 {
-	if (index >= numberPlanes) throw OutOfRange("Plane number out of range");
+	if (index >= planes.size()) throw OutOfRange("Plane number out of range");
 	planes[index] = plane;
 }
-
+void BasicFrame::set_plane(yuri::size_t index, plane_t& plane)
+{
+	if (index >= planes.size()) throw OutOfRange("Plane number out of range");
+	planes[index].swap(plane);
+}
+void BasicFrame::set_plane(yuri::size_t index, const yuri::ubyte_t *data, yuri::size_t data_size)
+{
+	if (index >= planes.size()) throw OutOfRange("Plane number out of range");
+	plane_t &plane = planes[index];
+	//plane.clear();
+	plane.reserve(data_size);
+//	std::copy(data,data+data_size,std::back_inserter(plane));
+	plane.insert(plane.begin(),data,data+data_size);
+}
 pBasicFrame BasicFrame::get_copy()
 {
-	pBasicFrame tmp ( new BasicFrame(numberPlanes));
+	pBasicFrame tmp ( new BasicFrame(planes.size()));
 	tmp->set_parameters(format, width, height);
 	tmp->set_time(pts,dts,duration);
-	for (yuri::size_t i = 0; i < numberPlanes; ++i) {
-		shared_ptr<Plane<yuri::ubyte_t> > p = planes[i]->get_copy();
-		tmp->set_plane(i,p);
+	for (yuri::size_t i = 0; i < planes.size(); ++i) {
+		tmp->get_plane(i)=const_cast<const plane_t&>(get_plane(i));
 	}
 	return tmp;
 }

@@ -23,9 +23,9 @@ REGISTER("avscaler",AVScaler)
 shared_ptr<BasicIOThread> AVScaler::generate(Log &_log,pThreadBase parent,Parameters& parameters)
 	throw (Exception)
 {
-	long format = BasicPipe::get_format_from_string(parameters["format"].get<string>(),YURI_FMT);
+	long format = BasicPipe::get_format_from_string(parameters["format"].get<std::string>(),YURI_FMT);
 	if (format == YURI_FMT_NONE) throw InitializationFailed(
-		string("Wrong output format ")+parameters["format"].get<string>());
+		std::string("Wrong output format ")+parameters["format"].get<std::string>());
 	shared_ptr<AVScaler> s(new AVScaler(_log,parent));
 	s->set_output_format(parameters["width"].get<yuri::ssize_t>(),
 			parameters["height"].get<yuri::ssize_t>(),
@@ -54,7 +54,7 @@ shared_ptr<Parameters> AVScaler::configure()
 bool AVScaler::configure_converter(Parameters& parameters,long format_in,
 		long format_out)	throw (Exception)
 {
-	set<long> fmts = get_supported_formats();
+	std::set<long> fmts = get_supported_formats();
 	if (fmts.find(format_in) == fmts.end()) throw NotImplemented();
 	if (fmts.find(format_out) == fmts.end()) throw NotImplemented();
 	parameters["format"]=BasicPipe::get_simple_format_string(format_out);
@@ -121,12 +121,12 @@ bool AVScaler::do_recheck_conversions()
 	if (scaling) log[debug] << "Scaling " << w_in << "x" << h_in << " => " << w_out << "x" << h_out << std::endl;
 	if (transforming) log[debug] << "Transforming " << BasicPipe::get_format_string(format_in) << " => " << BasicPipe::get_format_string(format_out) << std::endl;
 	if (f_in == PIX_FMT_NONE) {
-		log[warning] << "Input format not recognized by libav." << endl;
+		log[warning] << "Input format not recognized by libav." << std::endl;
 		valid_contexts = false;
 		return false;
 	}
 	if (f_out == PIX_FMT_NONE) {
-		log[warning] << "Output format not recognized by libav." << endl;
+		log[warning] << "Output format not recognized by libav." << std::endl;
 		valid_contexts = false;
 		return false;
 	}
@@ -137,10 +137,10 @@ bool AVScaler::do_recheck_conversions()
 void AVScaler::do_create_contexts()
 {
 	do_delete_contexts();
-	log[normal] << "[Re]creating contexts" << endl;
+	log[normal] << "[Re]creating contexts" << std::endl;
 	if (BasicPipe::get_format_group(format_in) != YURI_FMT
 			|| BasicPipe::get_format_group(format_out) != YURI_FMT) {
-		log[error] << "Trying to convert unsupported format!" <<endl;
+		log[error] << "Trying to convert unsupported format!" <<std::endl;
 		return;
 	}
 	if (scaling) {
@@ -213,7 +213,7 @@ bool AVScaler::do_fetch_frame()
 	if (in[0]->get_type() != YURI_TYPE_VIDEO) {
 		log[debug] << "Connected pipe with type other than video ("
 				<< BasicPipe::get_type_string(in[0]->get_type())
-				<< "), that's not gonna work" << endl;
+				<< "), that's not gonna work" << std::endl;
 		return false;
 	}
 	if (! (frame= in[0]->pop_frame())) return false;
@@ -259,7 +259,7 @@ void AVScaler::do_output_frame(shared_ptr<BasicFrame> frame)
 
 	shared_ptr<BasicFrame> f = frame->get_copy();
 	push_video_frame(0,f,format_out,w_out, h_out, pts, duration, frame->get_dts());
-	//log[debug] << "pushed frame " << w_out << "x" << h_out << ", with " <<  f->get_planes_count() << " planes. size: " << f->get_size() << endl;
+	//log[debug] << "pushed frame " << w_out << "x" << h_out << ", with " <<  f->get_planes_count() << " planes. size: " << f->get_size() << std::endl;
 }
 
 bool AVScaler::do_prescale_checks()
@@ -298,9 +298,9 @@ void AVScaler::av_ctx_deleter(SwsContext *ctx)
 	av_free(ctx);
 }
 
-set<long> AVScaler::get_supported_formats()
+std::set<long> AVScaler::get_supported_formats()
 {
-	set<long> fmts;
+	std::set<long> fmts;
 	fmts.insert(YURI_FMT_RGB);
 	fmts.insert(YURI_FMT_RGBA);
 	fmts.insert(YURI_FMT_YUV422);

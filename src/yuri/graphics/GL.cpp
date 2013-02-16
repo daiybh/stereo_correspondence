@@ -185,7 +185,7 @@ void GL::generate_texture(uint tid, pBasicFrame frame)
 				delete[] image;
 				textures[tid].wh = wh;
 			}
-			prepare_texture(tid,0,(*frame)[0].data.get(),w, h,fmt,fmt,true);
+			prepare_texture(tid,0,PLANE_RAW_DATA(frame,0),w, h,fmt,fmt,true);
 			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,simple_fragment_shader);
 		}break;
 		case YURI_FMT_BGR:{
@@ -196,7 +196,7 @@ void GL::generate_texture(uint tid, pBasicFrame frame)
 				delete[] image;
 				textures[tid].wh = wh;
 			}
-			prepare_texture(tid,0,(*frame)[0].data.get(),w, h,GL_RGB,GL_BGR,true);
+			prepare_texture(tid,0,PLANE_RAW_DATA(frame,0),w, h,GL_RGB,GL_BGR,true);
 			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,simple_fragment_shader);
 		}break;
 		case YURI_FMT_BGRA:{
@@ -207,7 +207,7 @@ void GL::generate_texture(uint tid, pBasicFrame frame)
 				delete[] image;
 				textures[tid].wh = wh;
 			}
-			prepare_texture(tid,0,(*frame)[0].data.get(),w, h,GL_BGRA,GL_BGRA,true);
+			prepare_texture(tid,0,PLANE_RAW_DATA(frame,0),w, h,GL_BGRA,GL_BGRA,true);
 			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,simple_fragment_shader);
 		}break;
 		case YURI_FMT_YUV444:
@@ -228,10 +228,10 @@ void GL::generate_texture(uint tid, pBasicFrame frame)
 				textures[tid].wh = wh;
 			}
 			if (frame->get_format()==YURI_FMT_YUV444) {
-				prepare_texture(tid,0,(*frame)[0].data.get(),w, h,3,GL_RGB,true);
+				prepare_texture(tid,0,PLANE_RAW_DATA(frame,0),w, h,3,GL_RGB,true);
 			} else if (!lq_422 ) {
 				yuri::ubyte_t *img = new yuri::ubyte_t [w*h*3];
-				yuri::ubyte_t *p = (*frame)[0].data.get();
+				yuri::ubyte_t *p = PLANE_RAW_DATA(frame,0);
 				yuri::ubyte_t *ty = img, *tu=img+1, *tv=img+2;
 //				yuri::ubyte_t y,u,v;
 				for (int i=0;i<static_cast<int>(w*h/2);++i) {
@@ -258,9 +258,9 @@ void GL::generate_texture(uint tid, pBasicFrame frame)
 				prepare_texture(tid,0,img,w, h,3,GL_RGB,true);
 				delete [] img;
 			} else {
-				prepare_texture(tid,0,(*frame)[0].data.get(),w/2, h,4,GL_RGBA,true);
+				prepare_texture(tid,0,PLANE_RAW_DATA(frame,0),w/2, h,4,GL_RGBA,true);
 				if (lq_422==1) {
-					prepare_texture(tid,1,(*frame)[0].data.get(),w, h,GL_LUMINANCE8_ALPHA8,GL_LUMINANCE_ALPHA,true);
+					prepare_texture(tid,1,PLANE_RAW_DATA(frame,0),w, h,GL_LUMINANCE8_ALPHA8,GL_LUMINANCE_ALPHA,true);
 				}
 			}
 		std::string fs;
@@ -283,7 +283,7 @@ void GL::generate_texture(uint tid, pBasicFrame frame)
 				textures[tid].wh = wh;
 			}
 			for (yuri::uint_t i=0;i<3;++i) {
-				prepare_texture(tid,i,(*frame)[i].data.get(),w/fi->plane_x_subs[i],
+				prepare_texture(tid,i,PLANE_RAW_DATA(frame,i),w/fi->plane_x_subs[i],
 						h/fi->plane_y_subs[i],GL_LUMINANCE8,GL_LUMINANCE,true);
 			}
 			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,
@@ -305,7 +305,7 @@ void GL::generate_texture(uint tid, pBasicFrame frame)
 				delete[] image;
 				textures[tid].wh = wh;
 			}
-			prepare_texture(tid,0,(*frame)[0].data.get(),w,	h,GL_LUMINANCE8,GL_LUMINANCE,true);
+			prepare_texture(tid,0,PLANE_RAW_DATA(frame,0),w,	h,GL_LUMINANCE8,GL_LUMINANCE,true);
 			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,
 					simple_fragment_shader);
 
@@ -334,7 +334,7 @@ void GL::generate_texture(uint tid, pBasicFrame frame)
 				fsize = wh * wh;
 			} else break;
 			if (textures[tid].wh != wh) {
-				yuri::size_t remaining=(*frame)[0].size, wh2=wh,next_level = fsize, offset = 0, level =0;
+				yuri::size_t remaining=PLANE_SIZE(frame,0), wh2=wh,next_level = fsize, offset = 0, level =0;
 				char *image = new char[fsize];
 				while (next_level <= remaining) {
 					glCompressedTexImage2D(GL_TEXTURE_2D, level++, format, wh2, wh2, 0, next_level,image);
@@ -351,10 +351,10 @@ void GL::generate_texture(uint tid, pBasicFrame frame)
 			}
 			//log[info] << "Allocating s3tc " << w << "x" << h << ", size: " << (w*h>>1) <<"\n";
 			glBindTexture(GL_TEXTURE_2D, tex);
-			yuri::size_t remaining=(*frame)[0].size, w2=w, h2=h, next_level = fsize, offset = 0, level =0;
+			yuri::size_t remaining=PLANE_SIZE(frame,0), w2=w, h2=h, next_level = fsize, offset = 0, level =0;
 			while (next_level <= remaining) {
 				log[debug] << "next_level: " << next_level << ", rem: " << remaining <<"\n";
-				glCompressedTexSubImage2D(GL_TEXTURE_2D, level++, 0, 0, w2, h2,	format, next_level, (*frame)[0].data.get()+offset);
+				glCompressedTexSubImage2D(GL_TEXTURE_2D, level++, 0, 0, w2, h2,	format, next_level, PLANE_RAW_DATA(frame,0)+offset);
 				w2>>=1;h2>>=1;remaining-=next_level;
 				offset+=next_level;
 				next_level>>=2;

@@ -123,8 +123,12 @@ bool RawFileSource::read_chunk()
 		//(*frame)[0].set(data,length);
 		for (yuri::size_t i=0;i<planes.size();++i) {
 			yuri::size_t plane_length = planes[i];
-			shared_array<yuri::ubyte_t> data = BasicIOThread::allocate_memory_block(plane_length,true);
-			file.read(reinterpret_cast<char*>(data.get()),plane_length);
+			std::istreambuf_iterator<char> it(file);
+			frame->get_plane(i).resize(plane_length);
+//			std::copy(it,it+plane_length,std::back_inserter(frame->get_plane(0)));
+//			shared_array<yuri::ubyte_t> data = BasicIOThread::allocate_memory_block(plane_length,true);
+
+			file.read(reinterpret_cast<char*>(PLANE_RAW_DATA(frame,i)),plane_length);
 			if (static_cast<yuri::size_t>(file.gcount()) != plane_length ) {
 				if (first_read) {
 					failed_read=true;
@@ -134,7 +138,7 @@ bool RawFileSource::read_chunk()
 				frame.reset();++loop_number;
 				return !failed_read;
 			}
-			(*frame)[i].set(data,plane_length);
+//			(*frame)[i].set(data,plane_length);
 		}
 		if (file.eof()) {
 			file.close();

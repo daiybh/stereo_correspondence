@@ -52,7 +52,7 @@ bool TSMuxer::step()
 {
 	if (!in[0] || in[0]->is_empty()) return true;
 	if (in[0]->get_type() != YURI_TYPE_VIDEO) {
-		log[warning] << "Input pipe is not video, bailing out" << endl;
+		log[warning] << "Input pipe is not video, bailing out" << std::endl;
 		return true;
 	}
 	yuri::size_t pkts = 0;
@@ -67,7 +67,7 @@ bool TSMuxer::step()
 	ptime t2 = microsec_clock::local_time();
 	log[debug] << "Processed " << pkts << " input frames in " <<
 			to_simple_string(t2-t1) << "s (" << to_simple_string(t1.time_of_day())
-			<< " - " << to_simple_string(t2.time_of_day()) << endl;
+			<< " - " << to_simple_string(t2.time_of_day()) << std::endl;
 	return true;
 }
 
@@ -78,14 +78,14 @@ bool TSMuxer::reconfigure(shared_ptr<BasicFrame> frame)
 	if (!output_format) {
 		output_format = av_guess_format("mpegts",0,0);
 		if (!output_format) {
-			log[error] << "Failed to get format for mpeg ts" << endl;
+			log[error] << "Failed to get format for mpeg ts" << std::endl;
 			return false;
 		}
 	}
 	if (!format_context) {
 		format_context.reset(avformat_alloc_context(),AVCodecBase::av_deleter<AVFormatContext>);
 		if (!format_context) {
-			log[error] << "Failed to allocate format context." << endl;
+			log[error] << "Failed to allocate format context." << std::endl;
 			return false;
 		}
 		format_context->oformat = output_format;
@@ -111,14 +111,15 @@ bool TSMuxer::reconfigure(shared_ptr<BasicFrame> frame)
 		if(format_context->oformat->flags & AVFMT_GLOBALHEADER)
 			s->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
 		/*if (av_set_parameters(format_context.get(),0)<0) {
-			log[error] << "Failed to set parameters for context" << endl;
+			log[error] << "Failed to set parameters for context" << std::endl;
 			return false;
 		}*/
 		//byte_context.reset(new AVIOContext);
-		if (!buffer) buffer = allocate_memory_block(buffer_size+FF_INPUT_BUFFER_PADDING_SIZE);
+		//if (!buffer) buffer = allocate_memory_block(buffer_size+FF_INPUT_BUFFER_PADDING_SIZE);
+		buffer.resize(buffer_size+FF_INPUT_BUFFER_PADDING_SIZE);
 		//init_put_byte(byte_context.get(),(uint8_t *)buffer.get(),buffer_size,1,
 		//    (void*)this, TSMuxer::read_buffer,TSMuxer::write_buffer,TSMuxer::seek_buffer);
-		byte_context.reset(avio_alloc_context((uint8_t *)buffer.get(),buffer_size,1,
+		byte_context.reset(avio_alloc_context((uint8_t *)&buffer[0],buffer_size,1,
 				(void*)this, TSMuxer::read_buffer,TSMuxer::write_buffer,TSMuxer::seek_buffer));
 		format_context->pb = byte_context.get();
 		//av_write_header(format_context.get());
@@ -149,7 +150,7 @@ int64_t TSMuxer::seek_buffer(void* opaque, int64_t offset, int whence)
 
 int TSMuxer::_read_buffer(yuri::ubyte_t* /*buf*/, int /*size*/)
 {
-	log[error] << "TSMuxer::_read_buffer() not implemented" << endl;
+	log[error] << "TSMuxer::_read_buffer() not implemented" << std::endl;
 	return -1;
 
 	//return memcpy(buf, buffer.get(), size);
@@ -157,7 +158,7 @@ int TSMuxer::_read_buffer(yuri::ubyte_t* /*buf*/, int /*size*/)
 int TSMuxer::_write_buffer(yuri::ubyte_t* buf, int size)
 {
 	log[debug] << "Reading " << size << " bytes (188x" << size/188 << " + "
-			<< size%188 <<  ")"<< endl;
+			<< size%188 <<  ")"<< std::endl;
 	if (out[0]) {
 		shared_ptr<BasicFrame> frame = allocate_frame_from_memory(buf,size);
 		push_video_frame(0,frame,YURI_VIDEO_MPEGTS,0,0);
@@ -171,7 +172,7 @@ int64_t TSMuxer::_seek_buffer(int64_t offset, int whence)
 		case SEEK_CUR: buffer_position += offset;
 		default: return -1;
 	}
-	log[debug] << "Seeked " << offset << " bytes. Actual position " << buffer_position <<endl;
+	log[debug] << "Seeked " << offset << " bytes. Actual position " << buffer_position <<std::endl;
 	return buffer_position;
 }
 
@@ -179,8 +180,8 @@ bool TSMuxer::put_frame(shared_ptr<BasicFrame> frame)
 {
 	shared_ptr<AVPacket> packet(new AVPacket,AVCodecBase::av_deleter<AVPacket>);
 	av_init_packet(packet.get());
-	packet->data = (uint8_t*)(*frame)[0].data.get();
-	packet->size = (*frame)[0].size;
+	packet->data = (uint8_t*)PLANE_RAW_DATA(frame,0);
+	packet->size = PLANE_SIZE(frame,0);
 	packet->stream_index = 0;
 	yuri::size_t time_step = 1e6 * format_context->streams[0]->time_base.num / format_context->streams[0]->time_base.den;
 	packet->pts = frame->get_pts() / time_step;

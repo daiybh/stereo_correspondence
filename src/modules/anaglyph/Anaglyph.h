@@ -20,7 +20,6 @@ namespace yuri {
 namespace io {
 using yuri::log::Log;
 using namespace yuri::config;
-using namespace std;
 class Anaglyph: public BasicIOThread {
 public:
 	PACK_START
@@ -40,7 +39,7 @@ public:
 	static shared_ptr<Parameters> configure();
 protected:
 	virtual bool step();
-	template<typename T> shared_ptr<BasicFrame> makeAnaglyph(shared_ptr<BasicFrame> left, shared_ptr<BasicFrame> right);
+	template<typename T> shared_ptr<BasicFrame> makeAnaglyph(const shared_ptr<BasicFrame>& left, const shared_ptr<BasicFrame>& right);
 protected:
 	int correction;
 	bool fast;

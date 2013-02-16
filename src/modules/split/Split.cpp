@@ -61,9 +61,9 @@ bool Split::step()
 	FormatInfo_t info = BasicPipe::get_format_info(frame->get_format());
 	yuri::size_t Bpp = info->bpp >> 3;
 	//log[verbose_debug] << "size: " << dest_w <<"x"<<dest_h<<"+"<<dest_x<<"+"<<dest_y<<" at "<<Bpp<<"Bpp"<<std::endl;
-	yuri::ubyte_t *out_ptr1=(*frame_out1)[0].data.get();
-	yuri::ubyte_t *out_ptr2=(*frame_out2)[0].data.get();
-	yuri::ubyte_t *ptr = (*frame)[0].data.get();
+	yuri::ubyte_t *out_ptr1=PLANE_RAW_DATA(frame_out1,0);
+	yuri::ubyte_t *out_ptr2=PLANE_RAW_DATA(frame_out2,0);
+	yuri::ubyte_t *ptr = PLANE_RAW_DATA(frame,0);
 	for (yuri::size_t i=0;i<height;++i) {
 		memcpy(out_ptr1,ptr,Bpp*left);
 		ptr+=Bpp*left; out_ptr1+=Bpp*left;

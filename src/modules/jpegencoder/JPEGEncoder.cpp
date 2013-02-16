@@ -109,7 +109,7 @@ bool JPEGEncoder::step()
 	JSAMPROW row_pointer;
 
 	while (cinfo.next_scanline < cinfo.image_height) {
-		row_pointer = (JSAMPROW) ((char*)((*frame)[0].data.get())+cinfo.next_scanline*width*Bpp );
+		row_pointer = reinterpret_cast<JSAMPROW>(PLANE_RAW_DATA(frame,0)+cinfo.next_scanline*width*Bpp );
 		jpeg_write_scanlines(&cinfo, &row_pointer, 1);
 	}
 	jpeg_finish_compress(&cinfo);
@@ -171,19 +171,30 @@ yuri::size_t JPEGEncoder::dumpData()
 {
 	yuri::size_t length = temp_data.tellp();
 	log[verbose_debug] << "Reading " << length << " bytes fromstd::stringstream" << std::endl;
-	shared_array<yuri::ubyte_t> mem = allocate_memory_block(length);
 	temp_data.seekg(0,std::ios::beg);
-	temp_data.read(reinterpret_cast<char*>(mem.get()),length);
+	if (out[0]) {
+		const std::string& str = temp_data.str();
+		pBasicFrame f = allocate_frame_from_memory(reinterpret_cast<const yuri::ubyte_t*>(str.data()), str.size());
+
+	} else {
+		length = 0;
+	}
 	temp_data.seekp(0,std::ios::beg);
 	temp_data.str().clear();
-	if (!out[0]) {
-		return 0;
-	}
-	else {
-		pBasicFrame f = allocate_frame_from_memory(mem, length);
-		push_video_frame(0,f,width,height,YURI_IMAGE_JPEG);
-	}
 	return length;
+//	shared_array<yuri::ubyte_t> mem = allocate_memory_block(length);
+
+//	temp_data.read(reinterpret_cast<char*>(mem.get()),length);
+//	temp_data.seekp(0,std::ios::beg);
+//	temp_data.str().clear();
+//	if (!out[0]) {
+//		return 0;
+//	}
+//	else {
+//		pBasicFrame f = allocate_frame_from_memory(mem, length);
+//		push_video_frame(0,f,width,height,YURI_IMAGE_JPEG);
+//	}
+//	return length;
 }
 
 

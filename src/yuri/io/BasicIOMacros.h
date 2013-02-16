@@ -39,7 +39,11 @@
 #define IO_THREAD_POST_RUN \
 	close_pipes();
 
-#define PLANE_SIZE(frame, plane) (*frame)[plane].get_size()
-#define PLANE_DATA(frame, plane) (*frame)[plane].data
-#define PLANE_RAW_DATA(frame, plane) (*frame)[plane].data.get()
+//#define PLANE_SIZE(frame, plane) (*frame)[plane].get_size()
+//#define PLANE_DATA(frame, plane) (*frame)[plane].data
+//#define PLANE_RAW_DATA(frame, plane) (*frame)[plane].data.get()
+#define PLANE_SIZE(frame, plane) (*frame)[plane].size()
+#define PLANE_DATA(frame, plane) (*frame)[plane]
+#define PLANE_RAW_DATA(frame, plane) &((*frame)[plane][0])
+
 #endif /* BASICIOMACROS_H_ */

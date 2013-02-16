@@ -149,7 +149,7 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_YUV422,YURI_FM
 				frame->get_planes_count()<< ") in input frame!" << std::endl;
 		return output;
 	}
-	yuri::size_t in_size = (*frame)[0].size;
+	yuri::size_t in_size = PLANE_SIZE(frame,0);
 	yuri::size_t width = frame->get_width();
 	yuri::size_t height = frame->get_height();
 	if (width * height * 2 != in_size) {
@@ -164,12 +164,13 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_YUV422,YURI_FM
 	output.reset(new BasicFrame(1));
 	yuri::size_t out_size = width * height * 5 / 2;
 	log[debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
-	shared_array<yuri::ubyte_t> data = allocate_memory_block(out_size);
-	shared_array<yuri::ubyte_t> in_data = (*frame)[0].data;
-	(*output)[0].set(data,out_size);
+	//shared_array<yuri::ubyte_t> data = allocate_memory_block(out_size);
+//	shared_array<yuri::ubyte_t> in_data = (*frame)[0].data;
+	PLANE_DATA(output,0).resize(out_size);
+//	(*output)[0].set(data,out_size);
 	for (yuri::size_t line = 0; line < height; ++ line) {
-		yuri::ubyte_t *in_ptr =  &in_data[line*width*2];
-		yuri::ubyte_t *out_ptr = &data[line*width*5>>1];
+		yuri::ubyte_t *in_ptr =  PLANE_RAW_DATA(frame,0)+(line*width*2);
+		yuri::ubyte_t *out_ptr = PLANE_RAW_DATA(output,0)+(line*width*5>>1);
 		unsigned int y0,y1;
 		for (yuri::size_t pos=0; pos<width/2; ++ pos) {
 			*out_ptr++=sixteenbits_yc_b0[*in_ptr&0xFF];
@@ -316,7 +317,7 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V
 				frame->get_planes_count()<< ") in input frame!" << std::endl;
 		return output;
 	}
-	yuri::size_t in_size = (*frame)[0].size;
+	yuri::size_t in_size = PLANE_SIZE(frame,0);
 	yuri::size_t width = frame->get_width();
 	yuri::size_t height = frame->get_height();
 	if (width * height * 3 != in_size) {
@@ -331,12 +332,15 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V
 	output.reset(new BasicFrame(1));
 	yuri::size_t out_size = width * height * 5 / 2;
 	log[debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
-	shared_array<yuri::ubyte_t> data = allocate_memory_block(out_size);
-	shared_array<yuri::ubyte_t> in_data = (*frame)[0].data;
-	(*output)[0].set(data,out_size);
+//	shared_array<yuri::ubyte_t> data = allocate_memory_block(out_size);
+//	shared_array<yuri::ubyte_t> in_data = (*frame)[0].data;
+//	(*output)[0].set(data,out_size);
+	PLANE_DATA(output,0).resize(out_size);
 	for (yuri::size_t line = 0; line < height; ++ line) {
-		yuri::ubyte_t *in_ptr =  &in_data[line*width*3];
-		yuri::ubyte_t *out_ptr = &data[line*width*5>>1];
+		yuri::ubyte_t *in_ptr =  PLANE_RAW_DATA(frame,0)+(line*width*3);
+		yuri::ubyte_t *out_ptr = PLANE_RAW_DATA(output,0)+(line*width*5>>1);
+//		yuri::ubyte_t *in_ptr =  &in_data[line*width*3];
+//		yuri::ubyte_t *out_ptr = &data[line*width*5>>1];
 		yuri::uint_t rgb1, rgb2, cb, cr;
 		for (yuri::size_t pos=0; pos<width/2; ++ pos) {
 			rgb1=*in_ptr++;
@@ -373,7 +377,7 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V
 				frame->get_planes_count()<< ") in input frame!" << std::endl;
 		return output;
 	}
-	yuri::size_t in_size = (*frame)[0].size;
+	yuri::size_t in_size = PLANE_SIZE(frame,0);
 	yuri::size_t width = frame->get_width();
 	yuri::size_t height = frame->get_height();
 	if (width * height * 3 != in_size) {
@@ -392,10 +396,13 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V
 		cuda_dest = cuda_alloc(out_size);
 	}
 	log[debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
-	shared_array<yuri::ubyte_t> data = allocate_memory_block(out_size);
-	shared_array<yuri::ubyte_t> in_data = (*frame)[0].data;
-	(*output)[0].set(data,out_size);
-	YuriConvertRGB24_YUV20(reinterpret_cast<const char*>(in_data.get()),reinterpret_cast<char*>(data.get()),cuda_src.get(),cuda_dest.get(),width*height,Wb,Wr);
+//	shared_array<yuri::ubyte_t> data = allocate_memory_block(out_size);
+//	shared_array<yuri::ubyte_t> in_data = (*frame)[0].data;
+//	(*output)[0].set(data,out_size);
+	PLANE_DATA(output,0).resize(out_size);
+
+//	YuriConvertRGB24_YUV20(reinterpret_cast<const char*>(in_data.get()),reinterpret_cast<char*>(data.get()),cuda_src.get(),cuda_dest.get(),width*height,Wb,Wr);
+	YuriConvertRGB24_YUV20(reinterpret_cast<const char*>(PLANE_RAW_DATA(frame,0)),reinterpret_cast<char*>(PLANE_RAW_DATA(output,0)),cuda_src.get(),cuda_dest.get(),width*height,Wb,Wr);
 	return output;
 #else
 	log[warning] << "CUDA optimizations not compiled in. Falling back to CPU version" << std::endl;
@@ -434,10 +441,11 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_YUV422,YURI_FM
 
 	//log[debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
 
-	shared_array<yuri::ubyte_t> data = PLANE_DATA(output,0);
-	shared_array<yuri::ubyte_t> in_data = PLANE_DATA(frame, 0);
+//	shared_array<yuri::ubyte_t> data = PLANE_DATA(output,0);
+//	shared_array<yuri::ubyte_t> in_data = PLANE_DATA(frame, 0);
 
-	YuriConvertYUV16_RGB24(reinterpret_cast<const char*>(in_data.get()),reinterpret_cast<char*>(data.get()),cuda_src.get(),cuda_dest.get(),width*height,Wb,Wr);
+//	YuriConvertYUV16_RGB24(reinterpret_cast<const char*>(in_data.get()),reinterpret_cast<char*>(data.get()),cuda_src.get(),cuda_dest.get(),width*height,Wb,Wr);
+	YuriConvertYUV16_RGB24(reinterpret_cast<const char*>(PLANE_RAW_DATA(frame,0)),reinterpret_cast<char*>(PLANE_RAW_DATA(output,0)),cuda_src.get(),cuda_dest.get(),width*height,Wb,Wr);
 	return output;
 #else
 	log[warning] << "CUDA optimizations not compiled in. Not doing anything" << std::endl;
@@ -524,8 +532,10 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI
 	yuri::size_t h = frame->get_height();
 	yuri::size_t pixel_pairs = (w*h)>>1;
 	output=allocate_empty_frame(YURI_FMT_YUV422,w,h,true);
-	yuri::ubyte_t *src = (*frame) [0].data.get();
-	yuri::ubyte_t *dest= (*output)[0].data.get();
+//	yuri::ubyte_t *src = (*frame) [0].data.get();
+//	yuri::ubyte_t *dest= (*output)[0].data.get();
+	yuri::ubyte_t *src = PLANE_RAW_DATA(frame,0);
+	yuri::ubyte_t *dest= PLANE_RAW_DATA(output,0);
 	yuri::ushort_t y1,y2,u,v;
 	while(pixel_pairs--) {
 		y1=*src++&0xFF;

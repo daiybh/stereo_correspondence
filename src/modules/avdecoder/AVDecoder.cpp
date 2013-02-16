@@ -50,16 +50,16 @@ bool AVDecoder::init_decoder(CodecID codec_id, int width, int height)
 {
 	this->codec_id=codec_id;
 	if (!find_decoder()) {
-		log[error] << "Failed to find decoder" << endl;
+		log[error] << "Failed to find decoder" << std::endl;
 		return false;
 	}
 	assert(c);
-	//log[info] << c << endl;
-	log[info] << "Selected decoder " << c->long_name << endl;
+	//log[info] << c << std::endl;
+	log[info] << "Selected decoder " << c->long_name << std::endl;
 //	const PixelFormat *p = c->pix_fmts;
-//	log[debug] << "formats" << endl;
+//	log[debug] << "formats" << std::endl;
  	/*if (p) while (*p!=PIX_FMT_NONE) {
-		log[debug] << "Codec supports format " << avcodec_get_pix_fmt_name(*p++) << endl;
+		log[debug] << "Codec supports format " << avcodec_get_pix_fmt_name(*p++) << std::endl;
 	}
 	*/if (cc) {
 		av_free(cc);
@@ -110,13 +110,13 @@ bool AVDecoder::decode_frame()
 			av_init_packet(&pkt);
 			if (fabs(time_step)<=0.01f) {
 				time_step = static_cast<float>(double(input_frame->get_duration())/1.0e6);
-//				log[info] << "dur: " << input_frame->get_duration() << ", ts:" << time_step<<endl;
+//				log[info] << "dur: " << input_frame->get_duration() << ", ts:" << time_step<<std::endl;
 			}
-			pkt.data 	 = reinterpret_cast<uint8_t*>((*input_frame)[0].data.get());
-			pkt.size 	 = (*input_frame)[0].get_size();
+			pkt.data 	 = reinterpret_cast<uint8_t*>(PLANE_RAW_DATA(input_frame,0));
+			pkt.size 	 = PLANE_SIZE(input_frame,0);
 			pkt.pts 	 = static_cast<int64_t>(input_frame->get_pts() / time_step /1e6);
 			pkt.dts 	 = static_cast<int64_t>(input_frame->get_dts() / time_step /1e6);
-			log[verbose_debug] << "input PTS: " << pkt.pts << ", orig: " << input_frame->get_pts() <<", ts: " << time_step<< endl;
+			log[verbose_debug] << "input PTS: " << pkt.pts << ", orig: " << input_frame->get_pts() <<", ts: " << time_step<< std::endl;
 			pkt.duration = static_cast<int64_t>(input_frame->get_duration() / time_step/1e6);
 			//if (!(f=in[0]->pop_frame())) return true;
 			avcodec_decode_video2(cc,frame.get(),&got_px,&pkt);
@@ -148,18 +148,18 @@ void AVDecoder::do_output_frame()
 		size_t plane_size = 0;
 		yuri::format_t yf = yuri_pixelformat_from_av(cc->pix_fmt);
 		if (yf == YURI_FMT_NONE) {
-			log[warning] << "Unknown output format " << cc->pix_fmt << endl;
+			log[warning] << "Unknown output format " << cc->pix_fmt << std::endl;
 			return;
 		}
 		FormatInfo_t fmt = BasicPipe::get_format_info(yf);
 		if (!fmt) {
-			log[warning] << "Unknown format! " << yuri_pixelformat_from_av(cc->pix_fmt) << ", converted from " << cc->pix_fmt << endl;
+			log[warning] << "Unknown format! " << yuri_pixelformat_from_av(cc->pix_fmt) << ", converted from " << cc->pix_fmt << std::endl;
 			return;
 		} else {
-			log[verbose_debug] << "Outputting " << fmt->long_name << endl;
+			log[verbose_debug] << "Outputting " << fmt->long_name << std::endl;
 		}
 		if (fmt->planes < 1) {
-			log[error] << "Wrong info for format " << fmt->long_name << endl;
+			log[error] << "Wrong info for format " << fmt->long_name << std::endl;
 			return;
 		}
 		for (int i = 0; i < 4; ++i) {
@@ -170,15 +170,16 @@ void AVDecoder::do_output_frame()
 			yuri::size_t line_size = width/fmt->plane_x_subs[i];
 			plane_size = line_size*height/fmt->plane_y_subs[i];
 			assert(line_size <= static_cast<yuri::size_t>(frame->linesize[i]));
-			shared_array<yuri::ubyte_t> smem = allocate_memory_block(plane_size);
-			yuri::ubyte_t *src=frame->data[i], *dest=smem.get();
-			log[verbose_debug] << "Copying plane " << i << ", size: "  << plane_size << endl;
+//			shared_array<yuri::ubyte_t> smem = allocate_memory_block(plane_size);
+			PLANE_DATA(output_frame,i).resize(plane_size);
+			yuri::ubyte_t *src=frame->data[i], *dest=PLANE_RAW_DATA(output_frame,i);
+			log[verbose_debug] << "Copying plane " << i << ", size: "  << plane_size << std::endl;
 			for (yuri::uint_t line=0;line<(height/fmt->plane_y_subs[i]);++line) {
 				memcpy(dest,src,line_size);
 				dest+=line_size;
 				src+=frame->linesize[i];
 			}
-			(*output_frame)[i].set(smem,plane_size);
+//			(*output_frame)[i].set(smem,plane_size);
 		}
 	}
 	bool do_out = false;
@@ -197,12 +198,12 @@ void AVDecoder::do_output_frame()
 		yuri::size_t pts_diff = pts - first_out_pts;
 		boost::posix_time::time_duration delta = t - first_time;
 		if (static_cast<yuri::usize_t>(delta.total_microseconds()) > pts_diff) {
-//			log[info] << "TMS: " << delta.total_microseconds() << ", ptd: " << pts_diff << endl;
+//			log[info] << "TMS: " << delta.total_microseconds() << ", ptd: " << pts_diff << std::endl;
 			do_out=true;
 		}
 	}
 	if (do_out) {
-//		log[info] << "PTS: " << pts << endl;
+//		log[info] << "PTS: " << pts << std::endl;
 		push_video_frame(0,output_frame,yuri_pixelformat_from_av(cc->pix_fmt),width,height,pts,dts,duration);
 		output_frame.reset();
 	}
@@ -238,12 +239,12 @@ bool AVDecoder::regenerate_contexts(long format,yuri::size_t width, size_t heigh
 		cod = CODEC_ID_NONE;
 	}
 	if (cod == CODEC_ID_NONE) {
-		log[warning] << "Unsupported input format: " << BasicPipe::get_format_string(format) <<" ("<<format<<")"<< endl;
+		log[warning] << "Unsupported input format: " << BasicPipe::get_format_string(format) <<" ("<<format<<")"<< std::endl;
 		return false;
 	}
-	log[info] << "Trying to init decoder @ " << width << "x" << height << ", dv? " << (cod==CODEC_ID_DVVIDEO) << endl;
+	log[info] << "Trying to init decoder @ " << width << "x" << height << ", dv? " << (cod==CODEC_ID_DVVIDEO) << std::endl;
 	if (!init_decoder(cod,width,height)) {
-		log[warning] << "Failed to get decoder for format: " << BasicPipe::get_format_string(format) << endl;
+		log[warning] << "Failed to get decoder for format: " << BasicPipe::get_format_string(format) << std::endl;
 		return false;
 	}
 	decoding_format = format;

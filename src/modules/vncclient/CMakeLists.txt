@@ -1,5 +1,5 @@
 # Set name of the module
-SET (MODULE vccclient)
+SET (MODULE vncclient)
 
 # Set all source files module uses
 SET (SRC VNCClient.cpp

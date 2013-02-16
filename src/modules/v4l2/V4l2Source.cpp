@@ -506,7 +506,7 @@ bool V4l2Source::prepare_frame(yuri::ubyte_t *data, yuri::size_t size)
 //			assert((*frame)[0].get_size()>=size);
 			//yuri::size_t cp = size;
 			if (size>buffer_free) size = buffer_free;
-			memcpy((*output_frame)[0].data.get()+frame_position,data,size);
+			memcpy(PLANE_RAW_DATA(output_frame,0)+frame_position,data,size);
 			buffer_free -= size;
 		} else {
 			yuri::size_t offset = 0;
@@ -530,7 +530,7 @@ bool V4l2Source::prepare_frame(yuri::ubyte_t *data, yuri::size_t size)
 					plane_size = buffer_free;
 				}
 				log[info] << "Copying " << plane_size << " bytes, have " << size-offset <<", free buffer: " << buffer_free<< std::endl;
-				memcpy((*output_frame)[i].data.get(),data+offset,plane_size);
+				memcpy(PLANE_RAW_DATA(output_frame,i),data+offset,plane_size);
 				offset+=plane_size;
 				buffer_free-=plane_size;
 			}

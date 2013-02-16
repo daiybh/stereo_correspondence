@@ -86,7 +86,8 @@ bool DVSource::stop_receiving()
 
 bool DVSource::analyze_frame(shared_ptr<BasicFrame> frame)
 {
-	shared_array<yuri::ubyte_t> data = (*frame)[0].data;
+	//shared_array<yuri::ubyte_t> data = (*frame)[0].data;
+	const yuri::ubyte_t * data = PLANE_RAW_DATA(frame,0);
 	// First, lets check the header
 	if (data[0]!=0x1f) {
 		log[debug] << "This is not a valid DV frame! Expected magic 0x1f and got " << std::hex << data[0] << std::dec <<std::endl;

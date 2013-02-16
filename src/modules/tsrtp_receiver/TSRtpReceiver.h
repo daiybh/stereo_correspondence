@@ -47,7 +47,7 @@ protected:
 	shared_ptr<ASIOUDPSocket> socket;
 	ptime first_packet;
 	yuri::size_t packets_received;
-	shared_array<yuri::ubyte_t> buffer, in_buffer;
+	plane_t buffer, in_buffer;
 	yuri::size_t buffer_size, buffer_position;
 	bool pass_thru;
 };

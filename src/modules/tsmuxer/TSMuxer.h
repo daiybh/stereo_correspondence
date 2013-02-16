@@ -39,8 +39,9 @@ public:
 protected:
 	AVOutputFormat *output_format;
 	shared_ptr<AVFormatContext> format_context;
-	vector<shared_ptr<AVStream> > streams;
-	shared_array<yuri::ubyte_t> buffer;
+	std::vector<shared_ptr<AVStream> > streams;
+	//shared_array<yuri::ubyte_t> buffer;
+	std::vector<yuri::ubyte_t> buffer;
 	shared_ptr<AVIOContext> byte_context;
 	yuri::size_t buffer_size, buffer_position;
 	yuri::size_t pts, dts, duration;

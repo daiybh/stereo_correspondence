@@ -75,9 +75,9 @@ bool Crop::step()
 	assert(info && info->planes==1);
 	yuri::size_t Bpp = info->bpp >> 3;
 	log[verbose_debug] << "size: " << w <<"x"<<h<<"+"<<x<<"+"<<y<<" at "<<Bpp<<"Bpp"<<std::endl;
-	yuri::ubyte_t  *out_ptr=(*frame_out)[0].data.get();
+	yuri::ubyte_t  *out_ptr=PLANE_RAW_DATA(frame,0);
 	for (int i=y;i<(h+y);++i) {
-		yuri::ubyte_t *ptr = (*frame)[0].data.get()+(i*frame->get_width()+x)*Bpp;
+		yuri::ubyte_t *ptr = PLANE_RAW_DATA(frame,0)+(i*frame->get_width()+x)*Bpp;
 		for (int j=0;j<(int)(w*Bpp);++j) *out_ptr++ = *ptr++;
 	}
 	push_video_frame(0,frame_out,frame->get_format(),w, h);

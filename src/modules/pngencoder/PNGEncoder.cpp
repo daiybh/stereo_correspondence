@@ -103,7 +103,7 @@ bool PNGEncoder::step() {
 	png_bytep *rows = new png_bytep[height];
 	int row_size = width * bpp;
 	for (int i = 0; i < height; ++i) {
-		rows[i] = (png_bytep) ((char*) ((*frame)[0].data.get()) + i * row_size);
+		rows[i] = reinterpret_cast<png_bytep>(PLANE_RAW_DATA(frame,0) + i * row_size);
 	}
 	png_write_image(pngPtr, rows);
 	png_write_end(pngPtr, infoPtr);

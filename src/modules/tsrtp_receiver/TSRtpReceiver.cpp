@@ -43,8 +43,10 @@ TSRtpReceiver::TSRtpReceiver(Log &log_, pThreadBase parent, Parameters &paramete
 	params.merge(parameters);
 
 	pass_thru=parameters["pass"].get<bool>();
-	buffer = allocate_memory_block(buffer_size);
-	in_buffer = allocate_memory_block(buffer_size);
+//	buffer = allocate_memory_block(buffer_size);
+//	in_buffer = allocate_memory_block(buffer_size);
+	buffer.resize(buffer_size);
+	in_buffer.resize(buffer_size);
 
 }
 
@@ -65,10 +67,10 @@ void TSRtpReceiver::run()
 	set_endpoint(params["address"].get<std::string>(),params["port"].get<yuri::size_t>());
 	yuri::size_t read_len;
 	while (still_running()) {
-		read_len = socket->read(in_buffer.get(),buffer_size);
+		read_len = socket->read(&in_buffer[0],buffer_size);
 		log[verbose_debug] << "Read " << read_len << std::endl;
 		if (pass_thru) {
-			shared_ptr<BasicFrame> f = allocate_frame_from_memory(in_buffer.get(),read_len);
+			shared_ptr<BasicFrame> f = allocate_frame_from_memory(&in_buffer[0],read_len);
 			push_raw_frame(0,f);
 		} else {
 			// The code bellow usually expects TS packets to be aligned to the beginning of the frame.
@@ -76,16 +78,16 @@ void TSRtpReceiver::run()
 			if (read_len <= sizeof(RTPPacket)) continue;
 			unsigned int pos = 0, len=0, total_len=buffer_position+read_len-sizeof(RTPPacket);
 			//RTPPacket *packet = reinterpret_cast<RTPPacket*>(in_buffer.get());
-			memcpy(buffer.get()+buffer_position,in_buffer.get()+sizeof(RTPPacket),read_len-sizeof(RTPPacket));
+			memcpy(&buffer[0]+buffer_position,&in_buffer[0]+sizeof(RTPPacket),read_len-sizeof(RTPPacket));
 			while (pos < total_len) {
-				if (buffer.get()[pos] == 0x47) {
+				if (buffer[pos] == 0x47) {
 					if (pos+2*188 >= total_len) {
 						// We have data for only one more packet. let's waint till next packet
 						buffer_position=total_len;
 						pos = total_len;
 						break;
 					}
-					if (buffer.get()[pos+188] == 0x47) break; // Second sync byte - we probably have the right offset
+					if (buffer[pos+188] == 0x47) break; // Second sync byte - we probably have the right offset
 				}
 				if (pos>total_len-188) {
 					// No luck here ;)
@@ -102,13 +104,13 @@ void TSRtpReceiver::run()
 			//log[debug] << "pos: " << pos << " total: " << total_len << std::endl;
 			len = total_len - pos;
 			if (len % 188) len -= len % 188;
-			shared_ptr<BasicFrame> f = allocate_frame_from_memory(buffer.get()+pos,len);
+			shared_ptr<BasicFrame> f = allocate_frame_from_memory(&buffer[0]+pos,len);
 			//f->set_time(static_cast<yuri::size_t>(packet->timestamp));
 			push_raw_frame(0,f);
 			if (pos) log[debug] << "Threw away " << (pos) << " bytes out of " << total_len << std::endl;
 			buffer_position=total_len-len-pos;
 			if (buffer_position) {
-				memmove(buffer.get(),buffer.get()+pos+len,buffer_position);
+				memmove(&buffer[0],&buffer[0]+pos+len,buffer_position);
 			}
 		}
 	}

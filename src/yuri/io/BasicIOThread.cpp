@@ -9,8 +9,10 @@
  */
 
 #include "BasicIOThread.h"
-#include <boost/make_shared.hpp>
 #include "yuri/io/FixedMemoryAllocator.h"
+#include <boost/make_shared.hpp>
+#include <algorithm>
+
 namespace yuri
 {
 namespace io
@@ -40,27 +42,37 @@ bool BasicIOThread::configure_converter(Parameters&, yuri::format_t,yuri::format
 	throw NotImplemented();
 }
 
-shared_array<yuri::ubyte_t> BasicIOThread::allocate_memory_block(yuri::size_t size, bool large)
-{
-	shared_array<yuri::ubyte_t> mem;
-	if (!large) mem.reset(new yuri::ubyte_t[size]);
-	else mem = FixedMemoryAllocator::get_block(size);
-	return mem;
-}
+//shared_array<yuri::ubyte_t> BasicIOThread::allocate_memory_block(yuri::size_t size, bool large)
+//{
+//	shared_array<yuri::ubyte_t> mem;
+//	if (!large) mem.reset(new yuri::ubyte_t[size]);
+//	else mem = FixedMemoryAllocator::get_block(size);
+//	return mem;
+//}
 pBasicFrame BasicIOThread::allocate_frame_from_memory(const yuri::ubyte_t *mem, yuri::size_t size, bool large)
 {
-	shared_array<yuri::ubyte_t> smem = allocate_memory_block(size,large);
-	memcpy(smem.get(),mem,size);
-	return allocate_frame_from_memory(smem,size,large);
-}
-
-pBasicFrame BasicIOThread::allocate_frame_from_memory(shared_array<yuri::ubyte_t> mem, yuri::size_t size, bool /*large*/)
-{
-	pBasicFrame f(new BasicFrame());
-	f->set_planes_count(1);
-	(*f)[0].set(mem,size);
+//	shared_array<yuri::ubyte_t> smem = allocate_memory_block(size,large);
+//	memcpy(smem.get(),mem,size);
+//	return allocate_frame_from_memory(smem,size,large);
+	pBasicFrame f = make_shared<BasicFrame>(1);
+	//std::copy(mem,mem+size,f->get_plane(0).begin());
+	f->set_plane(0,mem,size);
 	return f;
 }
+pBasicFrame BasicIOThread::allocate_frame_from_memory(const plane_t& mem)
+{
+	pBasicFrame f = make_shared<BasicFrame>(1);
+	f->set_plane(0,mem);
+	return f;
+}
+
+//pBasicFrame BasicIOThread::allocate_frame_from_memory(shared_array<yuri::ubyte_t> mem, yuri::size_t size, bool /*large*/)
+//{
+//	pBasicFrame f(new BasicFrame());
+//	f->set_planes_count(1);
+//	(*f)[0].set(mem,size);
+//	return f;
+//}
 pBasicFrame BasicIOThread::duplicate_frame(pBasicFrame frame)
 {
 	pBasicFrame f = frame->get_copy();
@@ -403,8 +415,9 @@ pBasicFrame BasicIOThread::allocate_empty_frame(yuri::format_t format, yuri::siz
 	for (yuri::size_t i = 0; i < fmt->planes; ++i) {
 		if (fmt->planes>1) bpplane = fmt->component_depths[i];
 		yuri::size_t planesize = width * height * bpplane / fmt->plane_x_subs[i] / fmt->plane_y_subs[i] / 8;
-		shared_array<yuri::ubyte_t> mem = allocate_memory_block(planesize,large);
-		(*pic)[i].set(mem,planesize);
+		//shared_array<yuri::ubyte_t> mem = allocate_memory_block(planesize,large);
+//		(*pic)[i].set(mem,planesize);
+		pic->get_plane(i).resize(planesize);
 	}
 	pic->set_parameters(format,width,height);
 	return pic;
