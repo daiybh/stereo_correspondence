@@ -1,8 +1,11 @@
-/*
- * test_module.cpp
+/*!
+ * @file 		test_module.cpp
+ * @author 		Zdenek Travnicek
+ * @date 		12.2.2013
+ * @date		16.2.2013
+ * @copyright	Institute of Intermedia, 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: 12.2.2013
- *      Author: neneko
  */
 
 #include <iostream>
@@ -16,7 +19,6 @@
 
 int main(int argc, char** argv)
 {
-//	using boost::uintptr_t;
 	if (argc < 2) {
 		std::cerr << "Usage " << argv[0] <<" <path-to-module>\n";
 		return 1;

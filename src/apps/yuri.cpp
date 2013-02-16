@@ -1,9 +1,13 @@
-/*
- * yuri.cpp
+/*!
+ * @file 		yuri.cpp
+ * @author 		Zdenek Travnicek
+ * @date 		4.8.2010
+ * @date		16.2.2013
+ * @copyright	Institute of Intermedia, 2010 - 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: Aug 4, 2010
- *      Author: neneko
  */
+
 #ifndef YURI_VERSION
 #define YURI_VERSION "Unknown"
 #endif
