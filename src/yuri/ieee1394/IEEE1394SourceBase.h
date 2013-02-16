@@ -45,7 +45,7 @@ protected:
 	virtual bool stop_receiving() = 0;
 	//static int busResetHandler(raw1394handle_t handle,  unsigned int generation);
 	//void virtual setGeneration(unsigned int generation);
-	virtual int findNodeByGuid(raw1394handle_t handle, uint64_t guid);
+	virtual nodeid_t findNodeByGuid(raw1394handle_t handle, uint64_t guid);
 	protected:
 	raw1394handle_t handle;
 	nodeid_t node;

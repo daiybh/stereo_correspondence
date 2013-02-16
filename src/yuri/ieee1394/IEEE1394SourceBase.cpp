@@ -59,8 +59,8 @@ IEEE1394SourceBase::IEEE1394SourceBase(Log &log_,pThreadBase parent, nodeid_t no
 	}
 	if (guid>0) {
 		node=findNodeByGuid(handle,guid);
-		if (node<0) {
-			log[fatal] << "Can't find node for specified GUID" << std::endl;
+		if (node==0xFFFF) {
+			log[fatal] << "Can't find node for specified GUID\n";
 			throw(Exception("No node for specified GUID"));
 		}
 		node|=0xffc0;
@@ -210,13 +210,13 @@ int IEEE1394SourceBase::enumerateDevices(std::vector<ieee1394_camera_info> &devi
 	return devices.size();
 }
 
-int IEEE1394SourceBase::findNodeByGuid(raw1394handle_t handle, uint64_t guid)
+nodeid_t IEEE1394SourceBase::findNodeByGuid(raw1394handle_t handle, uint64_t guid)
 {
 	int nodes= raw1394_get_nodecount(handle);
 	for (int node = 0; node < nodes; ++node) {
 		if (rom1394_get_guid(handle,node&0x3f)==guid) return node;
 	}
-	return -1;
+	return 0xFFFF;
 }
 
 }
