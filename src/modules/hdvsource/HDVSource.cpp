@@ -1,8 +1,11 @@
-/*
- * HDVSource.cpp
+/*!
+ * @file 		HDVSource.cpp
+ * @author 		Zdenek Travnicek
+ * @date 		29.5.2009
+ * @date		16.2.2013
+ * @copyright	Institute of Intermedia, 2009 - 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: May 29, 2009
- *      Author: neneko
  */
 
 #include "HDVSource.h"

@@ -1,8 +1,11 @@
-/*
- * SageOutput.cpp
+/*!
+ * @file 		SageOutput.cpp
+ * @author 		Zdenek Travnicek
+ * @date 		23.1.2013
+ * @date		16.2.2013
+ * @copyright	Institute of Intermedia, 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: Jan 23, 2013
- *      Author: neneko
  */
 
 #include "SageOutput.h"

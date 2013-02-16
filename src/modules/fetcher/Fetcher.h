@@ -1,10 +1,12 @@
-/*
- * Fetcher.h
+/*!
+ * @file 		Fetcher.h
+ * @author 		Zdenek Travnicek
+ * @date 		28.7.2009
+ * @date		16.2.2013
+ * @copyright	Institute of Intermedia, 2009 - 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: Jul 28, 2009
- *      Author: neneko
- *
- *	The class provides very simplified access to curl-based file fetching
+ *	Fetcher provides very simplified access to curl-based file fetching
  *	When there's only output pipe provided, it simply fetches url once
  *	every <latency> us adn pushes it into pipe.
  *	When there's also an input pipe, it fetches frames from input pipe and

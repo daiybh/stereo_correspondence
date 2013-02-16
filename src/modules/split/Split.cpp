@@ -1,8 +1,11 @@
-/*
- * Split.cpp
+/*!
+ * @file 		Split.cpp
+ * @author 		Zdenek Travnicek
+ * @date 		30.3.2011
+ * @date		16.2.2013
+ * @copyright	Institute of Intermedia, 2011 - 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: Mar 30, 2011
- *      Author: worker
  */
 
 #include "Split.h"

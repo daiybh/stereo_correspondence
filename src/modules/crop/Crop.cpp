@@ -1,8 +1,11 @@
-/*
- * Crop.cpp
+/*!
+ * @file 		Crop.cpp
+ * @author 		Zdenek Travnicek
+ * @date 		17.11.2010
+ * @date		16.2.2013
+ * @copyright	Institute of Intermedia, 2010 - 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: Nov 17, 2010
- *      Author: neneko
  */
 
 #include "Crop.h"

@@ -1,8 +1,11 @@
-/*
- * Anaglyph.cpp
+/*!
+ * @file 		Anaglyph.cpp
+ * @author 		Zdenek Travnicek
+ * @date 		31.7.2009
+ * @date		16.2.2013
+ * @copyright	Institute of Intermedia, 2009 - 2013
+ * 				Distributed under GNU Public License 3.0
  *
- *  Created on: Jul 31, 2009
- *      Author: neneko
  */
 
 #include "Anaglyph.h"
