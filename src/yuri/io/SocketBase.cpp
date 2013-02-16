@@ -17,9 +17,7 @@ SocketBase::~SocketBase()
 void SocketBase::run()
 {
 	while(still_running()) {
-		pause_timer();
 		sleep(50000);
-		start_timer();
 	}	
 }
 

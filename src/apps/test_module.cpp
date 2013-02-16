@@ -34,10 +34,10 @@ int main(int argc, char** argv)
 			<<"\n";
 		return 1;
 	}
-	// The ugly cast to uintptr_t is here for the sole purpose of silencing g++ warnings.
 	typedef const char * (*get_name_t)(void);
 	typedef void (*register_module_t)(void);
-#if defined __linux
+#if defined __linux__
+	// The ugly cast to uintptr_t is here for the sole purpose of silencing g++ warnings.
 	get_name_t get_name = reinterpret_cast<get_name_t>(reinterpret_cast<uintptr_t>(dlsym(handle,"yuri_module_get_name")));
 	register_module_t register_module = reinterpret_cast<register_module_t>(reinterpret_cast<uintptr_t>(dlsym(handle,"yuri_module_register")));
 #elif defined _WIN32
@@ -62,7 +62,7 @@ int main(int argc, char** argv)
 			std::cerr << "Module " << name << " seem valid\n";
 		}
 	}
-#if defined __linux
+#if defined __linux__
 	dlclose(handle);
 #elif defined _WIN32
 	FreeLibrary(handle);

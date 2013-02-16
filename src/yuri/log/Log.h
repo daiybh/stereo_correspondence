@@ -1,13 +1,15 @@
 #ifndef LOG_H_
 #define LOG_H_
+#include "yuri/io/types.h"
+#include "LogProxy.h"
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <string>
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include "LogProxy.h"
-#include "yuri/io/types.h"
+
 namespace yuri
 {
 namespace log {

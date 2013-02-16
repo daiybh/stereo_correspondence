@@ -7,10 +7,11 @@
 
 #ifndef LOGPROXY_H_
 #define LOGPROXY_H_
+#include "yuri/io/types.h"
 #include <ostream>
 #include <sstream>
 #include <boost/thread.hpp>
-#include "yuri/io/types.h"
+
 namespace yuri {
 namespace log {
 struct guarded_stream {

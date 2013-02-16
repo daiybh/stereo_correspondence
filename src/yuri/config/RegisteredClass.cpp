@@ -4,11 +4,11 @@
  *  Created on: Jul 24, 2010
  *      Author: worker
  */
-
+#include "yuri/io/platform.h"
 #include "RegisteredClass.h"
-#if defined __linux__
+#if defined YURI_LINUX
 #include <dlfcn.h>
-#elif defined _WIN32
+#elif defined YURI_WINDOWS
 #include <windows.h>
 #else
 #warning "Runtime object loading not supported on this platform"
@@ -226,7 +226,7 @@ bool RegisteredClass::load_module(std::string path)
 {
 	typedef const char * (*get_name_t)(void);
 	typedef void (*register_module_t)(void);
-#if defined __linux__
+#if defined YURI_LINUX
 	void *handle=dlopen(path.c_str(),RTLD_LAZY);
 	if (!handle) return false;
 	// The ugly cast to uintptr_t is here for the sole purpose of silencing g++ warnings.
@@ -249,7 +249,7 @@ bool RegisteredClass::load_module(std::string path)
 	register_module();
 
 	return true;
-#elif defined _WIN32
+#elif defined YURI_WINDOWS
 	HINSTANCE handle = LoadLibrary(path.c_str());
 	if (!handle) return false;
 	// The ugly cast to uintptr_t is here for the sole purpose of silencing g++ warnings.
