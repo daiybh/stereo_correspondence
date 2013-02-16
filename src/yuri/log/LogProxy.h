@@ -17,28 +17,67 @@
 
 namespace yuri {
 namespace log {
+/*!
+ * @brief 		Wrapper struct for std::basic_ostream providing locking
+ */
+template<
+    class CharT,
+    class Traits = std::char_traits<CharT>
+>
 struct guarded_stream {
-	void write(const std::string msg) {
+	typedef std::basic_string<CharT, Traits> string_t;
+	typedef std::basic_ostream<CharT, Traits> stream_t;
+	typedef CharT char_t;
+	/**
+	 * @brief 		Writes a string to the contained ostream
+	 * @param msg	String to write
+	 */
+	void write(const string_t msg) {
 		boost::mutex::scoped_lock l(mutex_);
 		str_ << msg;
 	}
-	guarded_stream(std::ostream& str):str_(str) {}
+	guarded_stream(stream_t& str):str_(str) {}
+	char_t widen(char c) { return str_.widen(c); }
 private:
-	std::ostream& str_;
+	stream_t& str_;
 	boost::mutex mutex_;
 };
 
+/**
+ * @brief Proxy for output stream
+ *
+ * LogProxy wraps an output stream and ensures that lines are written correctly
+ * even when logging concurrently from several threads
+ */
+template<
+    class CharT,
+    class Traits = std::char_traits<CharT>
+>
 class EXPORT LogProxy {
 private:
 	typedef std::basic_ostream<char>& (*iomanip_t)(std::basic_ostream<char>&);
 public:
-	LogProxy(guarded_stream& str_,bool dummy):stream_(str_),dummy_(dummy) {}
+	typedef guarded_stream<CharT, Traits> gstream_t;
+	typedef std::basic_stringstream<CharT, Traits> sstream_t;
+	/*!
+	 * @param	str_	Reference to a @em guarded_stream to write the messages
+	 * @param	dummy	All input is discarded, when dummy is set to true
+	 */
+	LogProxy(gstream_t& str_,bool dummy):stream_(str_),dummy_(dummy) {}
+	/*!
+	 * @brief			Copy constructor. Invalides the original LogProxy object
+	 */
 	LogProxy(const LogProxy& other):stream_(other.stream_),dummy_(other.dummy_) {
 		if (!dummy_) {
 			buffer_.str(other.buffer_.str());
 			const_cast<LogProxy&>(other).dummy_=true;
 		}
 	}
+	/*!
+	 * @brief			Provides ostream like operator << for inserting messages
+	 * @tparam	T		Type of message to insert
+	 * @param	val_	Message to write
+	 */
 	template<typename T>
 	LogProxy& operator<<(const T& val_)
 	{
@@ -47,11 +86,17 @@ public:
 		}
 		return *this;
 	}
-
+	/*!
+	 * @brief 			Overloaded operator<< for manipulators
+	 *
+	 * We are storing internally to std::stringstream, which won't accept std::endl,
+	 * so this method simply replaces std::endl with newlines.
+	 * @param	manip	Manipulator for the stream
+	 */
 	LogProxy& operator<<(iomanip_t manip)
 	{
-		// We can't call endl onstd::stringstream, so let's filter it out
-		if (manip==static_cast<iomanip_t>(std::endl)) return *this << "\n";
+		// We can't call endl on std::stringstream, so let's filter it out
+		if (manip==static_cast<iomanip_t>(std::endl)) return *this << stream_.widen('\n');
 		else return *this << manip;
 	}
 
@@ -64,8 +109,8 @@ public:
 #endif
 	}
 private:
-	guarded_stream& stream_;
-	std::stringstream buffer_;
+	gstream_t& stream_;
+	sstream_t buffer_;
 	bool dummy_;
 };
 

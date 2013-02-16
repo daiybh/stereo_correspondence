@@ -51,13 +51,13 @@ public:
 	void setID(int id);
 	void setLabel(std::string s);
 	void setFlags(int f) { output_flags=f; }
-	LogProxy operator[](debug_flags f);
+	LogProxy<char> operator[](debug_flags f);
 	int get_flags() { return output_flags; }
 	void set_quiet(bool q) {quiet =q;}
 protected:
 	static int uids;
 	int uid;
-	yuri::shared_ptr<guarded_stream> out;
+	yuri::shared_ptr<guarded_stream<char> > out;
 	int id;
 	boost::mutex lock;
 	std::string ids;

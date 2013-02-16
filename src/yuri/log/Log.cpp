@@ -40,7 +40,7 @@ std::map<_debug_flags, std::string> level_colors=boost::assign::map_list_of<_deb
 (verbose_debug,"\033[36m")
 (trace,"\033[4;36m");
 }
-Log::Log(std::ostream &out):uid(uids++),out(new guarded_stream(out)),
+Log::Log(std::ostream &out):uid(uids++),out(new guarded_stream<char>(out)),
 #ifdef USE_MPI_
 id(-1),
 #else
@@ -71,10 +71,10 @@ void Log::setLabel(std::string s)
 	ids=s;
 }
 
-LogProxy Log::operator[](debug_flags f)
+LogProxy<char> Log::operator[](debug_flags f)
 {
 	set_flag(f);
-	LogProxy lp(*out,flags > (output_flags & flag_mask));
+	LogProxy<char> lp(*out,flags > (output_flags & flag_mask));
 	if (!quiet) {
 		lp << ((output_flags&show_level)?print_level():"") << id << ":" << uid << ": "  << ids << print_time();
 	}
