@@ -37,31 +37,30 @@ using namespace yuri::log;
 class EXPORT Config
 {
 public:
-	Config(Log &log);
-	Config(Log &log, const char *confname);
-	virtual ~Config();
-	bool init_config(int argc, char **argv, bool use_file=true);
-	int get_array_size(std::string &path);
-	bool exists(std::string path);
-	void set_callback(std::string name, pCallback func, pThreadBase data);
-	shared_ptr<Callback> get_callback(std::string name);
-	template<typename T> bool get_value(std::string path, T &out, T def);
-	template<typename T> bool get_value(std::string path, T &out);
-	template<typename T> bool get_value_from_array(std::string path, int index, T &out);
+								Config(Log &log);
+								Config(Log &log, const char *confname);
+	virtual 					~Config();
+	bool 						init_config(int argc, char **argv, bool use_file=true);
+	int 						get_array_size(std::string &path);
+	bool 						exists(std::string path);
+	void 						set_callback(std::string name, pCallback func, pThreadBase data);
+	shared_ptr<Callback> 		get_callback(std::string name);
+	template<typename T> bool 	get_value(std::string path, T &out, T def);
+	template<typename T> bool 	get_value(std::string path, T &out);
+	template<typename T> bool 	get_value_from_array(std::string path, int index, T &out);
 protected:
-	bool read_config_file(std::string filename);
-	const char * get_env(std::string path);
-	Log log;
-	boost::mutex config_mutex;
-	std::map<std::string,shared_ptr<Callback> > callbacks;
-#ifdef YURI_HAVE_LIBCONFIG
-	std::deque<shared_ptr<libconfig::Config> > configs;
-#endif
-public: static Config* get_config(int index=0);
-protected: static Config* default_config;
-protected: static boost::mutex default_config_mutex;
-protected: static std::string cf;
-		   static std::string cfs;
+	bool 						read_config_file(std::string filename);
+	const char* 				get_env(std::string path);
+	Log 						log;
+	boost::mutex 				config_mutex;
+	std::map<std::string,shared_ptr<Callback> >
+								callbacks;
+
+public: static Config* 			get_config(int index=0);
+protected: static Config* 		default_config;
+protected: static boost::mutex 	default_config_mutex;
+protected: static std::string 	cf;
+		   static std::string 	cfs;
 };
 
 template<typename T>  bool

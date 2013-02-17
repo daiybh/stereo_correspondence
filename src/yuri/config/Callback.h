@@ -30,12 +30,12 @@ typedef void (*pCallback)(pThreadBase,pThreadBase);
 class EXPORT Callback
 {
 public:
-	Callback(pCallback func,pThreadBase data);
-	virtual ~Callback();
-	virtual void run(pThreadBase global);
+								Callback(pCallback func,pThreadBase data);
+	virtual 					~Callback();
+	virtual void 				run(pThreadBase global);
 protected:
-	pCallback func;
-	pThreadBase data;
+	pCallback 					func;
+	pThreadBase 				data;
 };
 
 }

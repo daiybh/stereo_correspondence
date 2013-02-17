@@ -51,9 +51,7 @@ ThreadBase::~ThreadBase()
 void ThreadBase::operator()()
 {
 	log[verbose_debug] << "Starting thread" << "\n";
-	//start_timer();
 	run();
-	//pause_timer();
 	if (!end_requested) request_end();
 }
 
@@ -261,31 +259,7 @@ void ThreadBase::do_join_thread(pThreadBase child, bool check)
 	//delete thread;
 	log[debug] << "Child joined (" << children.size() << " left)" << "\n";
 }
-/*
-void ThreadBase::start_timer()
-{
-	boost::mutex::scoped_lock l(timer_lock);
-	gettimeofday(&tv_start,0);
-	timer_started=true;
-}
-void ThreadBase::pause_timer()
-{
-	boost::mutex::scoped_lock l(timer_lock);
-	if (!timer_started) return;
-	timer_started=false;
-	gettimeofday(&tv_stop,0);
-	do_add_timer();
-}
-void ThreadBase::do_add_timer()
-{
-	elsec+=(tv_stop.tv_sec-tv_start.tv_sec);
-	elusec+=(tv_stop.tv_usec-tv_start.tv_usec);
-	if (elusec>1000000) {
-		elusec-=1000000;
-		elsec++;
-	}
-}
-*/
+
 void ThreadBase::request_finish_thread(pThreadBase child)
 {
 	boost::mutex::scoped_lock l2(end_lock);
@@ -336,7 +310,7 @@ pid_t ThreadBase::get_tid()
 
 pid_t ThreadBase::retrieve_tid()
 {
-#ifdef __linux__
+#ifdef YURI_LINUX
 	own_tid = syscall(SYS_gettid);
 	return own_tid;
 #else
@@ -352,7 +326,7 @@ void ThreadBase::print_id(_debug_flags f)
 
 bool ThreadBase::bind_to_cpu(yuri::uint_t cpu)
 {
-#ifdef __linux__
+#ifdef YURI_LINUX
 	cpu_set_t cpus;
 	CPU_ZERO(&cpus);
 	CPU_SET(cpu,&cpus);
@@ -375,7 +349,7 @@ bool ThreadBase::bind_to_cpu(yuri::uint_t cpu)
 
 void ThreadBase::set_thread_name(std::string name)
 {
-#ifdef __linux__
+#ifdef YURI_LINUX
 	int ret = prctl(PR_SET_NAME,name.c_str(),0,0,0);
 	log[info] << "Name set to " << name << " (result " << ret << ")"<<"\n";
 #endif

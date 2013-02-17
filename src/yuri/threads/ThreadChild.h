@@ -20,12 +20,13 @@ class ThreadBase;
 class EXPORT ThreadChild
 {
 public:
-	ThreadChild(shared_ptr<boost::thread> thread, shared_ptr<ThreadBase> child, bool spawned=false);
-	virtual ~ThreadChild();
-	shared_ptr<boost::thread> thread_ptr;
-	shared_ptr<ThreadBase> thread;
-	bool finished;
-	bool spawned;
+								ThreadChild(shared_ptr<boost::thread> thread,
+			shared_ptr<ThreadBase> child, bool spawned=false);
+	virtual 					~ThreadChild();
+	shared_ptr<boost::thread> 	thread_ptr;
+	shared_ptr<ThreadBase> 		thread;
+	bool 						finished;
+	bool 						spawned;
 };
 
 }

@@ -24,22 +24,22 @@ class BasicIOThread;
 
 class EXPORT PipeConnector {
 private:
-	PipeConnector() {}
+								PipeConnector() {}
 public:
-	PipeConnector(weak_ptr<ThreadBase> thread);
-	PipeConnector(shared_ptr<BasicPipe> pipe, weak_ptr<ThreadBase> thread);
-	PipeConnector(const PipeConnector& orig);
-	virtual ~PipeConnector();
-	shared_ptr<BasicPipe> operator->();
-	void reset();
-	void reset(shared_ptr<BasicPipe> pipe);
-	operator bool();
-	operator shared_ptr<BasicPipe>();
-	BasicPipe * get();
+								PipeConnector(weak_ptr<ThreadBase> thread);
+								PipeConnector(shared_ptr<BasicPipe> pipe, weak_ptr<ThreadBase> thread);
+								PipeConnector(const PipeConnector& orig);
+	virtual 					~PipeConnector();
+	shared_ptr<BasicPipe> 		operator->();
+	void 						reset();
+	void 						reset(shared_ptr<BasicPipe> pipe);
+								operator bool();
+								operator shared_ptr<BasicPipe>();
+	BasicPipe * 				get();
 protected:
-	shared_ptr<BasicPipe> pipe;
-	weak_ptr<ThreadBase> thread;
-	void set_pipe(shared_ptr<BasicPipe> pipe);
+	shared_ptr<BasicPipe> 		pipe;
+	weak_ptr<ThreadBase> 		thread;
+	void 						set_pipe(shared_ptr<BasicPipe> pipe);
 
 };
 

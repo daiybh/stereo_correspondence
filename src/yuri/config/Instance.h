@@ -23,15 +23,16 @@ using namespace yuri::log;
 using namespace yuri::threads;
 class EXPORT Instance {
 public:
-	Instance(std::string id, generator_t generator, shared_ptr<Parameters> par);
-	virtual ~Instance();
-	shared_ptr<BasicIOThread> create_class(Log& log_,pThreadBase parent) throw(Exception);
+								Instance(std::string id, generator_t generator,
+			shared_ptr<Parameters> par);
+	virtual 					~Instance();
+	shared_ptr<BasicIOThread> 	create_class(Log& log_,pThreadBase parent) throw(Exception);
 
-	template<typename T>void add_parameter(std::string name,T def);
-	Parameter& operator[] (const std::string id);
-	std::string id;
-	generator_t generator;
-	shared_ptr<Parameters> params;
+	template<typename T>void 	add_parameter(std::string name,T def);
+	Parameter& 					operator[] (const std::string id);
+	std::string 				id;
+	generator_t 				generator;
+	shared_ptr<Parameters> 		params;
 
 };
 

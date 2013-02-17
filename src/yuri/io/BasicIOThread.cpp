@@ -37,7 +37,7 @@ shared_ptr<Parameters> BasicIOThread::configure()
 	return p;
 }
 
-bool BasicIOThread::configure_converter(Parameters&, yuri::format_t,yuri::format_t) throw(Exception)
+bool BasicIOThread::configure_converter(Parameters&, yuri::format_t,yuri::format_t)
 {
 	throw NotImplemented();
 }

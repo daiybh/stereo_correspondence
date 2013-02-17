@@ -47,7 +47,7 @@ RawFileSource::RawFileSource(Log &_log, pThreadBase parent, Parameters &paramete
 			BasicIOThread(_log,parent,1,2,"RawFileSource"), position(0),
 			chunk_size(0), width(0), height(0),output_format(YURI_FMT_NONE),
 			fps(25.0),last_send(not_a_date_time),keep_alive(true),loop(true),
-			failed_read(false),block(0),loop_number(0)
+			failed_read(false),sequence(false),block(0),loop_number(0)
 {
 	IO_THREAD_INIT("Raw file source")
 	latency = 1000;
@@ -171,6 +171,9 @@ bool RawFileSource::set_param(Parameter &parameter)
 		log[info] << "output format " << output_format << std::endl;
 	} else if (parameter.name == "path") {
 		path=parameter.get<std::string>();
+		if (path.find("%d")!=std::string::npos) {
+			sequence = true;
+		}
 	} else if (parameter.name == "keep_alive") {
 		keep_alive=parameter.get<bool>();
 	} else if (parameter.name == "offset") {

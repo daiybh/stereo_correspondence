@@ -38,10 +38,10 @@ protected:
 	yuri::size_t position, chunk_size, width, height;
 	yuri::format_t output_format;
 	double fps;
-std::string path;
+	std::string path;
 	ptime last_send;
 	std::ifstream file;
-	bool keep_alive,loop, failed_read;
+	bool keep_alive,loop, failed_read, sequence;
 	yuri::usize_t block;
 	yuri::size_t loop_number;
 };

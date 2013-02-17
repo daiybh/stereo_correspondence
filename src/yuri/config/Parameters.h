@@ -58,36 +58,39 @@ public:
 	Parameter(std::string name, std::string sval):name(name),type(StringType),sval(sval) {}
 	Parameter(std::string name,shared_ptr<Callback> cb):name(name),type(Callback_functionType),cbval(cb) {}
 
-std::string name, description;
-	_type type;
+	std::string 			name;
+	std::string 			description;
+	_type 					type;
 
-std::string sval;
-	yuri::ssize_t ival;
-	double fval;
-	shared_ptr<yuri::config::Callback> cbval;
-	std::vector<shared_ptr<Parameters> > parameters_vector;
+	std::string 			sval;
+	yuri::ssize_t 			ival;
+	double 					fval;
+	shared_ptr<yuri::config::Callback>
+							cbval;
+	std::vector<shared_ptr<Parameters> >
+							parameters_vector;
 
-	Parameter & operator= (yuri::ssize_t ival);
-	Parameter & operator= (bool bval);
-	Parameter & operator= (double fval);
-	Parameter & operator= (std::string sval);
+	Parameter & 			operator= (yuri::ssize_t ival);
+	Parameter & 			operator= (bool bval);
+	Parameter & 			operator= (double fval);
+	Parameter & 			operator= (std::string sval);
 
-	Parameter & operator= (int ival);
-	Parameter & operator= (float fval);
-	Parameter & operator= (const char *cval);
+	Parameter & 			operator= (int ival);
+	Parameter & 			operator= (float fval);
+	Parameter & 			operator= (const char *cval);
 
-	Parameter & operator= (Parameter& par);
+	Parameter & 			operator= (Parameter& par);
 
-	Parameter & operator= (shared_ptr<Callback> cb);
+	Parameter & 			operator= (shared_ptr<Callback> cb);
 
-	Parameter& operator[] (const std::string id);
-	Parameters& operator[] (const yuri::size_t index);
+	Parameter& 				operator[] (const std::string id);
+	Parameters& 			operator[] (const yuri::size_t index);
 
 	template <typename T> T get();
 
-	Parameters& push_group(std::string description="");
+	Parameters& 			push_group(std::string description="");
 
-	shared_ptr<Parameter> get_copy();
+	shared_ptr<Parameter> 	get_copy();
 	~Parameter();
 };
 
@@ -109,33 +112,38 @@ template <typename T> T Parameter::get()
 
 class EXPORT Parameters {
 public:
-	Parameters();
-	Parameters(Parameters& p);
-	virtual ~Parameters();
-	Parameters& operator=(const Parameters& other);
+								Parameters();
+								Parameters(Parameters& p);
+	virtual 					~Parameters();
+	Parameters& 				operator=(const Parameters& other);
 
-	Parameter& operator[] (const std::string id);
-	bool is_defined(std::string id);
-	std::map<std::string,shared_ptr<Parameter> > params;
-	void merge(Parameters&p);
-	void set_description(std::string desc);
-	std::string get_description();
-	void set_max_pipes(yuri::sshort_t max_input, yuri::sshort_t  max_output);
-	void add_input_format(yuri::format_t format);
-	void add_output_format(yuri::format_t format);
-	std::set<yuri::format_t> get_input_formats();
-	std::set<yuri::format_t> get_output_formats();
-	yuri::sshort_t get_input_pipes();
-	yuri::sshort_t get_output_pipes();
-	void add_converter(yuri::format_t input, yuri::format_t output, int confidence=0, bool scaling=false);
-	std::map<std::pair<yuri::format_t, yuri::format_t>, shared_ptr<Converter> > get_converters();
+	Parameter& 					operator[] (const std::string id);
+	bool 						is_defined(std::string id);
+	std::map<std::string,shared_ptr<Parameter> >
+								params;
+	void 						merge(Parameters&p);
+	void 						set_description(std::string desc);
+	std::string 				get_description();
+	void 						set_max_pipes(yuri::sshort_t max_input, yuri::sshort_t  max_output);
+	void 						add_input_format(yuri::format_t format);
+	void 						add_output_format(yuri::format_t format);
+	std::set<yuri::format_t> 	get_input_formats();
+	std::set<yuri::format_t> 	get_output_formats();
+	yuri::sshort_t 				get_input_pipes();
+	yuri::sshort_t 				get_output_pipes();
+	void 						add_converter(yuri::format_t input, yuri::format_t output,
+				int confidence=0, bool scaling=false);
+	std::map<std::pair<yuri::format_t, yuri::format_t>, shared_ptr<Converter> >
+								get_converters();
 protected:
-	std::string description;
+	std::string 				description;
 	// Maximal number of input/output pipes. -1 for unlimited.
-	int max_input_pipes, max_output_pipes;
-	std::set<yuri::format_t > input_formats;
-	std::set<yuri::format_t> output_formats;
-	std::map<std::pair<yuri::format_t, yuri::format_t>, shared_ptr<Converter> > converters;
+	int 						max_input_pipes;
+	int							max_output_pipes;
+	std::set<yuri::format_t > 	input_formats;
+	std::set<yuri::format_t> 	output_formats;
+	std::map<std::pair<yuri::format_t, yuri::format_t>, shared_ptr<Converter> >
+								converters;
 };
 
 }

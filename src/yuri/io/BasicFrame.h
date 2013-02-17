@@ -25,10 +25,10 @@ typedef yuri::uvector<yuri::ubyte_t,false> plane_t;
 
 typedef yuri::shared_ptr<struct FrameInfo> pFrameInfo;
 struct EXPORT FrameInfo {
-	virtual ~FrameInfo() {}
-	std::string format;
-	yuri::size_t value;
-	yuri::size_t scale;
+	virtual 					~FrameInfo() {}
+	std::string 				format;
+	yuri::size_t 				value;
+	yuri::size_t 				scale;
 };
 
 typedef yuri::shared_ptr<class BasicFrame> pBasicFrame;
@@ -66,12 +66,16 @@ public:
 	virtual pFrameInfo 			get_info() {return info;}
 	virtual void 				set_info(pFrameInfo i) {info=i;}
 protected:
-	std::vector<plane_t> planes;
-	yuri::size_t /*numberPlanes, */dts, pts, duration;
-	yuri::format_t format;
-	yuri::size_t width, height;
-	yuri::usize_t samples, channels;
-	pFrameInfo info;
+	std::vector<plane_t> 		planes;
+	yuri::size_t 				dts;
+	yuri::size_t				pts;
+	yuri::size_t				duration;
+	yuri::format_t 				format;
+	yuri::size_t 				width;
+	yuri::size_t				height;
+	yuri::usize_t 				samples;
+	yuri::usize_t				channels;
+	pFrameInfo 					info;
 };
 
 }

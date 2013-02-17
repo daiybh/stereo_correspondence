@@ -24,11 +24,11 @@ class ThreadBase;
 class EXPORT ThreadSpawn
 {
 public:
-	ThreadSpawn(shared_ptr<ThreadBase> thread);
-	virtual ~ThreadSpawn();
-	void operator() ();
+							ThreadSpawn(shared_ptr<ThreadBase> thread);
+	virtual 				~ThreadSpawn();
+	void 					operator() ();
 protected:
-	shared_ptr<ThreadBase> thread;
+	shared_ptr<ThreadBase> 	thread;
 };
 
 }

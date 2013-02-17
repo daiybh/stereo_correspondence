@@ -44,7 +44,7 @@ using std::shared_ptr;
 #endif
 
 }
-#ifdef __GNUC__
+#ifdef YURI_LINUX
 #define YURI_UNUSED __attribute__((unused))
 #else
 #define YURI_UNUSED
