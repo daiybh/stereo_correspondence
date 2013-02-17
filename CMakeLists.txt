@@ -1,7 +1,12 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 2.8.0)
 PROJECT(yuri2 CXX)
 ENABLE_LANGUAGE(C)
 
+SET(OLD_CMAKE FALSE)
+IF (CMAKE_MAJOR_VERSION EQUAL 2 AND CMAKE_MINOR_VERSION EQUAL 8 AND CMAKE_PATCH_VERSION LESS 4)
+	SET(OLD_CMAKE TRUE)
+	MESSAGE("Old cmake version detected, disabling generator expressions")
+ENDIF()
 #################################################################
 # Include required CMake modules
 #################################################################
@@ -11,7 +16,7 @@ INCLUDE(CheckIncludeFileCXX)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/")
 include(cuda_module)
 include(GetGitRevisionDescription)
-
+include(yuri_install)
 #################################################################
 # Get the version of this build
 #################################################################

@@ -72,7 +72,11 @@ bool Crop::step()
 
 	pBasicFrame frame_out = allocate_empty_frame(frame->get_format(),w, h);
 	FormatInfo_t info = BasicPipe::get_format_info(frame->get_format());
-	assert(info && info->planes==1);
+	assert(info);
+	if (info->planes!=1) {
+		log[warning] << "Received frame has more that a single plane. \n";
+		return true;
+	}
 	yuri::size_t Bpp = info->bpp >> 3;
 	log[verbose_debug] << "size: " << w <<"x"<<h<<"+"<<x<<"+"<<y<<" at "<<Bpp<<"Bpp"<<std::endl;
 	yuri::ubyte_t  *out_ptr=PLANE_RAW_DATA(frame,0);
