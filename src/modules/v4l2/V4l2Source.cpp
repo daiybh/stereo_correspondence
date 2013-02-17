@@ -496,7 +496,7 @@ bool V4l2Source::prepare_frame(yuri::ubyte_t *data, yuri::size_t size)
 	yuri::size_t frame_size = (width*height*fi->bpp)>>3;
 	if (!fi->compressed) {
 		if (!output_frame) {
-			output_frame = allocate_empty_frame(fmt,width,height);
+			output_frame = allocate_empty_frame(fmt,width,height,true);
 			buffer_free = frame_size;
 		}
 		yuri::size_t frame_position = frame_size - buffer_free;
