@@ -67,7 +67,6 @@ bool JPEGDecoder::step() {
 			log[warning] << "Unrecognized file header!!" << std::endl;
 			return true;
 		}
-
 		jpeg_start_decompress(&cinfo);
 		if (aborted) throw (yuri::exception::Exception("Decoding failed"));
 		width = cinfo.image_width;
@@ -115,10 +114,9 @@ bool JPEGDecoder::step() {
 	}
 
 
-	if (decompressed && out[0] && mem) {
-
-
+	if (decompressed && out[0] && out_frame) {
 		push_video_frame(0,out_frame,colorspace,width,height);
+		out_frame.reset();
 		//out[0]->set_params(width,height,colorspace);
 		//out[0]->push_frame(mem,linesize*height,true);
 	}
