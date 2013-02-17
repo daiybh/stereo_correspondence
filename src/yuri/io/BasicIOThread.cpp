@@ -56,7 +56,14 @@ pBasicFrame BasicIOThread::allocate_frame_from_memory(const yuri::ubyte_t *mem, 
 //	return allocate_frame_from_memory(smem,size,large);
 	pBasicFrame f = make_shared<BasicFrame>(1);
 	//std::copy(mem,mem+size,f->get_plane(0).begin());
-	f->set_plane(0,mem,size);
+	if (!large) {
+		f->set_plane(0,mem,size);
+	} else {
+		FixedMemoryAllocator::memory_block_t block = FixedMemoryAllocator::get_block(size);
+		assert(block.first);
+		std::copy(mem,mem+size,&block.first[0]);
+		f->get_plane(0).set(block.first,size,block.second);
+	}
 	return f;
 }
 pBasicFrame BasicIOThread::allocate_frame_from_memory(const plane_t& mem)
@@ -415,6 +422,14 @@ pBasicFrame BasicIOThread::allocate_empty_frame(yuri::format_t format, yuri::siz
 	for (yuri::size_t i = 0; i < fmt->planes; ++i) {
 		if (fmt->planes>1) bpplane = fmt->component_depths[i];
 		yuri::size_t planesize = width * height * bpplane / fmt->plane_x_subs[i] / fmt->plane_y_subs[i] / 8;
+		if (!large) {
+			pic->get_plane(i).resize(planesize);
+		} else {
+			FixedMemoryAllocator::memory_block_t block = FixedMemoryAllocator::get_block(planesize);
+			assert(block.first);
+			//std::copy(mem,mem+size,&block.first[0]);
+			pic->get_plane(i).set(block.first,planesize,block.second);
+		}
 		//shared_array<yuri::ubyte_t> mem = allocate_memory_block(planesize,large);
 //		(*pic)[i].set(mem,planesize);
 		pic->get_plane(i).resize(planesize);
