@@ -1,0 +1,49 @@
+<?xml version="1.0" ?>
+<!-- Simple example of lib yuri function.
+     The application connects to video4lionux2 device (web camera)
+     shows the image.
+     
+     [ webcam ] -> [ renderer ]
+     
+      -->
+<app name="webcam">
+<!-- Specify variables for command line substitution -->
+<variable name="width" default="800"/>
+<variable name="height" default="600"/>
+<variable name="device" default="/dev/video0"/>
+<variable name="fps" default="100"/>
+<variable name="display" default=":0"/>
+
+<!-- General settings -->
+<general>
+<!-- Unlimited run time -->
+  <parameter name="run_limit">-1</parameter>
+<!-- Moderate debug informations -->
+  <parameter name="debug">0</parameter>
+</general>
+
+<!-- Units -->
+<!-- Video4Linux2 device source -->
+<node class="v4l2source" name="webcam">
+  <parameter name="path">@device</parameter>
+  <parameter name="width">@width</parameter>
+  <parameter name="height">@height</parameter>
+  <parameter name="fps">@fps</parameter>
+</node>
+
+<!-- And finally simple rendering window -->
+<node class="simple_renderer" name="renderer">
+        <parameter name="display">@display</parameter>
+        <parameter name="width">@width</parameter>
+        <parameter name="height">@height</parameter>
+        <parameter name="cursor">0</parameter>
+        <parameter name="keep_aspect">0</parameter>
+</node>
+
+<!-- Link specifications -->
+<link name="yuyv_image" source="webcam:0" target="renderer:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+
+</app>
