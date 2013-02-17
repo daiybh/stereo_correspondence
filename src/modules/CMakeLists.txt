@@ -23,6 +23,7 @@ add_subdirectory(split)
 find_package(JPEG)
 find_package(PNG)
 find_package(CURL)
+find_package(ImageMagick COMPONENTS Magick++)
 IF(NOT YURI_DISABLE_SAGE)
 	find_package(SAGE)
 ENDIF()
@@ -38,6 +39,7 @@ ENDIF()
 IF(${CORE_IEEE1394})
 	pkg_check_modules(ieee1394 libiec61883)
 ENDIF()
+
 #################################################################
 # Add optional modules based on results of the detection
 #################################################################
@@ -93,4 +95,8 @@ IF(${CORE_ASIO})
 	add_subdirectory(vncclient)
 	add_subdirectory(tsrtp_receiver)
 	add_subdirectory(tsrtp_streamer)
+ENDIF()
+
+IF(${ImageMagick_Magick++_FOUND})
+	add_subdirectory(imagemagick)
 ENDIF()
