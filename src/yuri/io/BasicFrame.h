@@ -58,8 +58,8 @@ public:
 
 	virtual plane_t& 			get_plane(yuri::size_t index);
 	virtual plane_t& 			operator[](yuri::size_t index);
-	virtual void 				set_plane(yuri::size_t index, plane_t& plane) DEPRECATED;
-	virtual void 				set_plane(yuri::size_t index, const plane_t& plane) DEPRECATED;
+	virtual void 				set_plane(yuri::size_t index, plane_t& plane);
+	virtual void 				set_plane(yuri::size_t index, const plane_t& plane);
 	virtual void				set_plane(yuri::size_t index, const yuri::ubyte_t *data, yuri::size_t data_size);
 
 	virtual pBasicFrame 		get_copy();
