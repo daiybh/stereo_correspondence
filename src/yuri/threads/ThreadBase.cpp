@@ -34,7 +34,7 @@ long ThreadBase::new_thread_id()
 ThreadBase::ThreadBase(Log &_log, pThreadBase parent):log(_log),parent(parent),
 	end(false),end_requested(false),
 	elsec(0),elusec(0),timer_started(false),
-	join_timeout(boost::posix_time::milliseconds(750)),exitCode(YURI_EXIT_OK),
+	join_timeout(boost::posix_time::milliseconds(2500)),exitCode(YURI_EXIT_OK),
 	lastChild(0),finishWhenChildEnds(false),quitWhenChildsEnd(true),own_tid(0)
 {
 	log[debug] << "Parent " << (void *)(parent.lock().get()) << "\n";
@@ -219,8 +219,8 @@ void ThreadBase::do_finish_thread(pThreadBase child, bool join)
 	if (!children[child]->finished) {
 		children[child]->thread->finish();
 		children[child]->finished=true;
-		if (children[child]->thread_ptr)
-			children[child]->thread_ptr->interrupt();
+//		if (children[child]->thread_ptr)
+//			children[child]->thread_ptr->interrupt();
 	}
 	if (join) {
 		if 	(children[child]->spawned) do_join_thread(child,false);
