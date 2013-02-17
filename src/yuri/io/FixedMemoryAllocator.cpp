@@ -68,19 +68,24 @@ bool FixedMemoryAllocator::do_allocate_blocks(yuri::size_t size, yuri::size_t co
  * the method tries to allocate it first.
  *
  * \param size Size of the requested block
- * \return Pointer (boost::shared_array<>) to the allocated block,
+ * \return Pointer to the allocated block,
  * or null pointer if the block cannot be allocated.
  */
-shared_array<yuri::ubyte_t> FixedMemoryAllocator::get_block(yuri::size_t size)
+FixedMemoryAllocator::memory_block_t FixedMemoryAllocator::get_block(yuri::size_t size)
 {
 	boost::mutex::scoped_lock l(mem_lock);
 	if (memory_pool.count(size)<1 || memory_pool[size].size()<1) {
-		if (!do_allocate_blocks(size,1)) return shared_array<yuri::ubyte_t>();
+		if (!do_allocate_blocks(size,1)) {
+			throw std::bad_alloc();
+		}
 	}
-	shared_array<yuri::ubyte_t>  tmp(memory_pool[size].back(),Deleter(size,memory_pool[size].back()));
+
+//	shared_array<yuri::ubyte_t>  tmp(memory_pool[size].back(),Deleter(size,memory_pool[size].back()));
+	yuri::ubyte_t * tmp = memory_pool[size].back();
+	memory_block_t block = std::make_pair(tmp,Deleter(size,tmp));
 	memory_pool[size].pop_back();
 	//std::cout << "Serving page of " << size << ". have " << memory[size].size() << " in cache" << "\n";
-	return tmp;
+	return block;
 }
 /** \brief Returns block to the pool.
  *
@@ -175,10 +180,10 @@ bool FixedMemoryAllocator::step()
  * This should get called only in shared_array and \em nowhere else.
  * \param mem pointer to the memory block to be deleted.
  */
-void FixedMemoryAllocator::Deleter::operator()(yuri::ubyte_t *mem)
+void FixedMemoryAllocator::Deleter::operator()(void *mem)
 {
 	assert(mem==original_pointer);
-	FixedMemoryAllocator::return_memory(size,mem);
+	FixedMemoryAllocator::return_memory(size,reinterpret_cast<yuri::ubyte_t*>(mem));
 }
 
 }

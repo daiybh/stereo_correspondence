@@ -19,7 +19,7 @@
 
 #include "yuri/io/BasicIOThread.h"
 #include "yuri/config/RegisteredClass.h"
-
+#include "yuri/io/uvector.h"
 namespace yuri {
 
 namespace io {
@@ -27,26 +27,27 @@ namespace io {
 
 class EXPORT FixedMemoryAllocator: public BasicIOThread {
 public:
+	struct Deleter {
+		Deleter(yuri::size_t size, yuri::ubyte_t *original_pointer):
+			size(size),original_pointer(original_pointer) {}
+		Deleter(const Deleter& d):size(d.size),original_pointer(d.original_pointer) {}
+		void operator()(void *mem);
+		/**\brief Size of block associated with this object */
+		yuri::size_t size;
+		/**\brief Pointer to the memory block associated with this object */
+		yuri::ubyte_t *original_pointer;
+
+	};
+	typedef std::pair<yuri::ubyte_t*, struct Deleter> memory_block_t;
 	IO_THREAD_GENERATOR_DECLARATION
 	static shared_ptr<Parameters> configure();
 	FixedMemoryAllocator(Log &_log, pThreadBase parent, Parameters &parameters) IO_THREAD_CONSTRUCTOR;
 	virtual ~FixedMemoryAllocator();
-	static shared_array<yuri::ubyte_t> get_block(yuri::size_t size);
+	static memory_block_t get_block(yuri::size_t size);
 	static bool return_memory(yuri::size_t size, yuri::ubyte_t* mem);
 	static bool allocate_blocks(yuri::size_t size, yuri::size_t count);
 	static bool remove_blocks(yuri::size_t size, yuri::size_t count=0);
-protected:
-	struct Deleter {
-		Deleter(yuri::size_t size, yuri::ubyte_t *original_pointer):
-			original_pointer(original_pointer),size(size) {}
-		Deleter(const Deleter& d)
-			{ size=d.size; original_pointer=d.original_pointer;}
-		void operator()(yuri::ubyte_t *mem);
-		/**\brief Pointer to the memory block associated with this object */
-		yuri::ubyte_t *original_pointer;
-		/**\brief Size of block associated with this object */
-		yuri::size_t size;
-	};
+private:
 	bool step();
 	virtual bool set_param(Parameter &parameter);
 	static bool do_allocate_blocks(yuri::size_t size, yuri::size_t count);
