@@ -16,6 +16,8 @@
 // Clang has to be first as it also defines __GNUC__
 #if defined __clang__
 #pragma clang diagnostic push
+// -Wc++11-extra-semi is not supported in clang3.1, so ignore that pragma
+#pragma clang diagnostic ignored "-Wunknown-pragmas"
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #pragma clang diagnostic ignored "-Wc++11-extra-semi"
 #elif defined __GNUC__
