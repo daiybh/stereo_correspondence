@@ -30,10 +30,10 @@ shared_ptr<Parameters> DXTCompress::configure()
 }
 
 DXTCompress::DXTCompress(Log &log_,pThreadBase parent,Parameters &parameters):
-BasicIOThread(log_,parent,1,1,std::string("dummy")),dxt_type(squish::kDxt1),
+BasicIOThread(log_,parent,1,1,std::string("dxt_compress")),dxt_type(squish::kDxt1),
 format(YURI_FMT_DXT1)
 {
-	IO_THREAD_INIT("Dummy")
+	IO_THREAD_INIT("DXTCompress")
 }
 
 DXTCompress::~DXTCompress()
