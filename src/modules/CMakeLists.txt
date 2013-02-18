@@ -15,6 +15,7 @@ add_subdirectory(flip)
 add_subdirectory(null)
 add_subdirectory(rawfilesource)
 add_subdirectory(split)
+add_subdirectory(dxt_compress)
 
 #################################################################
 # Let's check for libraries required 
@@ -67,6 +68,7 @@ IF(CORE_LIBAV)
 	ENDIF()
 	IF (${libavformat_FOUND})
 		add_subdirectory(tsmuxer)
+		#add_subdirectory(avdemuxer)
 	ENDIF()
 	IF (${libswscale_FOUND})
 		add_subdirectory(avscaler)
