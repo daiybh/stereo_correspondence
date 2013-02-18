@@ -159,6 +159,7 @@ void GL::generate_texture(uint tid, pBasicFrame frame)
 			break;
 		}
 	}
+//	log[info] << "w: " << w << ", h: " <<h<< ", wh: " << wh << "\n";
 	tx = (float) w / (float) wh;
 	ty = (float) h / (float) wh;
 	glBindTexture(GL_TEXTURE_2D, tex);
@@ -333,12 +334,18 @@ void GL::generate_texture(uint tid, pBasicFrame frame)
 				format = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 				fsize = wh * wh;
 			} else break;
+			bool mipmaps = true;
+			if ((yf==YURI_FMT_DXT5) || (yf==YURI_FMT_DXT3) || (yf==YURI_FMT_DXT1))
+				mipmaps = false;
 			if (textures[tid].wh != wh) {
-				yuri::size_t remaining=PLANE_SIZE(frame,0), wh2=wh,next_level = fsize, offset = 0, level =0;
+				yuri::size_t remaining=fsize, wh2=wh,next_level = fsize, offset = 0, level =0;
 				char *image = new char[fsize];
 				while (next_level <= remaining) {
 					glCompressedTexImage2D(GL_TEXTURE_2D, level++, format, wh2, wh2, 0, next_level,image);
-					wh2>>=1;remaining-=next_level;
+					if (!mipmaps) break;
+					wh2>>=1;
+					if (remaining<next_level) break;
+					remaining-=next_level;
 					offset+=next_level;
 					next_level>>=2;
 				}
@@ -349,13 +356,17 @@ void GL::generate_texture(uint tid, pBasicFrame frame)
 				delete[] image;
 				textures[tid].wh = wh;
 			}
-			//log[info] << "Allocating s3tc " << w << "x" << h << ", size: " << (w*h>>1) <<"\n";
 			glBindTexture(GL_TEXTURE_2D, tex);
+			fsize=w*h>>((yf==YURI_FMT_DXT1)?1:0);
+
 			yuri::size_t remaining=PLANE_SIZE(frame,0), w2=w, h2=h, next_level = fsize, offset = 0, level =0;
 			while (next_level <= remaining) {
 				log[debug] << "next_level: " << next_level << ", rem: " << remaining <<"\n";
 				glCompressedTexSubImage2D(GL_TEXTURE_2D, level++, 0, 0, w2, h2,	format, next_level, PLANE_RAW_DATA(frame,0)+offset);
-				w2>>=1;h2>>=1;remaining-=next_level;
+				if (!mipmaps) break;
+				w2>>=1;h2>>=1;
+				if (remaining<next_level) break;
+				remaining-=next_level;
 				offset+=next_level;
 				next_level>>=2;
 			}
