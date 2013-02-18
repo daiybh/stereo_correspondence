@@ -37,7 +37,7 @@ shared_ptr<Parameters> HDVSource::configure()
 HDVSource::HDVSource(Log &log_,pThreadBase parent, nodeid_t node, int port,
 		int64_t guid): IEEE1394SourceBase(log_,parent,node,port,guid),
 		total_packets(0),total_missing(0),buffer_size(0),buffer_position(0),
-		output_buffer(0),enable_checks(true)
+		enable_checks(true)
 {
 	log.setLabel("[HDV Source] ");
 	// Default size. This is proved to work correctly and it's just to fit single RTP packet.
