@@ -25,10 +25,13 @@ typedef yuri::uvector<yuri::ubyte_t,false> plane_t;
 
 typedef yuri::shared_ptr<struct FrameInfo> pFrameInfo;
 struct EXPORT FrameInfo {
+	FrameInfo():value(0),scale(0),max_value(0),min_value(0){}
 	virtual 					~FrameInfo() {}
 	std::string 				format;
 	yuri::size_t 				value;
 	yuri::size_t 				scale;
+	yuri::ssize_t				max_value;
+	yuri::ssize_t				min_value;
 };
 
 typedef yuri::shared_ptr<class BasicFrame> pBasicFrame;
