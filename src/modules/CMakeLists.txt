@@ -108,3 +108,4 @@ SET (OpenNI_INCLUDE_DIRS /usr/local/include/ni )
 SET (OpenNI_LIBRARIES OpenNI2)
 SET (OpenNI_LIBRARY_DIRECTORIES /usr/local/lib/)
 add_subdirectory(openni)
+
