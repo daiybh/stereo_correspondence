@@ -34,7 +34,7 @@
 }
 
 #define IO_THREAD_PRE_RUN  \
-	print_id(info); \
+	print_id(yuri::log::info); \
 	if (cpu_affinity >= 0) bind_to_cpu(cpu_affinity);
 #define IO_THREAD_POST_RUN \
 	close_pipes();
