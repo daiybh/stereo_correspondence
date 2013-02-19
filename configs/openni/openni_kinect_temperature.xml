@@ -33,6 +33,8 @@
         <parameter name="enable_color">@color</parameter>
         <parameter name="sensors">@sensors</parameter>
 </node>
+<node class="temperature" name="temp">
+</node>
 
 <!-- And finally simple rendering window -->
 <node class="simple_renderer" name="renderer">
@@ -44,9 +46,12 @@
 </node>
 
 <!-- Link specifications -->
-<link name="kinect" source="source:0" target="renderer:0">
+<link name="kinect" source="source:0" target="temp:0">
         <parameter name="limit">1</parameter>
         <parameter name="limit_type">count</parameter>
 </link>
-
+<link name="temp" source="temp:0" target="renderer:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
 </app>
