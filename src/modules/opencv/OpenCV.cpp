@@ -46,8 +46,8 @@ OpenCV::~OpenCV()
 namespace {
 typedef std::pair<format_t, format_t> fmt_pair;
 std::map<fmt_pair, int > format_map = boost::assign::map_list_of<fmt_pair, int>
-(std::make_pair(YURI_FMT_RGB,YURI_FMT_RGBA),CV_BGR2BGRA)
-(std::make_pair(YURI_FMT_RGBA,YURI_FMT_RGB),CV_BGRA2BGR);
+(std::make_pair(YURI_FMT_RGB,YURI_FMT_RGBA),static_cast<int>(CV_BGR2BGRA))
+(std::make_pair(YURI_FMT_RGBA,YURI_FMT_RGB),static_cast<int>(CV_BGRA2BGR));
 typedef std::map<fmt_pair, int >::iterator fmt_map_iter;
 }
 
