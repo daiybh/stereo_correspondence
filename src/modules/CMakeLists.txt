@@ -42,6 +42,7 @@ IF(${CORE_IEEE1394})
 	pkg_check_modules(ieee1394 libiec61883)
 ENDIF()
 
+pkg_check_modules(OpenCV opencv>=2.3.0)
 #################################################################
 # Add optional modules based on results of the detection
 #################################################################
@@ -102,4 +103,8 @@ ENDIF()
 
 IF(${ImageMagick_Magick++_FOUND})
 	add_subdirectory(imagemagick)
+ENDIF()
+
+IF(${OpenCV_FOUND})
+	add_subdirectory(opencv)
 ENDIF()
