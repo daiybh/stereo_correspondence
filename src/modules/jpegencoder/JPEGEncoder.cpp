@@ -175,7 +175,7 @@ yuri::size_t JPEGEncoder::dumpData()
 	if (out[0]) {
 		const std::string& str = temp_data.str();
 		pBasicFrame f = allocate_frame_from_memory(reinterpret_cast<const yuri::ubyte_t*>(str.data()), str.size());
-
+		push_video_frame(0,f,width,height,YURI_IMAGE_JPEG);
 	} else {
 		length = 0;
 	}

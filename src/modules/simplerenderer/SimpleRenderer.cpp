@@ -243,6 +243,13 @@ bool SimpleRenderer::prepare_image(yuri::uint_t index)
 		case YURI_FMT_U8:
 		case YURI_FMT_V8:
 		case YURI_FMT_DEPTH8:
+		case YURI_FMT_RED16:
+		case YURI_FMT_GREEN16:
+		case YURI_FMT_BLUE16:
+		case YURI_FMT_Y16:
+		case YURI_FMT_U16:
+		case YURI_FMT_V16:
+		case YURI_FMT_DEPTH16:
 		case YURI_FMT_DXT1:
 		//case YURI_FMT_DXT2:
 		case YURI_FMT_DXT3:

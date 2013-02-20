@@ -311,6 +311,26 @@ void GL::generate_texture(uint tid, pBasicFrame frame)
 					simple_fragment_shader);
 
 		}break;
+		case YURI_FMT_RED16:
+		case YURI_FMT_GREEN16:
+		case YURI_FMT_BLUE16:
+		case YURI_FMT_Y16:
+		case YURI_FMT_U16:
+		case YURI_FMT_V16:
+		case YURI_FMT_DEPTH16: {
+			assert(fi && fi->planes==1);
+			if (wh != textures[tid].wh) {
+				yuri::ubyte_t *image;
+				image = new yuri::ubyte_t[wh * wh*2];
+				prepare_texture(tid,0,image,wh, wh,GL_LUMINANCE16,GL_LUMINANCE,false,GL_UNSIGNED_SHORT);
+				delete[] image;
+				textures[tid].wh = wh;
+			}
+			prepare_texture(tid,0,PLANE_RAW_DATA(frame,0),w,	h,GL_LUMINANCE16,GL_LUMINANCE,true,GL_UNSIGNED_SHORT);
+			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,
+					simple_fragment_shader);
+
+		}break;
 		case YURI_FMT_DXT1:
 		case YURI_FMT_DXT1_WITH_MIPMAPS:
 //		case YURI_FMT_DXT2:
@@ -534,7 +554,8 @@ void GL::set_lq422(yuri::uint_t q)
 	log[info] << "Rendering in quality " << lq_422 <<"\n";
 }
 bool GL::prepare_texture(yuri::uint_t tid, yuri::uint_t texid, yuri::ubyte_t *data,
-		yuri::size_t w, yuri::size_t h, GLenum tex_mode, GLenum data_mode, bool update)
+		yuri::size_t w, yuri::size_t h, GLenum tex_mode, GLenum data_mode, bool update,
+		GLenum data_type)
 {
 	GLenum err;
 	glGetError();
@@ -546,9 +567,9 @@ bool GL::prepare_texture(yuri::uint_t tid, yuri::uint_t texid, yuri::ubyte_t *da
 		return false;
 	}
 	if (!update) {
-		glTexImage2D(GL_TEXTURE_2D, 0, tex_mode, w, h, 0, data_mode, GL_UNSIGNED_BYTE, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, tex_mode, w, h, 0, data_mode, data_type, 0);
 	} else {
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, data_mode, GL_UNSIGNED_BYTE, data);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, data_mode, data_type, data);
 	}
 	err = glGetError();
 	if (err) {

@@ -16,6 +16,7 @@ add_subdirectory(null)
 add_subdirectory(rawfilesource)
 add_subdirectory(split)
 add_subdirectory(dxt_compress)
+add_subdirectory(temperature)
 
 #################################################################
 # Let's check for libraries required 

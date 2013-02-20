@@ -98,7 +98,8 @@ public:
 	void enable_depth();
 	void set_lq422(yuri::uint_t q);
 	bool prepare_texture(yuri::uint_t tid, yuri::uint_t texid, yuri::ubyte_t *data,
-			yuri::size_t w, yuri::size_t h, GLenum tex_mode, GLenum data_mode, bool update);
+			yuri::size_t w, yuri::size_t h, GLenum tex_mode, GLenum data_mode, bool update,
+			GLenum data_type = GL_UNSIGNED_BYTE);
 	bool finish_frame();
 	Log log;
 	static mutex big_gpu_lock;
