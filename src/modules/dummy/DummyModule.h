@@ -15,21 +15,17 @@
 
 namespace yuri {
 namespace dummy_module {
-using yuri::log::Log;
-using yuri::config::Parameter;
-using yuri::config::Parameters;
-using yuri::io::pThreadBase;
 
 class DummyModule: public yuri::io::BasicIOThread
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<Parameters> configure();
+	static shared_ptr<config::Parameters> configure();
 	virtual ~DummyModule();
 private:
-	DummyModule(Log &log_,pThreadBase parent,Parameters &parameters);
+	DummyModule(log::Log &log_,io::pThreadBase parent,config::Parameters &parameters);
 	virtual bool step();
-	virtual bool set_param(Parameter& param);
+	virtual bool set_param(config::Parameter& param);
 	std::string dummy_name;
 };
 
