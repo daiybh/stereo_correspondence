@@ -1,0 +1,88 @@
+<?xml version="1.0" ?>
+<!-- Simple example of lib yuri function.
+     The application shows empty renderer window
+     
+     [ renderer ]
+     
+ -->
+<app name="renderer">
+<!-- Specify variables for command line substitution -->
+<variable name="width" default="800"/>
+<variable name="height" default="600"/>
+<variable name="display" default=":0"/>
+<variable name="path1" default=""/>
+<variable name="path2" default=""/>
+<variable name="fps" default="30"/>
+<variable name="format" default="r210"/>
+<variable name="w" default="1920"/>
+<variable name="h" default="1080"/>
+
+<!-- General settings -->
+<general>
+<!-- Unlimited run time -->
+  <parameter name="run_limit">-1</parameter>
+<!-- Moderate debug informations -->
+  <parameter name="debug">0</parameter>
+</general>
+
+<!-- Units -->
+<node class="raw_filesource" name="source1">
+        <parameter name="chunk">0</parameter>
+        <parameter name="loop">0</parameter>
+        <parameter name="output_format">@format</parameter>
+        <parameter name="path">@path1</parameter>
+        <parameter name="fps">@fps</parameter>
+        <parameter name="width">@w</parameter>
+        <parameter name="height">@h</parameter>
+</node>
+<node class="raw_filesource" name="source2">
+        <parameter name="chunk">0</parameter>
+        <parameter name="loop">0</parameter>
+        <parameter name="output_format">@format</parameter>
+        <parameter name="path">@path2</parameter>
+        <parameter name="fps">@fps</parameter>
+        <parameter name="width">@w</parameter>
+        <parameter name="height">@h</parameter>
+</node>
+
+<node class="yuri_convert" name="conv1">
+    <parameter name="debug">2</parameter>
+        <parameter name="format">RGB</parameter>
+</node>
+<node class="yuri_convert" name="conv2">
+    <parameter name="debug">2</parameter>
+        <parameter name="format">RGB</parameter>
+</node>
+<node class="diff" name="diff"/>
+
+<!-- And finally simple rendering window -->
+<node class="simple_renderer" name="renderer">
+        <parameter name="display">@display</parameter>
+        <parameter name="width">@width</parameter>
+        <parameter name="height">@height</parameter>
+        <parameter name="cursor">0</parameter>
+        <parameter name="keep_aspect">0</parameter>
+</node>
+
+<!-- Link specifications -->
+<link name="raw_file1" source="source1:0" target="conv1:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+<link name="image1" source="conv1:0" target="diff:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+<link name="raw_file2" source="source2:0" target="conv2:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+<link name="image2" source="conv2:0" target="diff:1">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+<link name="diff" source="diff:0" target="renderer:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+</app>
