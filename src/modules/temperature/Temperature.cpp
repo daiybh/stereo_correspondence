@@ -38,23 +38,24 @@ Temperature::~Temperature()
 }
 namespace {
 inline double r(double val) {
-	return val<0.8?0.0:val<0.99?val*5.0-4.0:0.0;
+	//return val<0.8?0.0:val<0.99?val*5.0-4.0:0.0;
 	// 0 - 0.35 -> 0.0
 	// 0.35 - 0.66 -> going up (0.0 - 1.0)
 	// 0.65 - 0.9 -> 1.0
 	// 0.9 - 1.0 going down (1.0 - 0.5)
-	//return val<0.35?0.0:val<0.65?val*4.0-1.4:val<0.9?1.0:5.5-val*5.0;
+	return val<0.35?0.0:val<0.65?val*4.0-1.4:val<0.9?1.0:5.5-val*5.0;
 }
 inline double g(double val) {
 	//return (val<0.4)?0:val<0.6?val*5.0-2.0:val<0.8?4.0-5*val:0.0;
 	//return (val<0.4||val>0.8)?0.0:val*2.5-1.0;
-	return (val<0.2)?0:val<0.4?val*5.0-1.0:val<0.8?1.0:5.0-5.0*val;
+	//return (val<0.2)?0:val<0.4?val*5.0-1.0:val<0.8?1.0:5.0-5.0*val;
+
 
 	// 0.0 - 0.1 -> 0.0
 	// 0.1 - 0.35 -> going up (0.0 - 1.0)
 	// 0.35 - 0.65 -> 1.0
 	// 0.65 - 0.9 -> going down (1.0 - 0.0)
-	//return val<0.1?0.0:val<0.35?val*4.0-0.4:val<0.65?1.0:val<0.9?3.6-val*4.0:0.0;
+	return val<0.1?0.0:val<0.35?val*4.0-0.4:val<0.65?1.0:val<0.9?3.6-val*4.0:0.0;
 }
 inline double b(double val) {
 	//return val>0.6?0.0:val*2.0;
@@ -64,7 +65,7 @@ inline double b(double val) {
 	// 0.1 - 0.35 -> 1.0
 	// 0.35 - 0.65 -> going down (1.0-0.0)
 	// 0.65 - 1.0 -> 0.0
-	//return val<0.1?val*5.0+0.5:val<0.35?1.0:val<0.65?(6.5)/3.0-(10.0/3.0)*val:0.0;
+	return val<0.1?val*5.0+0.5:val<0.35?1.0:val<0.65?(6.5)/3.0-(10.0/3.0)*val:0.0;
 }
 template<typename T>
 io::pBasicFrame colorize(const io::pBasicFrame& frame)
@@ -86,9 +87,12 @@ io::pBasicFrame colorize(const io::pBasicFrame& frame)
 	for (size_t i=0;i<size;++i) {
 		T& pix = *data++;
 		double val = 1.0 - static_cast<double>(pix-lower_bound)/(upper_bound-lower_bound);
-		*out++=static_cast<ubyte_t>(255*r(val));
-		*out++=static_cast<ubyte_t>(255*g(val));
-		*out++=static_cast<ubyte_t>(255*b(val));
+		if (val==1.0) {*out++=0;*out++=0;*out++=0;}
+		else {
+			*out++=static_cast<ubyte_t>(255*r(val));
+			*out++=static_cast<ubyte_t>(255*g(val));
+			*out++=static_cast<ubyte_t>(255*b(val));
+		}
 	}
 	return output;
 }
