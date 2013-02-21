@@ -60,10 +60,7 @@ max_sensors(1)
 			}
 			log[log::debug] << "Device opened successfully\n";
 
-//			if (dev->setImageRegistrationMode(enable_registration?openni::IMAGE_REGISTRATION_DEPTH_TO_COLOR:openni::IMAGE_REGISTRATION_OFF)
-//					!=openni::STATUS_OK) {
-//				log[log::warning] << "Failed to " << (enable_registration?"enable":"disable") << " color-depth registration\n";
-//			}
+
 			if (dev->setDepthColorSyncEnabled(enable_sync)!=openni::STATUS_OK) {
 				log[log::warning] << "Failed to " << (enable_sync?"enable":"disable") << " color-depth sync\n";
 			}
@@ -71,6 +68,14 @@ max_sensors(1)
 			if (enable_depth) if (enable_sensor(dev,openni::SENSOR_DEPTH)) found_streams++;
 			if (enable_ir) if (enable_sensor(dev,openni::SENSOR_IR)) found_streams++;
 			if (enable_color) if (enable_sensor(dev,openni::SENSOR_COLOR)) found_streams++;
+			if (enable_depth && enable_color) {
+				log[log::debug] << "Registration to color supported: " << dev->isImageRegistrationModeSupported(openni::IMAGE_REGISTRATION_DEPTH_TO_COLOR)<<
+						", want: " << enable_registration << "\n";
+				if (dev->setImageRegistrationMode(enable_registration?openni::IMAGE_REGISTRATION_DEPTH_TO_COLOR:openni::IMAGE_REGISTRATION_OFF)
+						!=openni::STATUS_OK) {
+					log[log::warning] << "Failed to " << (enable_registration?"enable":"disable") << " color-depth registration\n";
+				}
+			}
 			if (found_streams>0) {
 				log[log::debug] << "Storing device\n";
 				devices.push_back(dev);
