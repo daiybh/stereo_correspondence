@@ -50,6 +50,7 @@ using boost::iequals;
 template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_YUV422,YURI_FMT_V210_MVTP,false>(shared_ptr<BasicFrame> frame);
 template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V210_MVTP,false>(shared_ptr<BasicFrame> frame);
 template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI_FMT_YUV422,false>(shared_ptr<BasicFrame> frame);
+template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_R210,YURI_FMT_RGB24,false>(shared_ptr<BasicFrame> frame);
 #ifdef YURI_HAVE_LIBMVTP
 template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210,YURI_FMT_V210_MVTP,false>(shared_ptr<BasicFrame> frame);
 template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI_FMT_V210,false>(shared_ptr<BasicFrame> frame);
@@ -66,6 +67,7 @@ YuriConvertor::converters
 		(std::make_pair(YURI_FMT_YUV422,	YURI_FMT_V210_MVTP),&YuriConvertor::convert<YURI_FMT_YUV422, 	YURI_FMT_V210_MVTP,	false>)
 		(std::make_pair(YURI_FMT_RGB,		YURI_FMT_V210_MVTP),&YuriConvertor::convert<YURI_FMT_RGB, 		YURI_FMT_V210_MVTP,	false>)
 		(std::make_pair(YURI_FMT_V210_MVTP, YURI_FMT_YUV422),	&YuriConvertor::convert<YURI_FMT_V210_MVTP,	YURI_FMT_YUV422,	false>)
+		(std::make_pair(YURI_FMT_R210, 		YURI_FMT_RGB24),	&YuriConvertor::convert<YURI_FMT_R210,		YURI_FMT_RGB24,	false>)
 #endif
 #ifdef YURI_HAVE_LIBMVTP
 		(std::make_pair(YURI_FMT_V210, 		YURI_FMT_V210_MVTP),&YuriConvertor::convert<YURI_FMT_V210,		YURI_FMT_V210_MVTP,	false>)
@@ -133,7 +135,11 @@ bool YuriConvertor::step()
 #endif
 	if (converters.count(conv_pair)) converter = converters[conv_pair];
 	if (converter) outframe= (this->*converter)(frame);
-	else return true;
+	else {
+		log[debug] << "Unknown format combination " << BasicPipe::get_format_string(frame->get_format()) << " -> "
+				<< BasicPipe::get_format_string(format) << "\n";
+		return true;
+	}
 	if (outframe) {
 		outframe->set_info(frame->get_info());
 		push_video_frame (0,outframe,format, frame->get_width(), frame->get_height(),frame->get_pts(),frame->get_duration(),frame->get_dts());
@@ -553,6 +559,33 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI
 	}
 	return output;
 }
+namespace {
+#define R210_R(x) (((((x)&0x0000003F)<<4) | (((x)&0x0000F000)>>12)))
+#define R210_G(x) (((((x)&0x00000F00)>>2) | (((x)&0x00FC0000)>>18)))
+#define R210_B(x) (((((x)&0x00030000)>>8) | (((x)&0xFF000000)>>24)))
+}
+template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_R210,YURI_FMT_RGB24,false>(shared_ptr<BasicFrame> frame)
+{
+	shared_ptr<BasicFrame> output;
+	yuri::size_t w = frame->get_width();
+	yuri::size_t h = frame->get_height();
+	yuri::size_t pixels= w*h;
+	output=allocate_empty_frame(YURI_FMT_RGB24,w,h,true);
+	yuri::uint_t *src = reinterpret_cast<uint_t*>(PLANE_RAW_DATA(frame,0));
+	yuri::ubyte_t *dest= PLANE_RAW_DATA(output,0);
+	yuri::uint_t *src_max = src+w*h;
+	yuri::ubyte_t *dest_max= dest+w*h*3;
+	log[debug] << "Converting " << pixels << " pixels\n";
+	while(pixels--) {
+		if (dest>dest_max || src>src_max) break;
+		*dest++=(R210_R(*src)>>2)&0xFF;
+		*dest++=(R210_G(*src)>>2)&0xFF;
+		*dest++=(R210_B(*src)>>2)&0xFF;
+		src++;
+	}
+	return output;
+}
+
 bool YuriConvertor::set_param(Parameter &p)
 {
 	if (iequals(p.name,"colorimetry")) {
