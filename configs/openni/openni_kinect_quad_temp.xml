@@ -1,0 +1,119 @@
+<?xml version="1.0" ?>
+<!-- Simple example of lib yuri function.
+     The application shows empty temp window
+     
+     [ temp ]
+     
+ -->
+<app name="temp">
+<!-- Specify variables for command line substitution -->
+<variable name="width" default="800"/>
+<variable name="height" default="600"/>
+<variable name="display" default=":0"/>
+
+
+<variable name="depth" default="1"/>
+<variable name="ir" default="0"/>
+<variable name="color" default="0"/>
+<variable name="sensors" default="1"/>
+<variable name="sync" default="1"/>
+<variable name="register" default="0"/>
+
+<!-- General settings -->
+<general>
+<!-- Unlimited run time -->
+  <parameter name="run_limit">-1</parameter>
+<!-- Moderate debug informations -->
+  <parameter name="debug">0</parameter>
+</general>
+
+<!-- Units -->
+<node class="openni_kinect" name="source">
+         <parameter name="debug">1</parameter>
+        <parameter name="enable_depth">@depth</parameter>
+        <parameter name="enable_ir">@ir</parameter>
+        <parameter name="enable_color">@color</parameter>
+        <parameter name="sensors">@sensors</parameter>
+        <parameter name="enable_registration">@register</parameter>
+        <parameter name="enable_sync">@sync</parameter>
+</node>
+
+<node class="temperature" name="temp0"/>
+<node class="temperature" name="temp1"/>
+<node class="temperature" name="temp2"/>
+<node class="temperature" name="temp3"/>
+
+<node class="simple_renderer" name="renderer0">
+        <parameter name="display">@display</parameter>
+        <parameter name="width">@width</parameter>
+        <parameter name="height">@height</parameter>
+        <parameter name="x">0</parameter>
+        <parameter name="y">0</parameter>
+        <parameter name="cursor">0</parameter>
+        <parameter name="keep_aspect">0</parameter>
+</node>
+<node class="simple_renderer" name="renderer1">
+        <parameter name="display">@display</parameter>
+        <parameter name="width">@width</parameter>
+        <parameter name="height">@height</parameter>
+        <parameter name="x">@width</parameter>
+        <parameter name="y">0</parameter>
+        <parameter name="cursor">0</parameter>
+        <parameter name="keep_aspect">0</parameter>
+</node>
+<node class="simple_renderer" name="renderer2">
+        <parameter name="display">@display</parameter>
+        <parameter name="width">@width</parameter>
+        <parameter name="height">@height</parameter>
+        <parameter name="x">0</parameter>
+        <parameter name="y">@height</parameter>
+        <parameter name="cursor">0</parameter>
+        <parameter name="keep_aspect">0</parameter>
+</node>
+<node class="simple_renderer" name="renderer3">
+        <parameter name="display">@display</parameter>
+        <parameter name="width">@width</parameter>
+        <parameter name="height">@height</parameter>
+        <parameter name="x">@width</parameter>
+        <parameter name="y">@height</parameter>
+        <parameter name="cursor">0</parameter>
+        <parameter name="keep_aspect">0</parameter>
+</node>
+
+
+
+<!-- Link specifications -->
+<link name="kinect0" source="source:0" target="temp0:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+<link name="kinect1" source="source:1" target="temp1:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+<link name="kinect2" source="source:2" target="temp2:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+<link name="kinect3" source="source:3" target="temp3:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+<link name="temp0" source="temp0:0" target="renderer0:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+<link name="temp1" source="temp1:0" target="renderer1:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+<link name="temp2" source="temp2:0" target="renderer2:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+<link name="temp3" source="temp3:0" target="renderer3:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+
+</app>

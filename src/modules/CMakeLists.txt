@@ -43,6 +43,8 @@ IF(${CORE_IEEE1394})
 ENDIF()
 
 pkg_check_modules(OpenCV opencv>=2.3.0)
+find_package(OPENNI2)
+
 #################################################################
 # Add optional modules based on results of the detection
 #################################################################
@@ -107,4 +109,8 @@ ENDIF()
 
 IF(${OpenCV_FOUND})
 	add_subdirectory(opencv)
+ENDIF()
+
+IF(${OPENNI2_FOUND})
+	add_subdirectory(openni)
 ENDIF()
