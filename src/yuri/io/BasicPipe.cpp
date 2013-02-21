@@ -96,6 +96,9 @@ std::map<yuri::format_t, const FormatInfo_t> BasicPipe::formats=map_list_of<yuri
 		(YURI_FMT_YUV420_PLANAR,FormatInfo::raw_format("YUV Planar (YUYV) 4:2:0 12bit", list_of<std::string>("YUV420P"), false, 12, list_of(8)(8)(8),list_of("Y")("U")("V"),list_of(1)(2)(2),list_of(1)(2)(2)))
 		(YURI_FMT_YUV422_PLANAR,FormatInfo::raw_format("YUV Planar (YUYV) 4:2:2 16bit", list_of<std::string>("YUV422P"), false, 16, list_of(8)(8)(8),list_of("Y")("U")("V"),list_of(1)(2)(2),list_of(1)(1)(1)))
 		(YURI_FMT_YUV444_PLANAR,FormatInfo::raw_format("YUV Planar (YUYV) 4:4:4 24bit", list_of<std::string>("YUV444P"), false, 16, list_of(8)(8)(8),list_of("Y")("U")("V"),list_of(1)(1)(1),list_of(1)(1)(1)))
+		//////////////////      10bit formats        //////////////////
+		(YURI_FMT_V210, 		FormatInfo::raw_format("V210 20bit", list_of<std::string>("v210"), false, 20, list_of(10)(10)(10),list_of("YUYV"),list_of(1),list_of(1)))
+		(YURI_FMT_R210, 		FormatInfo::raw_format("R210 20bit", list_of<std::string>("r210"), false, 32, list_of(10)(10)(10),list_of("RGB"),list_of(1),list_of(1)))
 		////////////////// Compressed raw formats (no header) //////////////////
 		(YURI_FMT_DXT1, 		FormatInfo::raw_format("DXT1", list_of<std::string>("dxt1")("bc1"), true, 4))
 		(YURI_FMT_DXT2, 		FormatInfo::raw_format("DXT2", list_of<std::string>("dxt2")("bc2"), true, 8))
@@ -112,7 +115,6 @@ std::map<yuri::format_t, const FormatInfo_t> BasicPipe::formats=map_list_of<yuri
 		(YURI_FMT_DXT5_WITH_MIPMAPS,FormatInfo::raw_format("DXT5 with mipmaps", list_of<std::string>("dxt5t"), true, 8))
 
 		////////////////// Custom formats //////////////////
-		(YURI_FMT_V210, 		FormatInfo::raw_format("V210 20bit", list_of<std::string>("v210"), true, 20, list_of(10)(10)(10)))
 		(YURI_FMT_V210_MVTP, 	FormatInfo::raw_format("V210 20bit (MVTP ordering)", list_of<std::string>("mvtp_v210")("v210mvtp"), true, 20, list_of(10)(10)(10)))
 		(YURI_FMT_MVTP_FULL_FRAME,	FormatInfo::raw_format("MVTP Fullframe", list_of<std::string>("mvtp_full"), true, 20, list_of(10)(10)(10)))
 		(YURI_FMT_MVTP_AUX_DATA,FormatInfo::raw_format("MVTP Auxdata", list_of<std::string>("mvtp_aux"), true, 20, list_of(10)(10)(10)))

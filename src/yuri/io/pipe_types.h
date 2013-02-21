@@ -158,8 +158,9 @@ std::string long_name;
 #define YURI_FMT_DXT5_WITH_MIPMAPS						YURI_FMT + 40
 #define YURI_FMT_MVTP_FULL_FRAME						YURI_FMT + 41
 #define YURI_FMT_MVTP_AUX_DATA							YURI_FMT + 42
+#define YURI_FMT_R210									YURI_FMT + 43
 
-#define YURI_FMT_MAX									YURI_FMT_MVTP_AUX_DATA
+#define YURI_FMT_MAX									YURI_FMT_R210
 
 #define YURI_IMAGE										0x1000
 #define YURI_IMAGE_JPEG									YURI_IMAGE + 1
