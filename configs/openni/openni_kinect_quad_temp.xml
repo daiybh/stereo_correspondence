@@ -29,7 +29,7 @@
 
 <!-- Units -->
 <node class="openni_kinect" name="source">
-         <parameter name="debug">0</parameter>
+         <parameter name="debug">1</parameter>
         <parameter name="enable_depth">@depth</parameter>
         <parameter name="enable_ir">@ir</parameter>
         <parameter name="enable_color">@color</parameter>

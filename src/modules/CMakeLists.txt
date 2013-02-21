@@ -41,7 +41,7 @@ ENDIF()
 IF(${CORE_IEEE1394})
 	pkg_check_modules(ieee1394 libiec61883)
 ENDIF()
-
+find_package(OPENNI2)
 #################################################################
 # Add optional modules based on results of the detection
 #################################################################
@@ -104,8 +104,7 @@ IF(${ImageMagick_Magick++_FOUND})
 	add_subdirectory(imagemagick)
 ENDIF()
 
-SET (OpenNI_INCLUDE_DIRS /usr/local/include/ni )
-SET (OpenNI_LIBRARIES OpenNI2)
-SET (OpenNI_LIBRARY_DIRECTORIES /usr/local/lib/)
-add_subdirectory(openni)
+IF(${OPENNI2_FOUND})
+	add_subdirectory(openni)
+ENDIF()
 
