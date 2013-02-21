@@ -209,24 +209,31 @@ bool GLXWindow::create()
 
 	return true;
 }
+namespace {
+typedef struct
+{
+    unsigned long   flags;
+    unsigned long   functions;
+    unsigned long   decorations;
+    long            input_mode;
+    unsigned long   status;
+} wm_hints;
+}
 void GLXWindow::setHideDecoration(bool value)
 {
 	if (value) {
-#ifdef YURI_HAVE_MOTIF
-		MotifWmHints hints;
+
+		wm_hints hints;
 		Atom mh = None;
 		mh=XInternAtom(display.get(),"_MOTIF_WM_HINTS",0);
-		hints.flags = MWM_HINTS_DECORATIONS;
+		hints.flags = 2;//MWM_HINTS_DECORATIONS;
 		hints.decorations = 0;
 		hints.functions = 0;
 		hints.input_mode = 0;
 		hints.status = 0;
 		int r = XChangeProperty(display.get(), win,mh, mh, 32,PropModeReplace,
-				(unsigned char *) &hints, 4);
+				(unsigned char *) &hints, 5);
 		log[info] << "XChangeProperty returned " << r << std::endl;
-#else
-		log[debug] << "For hiding WM decoration recompile with USE_XM_H" << std::endl;
-#endif
 	}
 
 }
