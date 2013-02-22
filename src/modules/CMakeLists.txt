@@ -110,6 +110,7 @@ ENDIF()
 
 IF(${OpenCV_FOUND})
 	add_subdirectory(opencv)
+	add_subdirectory(opencv_calib)
 ENDIF()
 
 IF(${OPENNI2_FOUND})
