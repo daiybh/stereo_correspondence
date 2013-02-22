@@ -79,7 +79,7 @@ bool Cuda::lock_mem(void *mem, yuri::size_t size)
 	if ((err=cudaHostRegister(mem,size,cudaHostRegisterPortable))==cudaSuccess) {
 		return true;
 	}
-	log[error] << "Failed to lock memory: "<< cudaGetErrorString(err) << std::endl;
+	log[log::error] << "Failed to lock memory: "<< cudaGetErrorString(err) << std::endl;
 	return false;
 }
 bool Cuda::unlock_mem(void *mem, yuri::size_t /*size*/)
@@ -88,19 +88,19 @@ bool Cuda::unlock_mem(void *mem, yuri::size_t /*size*/)
 	if ((err=cudaHostUnregister(mem))==cudaSuccess) {
 		return true;
 	}
-	log[error] << "Failed to unlock memory: "<< cudaGetErrorString(err) << std::endl;
+	log[log::error] << "Failed to unlock memory: "<< cudaGetErrorString(err) << std::endl;
 	return false;
 }
 void *Cuda::map_mem(void *mem, yuri::size_t size)
 {
 	cudaError_t err;
 	if ((err=cudaHostRegister(mem,size,cudaHostRegisterMapped|cudaHostRegisterPortable))!=cudaSuccess) {
-		log[error] << "Failed to lock memory: "<< cudaGetErrorString(err) << std::endl;
+		log[log::error] << "Failed to lock memory: "<< cudaGetErrorString(err) << std::endl;
 		return 0;
 	}
 	void *ptr;
 	if ((err=cudaHostGetDevicePointer(&ptr,mem,0))!=cudaSuccess) {
-		log[error] << "Failed to get device pointer: "<< cudaGetErrorString(err) << std::endl;
+		log[log::error] << "Failed to get device pointer: "<< cudaGetErrorString(err) << std::endl;
 		unmap_mem(mem);
 		return 0;
 	}
@@ -122,16 +122,16 @@ bool Cuda::set_device(yuri::uint_t id)
 	boost::mutex::scoped_lock l(GL::big_gpu_lock);
 #endif
 	if ((err=cudaSetDeviceFlags(cudaDeviceMapHost)) != cudaSuccess) {
-		log[warning] << "Failed to set flags for device:"<<cudaGetErrorString(err) << std::endl;
+		log[log::warning] << "Failed to set flags for device:"<<cudaGetErrorString(err) << std::endl;
 		return true;
 	}
 
 	if ((err=cudaGLSetGLDevice(id)) == cudaSuccess) {
-		log[info] << "Successfully set device: " <<  id << std::endl;
+		log[log::info] << "Successfully set device: " <<  id << std::endl;
 		cudaDeviceReset();
 		return true;
 	}
-	log[error] << "Failed to set device " << id << ": " << cudaGetErrorString(err) << std::endl;
+	log[log::error] << "Failed to set device " << id << ": " << cudaGetErrorString(err) << std::endl;
 	return false;
 }
 #ifdef YURI_HAVE_X11
@@ -153,13 +153,13 @@ bool Cuda::register_texture(GL &gl, yuri::uint_t tid)
 	assert(tex!=(GLuint)-1);
 	//cudaGraphicsResource *res;
 	cudaError_t err;
-	log[info] << "Registering texture " << tex << " (" << tid << ")" << std::endl;
+	log[log::info] << "Registering texture " << tex << " (" << tid << ")" << std::endl;
 	if ((err=cudaGraphicsGLRegisterImage(&textures[tid].resource, tex,GL_TEXTURE_2D, cudaGraphicsMapFlagsWriteDiscard))
 			== cudaSuccess) {
 		//textures[tid].resource=res;
 		return true;
 	}
-	log[error] << "Failed to register gl texture "  <<tex<<": " << cudaGetErrorString(err) << std::endl;
+	log[log::error] << "Failed to register gl texture "  <<tex<<": " << cudaGetErrorString(err) << std::endl;
 	return false;
 }
 // Mapping texture to array
@@ -168,13 +168,13 @@ bool Cuda::map_texture(GL &/*gl*/, yuri::uint_t tid)
 //	cudaGraphicsResource *res=textures[tid].resource;
 	cudaError_t ret;
 	if ((ret=cudaGraphicsMapResources (1, &(textures[tid].resource),0)) != cudaSuccess) {
-		log[error] << "Failed to map GL texture to Cuda: " << cudaGetErrorString(ret) << std::endl;
+		log[log::error] << "Failed to map GL texture to Cuda: " << cudaGetErrorString(ret) << std::endl;
 		return false;
 	}
 //	void *ptr;
 //	cudaArray *array;
 	if ((ret=cudaGraphicsSubResourceGetMappedArray(&textures[tid].array, textures[tid].resource, 0, 0)) != cudaSuccess) {
-		log[error] << "Failed to get array for GL texture: " << cudaGetErrorString(ret) << std::endl;
+		log[log::error] << "Failed to get array for GL texture: " << cudaGetErrorString(ret) << std::endl;
 		return false;
 	}
 	//textures[tid].array = array;
@@ -186,7 +186,7 @@ bool Cuda::unmap_texture(GL &/*gl*/, yuri::uint_t tid)
 	cudaError_t err;
 	textures[tid].array = 0;
 	if ((err=cudaGraphicsUnmapResources (1, &textures[tid].resource,0)) != cudaSuccess) {
-		log[error] << "Failed to map GL texture to Cuda: " << cudaGetErrorString(err) << std::endl;
+		log[log::error] << "Failed to map GL texture to Cuda: " << cudaGetErrorString(err) << std::endl;
 		return false;
 	}
 	return true;
@@ -199,11 +199,11 @@ bool Cuda::copy_to_texture(GL &gl, yuri::uint_t tid, shared_ptr<void> src, yuri:
 	cudaError_t err;
 	assert(textures[tid].array);
 	if ((err=cudaMemcpyToArray(textures[tid].array,0,0,src.get(),size,cudaMemcpyDeviceToDevice)) != cudaSuccess) {
-		log[error] << "Failed to copy "<< size << "B to GL texture: " << cudaGetErrorString(err) << std::endl;
+		log[log::error] << "Failed to copy "<< size << "B to GL texture: " << cudaGetErrorString(err) << std::endl;
 		unmap_texture(gl,tid);
 		return false;
 	}
-	log[info] << "Copied " << size << "B to texture " << tid << std::endl;
+	log[log::info] << "Copied " << size << "B to texture " << tid << std::endl;
 	unmap_texture(gl,tid);
 	return true;
 }

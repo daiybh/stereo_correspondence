@@ -9,23 +9,23 @@
  */
 
 #include "PNGEncoder.h"
-
+#include "yuri/core/Module.h"
 namespace yuri {
 
-namespace io {
+namespace png {
 
 REGISTER("pngencoder",PNGEncoder)
 
 IO_THREAD_GENERATOR(PNGEncoder)
 
-shared_ptr<Parameters> PNGEncoder::configure()
+core::pParameters PNGEncoder::configure()
 {
-	shared_ptr<Parameters> p = BasicIOThread::configure();
+	core::pParameters p = BasicIOThread::configure();
 	return p;
 }
 
-PNGEncoder::PNGEncoder(Log &_log, pThreadBase parent, Parameters& parameters) IO_THREAD_CONSTRUCTOR:
-	BasicIOThread(_log, parent, 1, 1,"PNGEncoder"), memSize(0)
+PNGEncoder::PNGEncoder(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters) IO_THREAD_CONSTRUCTOR:
+	core::BasicIOThread(_log, parent, 1, 1,"PNGEncoder"), memSize(0)
 {
 	IO_THREAD_INIT("PNGEncoder")
 }
@@ -41,7 +41,7 @@ bool PNGEncoder::step() {
 	int pngcolortype = 0;
 	if (!in[0] || !(frame = in[0]->pop_frame()))
 		return true;
-	log[verbose_debug] << "Reading packet " << frame->get_size() << " bytes long" << std::endl;
+	log[log::verbose_debug] << "Reading packet " << frame->get_size() << " bytes long" << std::endl;
 	int bpp = 0;
 	int width = frame->get_width();
 	int height = frame->get_height();
@@ -61,13 +61,13 @@ bool PNGEncoder::step() {
 		break;
 	}
 	if (!bpp) {
-		log[error] << "Unknown BPP (colorspace: " << colorspace
+		log[log::error] << "Unknown BPP (colorspace: " << colorspace
 				<< ", not processing" << std::endl;
 		frame.reset();
 		return true;
 	}
 	if (static_cast<yuri::size_t>(bpp * width * height) != frame->get_size()) {
-		log[error] << "Wrong frame size!! (got:" << frame->get_size()
+		log[log::error] << "Wrong frame size!! (got:" << frame->get_size()
 				<< ", expected: " << bpp * width * height << ")" << std::endl;
 		frame.reset();
 		return true;
@@ -76,13 +76,13 @@ bool PNGEncoder::step() {
 			boost::posix_time::microsec_clock::universal_time());
 	pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 	if (!pngPtr) {
-		log[error] << "ERROR: Couldn't initialize png read struct" << std::endl;
+		log[log::error] << "ERROR: Couldn't initialize png read struct" << std::endl;
 		frame.reset();
 		return true;
 	}
 	infoPtr = png_create_info_struct(pngPtr);
 	if (!infoPtr) {
-		log[error] << "ERROR: Couldn't initialize png info struct" << std::endl;
+		log[log::error] << "ERROR: Couldn't initialize png info struct" << std::endl;
 		png_destroy_write_struct(&pngPtr, (png_infopp) 0);
 		frame.reset();
 		return true;
@@ -111,10 +111,10 @@ bool PNGEncoder::step() {
 	boost::posix_time::ptime t2(
 			boost::posix_time::microsec_clock::universal_time());
 	boost::posix_time::time_period tp(t1, t2);
-	log[debug] << "Compression took: " << tp.length().total_microseconds()
+	log[log::debug] << "Compression took: " << tp.length().total_microseconds()
 			<< " us" << std::endl;
 	if (position || out[0]) {
-		pBasicFrame out_frame = allocate_frame_from_memory(memory.get(),position);
+		core::pBasicFrame out_frame = allocate_frame_from_memory(memory.get(),position);
 		push_video_frame(0,out_frame,YURI_IMAGE_PNG,frame->get_width(),frame->get_height());
 	}
 	return true;
@@ -137,11 +137,11 @@ void PNGEncoder::writeData(png_bytep data, png_size_t length) {
 
 void PNGEncoder::handleError(png_structp pngPtr, png_const_charp error_msg) {
 	PNGEncoder *png = (PNGEncoder*) png_get_io_ptr(pngPtr);
-	png->printError(error, error_msg);
+	png->printError(log::error, error_msg);
 }
 void PNGEncoder::handleWarning(png_structp pngPtr, png_const_charp error_msg) {
 	PNGEncoder *png = (PNGEncoder*) png_get_io_ptr(pngPtr);
-	png->printError(warning, error_msg);
+	png->printError(log::warning, error_msg);
 }
 void PNGEncoder::printError(int type, const char * msg) {
 	log[(yuri::log::debug_flags) type] << msg << std::endl;

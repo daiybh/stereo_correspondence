@@ -11,6 +11,7 @@
 #include "Log.h"
 #include <map>
 #include <boost/assign.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 namespace yuri
 {
 namespace log

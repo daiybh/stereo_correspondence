@@ -9,7 +9,8 @@
  */
 
 #include "DummyModule.h"
-#include "yuri/config/RegisteredClass.h"
+#include "yuri/core/Module.h"
+
 namespace yuri {
 namespace dummy_module {
 
@@ -20,9 +21,9 @@ IO_THREAD_GENERATOR(DummyModule)
 // So we can write log[info] instead of log[log::info]
 using namespace yuri::log;
 
-shared_ptr<config::Parameters> DummyModule::configure()
+core::pParameters DummyModule::configure()
 {
-	shared_ptr<config::Parameters> p = io::BasicIOThread::configure();
+	core::pParameters p = core::BasicIOThread::configure();
 	p->set_description("Dummy module. For testing only.");
 	(*p)["size"]["Set size of ....  (ignored ;)"]=666;
 	(*p)["name"]["Set name"]=std::string("");
@@ -31,8 +32,8 @@ shared_ptr<config::Parameters> DummyModule::configure()
 }
 
 
-DummyModule::DummyModule(log::Log &log_,io::pThreadBase parent,config::Parameters &parameters):
-io::BasicIOThread(log_,parent,1,1,std::string("dummy"))
+DummyModule::DummyModule(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
+core::BasicIOThread(log_,parent,1,1,std::string("dummy"))
 {
 	IO_THREAD_INIT("Dummy")
 	if (!dummy_name.empty()) log[info] << "Got name " << dummy_name <<"\n";
@@ -44,20 +45,20 @@ DummyModule::~DummyModule()
 
 bool DummyModule::step()
 {
-	io::pBasicFrame frame = in[0]->pop_frame();
+	core::pBasicFrame frame = in[0]->pop_frame();
 	if (frame) {
 		yuri::format_t fmt = frame->get_format();
-		if (io::BasicPipe::get_format_group(fmt)==YURI_TYPE_VIDEO) {
+		if (core::BasicPipe::get_format_group(fmt)==YURI_TYPE_VIDEO) {
 			push_raw_video_frame(0, frame);
 		}
 	}
 	return true;
 }
-bool DummyModule::set_param(config::Parameter& param)
+bool DummyModule::set_param(const core::Parameter& param)
 {
 	if (param.name == "name") {
 		dummy_name = param.get<std::string>();
-	} else return io::BasicIOThread::set_param(param);
+	} else return core::BasicIOThread::set_param(param);
 	return true;
 }
 

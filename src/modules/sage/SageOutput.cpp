@@ -9,7 +9,7 @@
  */
 
 #include "SageOutput.h"
-#include "yuri/config/RegisteredClass.h"
+#include "yuri/core/Module.h"
 namespace yuri {
 namespace sage {
 
@@ -17,18 +17,18 @@ REGISTER("sage_output",SageOutput)
 
 IO_THREAD_GENERATOR(SageOutput)
 
-shared_ptr<yuri::config::Parameters> SageOutput::configure()
+core::pParameters SageOutput::configure()
 {
-	shared_ptr<yuri::config::Parameters> p = BasicIOThread::configure();
+	core::pParameters p = BasicIOThread::configure();
 
-	(*p)["address"]["SAGE address"]=string("127.0.0.1");
+	(*p)["address"]["SAGE address"]=std::string("127.0.0.1");
 	(*p)["width"]["Image width"]=800;
 	(*p)["height"]["Image height"]=600;
 	return p;
 }
 
 
-SageOutput::SageOutput(yuri::log::Log &log_,yuri::io::pThreadBase parent,yuri::config::Parameters &parameters)
+SageOutput::SageOutput(yuri::log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters)
 :BasicIOThread(log_,parent,1,0,"SageOutput"),sail_info(0),width(800),height(600),
  fmt(YURI_FMT_YUV422),sage_fmt(PIXFMT_YUV),sage_address("127.0.0.1")
 {
@@ -55,10 +55,10 @@ bool SageOutput::step()
 {
 	processMessages(sail_info,0,0);
 	if (!in[0]) return true;
-	shared_ptr<yuri::io::BasicFrame> frame = in[0]->pop_latest();
+	core::pBasicFrame frame = in[0]->pop_latest();
 	if (!frame) return true;
 	if (frame->get_format() != fmt) return true;
-	const yuri::FormatInfo_t finfo = yuri::io::BasicPipe::get_format_info(fmt);
+	const yuri::FormatInfo_t finfo = core::BasicPipe::get_format_info(fmt);
 	const yuri::size_t sage_line_width = finfo->bpp*width/8;
 	const yuri::size_t input_line_width = finfo->bpp*frame->get_width()/8;
 	const yuri::size_t copy_width = std::min(sage_line_width, input_line_width);
@@ -79,7 +79,7 @@ bool SageOutput::step()
 	return true;
 }
 
-bool SageOutput::set_param(yuri::config::Parameter &parameter)
+bool SageOutput::set_param(const core::Parameter &parameter)
 {
 	if (parameter.name == "address")
 		sage_address=parameter.get<std::string>();

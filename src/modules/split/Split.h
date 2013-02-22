@@ -11,23 +11,19 @@
 #ifndef SPLIT_H_
 #define SPLIT_H_
 
-#include "yuri/io/BasicIOThread.h"
-#include "yuri/config/RegisteredClass.h"
-
+#include "yuri/core/BasicIOThread.h"
 
 namespace yuri {
 
-namespace io {
+namespace split {
 
-using namespace yuri::config;
-
-class Split: public BasicIOThread {
+class Split: public core::BasicIOThread
+{
 public:
-	Split(Log &_log, pThreadBase parent, Parameters &params);
+	Split(log::Log &_log, core::pwThreadBase parent,core::Parameters &params);
 	virtual ~Split();
-	static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,
-			Parameters& parameters) throw (Exception);
-	static shared_ptr<Parameters> configure();
+	IO_THREAD_GENERATOR_DECLARATION
+	static core::pParameters configure();
 protected:
 	virtual bool step();
 };

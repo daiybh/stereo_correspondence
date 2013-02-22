@@ -9,6 +9,7 @@
  */
 
 #include "AVEncoder.h"
+#include "yuri/core/Module.h"
 extern "C" {
 #include "libavutil/pixdesc.h"
 }
@@ -24,9 +25,9 @@ REGISTER("avencoder",AVEncoder)
 
 IO_THREAD_GENERATOR(AVEncoder)
 
-shared_ptr<Parameters> AVEncoder::configure()
+core::pParameters AVEncoder::configure()
 {
-	shared_ptr<Parameters> p(new Parameters());
+	core::pParameters p(new core::Parameters());
 	(*p)["codec"]="";
 	(*p)["width"]=640;
 	(*p)["height"]=480;
@@ -48,14 +49,14 @@ shared_ptr<Parameters> AVEncoder::configure()
 	return p;
 }
 
-AVEncoder::AVEncoder(Log &_log, pThreadBase parent, Parameters &parameters) IO_THREAD_CONSTRUCTOR:
+AVEncoder::AVEncoder(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
 		AVCodecBase(_log,parent,"Encoder"),buffer_size(1048576)
 {
 	IO_THREAD_INIT("AVEncoder")
-	if (codec_id == CODEC_ID_NONE) throw InitializationFailed(std::string("Unknown/unsupported codec"));
+	if (codec_id == CODEC_ID_NONE) throw exception::InitializationFailed(std::string("Unknown/unsupported codec"));
 	buffer.reset(new uint8_t[buffer_size]);
 	if (!init_encoder())
-		throw InitializationFailed(std::string("Failed to init encoder"));
+		throw exception::InitializationFailed(std::string("Failed to init encoder"));
 }
 
 AVEncoder::~AVEncoder()
@@ -65,34 +66,34 @@ AVEncoder::~AVEncoder()
 bool AVEncoder::init_encoder()
 {
 	//this->codec_id=codec_id;
-	//log[debug]<<"Looking for encoder" << std::endl;
+	//log[log::debug]<<"Looking for encoder" << std::endl;
 	if (!find_encoder()) return false;
 	//this->width = width;
 	//this->height = height;
-	//log[debug]<<"Encoder found" << std::endl;
-	if (c) log[debug]<<"Codec found\n";
-	if (cc) log[debug]<<"We also have codec context" << "\n";
+	//log[log::debug]<<"Encoder found" << std::endl;
+	if (c) log[log::debug]<<"Codec found\n";
+	if (cc) log[log::debug]<<"We also have codec context" << "\n";
 	//this->cc->time_base= (AVRational){1,25};
-	log[info] << "Selected encoder " << c->long_name << "\n";
+	log[log::info] << "Selected encoder " << c->long_name << "\n";
 	const PixelFormat *p = c->pix_fmts;
 	supported_formats_for_current_codec.clear();
 	yuri::format_t fmt;
 	while (*p!=PIX_FMT_NONE) {
 		fmt = yuri_pixelformat_from_av(*p);
-		log[info] << "Codec supports format " << av_get_pix_fmt_name(*p) <<
+		log[log::info] << "Codec supports format " << av_get_pix_fmt_name(*p) <<
 				(fmt==YURI_FMT_NONE?" [Not supported in libyuri]":" [OK]") << "\n";
 		if (fmt!=YURI_FMT_NONE) {
-			log[info] << "\tMaps to libyuri format " << BasicPipe::get_format_string(fmt)<<"\n";
+			log[log::info] << "\tMaps to libyuri format " << core::BasicPipe::get_format_string(fmt)<<"\n";
 			supported_formats_for_current_codec.insert(fmt);
 		}
 		(void)*p++;
 	}
 	const AVProfile *prof = c->profiles;
 	if (!prof) {
-		log[info] << "Selected codec does not support profiles" << "\n";
+		log[log::info] << "Selected codec does not support profiles" << "\n";
 	} else {
 		while (prof->profile != FF_PROFILE_UNKNOWN) {
-			log[info] << "Supported profile " << prof->profile << ": " << prof->name << "\n";
+			log[log::info] << "Supported profile " << prof->profile << ": " << prof->name << "\n";
 			prof++;
 		}
 	}
@@ -114,15 +115,15 @@ void AVEncoder::run()
 void AVEncoder::encode_frame()
 {
 	if (!c || !cc || !in[0].get() || !out[0].get()) return;
-	shared_ptr<BasicFrame> f = in[0]->pop_frame();
+	core::pBasicFrame f = in[0]->pop_frame();
 	if (!f) return;
 	assert(buffer.get());
 	if (!supported_formats_for_current_codec.count(f->get_format())) {
-		log[warning] << "Frame format " << BasicPipe::get_format_string(f->get_format()) << " not supported in actual codec" << "\n";
+		log[log::warning] << "Frame format " << core::BasicPipe::get_format_string(f->get_format()) << " not supported in actual codec" << "\n";
 		return;
 	}
 	if (current_format != f->get_format()) {
-		log[warning] << "Input format changed, trying to reinitialize codec for this format" << "\n";
+		log[log::warning] << "Input format changed, trying to reinitialize codec for this format" << "\n";
 		PixelFormat newf = av_pixelformat_from_yuri(f->get_format());
 		// VERY ugly hack
 		if (codec_id == CODEC_ID_MJPEG /*|| codec_id==CODEC_ID_H264*/) {
@@ -134,11 +135,11 @@ void AVEncoder::encode_frame()
 	}
 	frame = convert_to_avframe(f);
 	frame->pts = f->get_pts() * cc->time_base.den / cc->time_base.num;
-//	log[debug] << "Prepared frame with linesizes " << frame->linesize[0] << " and " << frame->linesize[1] << endl;
+//	log[log::debug] << "Prepared frame with linesizes " << frame->linesize[0] << " and " << frame->linesize[1] << endl;
 
 	int used=avcodec_encode_video(cc,buffer.get(),buffer_size,frame.get());
 	if (used < 0 || (yuri::size_t)used>buffer_size) {
-		log[warning] << "Encoding probably failed, used " << used << "Bytes\n";
+		log[log::warning] << "Encoding probably failed, used " << used << "Bytes\n";
 		return;
 	}
 	yuri::size_t pts, dts, duration;
@@ -146,11 +147,11 @@ void AVEncoder::encode_frame()
 	pts = cc->coded_frame->display_picture_number * cc->time_base.num * 1e6 / cc->time_base.den;
 	dts = cc->coded_frame->coded_picture_number * cc->time_base.num * 1e6 / cc->time_base.den;
 	duration = cc->time_base.num * 1e6 / cc->time_base.den;
-	log[verbose_debug] << "Encoded frame with pts: " << pts << ", dpn: " <<
+	log[log::verbose_debug] << "Encoded frame with pts: " << pts << ", dpn: " <<
 				cc->coded_frame->display_picture_number << ", cpn: " <<
 				cc->coded_frame->coded_picture_number << "with ratio: " <<
 				cc->time_base.num << "/" << cc->time_base.den << "\n";
-	shared_ptr<BasicFrame> out_frame = allocate_frame_from_memory(buffer.get(),used);
+	core::pBasicFrame out_frame = allocate_frame_from_memory(buffer.get(),used);
 	push_video_frame(0,out_frame,yuri_format_from_avcodec(this->codec_id),width,height,pts,duration,dts);
 }
 
@@ -184,7 +185,7 @@ std::set<yuri::format_t> AVEncoder::get_supported_output_formats()
 
 }
 
-bool AVEncoder::set_param(Parameter &param)
+bool AVEncoder::set_param(const core::Parameter &param)
 {
 	if (param.name == "buffer_size") {
 		buffer_size = param.get<yuri::size_t>();

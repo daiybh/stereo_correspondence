@@ -11,7 +11,7 @@
 #ifndef SAGEOUTPUT_H_
 #define SAGEOUTPUT_H_
 
-#include "yuri/io/BasicIOThread.h"
+#include "yuri/core/BasicIOThread.h"
 // Libsail has some warnings, let's disable them for the moment (before upstream fixes them)
 // Clang has to be first as it also defines __GNUC__
 #if defined __clang__
@@ -35,20 +35,20 @@
 namespace yuri {
 namespace sage {
 
-class SageOutput: public yuri::io::BasicIOThread {
+class SageOutput: public yuri::core::BasicIOThread {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<yuri::config::Parameters> configure();
+	static core::pParameters configure();
 	virtual ~SageOutput();
 private:
-	SageOutput(yuri::log::Log &log_,yuri::io::pThreadBase parent,yuri::config::Parameters &p);
+	SageOutput(log::Log &log_,core::pwThreadBase parent,core::Parameters &p);
 	sail *sail_info;
 	yuri::size_t width, height;
 	yuri::format_t fmt;
 	sagePixFmt sage_fmt;
 	std::string sage_address;
 
-	virtual bool set_param(yuri::config::Parameter &parameter);
+	virtual bool set_param(const core::Parameter &parameter);
 	virtual bool step();
 };
 

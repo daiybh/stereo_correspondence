@@ -10,7 +10,7 @@
 
 #ifndef VERSION_H_
 #define VERSION_H_
-#include "yuri/io/types.h"
+#include "yuri/core/platform.h"
 namespace yuri {
 	EXPORT extern const char *yuri_version;
 }

@@ -8,19 +8,16 @@
  *
  */
 
-#include <yuri/io/BasicIOThread.h>
-#include <yuri/config/Config.h>
-#include "yuri/config/RegisteredClass.h"
+#include <yuri/core/BasicIOThread.h>
 
 #ifndef ANAGLYPH_H_
 #define ANAGLYPH_H_
 
 namespace yuri {
 
-namespace io {
-using yuri::log::Log;
-using namespace yuri::config;
-class Anaglyph: public BasicIOThread {
+namespace anaglyph {
+
+class Anaglyph: public core::BasicIOThread {
 public:
 	PACK_START
 	struct _rgb {
@@ -33,13 +30,13 @@ public:
 	/// @param _log  logger
 	/// @param parent  parent thread
 	/// @param correction Correction in pixels meaning how many pixels to the right should be right image shifted
-	Anaglyph(Log &_log, pThreadBase parent, int correction = 0, bool fast = true);
+	Anaglyph(log::Log &_log, core::pwThreadBase parent, int correction = 0, bool fast = true);
 	virtual ~Anaglyph();
-	static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception);
-	static shared_ptr<Parameters> configure();
+	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
+	static core::pParameters configure();
 protected:
 	virtual bool step();
-	template<typename T> shared_ptr<BasicFrame> makeAnaglyph(const shared_ptr<BasicFrame>& left, const shared_ptr<BasicFrame>& right);
+	template<typename T> core::pBasicFrame makeAnaglyph(const core::pBasicFrame& left, const core::pBasicFrame& right);
 protected:
 	int correction;
 	bool fast;

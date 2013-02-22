@@ -10,25 +10,21 @@
 #ifndef DUMMYMODULE_H_
 #define DUMMYMODULE_H_
 
-#include "yuri/io/BasicIOThread.h"
+#include "yuri/core/BasicIOThread.h"
 
 namespace yuri {
 namespace imagemagick_module {
-using yuri::log::Log;
-using yuri::config::Parameter;
-using yuri::config::Parameters;
-using yuri::io::pThreadBase;
 
-class ImageMagickSource: public yuri::io::BasicIOThread
+class ImageMagickSource: public yuri::core::BasicIOThread
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<Parameters> configure();
+	static core::pParameters configure();
 	virtual ~ImageMagickSource();
 private:
-	ImageMagickSource(Log &log_,pThreadBase parent,Parameters &parameters);
+	ImageMagickSource(log::Log &log_,core::pwThreadBase parent,core::Parameters &parameters);
 	virtual bool step();
-	virtual bool set_param(Parameter& param);
+	virtual bool set_param(const core::Parameter& param);
 	yuri::format_t format;
 };
 

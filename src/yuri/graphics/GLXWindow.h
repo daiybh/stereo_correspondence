@@ -10,7 +10,7 @@
 
 #ifndef GLXWINDOW_H_
 #define GLXWINDOW_H_
-#include "yuri/config/Config.h"
+//#include "yuri/config/Config.h"
 #include "WindowBase.h"
 
 #include <X11/Xlib.h>
@@ -25,18 +25,10 @@
 
 //define GLXWINDOW_USING_GLOBAL_MUTEX
 
-#ifdef YURI_HAVE_MOTIF
-	#include <Xm/MwmUtil.h>
-#endif
-
-
 namespace yuri
 {
 namespace graphics
 {
-using namespace yuri::log;
-using yuri::threads::ThreadBase;
-using yuri::threads::pThreadBase;
 
 class GLXWindow: public WindowBase
 {
@@ -49,9 +41,9 @@ public:
 	static bool is_context_used(GLXContext ctx);
 
 
-	GLXWindow(Log &log_,pThreadBase parent, Parameters &p);
+	GLXWindow(log::Log &log_, core::pwThreadBase parent, core::Parameters &p);
 	virtual ~GLXWindow();
-	static shared_ptr<Parameters> configure();
+	static core::pParameters configure();
 
 	virtual bool create();
 	virtual bool create_window();
@@ -66,7 +58,7 @@ public:
 	virtual bool process_events();
 	std::string get_keyname(int key);
 	virtual bool check_key(int keysym);
-	virtual void exec(shared_ptr<yuri::config::Callback> c);
+	virtual void exec(core::pCallback c);
 	virtual bool have_stereo();
 	virtual bool set_vsync(bool state);
 protected:

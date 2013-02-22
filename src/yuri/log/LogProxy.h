@@ -10,10 +10,9 @@
 
 #ifndef LOGPROXY_H_
 #define LOGPROXY_H_
-#include "yuri/io/types.h"
+#include "yuri/core/types.h"
 #include <ostream>
 #include <sstream>
-#include <boost/thread.hpp>
 
 namespace yuri {
 namespace log {
@@ -33,14 +32,14 @@ struct guarded_stream {
 	 * @param msg	String to write
 	 */
 	void write(const string_t msg) {
-		boost::mutex::scoped_lock l(mutex_);
+		yuri::mutex::scoped_lock l(mutex_);
 		str_ << msg;
 	}
 	guarded_stream(stream_t& str):str_(str) {}
 	char_t widen(char c) { return str_.widen(c); }
 private:
 	stream_t& str_;
-	boost::mutex mutex_;
+	yuri::mutex mutex_;
 };
 
 /**

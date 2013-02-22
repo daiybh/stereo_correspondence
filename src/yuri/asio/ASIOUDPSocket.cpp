@@ -9,16 +9,16 @@
  */
 
 #include "ASIOUDPSocket.h"
-
+#include "yuri/exception/InitializationFailed.h"
+#include "boost/lexical_cast.hpp"
 namespace yuri
 {
 
-namespace io
+namespace asio
 {
 
-ASIOUDPSocket::ASIOUDPSocket(Log &_log,pThreadBase parent,yuri::ushort_t port)
-		throw (InitializationFailed):
-		SocketBase(_log,parent),socket(0)
+ASIOUDPSocket::ASIOUDPSocket(log::Log &_log, core::pwThreadBase parent,yuri::ushort_t port):
+		core::SocketBase(_log,parent),socket(0)
 {
 	log.setLabel("[ASIO UDP] ");
 	try {
@@ -28,23 +28,23 @@ ASIOUDPSocket::ASIOUDPSocket(Log &_log,pThreadBase parent,yuri::ushort_t port)
 		socket->bind(udp::endpoint(udp::v4(), port));
 	}
 	catch (std::exception &e) {
-		log[error] << "EEEEEERRRRRRRRRROOOOOOOOOORRRRRRRRRRRRRRRRRRR!!"<<std::endl;
-		throw InitializationFailed(std::string("Failed to initialize UDP socket: ")+e.what());
+		log[log::error] << "EEEEEERRRRRRRRRROOOOOOOOOORRRRRRRRRRRRRRRRRRR!!\n";
+		throw exception::InitializationFailed(std::string("Failed to initialize UDP socket: ")+e.what());
 	}
 	try {boost::asio::socket_base::send_buffer_size opt;
 		boost::asio::socket_base::send_buffer_size opt2(10485760);
 		boost::asio::socket_base::receive_buffer_size opt3(10485760);
 		socket->get_option(opt);
-		log[debug] << "Send size: " << opt.value() << std::endl;
+		log[log::debug] << "Send size: " << opt.value() << "\n";
 		socket->set_option(opt2);
 		socket->set_option(opt3);
 		socket->get_option(opt);
-		log[debug] << "Send size: " << opt.value() << std::endl;
-		log[debug] << "Receive size: " << opt3.value() << std::endl;
+		log[log::debug] << "Send size: " << opt.value() << "\n";
+		log[log::debug] << "Receive size: " << opt3.value() << "\n";
 
 	}
 	catch (std::exception &e) {
-		log[warning] << "Failed to increase buffer sizes....!!"<<std::endl;
+		log[log::warning] << "Failed to increase buffer sizes....!!"<<"\n";
 		//throw InitializationFailed(std::string("Failed to initialize UDP socket: ")+e.what());
 	}
 }
@@ -57,8 +57,8 @@ yuri::size_t ASIOUDPSocket::read(yuri::ubyte_t * data,yuri::size_t size)
 {
 	yuri::size_t recvd =
 		socket->receive_from(boost::asio::buffer(data,size), remote_endpoint, 0);
-	//log[debug] << "Received data from " << remote_endpoint.address().to_string()
-	//	<< std::endl;
+	//log[log::debug] << "Received data from " << remote_endpoint.address().to_string()
+	//	<< "\n";
 	return recvd;
 
 }
@@ -97,9 +97,9 @@ bool ASIOUDPSocket::set_endpoint(std::string address, yuri::size_t port)
 {
 	udp::resolver resolver(io_service);
 	udp::resolver::query query(udp::v4(), address, boost::lexical_cast<std::string>(port));
-	log[debug] << "Resolving " << address << std::endl;
+	log[log::debug] << "Resolving " << address << "\n";
 	remote_endpoint = *resolver.resolve(query);
-	log[debug] << "Resolved to " << remote_endpoint.address().to_string() << std::endl;
+	log[log::debug] << "Resolved to " << remote_endpoint.address().to_string() << "\n";
 	if (remote_endpoint.address().is_v4()) {
 
 		boost::asio::ip::address_v4 v4addr = boost::asio::ip::address_v4::from_string(remote_endpoint.address().to_string());

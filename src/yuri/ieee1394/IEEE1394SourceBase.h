@@ -11,14 +11,12 @@
 #ifndef IEEE1394INPUTBASE_H_
 #define IEEE1394INPUTBASE_H_
 
-#include <yuri/io/BasicIOThread.h>
-#include <yuri/exception/Exception.h>
+#include <yuri/core/BasicIOThread.h>
 #include <vector>
 #include <libiec61883/iec61883.h>
 namespace yuri {
 
-namespace io {
-using yuri::exception::Exception;
+namespace ieee1394 {
 struct ieee1394_camera_info {
 	int port;
 	int node;
@@ -26,11 +24,10 @@ struct ieee1394_camera_info {
 	std::string label;
 };
 
-class IEEE1394SourceBase:
-public BasicIOThread
+class IEEE1394SourceBase: public core::BasicIOThread
 {
 public:
-	IEEE1394SourceBase(Log &log_,pThreadBase parent, nodeid_t node=0, int port = 0, uint64_t guid=-1, std::string id="IEEE1394");
+	IEEE1394SourceBase(log::Log &log_, core::pwThreadBase parent, nodeid_t node=0, int port = 0, uint64_t guid=-1, std::string id="IEEE1394");
 	virtual ~IEEE1394SourceBase();
 	virtual void run();
 	bool initialized() { return device_ready; }

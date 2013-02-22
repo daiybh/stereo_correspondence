@@ -12,11 +12,7 @@
 #define TSMUXER_H_
 
 #include "yuri/libav/AVCodecBase.h"
-#include "yuri/config/Config.h"
-#include "yuri/config/RegisteredClass.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
-
-#include <boost/smart_ptr.hpp>
 extern "C" {
 	#include <libavformat/avformat.h>
 }
@@ -25,15 +21,12 @@ namespace yuri {
 
 namespace video {
 
-using boost::shared_ptr;
-using namespace boost::posix_time;
-
 class TSMuxer:public AVCodecBase {
 public:
-	TSMuxer(Log &_log, pThreadBase parent);
+	TSMuxer(log::Log &_log, core::pwThreadBase parent);
 	virtual ~TSMuxer();
-	static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception);
-	static shared_ptr<Parameters> configure();
+	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
+	static core::pParameters configure();
 
 	bool step();
 protected:
@@ -48,8 +41,8 @@ protected:
 
 protected:
 	bool reconfigure();
-	bool reconfigure(shared_ptr<BasicFrame> frame);
-	bool put_frame(shared_ptr<BasicFrame> frame);
+	bool reconfigure(core::pBasicFrame frame);
+	bool put_frame(core::pBasicFrame frame);
 	static int read_buffer(void *opaque, yuri::ubyte_t *buf, int size);
 	static int write_buffer(void *opaque, yuri::ubyte_t *buf, int size);
 	static int64_t seek_buffer(void *opaque, int64_t offset, int whence);

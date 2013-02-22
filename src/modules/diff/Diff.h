@@ -11,23 +11,22 @@
 #ifndef _H_
 #define _H_
 
-#include "yuri/io/BasicIOThread.h"
+#include "yuri/core/BasicIOThread.h"
 
 namespace yuri {
-namespace dummy_module {
+namespace diff {
 
-class Diff: public yuri::io::BasicIOThread
+class Diff: public core::BasicIOThread
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<config::Parameters> configure();
+	static core::pParameters configure();
 	virtual ~Diff();
 private:
-	Diff(log::Log &log_,io::pThreadBase parent,config::Parameters &parameters);
+	Diff(log::Log &log_,core::pwThreadBase parent,core::Parameters &parameters);
 	virtual bool step();
-//	virtual bool set_param(config::Parameter& param);
-	io::pBasicFrame frame1;
-	io::pBasicFrame frame2;
+	core::pBasicFrame frame1;
+	core::pBasicFrame frame2;
 };
 
 } /* namespace dummy_module */

@@ -7,7 +7,7 @@
 
 #ifndef OPENNI_WRAPPER_H_
 #define OPENNI_WRAPPER_H_
-#include "yuri/io/platform.h"
+#include "yuri/core/platform.h"
 #if defined YURI_LINUX
 #if not defined linux
 // OpenNI requires 'linux' to be defined for correct use (and it's not in gcc in some cases, in C++11, for example)

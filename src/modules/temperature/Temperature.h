@@ -11,21 +11,21 @@
 #ifndef Temperature_H_
 #define Temperature_H_
 
-#include "yuri/io/BasicIOThread.h"
+#include "yuri/core/BasicIOThread.h"
 
 namespace yuri {
 namespace temperature {
 
-class Temperature: public yuri::io::BasicIOThread
+class Temperature: public yuri::core::BasicIOThread
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<config::Parameters> configure();
+	static core::pParameters configure();
 	virtual ~Temperature();
 private:
-	Temperature(log::Log &log_,io::pThreadBase parent,config::Parameters &parameters);
+	Temperature(log::Log &log_,core::pwThreadBase parent,core::Parameters &parameters);
 	virtual bool step();
-	virtual bool set_param(config::Parameter& param);
+	virtual bool set_param(const core::Parameter& param);
 };
 
 } /* namespace dummy_module */

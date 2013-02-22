@@ -22,7 +22,8 @@ namespace yuri {
 
 namespace graphics {
 
-GLShader::GLShader(Log &log_, GLenum type):log(log_),type(type),shader_text(0)
+GLShader::GLShader(log::Log &log_, GLenum type):log(log_),type(type),shader_text(0),
+		shader_size(0),shader_object(0)
 {
 	log.setLabel("[GLShader] ");
 }
@@ -67,7 +68,7 @@ bool GLShader::compile()
 	GLint compiled;
 	glGetObjectParameterivARB(shader_object, GL_COMPILE_STATUS, &compiled);
 	if (compiled) {
-		log[debug] << "Shader " << shader_object << " compiled without problems." << endl;
+		log[log::debug] << "Shader " << shader_object << " compiled without problems." << endl;
 		return true;
 	}
 	GLint blen = 0;
@@ -77,7 +78,7 @@ bool GLShader::compile()
 	{
 	 GLchar* compiler_log = new GLchar[blen];
 	 glGetInfoLogARB(shader_object, blen, &slen, compiler_log);
-	 log[error] << "compiler_log:" <<  compiler_log <<endl;
+	 log[log::error] << "compiler_log:" <<  compiler_log <<endl;
 	 delete compiler_log;
 	}
 	return false;

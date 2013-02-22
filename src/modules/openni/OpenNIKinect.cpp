@@ -6,7 +6,7 @@
  */
 
 #include "OpenNIKinect.h"
-#include "yuri/config/RegisteredClass.h"
+#include "yuri/core/Module.h"
 namespace yuri {
 namespace OpenNIKinect {
 
@@ -15,9 +15,9 @@ REGISTER("openni_kinect",OpenNIKinect)
 IO_THREAD_GENERATOR(OpenNIKinect)
 
 
-shared_ptr<config::Parameters> OpenNIKinect::configure()
+core::pParameters OpenNIKinect::configure()
 {
-	shared_ptr<config::Parameters> p = BasicIOThread::configure();
+	core::pParameters p = BasicIOThread::configure();
 	p->set_description("OpenNIKinect Kinect source.");
 	(*p)["enable_depth"]["Enable depth sensors"]=true;
 	(*p)["enable_ir"]	["Enable ir sensors"]	=false;
@@ -30,8 +30,8 @@ shared_ptr<config::Parameters> OpenNIKinect::configure()
 	return p;
 }
 
-OpenNIKinect::OpenNIKinect(log::Log &log_,io::pThreadBase parent, config::Parameters &parameters):
-io::BasicIOThread(log_,parent,0,16,std::string("OpenNIKinect")),enable_depth(true),
+OpenNIKinect::OpenNIKinect(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
+core::BasicIOThread(log_,parent,0,16,std::string("OpenNIKinect")),enable_depth(true),
 enable_ir(false),enable_color(false),enable_sync(true),enable_registration(false),
 max_sensors(1)
 {
@@ -103,7 +103,7 @@ std::string get_type_name(const openni::SensorType type) {
 		case openni::SENSOR_DEPTH: return "depth";
 		case openni::SENSOR_IR: return "ir";
 		case openni::SENSOR_COLOR: return "color";
-		default: return "unknowd";
+		default: return "unknown";
 	}
 }
 openni::VideoMode get_def_mode(const openni::SensorType type) {
@@ -191,7 +191,7 @@ void OpenNIKinect::run()
 						}
 					}
 				}
-				io::pBasicFrame frame = io::BasicIOThread::allocate_frame_from_memory(
+				core::pBasicFrame frame = core::BasicIOThread::allocate_frame_from_memory(
 						reinterpret_cast<const yuri::ubyte_t*>(frame_ref.getData()),
 						frame_ref.getDataSize(),true);
 				openni::VideoMode mode = frame_ref.getVideoMode();
@@ -209,7 +209,7 @@ void OpenNIKinect::run()
 
 				}
 				if (format != YURI_FMT_NONE) {
-					io::pFrameInfo fi(new io::FrameInfo());
+					core::pFrameInfo fi(new core::FrameInfo());
 					fi->max_value = stream_pointers[index]->getMaxPixelValue();
 					fi->min_value = stream_pointers[index]->getMinPixelValue();
 					frame->set_info(fi);
@@ -236,7 +236,7 @@ void OpenNIKinect::run()
 	}
 	IO_THREAD_POST_RUN
 }
-bool OpenNIKinect::set_param(config::Parameter& param)
+bool OpenNIKinect::set_param(const core::Parameter& param)
 {
 	log[log::info] << "Got param " << param.name <<": " << param.get<int>() <<"\n";
 	if (param.name == "enable_depth") {

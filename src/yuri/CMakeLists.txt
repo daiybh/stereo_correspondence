@@ -82,10 +82,11 @@ include_directories ( ${YURI_INCLUDE} ${YURI_HELPER_LIBAV_INCLUDE} ${YURI_HELPER
 # Submerge into subdirectories to collect source files
 #################################################################
 add_subdirectory(log)
-add_subdirectory(config)
-add_subdirectory(threads)
+#add_subdirectory(config)
+#add_subdirectory(threads)
 add_subdirectory(exception)
-add_subdirectory(io)
+#add_subdirectory(io)
+add_subdirectory(core)
 
 #################################################################
 # Collect sources for helper libraries

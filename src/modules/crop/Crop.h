@@ -11,23 +11,20 @@
 #ifndef CROP_H_
 #define CROP_H_
 
-#include "yuri/io/BasicIOThread.h"
-#include "yuri/config/RegisteredClass.h"
-
+#include "yuri/core/BasicIOThread.h"
 
 namespace yuri {
 
 namespace io {
-using namespace yuri::config;
 
-class Crop: public yuri::io::BasicIOThread {
+class Crop: public core::BasicIOThread {
 public:
 	virtual ~Crop();
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<Parameters> configure();
-	virtual bool set_param(Parameter &parameter);
+	static core::pParameters configure();
+	virtual bool set_param(const core::Parameter &parameter);
 protected:
-	Crop(Log &_log, pThreadBase parent, Parameters &parameters) IO_THREAD_CONSTRUCTOR;
+	Crop(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters) IO_THREAD_CONSTRUCTOR;
 	virtual bool step();
 	yuri::ssize_t dest_x;
 	yuri::ssize_t dest_y;

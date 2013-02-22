@@ -11,39 +11,33 @@
 #ifndef YURICONVERTOR_H_
 #define YURICONVERTOR_H_
 
-#include "yuri/io/BasicIOThread.h"
-#include "yuri/config/RegisteredClass.h"
-
-
+#include "yuri/core/BasicIOThread.h"
 
 namespace yuri {
 
 namespace video {
-using namespace yuri::io;
-using namespace yuri::log;
-using namespace yuri::config;
 
 enum _colorimetry {
 	YURI_COLORIMETRY_REC709,
 	YURI_COLORIMETRY_REC601
 };
 
-class YuriConvertor: public BasicIOThread {
+class YuriConvertor: public core::BasicIOThread {
 public:
-	YuriConvertor(Log &log_, pThreadBase parent,Parameters& parameters) IO_THREAD_CONSTRUCTOR;
+	YuriConvertor(log::Log &log_, core::pwThreadBase parent, core::Parameters& parameters) IO_THREAD_CONSTRUCTOR;
 	virtual ~YuriConvertor();
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<Parameters> configure();
+	static core::pParameters configure();
 	bool step();
-	bool set_param(Parameter &p);
+	bool set_param(const core::Parameter &p);
 protected:
-	template<yuri::format_t format_in,yuri::format_t format_out,bool using_cuda> shared_ptr<BasicFrame> convert(shared_ptr<BasicFrame> frame);
+	template<yuri::format_t format_in,yuri::format_t format_out,bool using_cuda> core::pBasicFrame convert(core::pBasicFrame frame);
 
-	//shared_ptr<BasicFrame> convert_from_yuv422(shared_ptr<BasicFrame> frame);
-//	shared_ptr<BasicFrame> convert_rgb_to_ycbcr(shared_ptr<BasicFrame> frame);
-//	shared_ptr<BasicFrame> convert_rgb_to_ycbcr_cuda(shared_ptr<BasicFrame> frame);
-//	shared_ptr<BasicFrame> convert_yuv_to_rgb_cuda(shared_ptr<BasicFrame> frame);
-//	shared_ptr<BasicFrame> convert_mvtp_to_yuv(shared_ptr<BasicFrame> frame);
+	//core::pBasicFrame convert_from_yuv422(core::pBasicFrame frame);
+//	core::pBasicFrame convert_rgb_to_ycbcr(core::pBasicFrame frame);
+//	core::pBasicFrame convert_rgb_to_ycbcr_cuda(core::pBasicFrame frame);
+//	core::pBasicFrame convert_yuv_to_rgb_cuda(core::pBasicFrame frame);
+//	core::pBasicFrame convert_mvtp_to_yuv(core::pBasicFrame frame);
 
 	bool use_cuda;
 
@@ -75,7 +69,7 @@ protected:
 #ifdef YURI_HAVE_CUDA
 	static shared_ptr<void> cuda_alloc(yuri::size_t size);
 #endif
-	typedef shared_ptr<BasicFrame>(YuriConvertor::*converter_t)(shared_ptr<BasicFrame>);
+	typedef core::pBasicFrame(YuriConvertor::*converter_t)(core::pBasicFrame);
 	static std::map<std::pair<yuri::format_t, yuri::format_t>, converter_t> converters;
 #ifdef YURI_HAVE_CUDA
 	static std::map<std::pair<yuri::format_t, yuri::format_t>, converter_t> cuda_converters;

@@ -11,27 +11,25 @@
 #ifndef ENCODER_H_
 #define ENCODER_H_
 #include "yuri/libav/AVCodecBase.h"
-#include "yuri/config/Config.h"
-#include "yuri/config/RegisteredClass.h"
 
 namespace yuri
 {
 
 namespace video
 {
-using namespace yuri::config;
+
 class AVEncoder: public AVCodecBase
 {
 public:
 	virtual ~AVEncoder();
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<Parameters> configure();
+	static core::pParameters configure();
 
 	bool init_encoder();
 	void run();
-	virtual bool set_param(Parameter &param);
+	virtual bool set_param(const core::Parameter &param);
 protected:
-	AVEncoder(Log &_log, pThreadBase parent,Parameters &parameters) IO_THREAD_CONSTRUCTOR;
+	AVEncoder(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters) IO_THREAD_CONSTRUCTOR;
 	void encode_frame();
 	virtual bool step();
 	shared_ptr<AVFrame> frame;

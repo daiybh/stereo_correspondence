@@ -9,23 +9,25 @@
  */
 
 #include "Anaglyph.h"
-
+#include "yuri/core/RegisteredClass.h"
+#include "yuri/core/pipe_types.h"
+#include "yuri/core/BasicPipe.h"
 namespace yuri {
 
-namespace io {
+namespace anaglyph {
 
 REGISTER("anaglyph",Anaglyph)
 
-shared_ptr<BasicIOThread> Anaglyph::generate(Log &_log,pThreadBase parent,Parameters& parameters)
-			throw (Exception)
+core::pBasicIOThread Anaglyph::generate(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters)
+
 {
 	shared_ptr<Anaglyph> a (new Anaglyph(_log,parent,
 			parameters["correction"].get<int>()));
 	return a;
 }
-shared_ptr<Parameters> Anaglyph::configure()
+core::pParameters Anaglyph::configure()
 {
-	shared_ptr<Parameters> p (new Parameters());
+	core::pParameters p (new core::Parameters());
 	(*p)["correction"]["Number of pixels the images get shifted (width of the final image gets shorter by the same amount)"]=0;
 	(*p)["fast"]["Skips old frames in the pipe. Setting this to false forces processing of all frames"]=true;
 	p->set_max_pipes(2,1);
@@ -37,8 +39,8 @@ shared_ptr<Parameters> Anaglyph::configure()
 }
 
 
-Anaglyph::Anaglyph(Log &_log, pThreadBase parent, int correction, bool fast)
-	:BasicIOThread(_log,parent,2,1,"Anaglyph"),correction(correction),fast(fast)
+Anaglyph::Anaglyph(log::Log &_log, core::pwThreadBase parent, int correction, bool fast)
+	:core::BasicIOThread(_log,parent,2,1,"Anaglyph"),correction(correction),fast(fast)
 {
 }
 
@@ -50,7 +52,7 @@ bool Anaglyph::step()
 {
 	if (!in[0] || !in[1] || in[0]->is_empty() || in[1]->is_empty())
 		return true;
-	shared_ptr<BasicFrame> left, right, out_frame;
+	core::pBasicFrame left, right, out_frame;
 	if (fast) {
 		while (!in[0]->is_empty())	left = in[0]->pop_frame();
 		while (!in[1]->is_empty())	right = in[1]->pop_frame();
@@ -61,16 +63,16 @@ bool Anaglyph::step()
 	assert(left && right);
 
 	if (left->get_format() != right->get_format()) {
-		log[error] << "Both eyes have different colorspaces, this is not supported now\n";
+		log[log::error] << "Both eyes have different colorspaces, this is not supported now\n";
 		return true;
 	}
 	if (left->get_format() != YURI_FMT_RGB && left->get_format() != YURI_FMT_RGBA) {
-		log[error] << "Unsupported color space " << BasicPipe::get_format_string(left->get_format()) << "\n";
+		log[log::error] << "Unsupported color space " << core::BasicPipe::get_format_string(left->get_format()) << "\n";
 		return true;
 	}
 	if (left->get_width() != right->get_width() ||
 			left->get_height() != right->get_height()) {
-		log[error] << "Images have different resolutions. No support for this now.\n";
+		log[log::error] << "Images have different resolutions. No support for this now.\n";
 		return true;
 	}
 	switch (left->get_format()) {
@@ -94,13 +96,13 @@ bool Anaglyph::step()
 	return true;
 }
 
-template<typename T> shared_ptr<BasicFrame> Anaglyph::makeAnaglyph(const shared_ptr<BasicFrame>& left, const shared_ptr<BasicFrame>& right)
+template<typename T> core::pBasicFrame Anaglyph::makeAnaglyph(const core::pBasicFrame& left, const core::pBasicFrame& right)
 {
 	const T *datal = reinterpret_cast<T*>(PLANE_RAW_DATA(left,0));
 	const T *datar = reinterpret_cast<T*>(PLANE_RAW_DATA(right,0));
 	yuri::size_t w = left->get_width();
 	yuri::size_t h = left->get_height();
-	shared_ptr<BasicFrame> out_frame;
+	core::pBasicFrame out_frame;
 	if (!correction) { // Simple case with no correction
 		out_frame=left->get_copy();
 		T *datao = reinterpret_cast<T*>(PLANE_RAW_DATA(out_frame,0));
@@ -112,7 +114,7 @@ template<typename T> shared_ptr<BasicFrame> Anaglyph::makeAnaglyph(const shared_
 	} else if (correction > 0) { // Ok, we have to process correction
 		yuri::size_t w_cor = w - correction;
 		if (w_cor <= 0) {
-			log[error] << "requested corrections larger than image width!\n";
+			log[log::error] << "requested corrections larger than image width!\n";
 			return out_frame;
 		}
 		yuri::size_t w_rounded = w_cor%4?4*(w_cor/4+1):w_cor;
@@ -135,7 +137,7 @@ template<typename T> shared_ptr<BasicFrame> Anaglyph::makeAnaglyph(const shared_
 	} else { // Ok, we have to process  negative correction
 		yuri::size_t w_cor = w + correction;
 		if (w_cor <= 0) {
-			log[error] << "requested corrections larger than image width!\n";
+			log[log::error] << "requested corrections larger than image width!\n";
 			return out_frame;
 		}
 		yuri::size_t w_rounded = w_cor%4?4*(w_cor/4+1):w_cor;

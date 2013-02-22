@@ -12,7 +12,7 @@
 #define YURI_VERSION "Unknown"
 #endif
 #define BOOST_LIB_DIAGNOSTIC
-#include "yuri/config/ApplicationBuilder.h"
+#include "yuri/core/ApplicationBuilder.h"
 #include "yuri/version.h"
 #include <iostream>
 #include <memory>
@@ -20,18 +20,18 @@
 #include <signal.h>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
-
+#include "yuri/core/Parameters.h"
+#include "yuri/core/RegisteredClass.h"
+#include "yuri/core/BasicPipe.h"
 //using namespace std;
 using namespace yuri;
-using namespace yuri::io;
 using namespace yuri::log;
-using namespace yuri::config;
 using boost::iequals;
 using yuri::shared_ptr;
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
-static shared_ptr<ApplicationBuilder> b;
+static yuri::shared_ptr<core::ApplicationBuilder> b;
 static po::options_description options("General options");
 static int verbosity;
 static Log l(std::clog);
@@ -67,12 +67,12 @@ void list_registered(Log l_)
 {
 	l_[info]<<"List of registered objects:" << std::endl;
 std::string name;
-	shared_ptr<std::vector<std::string> > v = yuri::config::RegisteredClass::list_registered();
+	shared_ptr<std::vector<std::string> > v = yuri::core::RegisteredClass::list_registered();
 	BOOST_FOREACH(name,*v) {
 		if (verbosity>=0)
 			l_[fatal] << "..:: " << name << " ::.." << std::endl;
 		else l_[fatal] << name << std::endl;
-		shared_ptr<Parameters> p = RegisteredClass::get_params(name);
+		core::pParameters p = core::RegisteredClass::get_params(name);
 		if (!p) l_[info] << "\t\tclass has no configuration defined!" << std::endl;
 		else {
 			if (!p->get_description().empty()) l_[info]<< "\t"
@@ -80,16 +80,16 @@ std::string name;
 			long fmt;
 			if (p->get_input_formats().size()) {
 				BOOST_FOREACH(fmt,p->get_input_formats()) {
-					l_[normal]<< "\t\tSupports input format: " << BasicPipe::get_format_string(fmt) << std::endl;
+					l_[normal]<< "\t\tSupports input format: " << core::BasicPipe::get_format_string(fmt) << std::endl;
 				}
 			} else l_[normal] << "\t\tClass does not have any restrictions on input pipes defined." << std::endl;
 			if (p->get_output_formats().size()) {
 				BOOST_FOREACH(fmt,p->get_output_formats()) {
-					l_[normal]<< "\t\tSupports output format: " << BasicPipe::get_format_string(fmt) << std::endl;
+					l_[normal]<< "\t\tSupports output format: " << core::BasicPipe::get_format_string(fmt) << std::endl;
 				}
 			} else l_[normal] << "\t\tClass does not have any restrictions on output pipes defined." << std::endl;
 			if (p->params.size()) {
-				std::pair<std::string,shared_ptr<Parameter> > par;
+				std::pair<std::string,core::pParameter > par;
 				BOOST_FOREACH(par,p->params) {
 					l_[info] << "\t\t'" << par.first << "' has default value \""
 							<< par.second->get<std::string>() << "\"" << std::endl;
@@ -104,9 +104,9 @@ void list_formats(Log& l_)
 {
 	l_[info] << "List of registered formats:" << std::endl;
 std::string name;
-	boost::mutex::scoped_lock lock(BasicPipe::format_lock);
+	boost::mutex::scoped_lock lock(core::BasicPipe::format_lock);
 	std::pair<yuri::format_t, yuri::FormatInfo_t > fmtp;
-	BOOST_FOREACH(fmtp, BasicPipe::formats) {
+	BOOST_FOREACH(fmtp, core::BasicPipe::formats) {
 		yuri::FormatInfo_t fmt = fmtp.second;
 		l_[fatal] << fmt->long_name << std::endl;
 		if (fmt->short_names.size()) {
@@ -137,11 +137,11 @@ std::string name;
 
 void list_converters(Log l_)
 {
-	std::pair<std::pair<long,long>,std::vector<shared_ptr<Converter> > > conv;
-	BOOST_FOREACH(conv,RegisteredClass::get_all_converters()) {
-		l_[info] << "Convertors from " << BasicPipe::get_format_string(conv.first.first)
-		 << " to " << BasicPipe::get_format_string(conv.first.second) << std::endl;
-		shared_ptr<Converter> c;
+	std::pair<std::pair<long,long>,std::vector<shared_ptr<core::Converter> > > conv;
+	BOOST_FOREACH(conv,core::RegisteredClass::get_all_converters()) {
+		l_[info] << "Convertors from " << core::BasicPipe::get_format_string(conv.first.first)
+		 << " to " << core::BasicPipe::get_format_string(conv.first.second) << std::endl;
+		shared_ptr<core::Converter> c;
 		BOOST_FOREACH(c,conv.second) {
 			if (!c) std::cout << "??" <<std::endl;
 			l_[info] << "\t" << c->id << std::endl;
@@ -209,7 +209,7 @@ int main(int argc, char**argv)
 		return 1;
 	}
 	if (vm.count("list")) {
-		b.reset( new ApplicationBuilder (l,pThreadBase()));
+		b.reset( new core::ApplicationBuilder (l,core::pwThreadBase()));
 		b->find_modules();
 		b->load_modules();
 		l.set_quiet(true);
@@ -238,9 +238,9 @@ int main(int argc, char**argv)
 
 	l[debug] << "Loading file " << filename << std::endl;
 	try {
-		b.reset( new ApplicationBuilder (l,pThreadBase(),filename,arguments));
+		b.reset( new core::ApplicationBuilder (l, core::pwThreadBase(),filename,arguments));
 	}
-	catch (Exception &e) {
+	catch (exception::Exception &e) {
 		l[fatal] << "failed to initialize application: " << e.what() << std::endl;
 		exit(1);
 	}
@@ -257,7 +257,7 @@ int main(int argc, char**argv)
 	try {
 		(*b)();
 	}
-	catch (Exception &e) {
+	catch (yuri::exception::Exception &e) {
 		l[fatal] << "Application failed to start: " << e.what() << std::endl;
 	}
 	catch(std::exception &e) {

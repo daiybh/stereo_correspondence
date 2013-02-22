@@ -11,29 +11,25 @@
 #ifndef JPEGENCODER_H_
 #define JPEGENCODER_H_
 
-#include <boost/shared_array.hpp>
+
 #include <cstdio>
 #include <jpeglib.h>
-#include "yuri/config/RegisteredClass.h"
-
-#include "yuri/io/BasicIOThread.h"
+#include "yuri/core/BasicIOThread.h"
 
 namespace yuri {
 
-namespace io {
-using yuri::log::Log;
-using namespace yuri::config;
+namespace jpg {
 
 
-class JPEGEncoder: public BasicIOThread {
+class JPEGEncoder: public core::BasicIOThread {
 public:
-	JPEGEncoder(Log &_log, pThreadBase parent, int level=75, long buffer_size=1048576);
+	JPEGEncoder(log::Log &_log, core::pwThreadBase parent, int level=75, long buffer_size=1048576);
 	virtual ~JPEGEncoder();
-	static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,
-			Parameters& parameters) throw (Exception);
+	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent,
+			core::Parameters& parameters);
 //	static bool configure_converter(Parameters& parameters,
 //			long format_in, long format_out) throw (Exception);
-	static shared_ptr<Parameters> configure();
+	static core::pParameters configure();
 protected:
 	virtual bool step();
 	void setDestManager(jpeg_compress_struct* cinfo);
@@ -44,7 +40,7 @@ static	int sEmptyBuffer(j_compress_ptr cinfo);
 static	void sTermDestination(j_compress_ptr cinfo);
 	yuri::size_t dumpData();
 protected:
-	pBasicFrame frame;
+	core::pBasicFrame frame;
 std::stringstream temp_data;
 	int level;
 	shared_array<char> buffer;

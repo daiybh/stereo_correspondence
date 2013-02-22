@@ -9,7 +9,7 @@
  */
 
 #include "Crop.h"
-
+#include "yuri/core/Module.h"
 
 namespace yuri {
 
@@ -19,9 +19,9 @@ REGISTER("crop",Crop)
 
 IO_THREAD_GENERATOR(Crop)
 
-shared_ptr<Parameters> Crop::configure()
+core::pParameters Crop::configure()
 {
-	shared_ptr<Parameters> p (new Parameters());
+	core::pParameters p (new core::Parameters());
 	(*p)["x"]["offset x"]=0;
 	(*p)["y"]["offset y"]=0;
 	(*p)["width"]["width"]=-1;
@@ -33,8 +33,8 @@ shared_ptr<Parameters> Crop::configure()
 }
 
 
-Crop::Crop(Log &_log, pThreadBase parent, Parameters &parameters) IO_THREAD_CONSTRUCTOR:
-	BasicIOThread(_log,parent,1,1)
+Crop::Crop(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
+	core::BasicIOThread(_log,parent,1,1)
 {
 	IO_THREAD_INIT("Crop")
 }
@@ -45,7 +45,7 @@ Crop::~Crop() {
 
 bool Crop::step()
 {
-	pBasicFrame frame;
+	core::pBasicFrame frame;
 	if (!in[0] || !(frame = in[0]->pop_frame()))
 		return true;
 
@@ -62,23 +62,23 @@ bool Crop::step()
 	} else if (y + h > static_cast<yuri::ssize_t>(frame->get_height())) {
 		h = frame->get_width() - y;
 	}
-	log[verbose_debug] << "X: " << x << ", Y: " << y << ", W: " << w<< ", H: " << h <<std::endl;
+	log[log::verbose_debug] << "X: " << x << ", Y: " << y << ", W: " << w<< ", H: " << h <<std::endl;
 	if (!x && !y && w==static_cast<yuri::ssize_t>(frame->get_width())
 			&& h==static_cast<yuri::ssize_t>(frame->get_height())) {
-		log[verbose_debug] << "Passing thru" << std::endl;
+		log[log::verbose_debug] << "Passing thru" << std::endl;
 		push_raw_video_frame(0,frame);
 		return true;
 	}
 
-	pBasicFrame frame_out = allocate_empty_frame(frame->get_format(),w, h);
-	FormatInfo_t info = BasicPipe::get_format_info(frame->get_format());
+	core::pBasicFrame frame_out = allocate_empty_frame(frame->get_format(),w, h);
+	FormatInfo_t info = core::BasicPipe::get_format_info(frame->get_format());
 	assert(info);
 	if (info->planes!=1) {
-		log[warning] << "Received frame has more that a single plane. \n";
+		log[log::warning] << "Received frame has more that a single plane. \n";
 		return true;
 	}
 	yuri::size_t Bpp = info->bpp >> 3;
-	log[verbose_debug] << "size: " << w <<"x"<<h<<"+"<<x<<"+"<<y<<" at "<<Bpp<<"Bpp"<<std::endl;
+	log[log::verbose_debug] << "size: " << w <<"x"<<h<<"+"<<x<<"+"<<y<<" at "<<Bpp<<"Bpp"<<std::endl;
 	yuri::ubyte_t  *out_ptr=PLANE_RAW_DATA(frame,0);
 	for (int i=y;i<(h+y);++i) {
 		yuri::ubyte_t *ptr = PLANE_RAW_DATA(frame,0)+(i*frame->get_width()+x)*Bpp;
@@ -88,7 +88,7 @@ bool Crop::step()
 	return true;
 }
 
-bool Crop::set_param(Parameter &parameter)
+bool Crop::set_param(const core::Parameter &parameter)
 {
 	if (parameter.name== "x") {
 		dest_x=parameter.get<yuri::ssize_t>();

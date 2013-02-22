@@ -11,21 +11,21 @@
 #ifndef DUMMYMODULE_H_
 #define DUMMYMODULE_H_
 
-#include "yuri/io/BasicIOThread.h"
+#include "yuri/core/BasicIOThread.h"
 
 namespace yuri {
 namespace dummy_module {
 
-class DummyModule: public yuri::io::BasicIOThread
+class DummyModule: public core::BasicIOThread
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<config::Parameters> configure();
+	static core::pParameters configure();
 	virtual ~DummyModule();
 private:
-	DummyModule(log::Log &log_,io::pThreadBase parent,config::Parameters &parameters);
+	DummyModule(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
 	virtual bool step();
-	virtual bool set_param(config::Parameter& param);
+	virtual bool set_param(const core::Parameter& param);
 	std::string dummy_name;
 };
 

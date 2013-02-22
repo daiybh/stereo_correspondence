@@ -12,20 +12,19 @@
 #define HDVSOURCE_H_
 
 #include "yuri/ieee1394/IEEE1394SourceBase.h"
-#include "yuri/config/RegisteredClass.h"
 
 namespace yuri {
 
-namespace io {
+namespace ieee1394 {
 
 class HDVSource:
 	public IEEE1394SourceBase
 {
 public:
-	static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,Parameters& parameters);
-	static shared_ptr<Parameters> configure();
+	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
+	static core::pParameters configure();
 
-	HDVSource(Log &log_,pThreadBase parent, nodeid_t node=0, int port = 0, int64_t guid=-1);
+	HDVSource(log::Log &log_,core::pwThreadBase parent, nodeid_t node=0, int port = 0, int64_t guid=-1);
 	virtual ~HDVSource();
 	//virtual void run();
 	void setOutputBufferSize(long size);

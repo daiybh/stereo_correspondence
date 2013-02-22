@@ -10,15 +10,14 @@
 
 #ifndef LOG_H_
 #define LOG_H_
-#include "yuri/io/types.h"
+#include "yuri/core/types.h"
 #include "LogProxy.h"
 
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <string>
-#include <boost/thread.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
+
 
 namespace yuri
 {
@@ -59,7 +58,7 @@ protected:
 	int uid;
 	yuri::shared_ptr<guarded_stream<char> > out;
 	int id;
-	boost::mutex lock;
+	yuri::mutex lock;
 	std::string ids;
 	debug_flags flags;
 	int output_flags;

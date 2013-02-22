@@ -9,7 +9,7 @@
  */
 
 #include "Temperature.h"
-#include "yuri/config/RegisteredClass.h"
+#include "yuri/core/Module.h"
 #include <limits>
 namespace yuri {
 namespace temperature {
@@ -18,17 +18,17 @@ REGISTER("temperature",Temperature)
 
 IO_THREAD_GENERATOR(Temperature)
 
-shared_ptr<config::Parameters> Temperature::configure()
+core::pParameters Temperature::configure()
 {
-	shared_ptr<config::Parameters> p = io::BasicIOThread::configure();
+	core::pParameters p = core::BasicIOThread::configure();
 	p->set_description("Temperature.");
 	p->set_max_pipes(1,1);
 	return p;
 }
 
 
-Temperature::Temperature(log::Log &log_,io::pThreadBase parent,config::Parameters &parameters):
-io::BasicIOThread(log_,parent,1,1,std::string("temperature"))
+Temperature::Temperature(log::Log &log_,core::pwThreadBase parent,core::Parameters &parameters):
+core::BasicIOThread(log_,parent,1,1,std::string("temperature"))
 {
 	IO_THREAD_INIT("Temperature")
 }
@@ -68,7 +68,7 @@ inline double b(double val) {
 	return val<0.1?val*5.0+0.5:val<0.35?1.0:val<0.65?(6.5)/3.0-(10.0/3.0)*val:0.0;
 }
 template<typename T>
-io::pBasicFrame colorize(const io::pBasicFrame& frame)
+core::pBasicFrame colorize(const core::pBasicFrame& frame)
 {
 	const size_t size = PLANE_SIZE(frame,0)/sizeof(T);
 	T* data = reinterpret_cast<T*>(PLANE_RAW_DATA(frame,0));
@@ -77,8 +77,8 @@ io::pBasicFrame colorize(const io::pBasicFrame& frame)
 	const size_t width = frame->get_width();
 	const size_t height = frame->get_height();
 	assert(size==width*height);
-	io::pBasicFrame output = io::BasicIOThread::allocate_empty_frame(YURI_FMT_RGB24, width, height);
-	io::pFrameInfo fi = frame->get_info();
+	core::pBasicFrame output = core::BasicIOThread::allocate_empty_frame(YURI_FMT_RGB24, width, height);
+	core::pFrameInfo fi = frame->get_info();
 	if (fi) {
 		if (fi->min_value) lower_bound = fi->min_value;
 		if (fi->max_value) upper_bound = fi->max_value;
@@ -100,10 +100,10 @@ io::pBasicFrame colorize(const io::pBasicFrame& frame)
 
 bool Temperature::step()
 {
-	io::pBasicFrame frame = in[0]->pop_frame();
+	core::pBasicFrame frame = in[0]->pop_frame();
 	if (frame) {
 		yuri::format_t fmt = frame->get_format();
-		io::pBasicFrame output;
+		core::pBasicFrame output;
 		switch(fmt) {
 			case YURI_FMT_RED8:
 			case YURI_FMT_GREEN8:
@@ -125,9 +125,9 @@ bool Temperature::step()
 	}
 	return true;
 }
-bool Temperature::set_param(config::Parameter& param)
+bool Temperature::set_param(const core::Parameter& param)
 {
-	return io::BasicIOThread::set_param(param);
+	return core::BasicIOThread::set_param(param);
 	//return true;
 }
 

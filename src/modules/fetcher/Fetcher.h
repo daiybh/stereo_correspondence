@@ -18,44 +18,38 @@
 #include <curl/curl.h>
 #include <sstream>
 #include <map>
-#include "yuri/io/BasicIOThread.h"
-#include "yuri/exception/Exception.h"
-#include "yuri/config/RegisteredClass.h"
+#include "yuri/core/BasicIOThread.h"
 
 namespace yuri {
 
-namespace io {
-using yuri::log::Log;
-using namespace std;
-using yuri::exception::Exception;
-using namespace yuri::config;
+namespace fetcher {
 
-class Fetcher: public BasicIOThread {
+class Fetcher: public core::BasicIOThread {
 public:
-	Fetcher(Log &_log, pThreadBase parent, string url) throw (Exception);
+	Fetcher(log::Log &_log, core::pwThreadBase parent, std::string url);
 	virtual ~Fetcher();
-	static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception);
-	static shared_ptr<Parameters> configure();
+	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
+	static core::pParameters configure();
 
-	shared_ptr<BasicFrame> fetch();
+	core::pBasicFrame fetch();
 	virtual void run();
-	void setUploadParams(string filename, string filetype, string inputname);
-	void addUploadSection(string name, string value);
+	void setUploadParams(std::string filename, std::string filetype, std::string inputname);
+	void addUploadSection(std::string name, std::string value);
 	void clearUploadSections();
-	void setUrl(string new_url);
+	void setUrl(std::string new_url);
 	//static void deleter_curl_form(struct curl_httppost *h);
 	static void curl_session_deleter(CURL *pcurl);
 protected:
 	static yuri::size_t writeCallback(void* data, size_t size, size_t num, void*stream);
 	virtual bool step();
 	yuri::size_t writeData(void* data, size_t size, size_t num);
-	shared_ptr<BasicFrame> dumpData();
-	string printCurlFormaddError(int cerror);
-	string url;
+	core::pBasicFrame dumpData();
+	std::string printCurlFormaddError(int cerror);
+	std::string url;
 	shared_ptr<CURL> curl;
-	stringstream temp_data;
-	string fname, ftype, iname;
-	map<string, string> sections;
+	std::stringstream temp_data;
+	std::string fname, ftype, iname;
+	std::map<std::string, std::string> sections;
 	boost::mutex upload_lock;
 	long type;
 };

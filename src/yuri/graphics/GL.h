@@ -13,13 +13,15 @@
 #include <map>
 #include "GLProgram.h"
 #include <GL/gl.h>
-#include "yuri/io/BasicFrame.h"
 #include "yuri/graphics/WindowBase.h"
+#include "yuri/core/pipe_types.h"
+//#include "yuri/core/BasicFrame.h"
+
 
 namespace yuri {
 
 namespace graphics {
-using namespace yuri::io;
+typedef yuri::shared_ptr<class WindowBase> pWindowBase;
 
 struct _texture_info {
 	GLuint tid[8];
@@ -68,7 +70,7 @@ struct _texture_info {
 			}
 		}
 	}
-	void finish_update(Log &log,yuri::format_t fmt,std::string vs,std::string fs){
+	void finish_update(log::Log &log,yuri::format_t fmt,std::string vs,std::string fs){
 		format = fmt;
 		if (!shader) {
 			shader.reset(new GLProgram(log));
@@ -82,15 +84,15 @@ struct _texture_info {
 
 class GL {
 public:
-	GL(Log &log_);
+	GL(log::Log &log_);
 	virtual ~GL();
 	std::map<uint,_texture_info> textures;
-	void generate_texture(uint tid, pBasicFrame frame);
+	void generate_texture(uint tid, core::pBasicFrame frame);
 	void generate_empty_texture(yuri::uint_t tid, yuri::format_t fmt, yuri::size_t w, yuri::size_t h);
 	void setup_ortho(GLdouble left=0.0, GLdouble right=1.0f,
 			GLdouble bottom=0.0, GLdouble top=1.0,
 			GLdouble near=-100.0, GLdouble far=100.0);
-	void draw_texture(uint tid, shared_ptr<WindowBase> win, GLdouble width=1.0,
+	void draw_texture(uint tid, pWindowBase win, GLdouble width=1.0,
 			GLdouble height=1.0, GLdouble x=0.0, GLdouble y=0.0);
 	static void enable_smoothing();
 	static void save_state();
@@ -101,7 +103,7 @@ public:
 			yuri::size_t w, yuri::size_t h, GLenum tex_mode, GLenum data_mode, bool update,
 			GLenum data_type = GL_UNSIGNED_BYTE);
 	bool finish_frame();
-	Log log;
+	log::Log log;
 	static mutex big_gpu_lock;
 protected:
 	static std::string simple_vertex_shader, simple_fragment_shader,

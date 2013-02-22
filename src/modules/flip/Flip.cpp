@@ -9,7 +9,7 @@
  */
 
 #include "Flip.h"
-
+#include "yuri/core/Module.h"
 namespace yuri {
 
 namespace io {
@@ -18,9 +18,9 @@ REGISTER("flip",Flip)
 
 IO_THREAD_GENERATOR(Flip)
 
-shared_ptr<Parameters> Flip::configure()
+core::pParameters Flip::configure()
 {
-	shared_ptr<Parameters> p = BasicIOThread::configure();
+	core::pParameters p = BasicIOThread::configure();
 	(*p)["flip_x"]["flip x (around y axis)"]=true;
 	(*p)["flip_y"]["flip y (around X axis)"]=false;
 	p->set_max_pipes(1,1);
@@ -30,8 +30,8 @@ shared_ptr<Parameters> Flip::configure()
 }
 
 
-Flip::Flip(Log &_log, pThreadBase parent, Parameters &parameters) IO_THREAD_CONSTRUCTOR
-		:BasicIOThread(_log,parent,1,1),flip_x(true),flip_y(false)
+Flip::Flip(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters) IO_THREAD_CONSTRUCTOR
+		:core::BasicIOThread(_log,parent,1,1),flip_x(true),flip_y(false)
  {
 	IO_THREAD_INIT("Flip")
 
@@ -44,7 +44,7 @@ Flip::~Flip() {
 
 bool Flip::step()
 {
-	pBasicFrame frame;
+	core::pBasicFrame  frame;
 	if (!in[0] || !(frame = in[0]->pop_frame()))
 		return true;
 
@@ -52,8 +52,8 @@ bool Flip::step()
 	yuri::size_t	h = frame->get_height();
 
 
-	pBasicFrame frame_out = frame->get_copy();
-	FormatInfo_t info = BasicPipe::get_format_info(frame->get_format());
+	core::pBasicFrame  frame_out = frame->get_copy();
+	FormatInfo_t info = core::BasicPipe::get_format_info(frame->get_format());
 	assert(info && info->planes==1);
 
 	yuri::size_t Bpp = info->bpp >> 3;
@@ -63,7 +63,7 @@ bool Flip::step()
 		Bpp*=2;
 		swap_l=true;
 	}
-	if (flip_y) log[warning] << "Flip_y not supported!!" << std::endl;
+	if (flip_y) log[log::warning] << "Flip_y not supported!!" << std::endl;
 	if (flip_x) {
 		yuri::ubyte_t *base_ptr =  PLANE_RAW_DATA(frame_out,0);
 //		yuri::size_t cnt = 0;
@@ -87,18 +87,18 @@ bool Flip::step()
 				//std::swap(*in_ptr++,*out_ptr--);
 			}
 		}
-//		log[yuri::log::info] << "swapped " << cnt << " values" << std::endl;
+//		log[log::yuri::log::info] << "swapped " << cnt << " values" << std::endl;
 	}
 
 	push_raw_video_frame(0,frame_out);
 	return true;
 }
 
-bool Flip::set_param(Parameter &parameter)
+bool Flip::set_param(const core::Parameter &parameter)
 {
 	if (parameter.name== "flip_x") {
 		flip_x=parameter.get<bool>();
-		log[info] << "flip_x is: " << flip_x<<std::endl;
+		log[log::info] << "flip_x is: " << flip_x<<std::endl;
 	} else if (parameter.name== "flip_y") {
 		flip_y=parameter.get<bool>();
 	} else  return BasicIOThread::set_param(parameter);

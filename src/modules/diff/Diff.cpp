@@ -9,9 +9,10 @@
  */
 
 #include "Diff.h"
-#include "yuri/config/RegisteredClass.h"
+#include "yuri/core/Module.h"
+
 namespace yuri {
-namespace dummy_module {
+namespace diff {
 
 REGISTER("diff",Diff)
 
@@ -20,19 +21,17 @@ IO_THREAD_GENERATOR(Diff)
 // So we can write log[info] instead of log[log::info]
 using namespace yuri::log;
 
-shared_ptr<config::Parameters> Diff::configure()
+core::pParameters Diff::configure()
 {
-	shared_ptr<config::Parameters> p = io::BasicIOThread::configure();
+	core::pParameters p = core::BasicIOThread::configure();
 	p->set_description("Image difference.");
-//	(*p)["size"]["Set size of ....  (ignored ;)"]=666;
-//	(*p)["name"]["Set name"]=std::string("");
 	p->set_max_pipes(2,1);
 	return p;
 }
 
 
-Diff::Diff(log::Log &log_,io::pThreadBase parent,config::Parameters &parameters):
-io::BasicIOThread(log_,parent,2,1,std::string("diff"))
+Diff::Diff(log::Log &log_,core::pwThreadBase parent,core::Parameters &parameters):
+core::BasicIOThread(log_,parent,2,1,std::string("diff"))
 {
 	IO_THREAD_INIT("Diff")
 }
@@ -64,7 +63,7 @@ bool Diff::step()
 	}
 	const size_t width = frame1->get_width();
 	const size_t height = frame1->get_height();
-	io::pBasicFrame output = allocate_empty_frame(YURI_FMT_RGB24,width,height);
+	core::pBasicFrame output = allocate_empty_frame(YURI_FMT_RGB24,width,height);
 	ubyte_t *first = PLANE_RAW_DATA(frame1,0);
 	ubyte_t *second= PLANE_RAW_DATA(frame2,0);
 	ubyte_t *out_ptr= PLANE_RAW_DATA(output,0);
@@ -78,7 +77,7 @@ bool Diff::step()
 }
 //bool Diff::set_param(config::Parameter& param)
 //{
-//	return io::BasicIOThread::set_param(param);
+//	return core::BasicIOThread::set_param(param);
 //}
 
 } /* namespace dummy_module */

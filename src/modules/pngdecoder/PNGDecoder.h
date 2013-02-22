@@ -10,29 +10,25 @@
 
 #ifndef PNGDECODE_H_
 #define PNGDECODE_H_
-#include <yuri/io/BasicIOThread.h>
-#include <yuri/config/Config.h>
+#include <yuri/core/BasicIOThread.h>
 #include <png.h>
 namespace yuri {
 
-namespace io {
-using yuri::log::Log;
-using namespace yuri::config;
-using namespace std;
+namespace png {
 
-class PNGDecoder: public BasicIOThread {
+class PNGDecoder: public core::BasicIOThread {
 public:
-	PNGDecoder(Log &_log, pThreadBase parent, Parameters& parameters);
+	PNGDecoder(log::Log &_log, core::pwThreadBase parent,core::Parameters& parameters);
 	virtual ~PNGDecoder();
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<Parameters> configure();
+	static core::pParameters configure();
 	virtual bool step();
-	static bool validatePng(pBasicFrame f);
+	static bool validatePng(core::pBasicFrame f);
 protected:
 	static void readData(png_structp pngPtr, png_bytep data, png_size_t length);
 	void readData(png_bytep data, png_size_t length);
 	long position;
-	pBasicFrame f;
+	core::pBasicFrame f;
 	//png_structp pngPtr;
 	//png_infop infoPtr;
 };

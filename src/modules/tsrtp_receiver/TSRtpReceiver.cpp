@@ -9,23 +9,23 @@
  */
 
 #include "TSRtpReceiver.h"
-
+#include "yuri/core/Module.h"
 namespace yuri {
 
-namespace io {
+namespace rtp {
 
 REGISTER("ts_receiver",TSRtpReceiver)
 
-shared_ptr<BasicIOThread> TSRtpReceiver::generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception)
+core::pBasicIOThread TSRtpReceiver::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
 {
 	shared_ptr<TSRtpReceiver> yc (new TSRtpReceiver(_log,parent, parameters));
 //yc->set_endpoint(parameters["address"].get<std::string>(),parameters["port"].get<yuri::size_t>());
 	return yc;
 }
 
-shared_ptr<Parameters> TSRtpReceiver::configure()
+core::pParameters TSRtpReceiver::configure()
 {
-	shared_ptr<Parameters> p (new Parameters());
+	core::pParameters p (new core::Parameters());
 	p->set_max_pipes(0,1);
 	p->add_output_format(YURI_VIDEO_MPEGTS);
 	// Just for now, let's define target as parameter
@@ -35,7 +35,7 @@ shared_ptr<Parameters> TSRtpReceiver::configure()
 	return p;
 }
 
-TSRtpReceiver::TSRtpReceiver(Log &log_, pThreadBase parent, Parameters &parameters):
+TSRtpReceiver::TSRtpReceiver(log::Log &log_, core::pwThreadBase parent,core::Parameters &parameters):
 				BasicIOThread(log_,parent,0,1,"TS RTP Streamer"),seq(0),pseq(0),
 				buffer_size(1048576),buffer_position(0),pass_thru(false)
 {
@@ -57,20 +57,20 @@ TSRtpReceiver::~TSRtpReceiver() {
 
 bool TSRtpReceiver::set_endpoint(std::string address, yuri::size_t port)
 {
-	if (!socket) socket.reset(new ASIOUDPSocket(log,get_this_ptr(),port));
+	if (!socket) socket.reset(new asio::ASIOUDPSocket(log,get_this_ptr(),port));
 	return socket->set_endpoint(address,port);
 }
 
 void TSRtpReceiver::run()
 {
-	print_id(info);
+	print_id(log::info);
 	set_endpoint(params["address"].get<std::string>(),params["port"].get<yuri::size_t>());
 	yuri::size_t read_len;
 	while (still_running()) {
 		read_len = socket->read(&in_buffer[0],buffer_size);
-		log[verbose_debug] << "Read " << read_len << std::endl;
+		log[log::verbose_debug] << "Read " << read_len << std::endl;
 		if (pass_thru) {
-			shared_ptr<BasicFrame> f = allocate_frame_from_memory(&in_buffer[0],read_len);
+			core::pBasicFrame f = allocate_frame_from_memory(&in_buffer[0],read_len);
 			push_raw_frame(0,f);
 		} else {
 			// The code bellow usually expects TS packets to be aligned to the beginning of the frame.
@@ -98,16 +98,16 @@ void TSRtpReceiver::run()
 				pos++;
 			}
 			if (pos+188>=total_len)  {
-				//log[debug] << "Not enough data, waiting" << std::endl;
+				//log[log::debug] << "Not enough data, waiting" << std::endl;
 				continue;
 			}
-			//log[debug] << "pos: " << pos << " total: " << total_len << std::endl;
+			//log[log::debug] << "pos: " << pos << " total: " << total_len << std::endl;
 			len = total_len - pos;
 			if (len % 188) len -= len % 188;
-			shared_ptr<BasicFrame> f = allocate_frame_from_memory(&buffer[0]+pos,len);
+			core::pBasicFrame f = allocate_frame_from_memory(&buffer[0]+pos,len);
 			//f->set_time(static_cast<yuri::size_t>(packet->timestamp));
 			push_raw_frame(0,f);
-			if (pos) log[debug] << "Threw away " << (pos) << " bytes out of " << total_len << std::endl;
+			if (pos) log[log::debug] << "Threw away " << (pos) << " bytes out of " << total_len << std::endl;
 			buffer_position=total_len-len-pos;
 			if (buffer_position) {
 				memmove(&buffer[0],&buffer[0]+pos+len,buffer_position);

@@ -11,20 +11,20 @@
 #ifndef ASIOTCPSOCKET_H_
 #define ASIOTCPSOCKET_H_
 #include "boost/asio.hpp"
-#include "yuri/io/SocketBase.h"
+#include "yuri/core/SocketBase.h"
 #include "yuri/exception/InitializationFailed.h"
 namespace yuri
 {
 
-namespace io
+namespace asio
 {
 using boost::asio::ip::tcp;
-using yuri::exception::InitializationFailed;
+
 //typedef boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_NO_CHECK> socket_no_check;
 
-class ASIOTCPSocket : public SocketBase {
+class ASIOTCPSocket : public core::SocketBase {
 public:
-	ASIOTCPSocket(Log &_log,pThreadBase parent);
+	ASIOTCPSocket(log::Log &_log, core::pwThreadBase parent);
 	virtual ~ASIOTCPSocket();
 	bool connect(std::string address, yuri::ushort_t port);
 	virtual yuri::size_t read(yuri::ubyte_t * data,yuri::size_t size);

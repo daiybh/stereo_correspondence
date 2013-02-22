@@ -17,7 +17,7 @@ namespace graphics {
 
 class GLProgram {
 public:
-	GLProgram(Log &log_);
+	GLProgram(log::Log &log_);
 	virtual ~GLProgram();
 	bool attach_shader(GLShader &shader);
 	bool load_shader(GLuint type,std::string source);
@@ -29,7 +29,7 @@ public:
 	GLint get_uniform(std::string name);
 	void set_uniform_sampler(GLint id, GLint value);
 protected:
-	Log log;
+	log::Log log;
 	GLuint program;
 
 };

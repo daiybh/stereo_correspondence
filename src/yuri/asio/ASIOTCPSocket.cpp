@@ -9,18 +9,18 @@
  */
 
 #include "ASIOTCPSocket.h"
-
+#include "boost/lexical_cast.hpp"
 namespace yuri {
 
-namespace io {
+namespace asio {
 
-ASIOTCPSocket::ASIOTCPSocket(Log &_log,pThreadBase parent):SocketBase(_log,parent)
+ASIOTCPSocket::ASIOTCPSocket(log::Log &_log, core::pwThreadBase parent):core::SocketBase(_log,parent)
 {
 	try {
 		socket.reset(new tcp::socket(io_service));
 	}
 	catch (...) {
-		throw InitializationFailed("Failed to iniailize ASIOTCPSocket");
+		throw exception::InitializationFailed("Failed to iniailize ASIOTCPSocket");
 	}
 }
 
@@ -44,6 +44,7 @@ bool ASIOTCPSocket::connect(std::string address, yuri::ushort_t port)
 			throw (e);
 		}
 	}
+	return false;
 }
 
 yuri::size_t ASIOTCPSocket::read(yuri::ubyte_t * data,yuri::size_t size)

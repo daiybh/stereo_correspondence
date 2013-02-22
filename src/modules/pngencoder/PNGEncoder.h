@@ -10,23 +10,20 @@
 
 #ifndef PNGENCODE_H_
 #define PNGENCODE_H_
-#include "yuri/io/BasicIOThread.h"
-#include "yuri/config/RegisteredClass.h"
+#include "yuri/core/BasicIOThread.h"
 #include <png.h>
 
 namespace yuri {
 
-namespace io {
-using yuri::log::Log;
-using namespace yuri::config;
+namespace png {
 
-class PNGEncoder: public BasicIOThread {
+class PNGEncoder: public core::BasicIOThread {
 public:
-	PNGEncoder(Log &_log, pThreadBase parent, Parameters& parameters) IO_THREAD_CONSTRUCTOR;
+	PNGEncoder(log::Log &_log, core::pwThreadBase parent,core::Parameters& parameters) IO_THREAD_CONSTRUCTOR;
 	virtual ~PNGEncoder();
 	virtual bool step();
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<Parameters> configure();
+	static core::pParameters configure();
 
 protected:
 	static void writeData(png_structp pngPtr, png_bytep data, png_size_t length);
@@ -36,7 +33,7 @@ protected:
 	static void handleWarning(png_structp png_ptr, png_const_charp error_msg);
 	void printError(int type, const char * msg);
 	long position;
-	pBasicFrame frame;
+	core::pBasicFrame frame;
 	shared_array<yuri::ubyte_t> memory;
 	long memSize;
 };

@@ -9,24 +9,25 @@
  */
 
 #include "TSRtpStreamer.h"
+#include "yuri/core/Module.h"
 
 namespace yuri {
 
-namespace io {
+namespace rtp {
 
 
 REGISTER("ts_streamer",TSRtpStreamer)
 
-shared_ptr<BasicIOThread> TSRtpStreamer::generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception)
+core::pBasicIOThread TSRtpStreamer::generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters)
 {
 	shared_ptr<TSRtpStreamer> yc (new TSRtpStreamer(_log,parent));
 	yc->set_endpoint(parameters["address"].get<std::string>(),parameters["port"].get<yuri::size_t>());
 	return yc;
 }
 
-shared_ptr<Parameters> TSRtpStreamer::configure()
+core::pParameters TSRtpStreamer::configure()
 {
-	shared_ptr<Parameters> p (new Parameters());
+	core::pParameters p (new core::Parameters());
 	p->set_max_pipes(1,0);
 	p->add_input_format(YURI_VIDEO_MPEGTS);
 	// Just for now, let's define target as parameter
@@ -35,7 +36,7 @@ shared_ptr<Parameters> TSRtpStreamer::configure()
 	return p;
 }
 
-TSRtpStreamer::TSRtpStreamer(Log &log_, pThreadBase parent):
+TSRtpStreamer::TSRtpStreamer(log::Log &log_, core::pwThreadBase parent):
 		BasicIOThread(log_,parent,1,0,"TS RTP Streamer"),seq(0),pseq(0)
 {
 	latency=1;
@@ -44,20 +45,20 @@ TSRtpStreamer::TSRtpStreamer(Log &log_, pThreadBase parent):
 TSRtpStreamer::~TSRtpStreamer()
 {
 	ptime end_time=microsec_clock::local_time();
-	log[debug] << "Sent " << packets_sent << " in " << to_simple_string(end_time - first_packet)
+	log[log::debug] << "Sent " << packets_sent << " in " << to_simple_string(end_time - first_packet)
 			<< ". That make " << (double)(packets_sent)*1.0e6/(end_time - first_packet).total_microseconds() << " pkts/us" << std::endl;
 }
 
 bool TSRtpStreamer::set_endpoint(std::string address, yuri::size_t port)
 {
-	if (!socket) socket.reset(new ASIOUDPSocket(log,get_this_ptr(),6666));
+	if (!socket) socket.reset(new asio::ASIOUDPSocket(log,get_this_ptr(),6666));
 	return socket->set_endpoint(address,port);
 }
 
 bool TSRtpStreamer::step()
 {
 	if (!in[0] || in[0]->is_empty()) return true;
-	shared_ptr<BasicFrame> frame = in[0]->pop_frame();
+	core::pBasicFrame frame = in[0]->pop_frame();
 	yuri::size_t header_size = sizeof(RTPPacket);
 //	shared_array<yuri::ubyte_t> packet = allocate_memory_block(header_size+7*188);
 	plane_t packet(header_size+7*188);
@@ -85,7 +86,7 @@ bool TSRtpStreamer::step()
 	while (remaining) {
 		//p->timestamp = htonl(pseq * 90000 / 25);
 		yuri::uint_t ts = (microsec_clock::local_time()-first_packet).total_microseconds()*90/1000;
-		//log[debug] << "ts: " << ts << std::endl;
+		//log[log::debug] << "ts: " << ts << std::endl;
 		p->timestamp = htonl(ts);
 		*((yuri::uint_t*)p->bytes) = htonl(hdr|pseq++);
 

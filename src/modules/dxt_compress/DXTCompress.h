@@ -11,25 +11,22 @@
 #ifndef DXTCompress_H_
 #define DXTCompress_H_
 
-#include "yuri/io/BasicIOThread.h"
+#include "yuri/core/BasicIOThread.h"
 
 namespace yuri {
-namespace dummy_module {
-using yuri::log::Log;
-using yuri::config::Parameter;
-using yuri::config::Parameters;
-using yuri::io::pThreadBase;
+namespace dxt_compress {
 
-class DXTCompress: public yuri::io::BasicIOThread
+
+class DXTCompress: public yuri::core::BasicIOThread
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<Parameters> configure();
+	static core::pParameters configure();
 	virtual ~DXTCompress();
 private:
-	DXTCompress(Log &log_,pThreadBase parent,Parameters &parameters);
+	DXTCompress(log::Log &log_,core::pwThreadBase parent, core::Parameters &parameters);
 	virtual bool step();
-	virtual bool set_param(Parameter& param);
+	virtual bool set_param(const core::Parameter& param);
 	int dxt_type;
 	yuri::format_t format;
 };

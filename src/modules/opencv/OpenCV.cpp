@@ -9,12 +9,12 @@
  */
 
 #include "OpenCV.h"
-#include "yuri/config/RegisteredClass.h"
+#include "yuri/core/Module.h"
 #include "opencv2/imgproc/imgproc.hpp"
 #include <boost/assign.hpp>
 
 namespace yuri {
-namespace dummy_module {
+namespace opencv {
 
 REGISTER("opencv",OpenCV)
 
@@ -22,9 +22,9 @@ IO_THREAD_GENERATOR(OpenCV)
 
 using namespace yuri::log;
 
-shared_ptr<config::Parameters> OpenCV::configure()
+core::pParameters OpenCV::configure()
 {
-	shared_ptr<config::Parameters> p = io::BasicIOThread::configure();
+	core::pParameters p = core::BasicIOThread::configure();
 	p->set_description("Dummy module. For testing only.");
 	(*p)["size"]["Set size of ....  (ignored ;)"]=666;
 	(*p)["name"]["Set name"]=std::string("");
@@ -33,8 +33,8 @@ shared_ptr<config::Parameters> OpenCV::configure()
 }
 
 
-OpenCV::OpenCV(log::Log &log_,io::pThreadBase parent,config::Parameters &parameters):
-io::BasicIOThread(log_,parent,1,1,std::string("opencv")),format(YURI_FMT_RGB24)
+OpenCV::OpenCV(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
+core::BasicIOThread(log_,parent,1,1,std::string("opencv")),format(YURI_FMT_RGB24)
 {
 	IO_THREAD_INIT("OpenCV")
 }
@@ -53,20 +53,20 @@ typedef std::map<fmt_pair, int >::iterator fmt_map_iter;
 
 bool OpenCV::step()
 {
-	const io::pBasicFrame frame = in[0]->pop_frame();
+	const core::pBasicFrame frame = in[0]->pop_frame();
 	if (frame) {
 		fmt_pair fmts = std::make_pair(frame->get_format(), format);
 		fmt_map_iter it = format_map.find(fmts);
 		if (it==format_map.end()) {
 			log[warning] << "Unsupported conversion combination! (" <<
-					io::BasicPipe::get_format_string(fmts.first) << " -> " <<
-					io::BasicPipe::get_format_string(fmts.second) << "\n";
+					core::BasicPipe::get_format_string(fmts.first) << " -> " <<
+					core::BasicPipe::get_format_string(fmts.second) << "\n";
 			return true;
 		}
 		const size_t width = frame->get_width();
 		const size_t height = frame->get_height();
-		const FormatInfo_t in_fi 	= io::BasicPipe::get_format_info(frame->get_format());
-		const FormatInfo_t out_fi	= io::BasicPipe::get_format_info(format);
+		const FormatInfo_t in_fi 	= core::BasicPipe::get_format_info(frame->get_format());
+		const FormatInfo_t out_fi	= core::BasicPipe::get_format_info(format);
 		if (!in_fi || !out_fi) {
 			log[warning] << "Unknown type passed\n";
 			return true;
@@ -97,7 +97,7 @@ bool OpenCV::step()
 		}
 		int in_type 	= CV_MAKETYPE(in_base,  in_fi->components[0].size());
 		int out_type	= CV_MAKETYPE(out_base, out_fi->components[0].size());
-		io::pBasicFrame output = allocate_empty_frame(format,width,height);
+		core::pBasicFrame output = allocate_empty_frame(format,width,height);
 		cv::Mat in_mat(height,width,in_type,PLANE_RAW_DATA(frame,0));
 		cv::Mat out_mat(height,width,out_type,PLANE_RAW_DATA(output,0));
 		cv::cvtColor(in_mat,out_mat,it->second);
@@ -106,11 +106,11 @@ bool OpenCV::step()
 	}
 	return true;
 }
-bool OpenCV::set_param(config::Parameter& param)
+bool OpenCV::set_param(const core::Parameter& param)
 {
 	if (param.name =="format") {
-		format = io::BasicPipe::get_format_from_string(param.get<std::string>());
-	} else return io::BasicIOThread::set_param(param);
+		format = core::BasicPipe::get_format_from_string(param.get<std::string>());
+	} else return core::BasicIOThread::set_param(param);
 	return true;
 }
 

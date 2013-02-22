@@ -7,24 +7,24 @@
 
 #ifndef OpenNIKinect_H_
 #define OpenNIKinect_H_
-#include "yuri/io/BasicIOThread.h"
+#include "yuri/core/BasicIOThread.h"
 #include "openni_wrapper.h"
 
 namespace yuri {
 namespace OpenNIKinect {
 
-class OpenNIKinect: public io::BasicIOThread
+class OpenNIKinect: public core::BasicIOThread
 {
 public:
 	typedef shared_ptr<openni::Device> pDevice;
 	typedef shared_ptr<openni::VideoStream> pVideoStream;
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<config::Parameters> configure();
+	static core::pParameters configure();
 	virtual ~OpenNIKinect();
 private:
-	OpenNIKinect(log::Log &log_,io::pThreadBase parent,config::Parameters &parameters);
+	OpenNIKinect(log::Log &log_,core::pwThreadBase parent,core::Parameters &parameters);
 	virtual void run();
-	virtual bool set_param(config::Parameter& param);
+	virtual bool set_param(const core::Parameter& param);
 	bool enable_sensor(pDevice, openni::SensorType);
 
 

@@ -9,24 +9,26 @@
  */
 
 #include "RawFileSource.h"
+#include "yuri/core/Module.h"
 #include <fstream>
 #include <boost/assign.hpp>
+
 namespace yuri {
 
-namespace io {
+namespace rawfilesource {
 
 
 REGISTER("raw_filesource",RawFileSource)
 
-shared_ptr<BasicIOThread> RawFileSource::generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception)
+core::pBasicIOThread RawFileSource::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
 {
-	shared_ptr<BasicIOThread> c (new RawFileSource(_log,parent,parameters));
+	core::pBasicIOThread c (new RawFileSource(_log,parent,parameters));
 	return c;
 }
 
-shared_ptr<Parameters> RawFileSource::configure()
+core::pParameters RawFileSource::configure()
 {
-	shared_ptr<Parameters> p = BasicIOThread::configure();
+	core::pParameters p = BasicIOThread::configure();
 	(*p)["path"]["Path to the file"]=std::string();
 	(*p)["keep_alive"]["Stay idle after pushing the file (setting to false will cause the object to quit afterward)"]=true;
 	(*p)["output_format"]["Force output format"]=std::string("single16");
@@ -43,8 +45,8 @@ shared_ptr<Parameters> RawFileSource::configure()
 }
 
 
-RawFileSource::RawFileSource(Log &_log, pThreadBase parent, Parameters &parameters):
-			BasicIOThread(_log,parent,1,2,"RawFileSource"), position(0),
+RawFileSource::RawFileSource(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters):
+			core::BasicIOThread(_log,parent,1,2,"RawFileSource"), position(0),
 			chunk_size(0), width(0), height(0),output_format(YURI_FMT_NONE),
 			fps(25.0),last_send(not_a_date_time),keep_alive(true),loop(true),
 			failed_read(false),sequence(false),block(0),loop_number(0)
@@ -98,7 +100,7 @@ bool RawFileSource::read_chunk()
 		}
 		yuri::size_t length = chunk_size;
 		std::vector<yuri::size_t> planes=boost::assign::list_of(length);
-		FormatInfo_t fi = BasicPipe::get_format_info(output_format);
+		FormatInfo_t fi = core::BasicPipe::get_format_info(output_format);
 		if (output_format != YURI_FMT_NONE && fi && !fi->compressed && width && height) {
 
 			// Known raw format. I can guess the chunk_size.
@@ -112,14 +114,14 @@ bool RawFileSource::read_chunk()
 				}
 
 			} else planes=boost::assign::list_of(length);
-			log[debug] << "Guessed size for " << fi->long_name << " is " << length<<std::endl;
+			log[log::debug] << "Guessed size for " << fi->long_name << " is " << length<<std::endl;
 		} else if (!chunk_size) {
 			file.seekg(0,std::ios_base::end);
 			length = static_cast<yuri::size_t>(file.tellg()) - position;
 			file.seekg(position,std::ios_base::beg);
 			planes=boost::assign::list_of(length);
 		}
-		frame.reset(new BasicFrame(planes.size()));
+		frame.reset(new core::BasicFrame(planes.size()));
 		//(*frame)[0].set(data,length);
 		for (yuri::size_t i=0;i<planes.size();++i) {
 			yuri::size_t plane_length = planes[i];
@@ -132,7 +134,7 @@ bool RawFileSource::read_chunk()
 			if (static_cast<yuri::size_t>(file.gcount()) != plane_length ) {
 				if (first_read) {
 					failed_read=true;
-					log[warning]<< "Wrong length of the file (read " << file.gcount() << ", expected " << plane_length << ")" << std::endl;
+					log[log::warning]<< "Wrong length of the file (read " << file.gcount() << ", expected " << plane_length << ")" << std::endl;
 				}
 				file.close();
 				frame.reset();++loop_number;
@@ -149,14 +151,14 @@ bool RawFileSource::read_chunk()
 		frame->set_parameters(output_format, width, height);
 	}
 	catch (std::exception &e) {
-		log[error] << "Failed to process file " << params["path"].get<std::string>()
+		log[log::error] << "Failed to process file " << params["path"].get<std::string>()
 				<< " (" << e.what() << ")"<<std::endl;
 		failed_read=true;
 		return false;
 	}
 	return true;
 }
-bool RawFileSource::set_param(Parameter &parameter)
+bool RawFileSource::set_param(const core::Parameter &parameter)
 {
 	if (parameter.name == "chunk") {
 		chunk_size=parameter.get<yuri::size_t>();
@@ -167,8 +169,8 @@ bool RawFileSource::set_param(Parameter &parameter)
 	} else if (parameter.name == "height") {
 		height=parameter.get<yuri::size_t>();
 	} else if (parameter.name == "output_format") {
-		output_format = BasicPipe::get_format_from_string(parameter.get<std::string>());
-		log[info] << "output format " << output_format << std::endl;
+		output_format = core::BasicPipe::get_format_from_string(parameter.get<std::string>());
+		log[log::info] << "output format " << output_format << std::endl;
 	} else if (parameter.name == "path") {
 		path=parameter.get<std::string>();
 		if (path.find("%d")!=std::string::npos) {

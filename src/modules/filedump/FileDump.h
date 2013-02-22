@@ -10,26 +10,23 @@
 
 #ifndef FILEDUMP_H_
 #define FILEDUMP_H_
-#include "yuri/io/BasicIOThread.h"
-#include "yuri/config/Config.h"
+#include "yuri/core/BasicIOThread.h"
 #include <fstream>
 #include <string>
-#include "yuri/config/Parameters.h"
 
 namespace yuri
 {
-namespace io
+namespace dump
 {
 
-using namespace yuri::config;
 
-class FileDump: public BasicIOThread
+class FileDump: public core::BasicIOThread
 {
 public:
-	FileDump(Log &log_,pThreadBase parent, Parameters &parameters);
+	FileDump(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
 	virtual ~FileDump();
-	static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception);
-	static shared_ptr<Parameters> configure();
+	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
+	static core::pParameters configure();
 protected:
 	bool step();
 protected:

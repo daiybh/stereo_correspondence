@@ -10,22 +10,23 @@
 
 #ifndef NULL_H_
 #define NULL_H_
-#include "yuri/config/RegisteredClass.h"
+
+#include "yuri/core/BasicIOThread.h"
 
 namespace yuri
 {
 
-namespace io
+namespace null
 {
-using namespace yuri::log;
-class Null: public BasicIOThread
+
+class Null: public core::BasicIOThread
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<Parameters> configure();
+	static core::pParameters configure();
 	virtual ~Null();
 protected:
-	Null(Log &_log,pThreadBase parent, Parameters& parameters) IO_THREAD_CONSTRUCTOR;
+	Null(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters) IO_THREAD_CONSTRUCTOR;
 	virtual bool step();
 };
 

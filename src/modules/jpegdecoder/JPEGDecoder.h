@@ -12,25 +12,22 @@
 #define JPEGDECODER_H_
 
 
-#include <yuri/io/BasicIOThread.h>
-#include <yuri/config/Config.h>
+#include <yuri/core/BasicIOThread.h>
 #include <jpeglib.h>
-#include "yuri/config/RegisteredClass.h"
+
 
 namespace yuri {
 
-namespace io {
-using yuri::log::Log;
-using namespace yuri::config;
+namespace jpg {
 
-class JPEGDecoder:public BasicIOThread {
+class JPEGDecoder:public core::BasicIOThread {
 public:
-	JPEGDecoder(Log &_log, pThreadBase parent);
+	JPEGDecoder(log::Log &_log, core::pwThreadBase parent);
 	virtual ~JPEGDecoder();
-	static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception);
-	static shared_ptr<Parameters> configure();
+	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters);
+	static core::pParameters configure();
 
-	static bool validate(pBasicFrame f);
+	static bool validate(core::pBasicFrame f);
 	virtual bool step();
 	void forceLineWidthMult(int mult) { if (mult>1)line_width_mult = mult; else mult=1; }
 protected:
@@ -44,7 +41,7 @@ protected:
 	static void termSource(jpeg_decompress_struct* cinfo);
 	static void errorExit(jpeg_common_struct* cinfo);
 	void abort();
-	pBasicFrame frame;
+	core::pBasicFrame frame;
 	int line_width_mult;
 	bool aborted;
 

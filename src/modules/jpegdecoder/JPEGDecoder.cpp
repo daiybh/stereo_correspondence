@@ -9,29 +9,29 @@
  */
 
 #include "JPEGDecoder.h"
+#include "yuri/core/Module.h"
 
-#include <yuri/exception/Exception.h>
 namespace yuri {
 
-namespace io {
+namespace jpg {
 
 REGISTER("jpegdecoder",JPEGDecoder)
 
-shared_ptr<BasicIOThread> JPEGDecoder::generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception)
+core::pBasicIOThread JPEGDecoder::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
 {
 	shared_ptr<JPEGDecoder> j( new JPEGDecoder(_log,parent));
 	j->forceLineWidthMult(parameters["line_multiply"].get<int>());
 	return j;
 }
-shared_ptr<Parameters> JPEGDecoder::configure()
+core::pParameters JPEGDecoder::configure()
 {
-	shared_ptr<Parameters> p = BasicIOThread::configure();
+	core::pParameters p = BasicIOThread::configure();
 	(*p)["line_multiply"]=1;
 	return p;
 }
 
 
-JPEGDecoder::JPEGDecoder(Log &_log, pThreadBase parent)
+JPEGDecoder::JPEGDecoder(log::Log &_log, core::pwThreadBase parent)
 	:BasicIOThread(_log,parent,1,1),line_width_mult(1),aborted(false)
 {
 	log.setLabel("[JPEGDecoder]");
@@ -46,7 +46,7 @@ bool JPEGDecoder::step() {
 		return true;
 	bool decompressed = false;
 	aborted = false;
-	//log[debug] << "Reading packet " << frame->get_size() << " bytes long" << std::endl;
+	//log[log::debug] << "Reading packet " << frame->get_size() << " bytes long" << std::endl;
 
 	struct jpeg_decompress_struct cinfo;
 	cinfo.client_data=reinterpret_cast<void*>(this);
@@ -60,11 +60,11 @@ bool JPEGDecoder::step() {
 	int bpp;
 	int linesize;
 	shared_array<yuri::ubyte_t> mem;
-	pBasicFrame out_frame (new BasicFrame(1));
+	core::pBasicFrame out_frame (new core::BasicFrame(1));
 	//while (cinfo.next_scanline < cinfo.image_height) {
 	try {
 		if (jpeg_read_header(&cinfo,true)!=JPEG_HEADER_OK) {
-			log[warning] << "Unrecognized file header!!" << std::endl;
+			log[log::warning] << "Unrecognized file header!!" << std::endl;
 			return true;
 		}
 		jpeg_start_decompress(&cinfo);
@@ -76,7 +76,7 @@ bool JPEGDecoder::step() {
 		bpp = cinfo.output_components;
 		linesize = width*bpp;
 		colorspace= (bpp==3?YURI_FMT_RGB24:bpp==4?YURI_FMT_RGB32:YURI_FMT_NONE);
-		log[verbose_debug] << "Allocating " << linesize * height << " bytes for image "
+		log[log::verbose_debug] << "Allocating " << linesize * height << " bytes for image "
 			<< width << "x" << height << " @ " << 8*bpp << "bpp" << std::endl;
 		PLANE_DATA(out_frame,0).resize(linesize * height);
 //		mem=allocate_memory_block(linesize * height);
@@ -91,7 +91,7 @@ bool JPEGDecoder::step() {
 			completed += processed;
 			if (static_cast<int>(completed) >= height) break;
 			if (!processed) {
-				log[error] << "No lines processed ... corrupt file?" << std::endl;
+				log[log::error] << "No lines processed ... corrupt file?" << std::endl;
 				break;
 			}
 		}
@@ -108,7 +108,7 @@ bool JPEGDecoder::step() {
 		}
 	}
 	catch (yuri::exception::Exception &e) {
-		log[error] << "Decoding failed!: " << e.what() << std::endl;
+		log[log::error] << "Decoding failed!: " << e.what() << std::endl;
 		jpeg_abort(reinterpret_cast<j_common_ptr>(&cinfo));
 		return true;
 	}
@@ -138,7 +138,7 @@ void JPEGDecoder::setDestManager(jpeg_decompress_struct* cinfo)
 }
 
 /// Check if there's valid JPEG magic
-bool JPEGDecoder::validate(pBasicFrame frame)
+bool JPEGDecoder::validate(core::pBasicFrame frame)
 {
 	if (!frame || PLANE_SIZE(frame,0)<4) return false;
 	uint8_t *magic = reinterpret_cast<uint8_t*>(PLANE_RAW_DATA(frame,0));

@@ -9,8 +9,7 @@
  */
 
 #include "AVScaler.h"
-
-#include "yuri/exception/InitializationFailed.h"
+#include "yuri/core/Module.h"
 
 namespace yuri
 {
@@ -20,11 +19,10 @@ namespace video
 REGISTER("avscaler",AVScaler)
 
 
-shared_ptr<BasicIOThread> AVScaler::generate(Log &_log,pThreadBase parent,Parameters& parameters)
-	throw (Exception)
+core::pBasicIOThread AVScaler::generate(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters)
 {
-	long format = BasicPipe::get_format_from_string(parameters["format"].get<std::string>(),YURI_FMT);
-	if (format == YURI_FMT_NONE) throw InitializationFailed(
+	long format = core::BasicPipe::get_format_from_string(parameters["format"].get<std::string>(),YURI_FMT);
+	if (format == YURI_FMT_NONE) throw exception::InitializationFailed(
 		std::string("Wrong output format ")+parameters["format"].get<std::string>());
 	shared_ptr<AVScaler> s(new AVScaler(_log,parent));
 	s->set_output_format(parameters["width"].get<yuri::ssize_t>(),
@@ -32,9 +30,9 @@ shared_ptr<BasicIOThread> AVScaler::generate(Log &_log,pThreadBase parent,Parame
 			format);
 	return s;
 }
-shared_ptr<Parameters> AVScaler::configure()
+core::pParameters AVScaler::configure()
 {
-	shared_ptr<Parameters> p =BasicIOThread::configure();
+	core::pParameters p =BasicIOThread::configure();
 	p->set_description("Scaling object using libswscale");
 	(*p)["format"]["Color format for the output"]="RGB";
 	(*p)["width"]["Width of the output image. Set to negative value to disable scaling"]=640;
@@ -51,20 +49,20 @@ shared_ptr<Parameters> AVScaler::configure()
 	return p;
 }
 
-bool AVScaler::configure_converter(Parameters& parameters,long format_in,
-		long format_out)	throw (Exception)
+bool AVScaler::configure_converter(core::Parameters& parameters,long format_in,
+		long format_out)
 {
 	std::set<long> fmts = get_supported_formats();
-	if (fmts.find(format_in) == fmts.end()) throw NotImplemented();
-	if (fmts.find(format_out) == fmts.end()) throw NotImplemented();
-	parameters["format"]=BasicPipe::get_simple_format_string(format_out);
+	if (fmts.find(format_in) == fmts.end()) throw exception::NotImplemented();
+	if (fmts.find(format_out) == fmts.end()) throw exception::NotImplemented();
+	parameters["format"]=core::BasicPipe::get_simple_format_string(format_out);
 	parameters["width"]=-1;
 	parameters["height"]=-1;
 	return true;
 }
 
 
-AVScaler::AVScaler(Log &_log, pThreadBase parent):
+AVScaler::AVScaler(log::Log &_log, core::pwThreadBase parent):
 	AVCodecBase(_log,parent,"AVScaler"),f_in(PIX_FMT_NONE),f_out(PIX_FMT_NONE),
 	format_in(YURI_FMT_NONE),format_out(YURI_FMT_NONE),w_in(0),h_in(0),w_out(0),
 	h_out(0),scaling(false),transforming(false),valid_contexts(false),
@@ -117,16 +115,16 @@ bool AVScaler::do_recheck_conversions()
 
 	if (format_in != format_out) transforming=true;
 	else transforming=false;
-	log[debug] << "Scaling " << (scaling?"enabled":"disabled") << ", transforming " << (transforming?"enabled":"disabled") << std::endl;
-	if (scaling) log[debug] << "Scaling " << w_in << "x" << h_in << " => " << w_out << "x" << h_out << std::endl;
-	if (transforming) log[debug] << "Transforming " << BasicPipe::get_format_string(format_in) << " => " << BasicPipe::get_format_string(format_out) << std::endl;
+	log[log::debug] << "Scaling " << (scaling?"enabled":"disabled") << ", transforming " << (transforming?"enabled":"disabled") << std::endl;
+	if (scaling) log[log::debug] << "Scaling " << w_in << "x" << h_in << " => " << w_out << "x" << h_out << std::endl;
+	if (transforming) log[log::debug] << "Transforming " << core::BasicPipe::get_format_string(format_in) << " => " << core::BasicPipe::get_format_string(format_out) << std::endl;
 	if (f_in == PIX_FMT_NONE) {
-		log[warning] << "Input format not recognized by libav." << std::endl;
+		log[log::warning] << "Input format not recognized by libav." << std::endl;
 		valid_contexts = false;
 		return false;
 	}
 	if (f_out == PIX_FMT_NONE) {
-		log[warning] << "Output format not recognized by libav." << std::endl;
+		log[log::warning] << "Output format not recognized by libav." << std::endl;
 		valid_contexts = false;
 		return false;
 	}
@@ -137,10 +135,10 @@ bool AVScaler::do_recheck_conversions()
 void AVScaler::do_create_contexts()
 {
 	do_delete_contexts();
-	log[normal] << "[Re]creating contexts" << std::endl;
-	if (BasicPipe::get_format_group(format_in) != YURI_FMT
-			|| BasicPipe::get_format_group(format_out) != YURI_FMT) {
-		log[error] << "Trying to convert unsupported format!" <<std::endl;
+	log[log::normal] << "[Re]creating contexts" << std::endl;
+	if (core::BasicPipe::get_format_group(format_in) != YURI_FMT
+			|| core::BasicPipe::get_format_group(format_out) != YURI_FMT) {
+		log[log::error] << "Trying to convert unsupported format!" <<std::endl;
 		return;
 	}
 	if (scaling) {
@@ -211,8 +209,8 @@ bool AVScaler::do_fetch_frame()
 		return false;
 	}
 	if (in[0]->get_type() != YURI_TYPE_VIDEO) {
-		log[debug] << "Connected pipe with type other than video ("
-				<< BasicPipe::get_type_string(in[0]->get_type())
+		log[log::debug] << "Connected pipe with type other than video ("
+				<< core::BasicPipe::get_type_string(in[0]->get_type())
 				<< "), that's not gonna work" << std::endl;
 		return false;
 	}
@@ -254,12 +252,12 @@ void AVScaler::do_delete_contexts()
 */
 }
 
-void AVScaler::do_output_frame(shared_ptr<BasicFrame> frame)
+void AVScaler::do_output_frame(core::pBasicFrame frame)
 {
 
-	shared_ptr<BasicFrame> f = frame->get_copy();
+	core::pBasicFrame f = frame->get_copy();
 	push_video_frame(0,f,format_out,w_out, h_out, pts, duration, frame->get_dts());
-	//log[debug] << "pushed frame " << w_out << "x" << h_out << ", with " <<  f->get_planes_count() << " planes. size: " << f->get_size() << std::endl;
+	//log[log::debug] << "pushed frame " << w_out << "x" << h_out << ", with " <<  f->get_planes_count() << " planes. size: " << f->get_size() << std::endl;
 }
 
 bool AVScaler::do_prescale_checks()
@@ -287,7 +285,7 @@ bool AVScaler::synchronous_scale(shared_ptr<AVFrame> fr,int w, int h, PixelForma
 
 bool AVScaler::step()
 {
-	log[verbose_debug] << "Step!" << std::endl;
+	log[log::verbose_debug] << "Step!" << std::endl;
 	scale_frame();
 	return true;
 }

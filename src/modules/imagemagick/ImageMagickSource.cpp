@@ -8,7 +8,7 @@
  */
 
 #include "ImageMagickSource.h"
-#include "yuri/config/RegisteredClass.h"
+#include "yuri/core/Module.h"
 #include "Magick++.h"
 #include <map>
 #include <boost/assign.hpp>
@@ -19,7 +19,6 @@ REGISTER("imagemagick_source",ImageMagickSource)
 
 IO_THREAD_GENERATOR(ImageMagickSource)
 
-using namespace yuri::io;
 
 namespace {
 std::map<yuri::format_t, std::pair<std::string, Magick::StorageType> > yuri_to_magick_format = boost::assign::map_list_of<yuri::format_t, std::pair<std::string, Magick::StorageType> >
@@ -28,9 +27,9 @@ std::map<yuri::format_t, std::pair<std::string, Magick::StorageType> > yuri_to_m
 (YURI_FMT_BGR,std::make_pair("BGR",Magick::CharPixel));
 }
 
-shared_ptr<Parameters> ImageMagickSource::configure()
+core::pParameters ImageMagickSource::configure()
 {
-	shared_ptr<Parameters> p = BasicIOThread::configure();
+	core::pParameters p = BasicIOThread::configure();
 	p->set_description("Image loader based on ImageMagick.");
 	(*p)["format"]["Set output format"]="RGB";
 	p->set_max_pipes(1,1);
@@ -38,8 +37,8 @@ shared_ptr<Parameters> ImageMagickSource::configure()
 }
 
 
-ImageMagickSource::ImageMagickSource(Log &log_,pThreadBase parent,Parameters &parameters):
-BasicIOThread(log_,parent,1,1,std::string("ImageMagickSource"))
+ImageMagickSource::ImageMagickSource(log::Log &log_,core::pwThreadBase parent,core::Parameters &parameters):
+core::BasicIOThread(log_,parent,1,1,std::string("ImageMagickSource"))
 {
 	IO_THREAD_INIT("ImageMagickSource")
 }
@@ -50,14 +49,14 @@ ImageMagickSource::~ImageMagickSource()
 
 bool ImageMagickSource::step()
 {
-	pBasicFrame frame = in[0]->pop_frame();
+	core::pBasicFrame frame = in[0]->pop_frame();
 	if (!frame) return true;
 	yuri::format_t fmt = frame->get_format();
-	if (BasicPipe::get_format_group(fmt)!=YURI_TYPE_VIDEO) {
+	if (core::BasicPipe::get_format_group(fmt)!=YURI_TYPE_VIDEO) {
 		return true;
 	}
 	if (frame->get_planes_count()>1) {
-		log[warning] << "Input frame has more than 1 plane, ignoring them\n";
+		log[log::warning] << "Input frame has more than 1 plane, ignoring them\n";
 	}
 	try {
 		Magick::Blob blob(PLANE_RAW_DATA(frame,0),PLANE_SIZE(frame,0));
@@ -66,24 +65,24 @@ bool ImageMagickSource::step()
 		image.modifyImage();
 		yuri::size_t width = image.columns();
 		yuri::size_t height = image.rows();
-		log[debug] << "Loaded image " << width << "x" <<height <<"\n";
+		log[log::debug] << "Loaded image " << width << "x" <<height <<"\n";
 		if (!still_running()) return false;
-		pBasicFrame out_frame = allocate_empty_frame(format,width,height);
+		core::pBasicFrame out_frame = allocate_empty_frame(format,width,height);
 		std::pair<std::string, Magick::StorageType> img_type = yuri_to_magick_format[format];
 		image.write(0,0,width,height,img_type.first,img_type.second,PLANE_RAW_DATA(out_frame,0));
 		push_raw_video_frame(0,out_frame);
 	}
 	catch (std::exception& e) {
-		log[error] << "Exception during decoding: " << e.what() << "\n";
+		log[log::error] << "Exception during decoding: " << e.what() << "\n";
 	}
 	return true;
 }
-bool ImageMagickSource::set_param(Parameter& param)
+bool ImageMagickSource::set_param(const core::Parameter& param)
 {
 	if (param.name == "format") {
-		format = BasicPipe::get_format_from_string(param.get<std::string>());
+		format = core::BasicPipe::get_format_from_string(param.get<std::string>());
 		if (yuri_to_magick_format.find(format)==yuri_to_magick_format.end()) {
-			log[warning] << "Specified format is not currently supported. Falling back to RGB\n";
+			log[log::warning] << "Specified format is not currently supported. Falling back to RGB\n";
 			format = YURI_FMT_RGB24;
 		}
 	} else return BasicIOThread::set_param(param);

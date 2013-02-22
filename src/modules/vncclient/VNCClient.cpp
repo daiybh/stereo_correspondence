@@ -9,10 +9,10 @@
  */
 
 #include "VNCClient.h"
-
+#include "yuri/core/Module.h"
 namespace yuri {
 
-namespace io {
+namespace vnc {
 
 REGISTER("vncclient",VNCClient)
 
@@ -20,16 +20,16 @@ REGISTER("vncclient",VNCClient)
 IO_THREAD_GENERATOR(VNCClient)
 
 using boost::iequals;
-shared_ptr<Parameters> VNCClient::configure()
+core::pParameters VNCClient::configure()
 {
-	shared_ptr<Parameters> p = BasicIOThread::configure();
+	core::pParameters p = BasicIOThread::configure();
 	p->set_description("Receives data from VNC server");
 	(*p)["port"]["Port to connect to"]=5900;
 	(*p)["address"]["Address to connect to"]=std::string("localhost");
 	return p;
 }
 
-VNCClient::VNCClient(Log &log_,pThreadBase parent, Parameters &parameters) IO_THREAD_CONSTRUCTOR:
+VNCClient::VNCClient(log::Log &log_,core::pwThreadBase parent,core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
 	BasicIOThread(log_,parent,0,1,"VNCClient"),buffer_size(104857600),state(awaiting_data),
 	remaining_rectangles(0)
 {
@@ -56,7 +56,7 @@ void VNCClient::run()
 		if (!buffer_valid || need_data) {
 			if (socket->available()) {
 				read = socket->read(buffer_pos+buffer_valid,buffer_free);
-				log[info] << "Read " << read << " bytes" << std::endl;
+				log[log::info] << "Read " << read << " bytes" << std::endl;
 				buffer_valid+=read;
 				buffer_free-=read;
 				if (read) {
@@ -68,7 +68,7 @@ void VNCClient::run()
 			}
 		}
 		if (!buffer_free) {
-			log[error] << "Buffer full. Moving data." << std::endl;
+			log[log::error] << "Buffer full. Moving data." << std::endl;
 			yuri::size_t free_beg = buffer_pos - &buffer[0];
 			yuri::size_t remaining = buffer_valid;
 			yuri::ubyte_t *pos_d = &buffer[0], *pos_s = buffer_pos;
@@ -82,7 +82,7 @@ void VNCClient::run()
 			}
 			buffer_pos = &buffer[0];
 			buffer_free = buffer_size - buffer_valid;
-			log[error] << "Moved buffer " << free_beg << " bytes back"<< std::endl;
+			log[log::error] << "Moved buffer " << free_beg << " bytes back"<< std::endl;
 		}
 		now = boost::posix_time::microsec_clock::local_time();
 		if (now-last_read > boost::posix_time::milliseconds(200)) {
@@ -102,15 +102,15 @@ void VNCClient::run()
  */
 bool VNCClient::connect()
 {
-	if (!socket) socket.reset(new ASIOTCPSocket(log,get_this_ptr()));
+	if (!socket) socket.reset(new asio::ASIOTCPSocket(log,get_this_ptr()));
 	//socket->set_endpoint(address,port);
 	socket->connect(address,port);
-	log[info] << "Connected to " << address << ":" << port << std::endl;
+	log[log::info] << "Connected to " << address << ":" << port << std::endl;
 	if (!handshake()) return false;
 	return true;
 }
 
-bool VNCClient::set_param(Parameter &p)
+bool VNCClient::set_param(const core::Parameter &p)
 {
 	if (iequals(p.name, "address")) {
 		address = p.get<std::string>();
@@ -128,7 +128,7 @@ bool VNCClient::handshake()
 	yuri::size_t read = socket->read(buffer_pos,12);
 	assert(read==12);
 	buffer_pos[12]=0;
-	log[info] << "Connected to server version: " << reinterpret_cast<char*>(buffer_pos) << std::endl;
+	log[log::info] << "Connected to server version: " << reinterpret_cast<char*>(buffer_pos) << std::endl;
 	socket->write(buffer_pos,12);
 	read = socket->read(buffer_pos,buffer_free);
 	assert(read>0);
@@ -145,7 +145,7 @@ bool VNCClient::handshake()
 	read = 	socket->read(buffer_pos,4);
 	assert(read==4);
 	if (*reinterpret_cast<yuri::uint_t*>(buffer_pos) != 0) {
-		log[error] << "handshake unsuccessful" << std::endl;
+		log[log::error] << "handshake unsuccessful" << std::endl;
 		return false;
 	}
 	buffer_pos[0]=1;
@@ -162,12 +162,12 @@ bool VNCClient::handshake()
 	}
 	yuri::uint_t name_len = get_uint(buffer_pos+20);
 	std::string name(reinterpret_cast<const char*>(buffer_pos+24),name_len);
-	log[info] << "handshake finished, connected to server " << name <<
+	log[log::info] << "handshake finished, connected to server " << name <<
 			", with resolution " << width << "x" << height << std::endl;
-	log[info] << "Server encoding uses " << pixel_format.bpp <<
+	log[log::info] << "Server encoding uses " << pixel_format.bpp <<
 			" bit per pixel, with " << pixel_format.depth <<
 			" valid bits" << std::endl;
-	log[info] << "Color parameters: " <<
+	log[log::info] << "Color parameters: " <<
 			"red @" << static_cast<yuri::ushort_t>(pixel_format.colors[0].shift) << ", max: " <<  pixel_format.colors[0].max <<
 			"green @" << static_cast<yuri::ushort_t>(pixel_format.colors[1].shift) << ", max: " <<  pixel_format.colors[1].max <<
 			"blue @" << static_cast<yuri::ushort_t>(pixel_format.colors[2].shift) << ", max: " <<  pixel_format.colors[2].max << std::endl;
@@ -195,26 +195,26 @@ bool VNCClient::process_data()
 	yuri::uint_t len;
 	switch (state) {
 		case awaiting_data:
-			log[debug] << "Processing data, starting with " << static_cast<yuri::uint_t>(buffer_pos[0]) << ", valid: " << buffer_valid<< std::endl;
+			log[log::debug] << "Processing data, starting with " << static_cast<yuri::uint_t>(buffer_pos[0]) << ", valid: " << buffer_valid<< std::endl;
 			switch(buffer_pos[0]) {
 				case 0:if (buffer_valid < 4) return false;
 					remaining_rectangles = get_ushort(buffer_pos+2);
-					log[debug] << "Rectangles: " << remaining_rectangles<<std::endl;
+					log[log::debug] << "Rectangles: " << remaining_rectangles<<std::endl;
 					move_buffer(4);
 					state = receiving_rectangles;
 					//buffer_r
 					return true;
-				case 2: log[info] << "BELL" << std::endl;
+				case 2: log[log::info] << "BELL" << std::endl;
 					move_buffer(1);return true;
 				case 3: if (buffer_valid < 8) return false;
 					len = get_uint(buffer_pos+4);
 					if (buffer_valid < 8+len) return false;
 					text = std::string(reinterpret_cast<const char*>(buffer_pos+8),len);
-					log[info] << "Server cut text: " << text << std::endl;
+					log[log::info] << "Server cut text: " << text << std::endl;
 					move_buffer(8+len);
 					return true;
 				case 150: if (buffer_valid < 10) return false;
-					log[info] << "Continuous updates enabled" << std::endl;
+					log[log::info] << "Continuous updates enabled" << std::endl;
 					move_buffer(10);
 					return true;
 				default:
@@ -234,20 +234,20 @@ bool VNCClient::process_data()
 				w = get_ushort(buffer_pos+4);
 				h = get_ushort(buffer_pos+6);
 				enc = get_uint(buffer_pos+8);
-				log[debug] << "Got update for rect " << w<<"x"<<h<<" at " <<x<<"x"<<y<<", encoding: " << enc << std::endl;
+				log[log::debug] << "Got update for rect " << w<<"x"<<h<<" at " <<x<<"x"<<y<<", encoding: " << enc << std::endl;
 				yuri::usize_t need = 0;
 				switch (enc) {
 					case 0: need = w*h*(pixel_format.bpp>>3);
 						break;
 					case 1: need = 4;
-						log[warning] << "copy rect!" << std::endl;
+						log[log::warning] << "copy rect!" << std::endl;
 						break;
 					default:
-						log[error] << "Unsupported encoding!!" << std::endl;
+						log[log::error] << "Unsupported encoding!!" << std::endl;
 				}
 
 				if (buffer_valid < 12 + need) {
-					log[debug] << "Not enough data (need: " << need << ", have: " << buffer_valid << "@ "<< (buffer_pos - &buffer[0])<< ")"<<std::endl;
+					log[log::debug] << "Not enough data (need: " << need << ", have: " << buffer_valid << "@ "<< (buffer_pos - &buffer[0])<< ")"<<std::endl;
 					return false;
 				}
 				switch (enc) {
@@ -288,14 +288,14 @@ bool VNCClient::process_data()
 						} break;
 
 					default:
-						log[error] << "Unimplemented encoding " << std::endl;
+						log[log::error] << "Unimplemented encoding " << std::endl;
 						break;
 				}
 				move_buffer(12+need);
 				if (!--remaining_rectangles) {
 					state = awaiting_data;
-//					shared_ptr<BasicFrame> frame = BasicIOThread::allocate_frame_from_memory(image,width*height*3);
-					shared_ptr<BasicFrame> frame = BasicIOThread::allocate_frame_from_memory(image);
+//					core::pBasicFrame frame = BasicIOThread::allocate_frame_from_memory(image,width*height*3);
+					core::pBasicFrame frame = BasicIOThread::allocate_frame_from_memory(image);
 					push_video_frame(0,frame,YURI_FMT_RGB24,width,height);
 					request_rect(0,0,width,height,true);
 				}

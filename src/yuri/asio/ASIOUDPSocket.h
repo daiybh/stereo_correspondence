@@ -12,23 +12,23 @@
 #define ASIOUDPSOCKET_H_
 
 #include "boost/asio.hpp"
-#include "yuri/io/SocketBase.h"
-#include "yuri/exception/InitializationFailed.h"
+#include "yuri/core/SocketBase.h"
+
 namespace yuri
 {
 
-namespace io
+namespace asio
 {
 using boost::asio::ip::udp;
-using yuri::exception::InitializationFailed;
-#ifdef __linux__
+#ifdef YURI_LINUX
 typedef boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_NO_CHECK> socket_no_check;
 #else
 #endif
-class ASIOUDPSocket : public SocketBase
+
+class ASIOUDPSocket : public core::SocketBase
 {
 public:
-	ASIOUDPSocket(Log &_log,pThreadBase parent,yuri::ushort_t port) throw (InitializationFailed);
+	ASIOUDPSocket(log::Log &_log, core::pwThreadBase parent,yuri::ushort_t port);
 	virtual ~ASIOUDPSocket();
 	virtual yuri::size_t read(yuri::ubyte_t * data,yuri::size_t size);
 	virtual yuri::size_t write(yuri::ubyte_t * data,yuri::size_t size);

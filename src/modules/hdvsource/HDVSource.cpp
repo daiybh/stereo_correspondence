@@ -9,14 +9,14 @@
  */
 
 #include "HDVSource.h"
-
+#include "yuri/core/Module.h"
 namespace yuri {
 
-namespace io {
+namespace ieee1394 {
 
 REGISTER("hdvsource",HDVSource)
 
-shared_ptr<BasicIOThread> HDVSource::generate(Log &_log,pThreadBase parent,Parameters& parameters)
+core::pBasicIOThread HDVSource::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
 {
 	shared_ptr<HDVSource> hdv(new HDVSource(_log,parent,
 			parameters["node"].get<unsigned>(),
@@ -24,9 +24,9 @@ shared_ptr<BasicIOThread> HDVSource::generate(Log &_log,pThreadBase parent,Param
 			parameters["guid"].get<int64_t>()));
 	return hdv;
 }
-shared_ptr<Parameters> HDVSource::configure()
+core::pParameters HDVSource::configure()
 {
-	shared_ptr<Parameters> p (new Parameters());
+	core::pParameters p (new core::Parameters());
 	(*p)["node"]=0;
 	(*p)["port"]=0;
 	(*p)["guid"]=0;
@@ -34,7 +34,7 @@ shared_ptr<Parameters> HDVSource::configure()
 }
 
 
-HDVSource::HDVSource(Log &log_,pThreadBase parent, nodeid_t node, int port,
+HDVSource::HDVSource(log::Log &log_,core::pwThreadBase parent, nodeid_t node, int port,
 		int64_t guid): IEEE1394SourceBase(log_,parent,node,port,guid),
 		total_packets(0),total_missing(0),buffer_size(0),buffer_position(0),
 		enable_checks(true)
@@ -46,11 +46,11 @@ HDVSource::HDVSource(Log &log_,pThreadBase parent, nodeid_t node, int port,
 }
 
 HDVSource::~HDVSource() {
-	log[debug] << "Received " << total_packets << " packets, " <<
+	log[log::debug] << "Received " << total_packets << " packets, " <<
 		total_missing << " packet was missing in the stream" << std::endl;
 	std::pair<int,int> pid;
 	BOOST_FOREACH(pid,counters) {
-		log[debug] << "There was pid " << pid.first << " in the received stream" << std::endl;
+		log[log::debug] << "There was pid " << pid.first << " in the received stream" << std::endl;
 	}
 }
 
@@ -59,10 +59,10 @@ bool HDVSource::start_receiving()
 	mpeg_frame = iec61883_mpeg2_recv_init (handle,
 			receive_frame, (void *)this);
 	if (!mpeg_frame) return false;
-	log[info] << "Calling receive start" << std::endl;
+	log[log::info] << "Calling receive start" << std::endl;
 	if (iec61883_mpeg2_recv_start (mpeg_frame, channel))
 		return false;
-	log[info] << "Receiving" << std::endl;
+	log[log::info] << "Receiving" << std::endl;
 	return true;
 }
 
@@ -79,26 +79,26 @@ int HDVSource::receive_frame(unsigned char*data, int length, unsigned int droppe
 
 int HDVSource::process_frame(unsigned char *data, int length, unsigned int dropped)
 {
-	if (dropped) log[info] << "Dropped " << dropped << " frames" << std::endl;
+	if (dropped) log[log::info] << "Dropped " << dropped << " frames" << std::endl;
 	if (enable_checks) {
 		int pid = static_cast<int>((static_cast<int>(data[1]&0x1F)*256 + data[2]));
 		bool payload = static_cast<bool>(data[3]&0x10);
 		bool error = static_cast<bool>(data[1]&0x80);
 		if (error) {
-			log[warning] << "Receiver error in stream, skipping" << std::endl;
+			log[log::warning] << "Receiver error in stream, skipping" << std::endl;
 			return 0;
 		}
-		log[verbose_debug] << "Received  frame with size " << length << " B from PID " <<
+		log[log::verbose_debug] << "Received  frame with size " << length << " B from PID " <<
 			pid << std::endl;
-		if (*data!=0x47) log[warning] << "Missing sync byte!" << std::endl;
+		if (*data!=0x47) log[log::warning] << "Missing sync byte!" << std::endl;
 		int act_count = data[3]&0xF;
-		/*log[debug] << "Packet header: 0x" << std::hex
+		/*log[log::debug] << "Packet header: 0x" << std::hex
 			<< (int)(data[0]) << " " << (int)(data[1]) << " "
 			<< (int)(data[2]) << " " << (int)(data[3]) <<
 			std::dec << std::endl;*/
 		if (payload) {
 			if (act_count != counters[pid]) {
-				log[warning] << "Continuity problem, expected " << counters[pid] <<
+				log[log::warning] << "Continuity problem, expected " << counters[pid] <<
 				", received " << act_count << ". PID : " << pid << std::endl;
 	//			return 0;
 				counters[pid]=(act_count+1)&0xF;
@@ -108,7 +108,7 @@ int HDVSource::process_frame(unsigned char *data, int length, unsigned int dropp
 		}
 	}
 
-	//log[debug] << "Counter: " << (int)(data[3]&0xF) << std::endl;
+	//log[log::debug] << "Counter: " << (int)(data[3]&0xF) << std::endl;
 	total_packets++;
 	if (out[0]) {
 		boost::mutex::scoped_lock l(buffer_lock);
@@ -129,7 +129,7 @@ int HDVSource::process_frame(unsigned char *data, int length, unsigned int dropp
 		}
 	}
 	else {
-		log[warning] << "Received frame and don't have pipe to put it into, throwing away" << std::endl;
+		log[log::warning] << "Received frame and don't have pipe to put it into, throwing away" << std::endl;
 	}
 	return 0;
 }
@@ -154,7 +154,7 @@ void HDVSource::do_sendOutputBuffer()
 
 void HDVSource::do_send_data(yuri::ubyte_t *data, yuri::size_t size)
 {
-	shared_ptr<BasicFrame> frame = allocate_frame_from_memory(data,size);
+	core::pBasicFrame frame = allocate_frame_from_memory(data,size);
 	push_video_frame(0,frame,YURI_VIDEO_MPEGTS,1440,1080);
 }
 

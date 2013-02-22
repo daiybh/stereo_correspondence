@@ -11,13 +11,12 @@
 #ifndef VNCCLIENT_H_
 #define VNCCLIENT_H_
 
-#include "yuri/io/BasicIOThread.h"
-#include "yuri/config/RegisteredClass.h"
+#include "yuri/core/BasicIOThread.h"
 #include "yuri/asio/ASIOTCPSocket.h"
 
 namespace yuri {
 
-namespace io {
+namespace vnc {
 struct _color_spec {
 	yuri::ushort_t max;
 	yuri::ubyte_t shift;
@@ -31,12 +30,12 @@ enum _receiving_states {
 	awaiting_data,
 	receiving_rectangles
 };
-class VNCClient: public yuri::io::BasicIOThread {
+class VNCClient: public yuri::core::BasicIOThread {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<Parameters> configure();
+	static core::pParameters configure();
 
-	VNCClient(Log &log_,pThreadBase parent,Parameters &parameters)
+	VNCClient(log::Log &log_,core::pwThreadBase parent, core::Parameters &parameters)
 					IO_THREAD_CONSTRUCTOR;
 	virtual ~VNCClient();
 
@@ -44,7 +43,7 @@ protected:
 	void run();
 	bool connect();
 	bool handshake();
-	bool set_param(Parameter &p);
+	bool set_param(const core::Parameter &p);
 	bool process_data();
 	bool request_rect(yuri::ushort_t x, yuri::ushort_t y, yuri::ushort_t w, yuri::ushort_t h, bool incremental);
 	bool enable_continuous();
@@ -58,7 +57,7 @@ protected:
 	std::string address;
 	yuri::ushort_t port;
 //	boost::shared_ptr<ASIOAsyncTCPSocket> socket;
-	boost::shared_ptr<ASIOTCPSocket> socket;
+	boost::shared_ptr<asio::ASIOTCPSocket> socket;
 
 	plane_t buffer, image;
 	yuri::ubyte_t *buffer_pos, *buffer_end;

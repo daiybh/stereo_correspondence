@@ -12,25 +12,26 @@
 #include "SimpleRenderer.h"
 #include <boost/assign.hpp>
 #include <boost/algorithm/string.hpp>
+#include "yuri/core/Module.h"
+#include "boost/date_time/posix_time/posix_time.hpp"
 namespace yuri {
 
-namespace io {
+namespace renderer {
 using boost::posix_time::microsec_clock;
 
 REGISTER("simple_renderer",SimpleRenderer)
 
-shared_ptr<BasicIOThread> SimpleRenderer::generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception)
+IO_THREAD_GENERATOR(SimpleRenderer)
+
+using graphics::GL;
+
+core::pParameters SimpleRenderer::configure()
 {
-	shared_ptr<SimpleRenderer> sr (new SimpleRenderer(_log,parent,parameters));
-	return sr;
-}
-shared_ptr<Parameters> SimpleRenderer::configure()
-{
-	shared_ptr<Parameters> p =
+	core::pParameters p =
 #ifdef YURI_HAVE_GTKMM
 			GTKWindow::configure();
 #else
-			GLXWindow::configure();
+			graphics::GLXWindow::configure();
 #endif
 	(*p)["keep_aspect"]["Keep aspect ratio"]=false;
 	(*p)["flip_x"]["Flip around X axis"]=false;
@@ -56,7 +57,7 @@ std::map<std::string,stereo::_type> SimpleRenderer::stereo_types = boost::assign
 	("anaglyph",stereo::anaglyph)
 	("quadbuffer",stereo::quadbuffer);
 
-SimpleRenderer::SimpleRenderer(Log &log_,pThreadBase parent,Parameters &parameters)
+SimpleRenderer::SimpleRenderer(log::Log &log_,core::pwThreadBase parent, core::Parameters &parameters)
 	:BasicIOThread(log_,parent,1,0,"SimpleRenderer"),keep_aspect(false),
 	 flip_x(false),flip_y(false),flip_y_right(false),quality(1),vsync(false),gl(log),
 	 measure(0),measurement_frames(0),stereo_3d(false),stereo_type(stereo::none),
@@ -90,22 +91,22 @@ void SimpleRenderer::run()
 {
 	IO_THREAD_PRE_RUN
 	set_thread_name( std::string("Renderer"));
-	drawcb.reset(new Callback(SimpleRenderer::draw_gl,get_this_ptr()));
-	initcb.reset(new Callback(SimpleRenderer::init_gl,get_this_ptr()));
+	drawcb.reset(new core::Callback(SimpleRenderer::draw_gl,get_this_ptr()));
+	initcb.reset(new core::Callback(SimpleRenderer::init_gl,get_this_ptr()));
 	params["draw_callback"]=drawcb;
 	params["init_callback"]=initcb;
-	shared_ptr<GLXWindow> glx;
+	shared_ptr<graphics::GLXWindow> glx;
 #ifdef YURI_HAVE_GTKMM
 	if (boost::iequals(params["window_type"].get<std::string>(),"gtk")) {
 		glx.reset(new GTKWindow(log,get_this_ptr(),params));
 	} else
 #endif
-	glx.reset(new GLXWindow(log,get_this_ptr(),params));
+	glx.reset(new graphics::GLXWindow(log,get_this_ptr(),params));
 
 
 	if (!glx->create()) {
-		log[error] << "Failed to create window" << std::endl;
-		throw Exception("Failed to create GLX window");
+		log[log::error] << "Failed to create window" << std::endl;
+		throw exception::Exception("Failed to create GLX window");
 	}
 	glx->show();
 	glx->set_vsync(vsync);
@@ -127,28 +128,28 @@ void SimpleRenderer::run()
 	IO_THREAD_POST_RUN
 }
 
-void SimpleRenderer::init_gl(pThreadBase global, pThreadBase /*data*/)
+void SimpleRenderer::init_gl(core::pwThreadBase global, core::pwThreadBase /*data*/)
 {
 	if (global.expired()) return;
-	shared_ptr<WindowBase> win = dynamic_pointer_cast<WindowBase>(global.lock());
+	shared_ptr<graphics::WindowBase> win = dynamic_pointer_cast<graphics::WindowBase>(global.lock());
 
 	GL::enable_smoothing();
 
 }
 
-void SimpleRenderer::draw_gl(pThreadBase global, pThreadBase data)
+void SimpleRenderer::draw_gl(core::pwThreadBase global, core::pwThreadBase data)
 {
 	if (global.expired()) throw("global expired");
 	//shared_ptr<ThreadBase> tb = data.lock();
 	shared_ptr<SimpleRenderer> simple = dynamic_pointer_cast<SimpleRenderer>(data.lock());
 	if (data.expired()) throw("data expired");
-	shared_ptr<WindowBase> win = dynamic_pointer_cast<WindowBase>(global.lock());
+	shared_ptr<graphics::WindowBase> win = dynamic_pointer_cast<graphics::WindowBase>(global.lock());
 	assert (simple);
 	assert(win);
 	simple->_draw_gl(win);
 }
 
-void SimpleRenderer::_draw_gl(shared_ptr<WindowBase> win)
+void SimpleRenderer::_draw_gl(shared_ptr<graphics::WindowBase> win)
 {
 	if (!prepare_image(0)) return;
 	if (stereo_3d && !prepare_image(1)) return;
@@ -210,7 +211,7 @@ void SimpleRenderer::generate_texture(yuri::uint_t index)
 		if (measure) {
 			ptime _end_time=microsec_clock::local_time();
 			if (measurement_frames >= measure) {
-				log[info] << "Generating "<< measurement_frames<< " textures took " << to_simple_string(accumulated_time) << " that is " << (accumulated_time/measurement_frames).total_microseconds() << " us per frame"  << std::endl;
+				log[log::info] << "Generating "<< measurement_frames<< " textures took " << boost::posix_time::to_simple_string(accumulated_time) << " that is " << (accumulated_time/measurement_frames).total_microseconds() << " us per frame"  << std::endl;
 				accumulated_time = boost::posix_time::microseconds(0);
 				measurement_frames=0;
 			}
@@ -223,7 +224,7 @@ void SimpleRenderer::generate_texture(yuri::uint_t index)
 bool SimpleRenderer::prepare_image(yuri::uint_t index)
 {
 	if (!frames[index]) {
-		log[verbose_debug] << "I have empty frame, skipping" << std::endl;
+		log[log::verbose_debug] << "I have empty frame, skipping" << std::endl;
 		return false;
 	}
 	switch (frames[index]->get_format()) {
@@ -262,7 +263,7 @@ bool SimpleRenderer::prepare_image(yuri::uint_t index)
 		case YURI_FMT_DXT5_WITH_MIPMAPS:
 			break;
 		default:
-			log[warning] << "Wrong format (" << BasicPipe::get_format_string(frames[index]->get_format()) << ")" << std::endl;
+			log[log::warning] << "Wrong format (" << core::BasicPipe::get_format_string(frames[index]->get_format()) << ")" << std::endl;
 			return false;
 	}
 
@@ -274,7 +275,7 @@ void SimpleRenderer::set_keep_aspect(bool a)
 	keep_aspect = a;
 }
 
-bool SimpleRenderer::set_param(Parameter &parameter)
+bool SimpleRenderer::set_param(const core::Parameter &parameter)
 {
 	mutex::scoped_lock l(draw_lock);
 	if (parameter.name == "keep_aspect")

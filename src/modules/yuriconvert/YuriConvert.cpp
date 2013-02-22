@@ -9,6 +9,7 @@
  */
 
 #include "YuriConvert.h"
+#include "yuri/core/Module.h"
 #include <boost/assign.hpp>
 #ifdef YURI_HAVE_LIBMVTP
 #include "libMVTP/MVTPConvert.h"
@@ -47,17 +48,17 @@ boost::mutex YuriConvertor::tables_lock;
 IO_THREAD_GENERATOR(YuriConvertor)
 
 using boost::iequals;
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_YUV422,YURI_FMT_V210_MVTP,false>(shared_ptr<BasicFrame> frame);
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V210_MVTP,false>(shared_ptr<BasicFrame> frame);
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI_FMT_YUV422,false>(shared_ptr<BasicFrame> frame);
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_R210,YURI_FMT_RGB24,false>(shared_ptr<BasicFrame> frame);
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_YUV422,YURI_FMT_V210_MVTP,false>(core::pBasicFrame frame);
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V210_MVTP,false>(core::pBasicFrame frame);
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI_FMT_YUV422,false>(core::pBasicFrame frame);
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_R210,YURI_FMT_RGB24,false>(core::pBasicFrame frame);
 #ifdef YURI_HAVE_LIBMVTP
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210,YURI_FMT_V210_MVTP,false>(shared_ptr<BasicFrame> frame);
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI_FMT_V210,false>(shared_ptr<BasicFrame> frame);
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_V210,YURI_FMT_V210_MVTP,false>(core::pBasicFrame frame);
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI_FMT_V210,false>(core::pBasicFrame frame);
 #endif
 #ifdef YURI_HAVE_CUDA
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_YUV422,YURI_FMT_RGB,true>(shared_ptr<BasicFrame> frame);
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V210_MVTP,true>(shared_ptr<BasicFrame> frame);
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_YUV422,YURI_FMT_RGB,true>(core::pBasicFrame frame);
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V210_MVTP,true>(core::pBasicFrame frame);
 #endif
 
 std::map<std::pair<yuri::format_t, yuri::format_t>, YuriConvertor::converter_t>
@@ -81,9 +82,9 @@ YuriConvertor::cuda_converters=boost::assign::map_list_of<std::pair<yuri::format
 		(std::make_pair(YURI_FMT_RGB,		YURI_FMT_V210_MVTP),&YuriConvertor::convert<YURI_FMT_RGB, 		YURI_FMT_V210_MVTP,	true>)
 ;
 #endif
-shared_ptr<Parameters> YuriConvertor::configure()
+core::pParameters YuriConvertor::configure()
 {
-	shared_ptr<Parameters> p = BasicIOThread::configure();
+	core::pParameters p = BasicIOThread::configure();
 	//(*p)["alternative_tables"]["Use alternative pregenerated tables (not tested)"]=false;
 	(*p)["colorimetry"]["Colorimetry to use when converting from RGB (BT709, BT601)"]="BT709";
 #ifdef YURI_HAVE_CUDA
@@ -98,8 +99,8 @@ shared_ptr<Parameters> YuriConvertor::configure()
 	return p;
 }
 
-YuriConvertor::YuriConvertor(Log &log_, pThreadBase parent,Parameters& parameters) IO_THREAD_CONSTRUCTOR
-	:BasicIOThread(log_,parent,1,1,"YuriConv"),allocated_size(0)
+YuriConvertor::YuriConvertor(log::Log &log_, core::pwThreadBase parent, core::Parameters& parameters) IO_THREAD_CONSTRUCTOR
+	:core::BasicIOThread(log_,parent,1,1,"YuriConv"),allocated_size(0)
 {
 	IO_THREAD_INIT("Yuri Convert")
 	//alternative_tables = params["alternative_tables"].get<bool>();
@@ -124,9 +125,9 @@ YuriConvertor::~YuriConvertor() {
 bool YuriConvertor::step()
 {
 	if (!in[0] || in[0]->is_empty()) return true;
-	shared_ptr<BasicFrame> frame = in[0]->pop_frame();
+	core::pBasicFrame frame = in[0]->pop_frame();
 	if (!frame) return true;
-	shared_ptr<BasicFrame> outframe;
+	core::pBasicFrame outframe;
 	std::pair<yuri::format_t, yuri::format_t> conv_pair = std::make_pair(frame->get_format(), format);
 	YuriConvertor::converter_t converter = 0;
 #ifdef YURI_HAVE_CUDA
@@ -136,8 +137,8 @@ bool YuriConvertor::step()
 	if (converters.count(conv_pair)) converter = converters[conv_pair];
 	if (converter) outframe= (this->*converter)(frame);
 	else {
-		log[debug] << "Unknown format combination " << BasicPipe::get_format_string(frame->get_format()) << " -> "
-				<< BasicPipe::get_format_string(format) << "\n";
+		log[log::debug] << "Unknown format combination " << core::BasicPipe::get_format_string(frame->get_format()) << " -> "
+				<< core::BasicPipe::get_format_string(format) << "\n";
 		return true;
 	}
 	if (outframe) {
@@ -147,11 +148,11 @@ bool YuriConvertor::step()
 	return true;
 }
 
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_YUV422,YURI_FMT_V210_MVTP,false>(shared_ptr<BasicFrame> frame)
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_YUV422,YURI_FMT_V210_MVTP,false>(core::pBasicFrame frame)
 {
-	shared_ptr<BasicFrame> output;
+	core::pBasicFrame output;
 	if (frame->get_planes_count() != 1) {
-		log[warning] << "Unsupported number of planes (" <<
+		log[log::warning] << "Unsupported number of planes (" <<
 				frame->get_planes_count()<< ") in input frame!" << std::endl;
 		return output;
 	}
@@ -159,17 +160,17 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_YUV422,YURI_FM
 	yuri::size_t width = frame->get_width();
 	yuri::size_t height = frame->get_height();
 	if (width * height * 2 != in_size) {
-		log [warning] << "input frame has wrong size. Expected " <<
+		log [log::warning] << "input frame has wrong size. Expected " <<
 				width * height * 2 << ", got " << in_size << std::endl;
 		return output;
 	}
 	if (width % 2) {
-		log[warning] << "Wrong line width (" << width << ")" << std::endl;
+		log[log::warning] << "Wrong line width (" << width << ")" << std::endl;
 		return output;
 	}
-	output.reset(new BasicFrame(1));
+	output.reset(new core::BasicFrame(1));
 	yuri::size_t out_size = width * height * 5 / 2;
-	log[debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
+	log[log::debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
 	//shared_array<yuri::ubyte_t> data = allocate_memory_block(out_size);
 //	shared_array<yuri::ubyte_t> in_data = (*frame)[0].data;
 	PLANE_DATA(output,0).resize(out_size);
@@ -199,11 +200,11 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_YUV422,YURI_FM
 #define V210_B1(x) (((x)&0x000FFC00)>>10)
 #define V210_B2(x) (((x)&0x3FF00000)>>20)
 
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210,YURI_FMT_V210_MVTP,false>(shared_ptr<BasicFrame> frame)
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_V210,YURI_FMT_V210_MVTP,false>(core::pBasicFrame frame)
 {
-	shared_ptr<BasicFrame> output;
+	core::pBasicFrame output;
 	if (frame->get_planes_count() != 1) {
-		log[warning] << "Unsupported number of planes (" <<
+		log[log::warning] << "Unsupported number of planes (" <<
 				frame->get_planes_count()<< ") in input frame!" << std::endl;
 		return output;
 	}
@@ -221,12 +222,12 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210,YURI_FMT_
 		return output;
 	}
 //	if (width % 6) {
-//		log[warning] << "Line width should be multiply of 6 (" << width << ")" << std::endl;
+//		log[log::warning] << "Line width should be multiply of 6 (" << width << ")" << std::endl;
 //		return output;
 //	}
 	output.reset(new BasicFrame(1));
 	yuri::size_t out_size = width * height * 5 / 2;
-	log[debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
+	log[log::debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
 	shared_array<yuri::ubyte_t> data = allocate_memory_block(out_size+100); // Allocating a bit more just to make sure
 	shared_array<yuri::ubyte_t> in_data = (*frame)[0].data;
 	(*output)[0].set(data,out_size);
@@ -261,11 +262,11 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210,YURI_FMT_
 
 #define V210_ENC(a,b,c) ((a&0x3FF)<<20)|((b&0x3FF)<<10)|((c&0x3FF)<<0)
 
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI_FMT_V210,false>(shared_ptr<BasicFrame> frame)
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI_FMT_V210,false>(core::pBasicFrame frame)
 {
-	shared_ptr<BasicFrame> output;
+	core::pBasicFrame output;
 	if (frame->get_planes_count() != 1) {
-		log[warning] << "Unsupported number of planes (" <<
+		log[log::warning] << "Unsupported number of planes (" <<
 				frame->get_planes_count()<< ") in input frame!" << std::endl;
 		return output;
 	}
@@ -284,7 +285,7 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI
 	}*/
 	output.reset(new BasicFrame(1));
 	yuri::size_t out_size = line_width6 * height * 16;
-	log[debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
+	log[log::debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
 	shared_array<yuri::ubyte_t> data = allocate_memory_block(out_size+100); // Allocating a bit more just to make sure
 	shared_array<yuri::ubyte_t> in_data = (*frame)[0].data;
 	(*output)[0].set(data,out_size);
@@ -314,12 +315,12 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI
 
 
 #endif
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V210_MVTP,false>(shared_ptr<BasicFrame> frame)
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V210_MVTP,false>(core::pBasicFrame frame)
 {
-	shared_ptr<BasicFrame> output;
+	core::pBasicFrame output;
 	// Verify input frame
 	if (frame->get_planes_count() != 1) {
-		log[warning] << "Unsupported number of planes (" <<
+		log[log::warning] << "Unsupported number of planes (" <<
 				frame->get_planes_count()<< ") in input frame!" << std::endl;
 		return output;
 	}
@@ -327,17 +328,17 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V
 	yuri::size_t width = frame->get_width();
 	yuri::size_t height = frame->get_height();
 	if (width * height * 3 != in_size) {
-		log [warning] << "input frame has wrong size. Expected " <<
+		log [log::warning] << "input frame has wrong size. Expected " <<
 				width * height * 2 << ", got " << in_size << std::endl;
 		return output;
 	}
 	if (width % 2) {
-		log[warning] << "Wrong line width (" << width << ")" << std::endl;
+		log[log::warning] << "Wrong line width (" << width << ")" << std::endl;
 		return output;
 	}
-	output.reset(new BasicFrame(1));
+	output.reset(new core::BasicFrame(1));
 	yuri::size_t out_size = width * height * 5 / 2;
-	log[debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
+	log[log::debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
 //	shared_array<yuri::ubyte_t> data = allocate_memory_block(out_size);
 //	shared_array<yuri::ubyte_t> in_data = (*frame)[0].data;
 //	(*output)[0].set(data,out_size);
@@ -373,13 +374,13 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V
 }
 
 
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V210_MVTP,true>(shared_ptr<BasicFrame> frame)
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V210_MVTP,true>(core::pBasicFrame frame)
 {
 #ifdef YURI_HAVE_CUDA
-	shared_ptr<BasicFrame> output;
+	core::pBasicFrame output;
 	// Verify input frame
 	if (frame->get_planes_count() != 1) {
-		log[warning] << "Unsupported number of planes (" <<
+		log[log::warning] << "Unsupported number of planes (" <<
 				frame->get_planes_count()<< ") in input frame!" << std::endl;
 		return output;
 	}
@@ -387,21 +388,21 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V
 	yuri::size_t width = frame->get_width();
 	yuri::size_t height = frame->get_height();
 	if (width * height * 3 != in_size) {
-		log [warning] << "input frame has wrong size. Expected " <<
+		log [log::warning] << "input frame has wrong size. Expected " <<
 				width * height * 2 << ", got " << in_size << std::endl;
 		return output;
 	}
 	if (width % 2) {
-		log[warning] << "Wrong line width (" << width << ")" << std::endl;
+		log[log::warning] << "Wrong line width (" << width << ")" << std::endl;
 		return output;
 	}
-	output.reset(new BasicFrame(1));
+	output.reset(new core::BasicFrame(1));
 	yuri::size_t out_size = width * height * 5 / 2;
 	if (allocated_size != in_size) {
 		cuda_src = cuda_alloc(in_size);
 		cuda_dest = cuda_alloc(out_size);
 	}
-	log[debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
+	log[log::debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
 //	shared_array<yuri::ubyte_t> data = allocate_memory_block(out_size);
 //	shared_array<yuri::ubyte_t> in_data = (*frame)[0].data;
 //	(*output)[0].set(data,out_size);
@@ -411,18 +412,18 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V
 	YuriConvertRGB24_YUV20(reinterpret_cast<const char*>(PLANE_RAW_DATA(frame,0)),reinterpret_cast<char*>(PLANE_RAW_DATA(output,0)),cuda_src.get(),cuda_dest.get(),width*height,Wb,Wr);
 	return output;
 #else
-	log[warning] << "CUDA optimizations not compiled in. Falling back to CPU version" << std::endl;
+	log[log::warning] << "CUDA optimizations not compiled in. Falling back to CPU version" << std::endl;
 	return convert<YURI_FMT_RGB,YURI_FMT_V210_MVTP,false>(frame);
 #endif
 }
 
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_YUV422,YURI_FMT_RGB,true>(shared_ptr<BasicFrame> frame)
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_YUV422,YURI_FMT_RGB,true>(core::pBasicFrame frame)
 {
-	shared_ptr<BasicFrame> output;
+	core::pBasicFrame output;
 #ifdef YURI_HAVE_CUDA
 	// Verify input frame
 	if (frame->get_planes_count() != 1) {
-		log[warning] << "Unsupported number of planes (" <<
+		log[log::warning] << "Unsupported number of planes (" <<
 				frame->get_planes_count()<< ") in input frame!" << std::endl;
 		return output;
 	}
@@ -430,12 +431,12 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_YUV422,YURI_FM
 	yuri::size_t width = frame->get_width();
 	yuri::size_t height = frame->get_height();
 	if (width * height * 2 != in_size) {
-		log [warning] << "input frame has wrong size. Expected " <<
+		log [log::warning] << "input frame has wrong size. Expected " <<
 				width * height * 2 << ", got " << in_size << std::endl;
 		return output;
 	}
 	if (width % 2) {
-		log[warning] << "Wrong line width (" << width << ")" << std::endl;
+		log[log::warning] << "Wrong line width (" << width << ")" << std::endl;
 		return output;
 	}
 	output = allocate_empty_frame(YURI_FMT_RGB, width, height);
@@ -445,7 +446,7 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_YUV422,YURI_FM
 		cuda_dest = cuda_alloc(out_size);
 	}
 
-	//log[debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
+	//log[log::debug] << "Allocating " << out_size << " bytes for output frame" <<std::endl;
 
 //	shared_array<yuri::ubyte_t> data = PLANE_DATA(output,0);
 //	shared_array<yuri::ubyte_t> in_data = PLANE_DATA(frame, 0);
@@ -454,7 +455,7 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_YUV422,YURI_FM
 	YuriConvertYUV16_RGB24(reinterpret_cast<const char*>(PLANE_RAW_DATA(frame,0)),reinterpret_cast<char*>(PLANE_RAW_DATA(output,0)),cuda_src.get(),cuda_dest.get(),width*height,Wb,Wr);
 	return output;
 #else
-	log[warning] << "CUDA optimizations not compiled in. Not doing anything" << std::endl;
+	log[log::warning] << "CUDA optimizations not compiled in. Not doing anything" << std::endl;
 	return output;
 #endif
 }
@@ -490,7 +491,7 @@ void YuriConvertor::generate_tables()
 		}
 	/*}*/
 
-	log[info] << "Generating RGB->YCrCb conversion tables. This may take a while (128MB)" << std::endl;
+	log[log::info] << "Generating RGB->YCrCb conversion tables. This may take a while (128MB)" << std::endl;
 // Generate tables for RGB24->YCrCb (20bit)
 	yuri::ubyte_t R,G,B;
 	yuri::ushort_t Y,Cr,Cb;
@@ -528,12 +529,12 @@ void YuriConvertor::generate_tables()
 		rgb_cr[i]=Cr;
 
 	}
-	log[info] << "Tables generated" <<std::endl;
+	log[log::info] << "Tables generated" <<std::endl;
 	tables_initialized = true;
 }
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI_FMT_YUV422,false>(shared_ptr<BasicFrame> frame)
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI_FMT_YUV422,false>(core::pBasicFrame frame)
 {
-	shared_ptr<BasicFrame> output;
+	core::pBasicFrame output;
 	yuri::size_t w = frame->get_width();
 	yuri::size_t h = frame->get_height();
 	yuri::size_t pixel_pairs = (w*h)>>1;
@@ -564,9 +565,9 @@ namespace {
 #define R210_G(x) (((((x)&0x00000F00)>>2) | (((x)&0x00FC0000)>>18)))
 #define R210_B(x) (((((x)&0x00030000)>>8) | (((x)&0xFF000000)>>24)))
 }
-template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_R210,YURI_FMT_RGB24,false>(shared_ptr<BasicFrame> frame)
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_R210,YURI_FMT_RGB24,false>(core::pBasicFrame frame)
 {
-	shared_ptr<BasicFrame> output;
+	core::pBasicFrame output;
 	yuri::size_t w = frame->get_width();
 	yuri::size_t h = frame->get_height();
 	yuri::size_t pixels= w*h;
@@ -575,7 +576,7 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_R210,YURI_FMT_
 	yuri::ubyte_t *dest= PLANE_RAW_DATA(output,0);
 	yuri::uint_t *src_max = src+w*h;
 	yuri::ubyte_t *dest_max= dest+w*h*3;
-	log[debug] << "Converting " << pixels << " pixels\n";
+	log[log::debug] << "Converting " << pixels << " pixels\n";
 	while(pixels--) {
 		if (dest>dest_max || src>src_max) break;
 		*dest++=(R210_R(*src)>>2)&0xFF;
@@ -586,7 +587,7 @@ template<> shared_ptr<BasicFrame> YuriConvertor::convert<YURI_FMT_R210,YURI_FMT_
 	return output;
 }
 
-bool YuriConvertor::set_param(Parameter &p)
+bool YuriConvertor::set_param(const core::Parameter &p)
 {
 	if (iequals(p.name,"colorimetry")) {
 		std::string clr = p.get<std::string>();
@@ -595,14 +596,14 @@ bool YuriConvertor::set_param(Parameter &p)
 		} else if (iequals(clr,"BT601") || iequals(clr,"REC601") || iequals(clr,"BT.601") || iequals(clr,"REC.601")) {
 			colorimetry=YURI_COLORIMETRY_REC601;
 		} else {
-			log[warning] << "Unrecognized colorimetry type " << clr << ". Falling back to REC.709" << std::endl;
+			log[log::warning] << "Unrecognized colorimetry type " << clr << ". Falling back to REC.709" << std::endl;
 			colorimetry=YURI_COLORIMETRY_REC709;
 		}
 	} else if (iequals(p.name,"cuda")) {
 			use_cuda = p.get<bool>();
-			if (use_cuda) log[info] << "Using CUDA" << std::endl;
+			if (use_cuda) log[log::info] << "Using CUDA" << std::endl;
 	} else if (iequals(p.name,"format")) {
-		format = BasicPipe::get_format_from_string(p.get<std::string>(),YURI_TYPE_VIDEO);
+		format = core::BasicPipe::get_format_from_string(p.get<std::string>(),YURI_TYPE_VIDEO);
 		if (format==YURI_FMT_NONE) format=YURI_FMT_V210_MVTP;
 	}
 	else return BasicIOThread::set_param(p);

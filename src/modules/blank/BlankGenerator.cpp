@@ -9,18 +9,21 @@
  */
 
 #include "BlankGenerator.h"
+#include "yuri/core/Module.h"
+#include "boost/algorithm/string/predicate.hpp"
 
 namespace yuri {
 
-namespace io {
+namespace blank {
 
 REGISTER("blank",BlankGenerator)
 
 IO_THREAD_GENERATOR(BlankGenerator)
+
 using boost::iequals;
-shared_ptr<Parameters> BlankGenerator::configure()
+core::pParameters BlankGenerator::configure()
 {
-	shared_ptr<Parameters> p (new Parameters());
+	core::pParameters p (new core::Parameters());
 	p->set_max_pipes(0,1);
 	p->add_output_format(YURI_FMT_YUV422);
 	(*p)["format"]["Format (RGB, YUV422, ...)"]="YUV422";
@@ -30,7 +33,7 @@ shared_ptr<Parameters> BlankGenerator::configure()
 	return p;
 }
 
-BlankGenerator::BlankGenerator(Log &log_,pThreadBase parent, Parameters &parameters) IO_THREAD_CONSTRUCTOR:
+BlankGenerator::BlankGenerator(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
 		BasicIOThread(log_,parent,0,1,"BlankGenerator"),next_time(not_a_date_time),
 		fps(25),width(640),height(480),format(YURI_FMT_YUV422)
 {
@@ -38,7 +41,7 @@ BlankGenerator::BlankGenerator(Log &log_,pThreadBase parent, Parameters &paramet
 	//latency=4e6/fps;
 	latency = 4e5/fps;
 	if (format==YURI_FMT_NONE) {
-		throw InitializationFailed("None or wrong output format specified");
+		throw exception::InitializationFailed("None or wrong output format specified");
 	}
 }
 
@@ -47,7 +50,7 @@ BlankGenerator::~BlankGenerator()
 
 }
 
-bool BlankGenerator::set_param(Parameter &p)
+bool BlankGenerator::set_param(const core::Parameter &p)
 {
 	if (iequals(p.name,"fps")) {
 		fps = p.get<float>();
@@ -56,9 +59,9 @@ bool BlankGenerator::set_param(Parameter &p)
 	} else if (iequals(p.name,"height")) {
 		height = p.get<yuri::ushort_t>();
 	} else if (iequals(p.name,"format")) {
-		format = BasicPipe::get_format_from_string(p.get<std::string>());
+		format = core::BasicPipe::get_format_from_string(p.get<std::string>());
 		if (format == YURI_FMT_NONE) {
-			log[error] << "Failed to parse format std::string!" << std::endl;
+			log[log::error] << "Failed to parse format std::string!" << std::endl;
 			return false;
 		}
 	} else return BasicIOThread::set_param(p);
@@ -66,7 +69,7 @@ bool BlankGenerator::set_param(Parameter &p)
 }
 void BlankGenerator::run()
 {
-	/*const FormatInfo_t finfo = BasicPipe::get_format_info(format);
+	/*const FormatInfo_t finfo = core::BasicPipe::get_format_info(format);
 	pBasicFrame frame(new BasicFrame(finfo->planes));
 	for (unsigned int i=0;i<finfo->planes;++i) {
 		unsigned long size = width * height * finfo->bpp /
@@ -79,7 +82,7 @@ void BlankGenerator::run()
 
 	time_duration delta = microseconds(1e6)/fps;
 	next_time=microsec_clock::local_time();
-	pBasicFrame frame;
+	core::pBasicFrame frame;
 	while(still_running()) {
 		if (microsec_clock::local_time() < next_time) {
 			ThreadBase::sleep(latency);
@@ -90,7 +93,7 @@ void BlankGenerator::run()
 		next_time+=delta;
 	}
 }
-pBasicFrame BlankGenerator::generate_frame()
+core::pBasicFrame BlankGenerator::generate_frame()
 {
 	if (blank_frames.count(format)) return blank_frames[format];
 	switch (format) {
@@ -99,14 +102,14 @@ pBasicFrame BlankGenerator::generate_frame()
 		case YURI_FMT_RGB: blank_frames[format] = generate_frame_rgb();
 			return blank_frames[format];
 	}
-	log[error] << "Wrong format" << std::endl;
-	return pBasicFrame();
+	log[log::error] << "Wrong format" << std::endl;
+	return core::pBasicFrame();
 }
 
-pBasicFrame BlankGenerator::generate_frame_yuv422()
+core::pBasicFrame BlankGenerator::generate_frame_yuv422()
 {
 	assert(format==YURI_FMT_YUV422);
-	pBasicFrame frame = BasicIOThread::allocate_empty_frame(YURI_FMT_YUV422,width,height);
+	core::pBasicFrame frame = BasicIOThread::allocate_empty_frame(YURI_FMT_YUV422,width,height);
 	yuri::ubyte_t *data = PLANE_RAW_DATA(frame,0);
 	for (yuri::ushort_t y = 0; y<height; ++y) {
 		for (yuri::ushort_t x = 0; x < width; ++x) {
@@ -117,10 +120,10 @@ pBasicFrame BlankGenerator::generate_frame_yuv422()
 	return frame;
 }
 
-pBasicFrame BlankGenerator::generate_frame_rgb()
+core::pBasicFrame BlankGenerator::generate_frame_rgb()
 {
 	assert(format==YURI_FMT_RGB24);
-	pBasicFrame frame = BasicIOThread::allocate_empty_frame(YURI_FMT_RGB,width,height);
+	core::pBasicFrame frame = BasicIOThread::allocate_empty_frame(YURI_FMT_RGB,width,height);
 	yuri::ubyte_t *data = PLANE_RAW_DATA(frame,0);
 	for (yuri::ushort_t y = 0; y<height; ++y) {
 		for (yuri::ushort_t x = 0; x < width; ++x) {

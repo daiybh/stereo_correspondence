@@ -12,6 +12,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/assign.hpp>
+
 namespace yuri
 {
 namespace video
@@ -45,7 +46,7 @@ std::map<yuri::format_t, PixelFormat> AVCodecBase::yuri_pixel_map=boost::assign:
 std::map<PixelFormat, PixelFormat> AVCodecBase::av_identity=boost::assign::map_list_of
 		(PIX_FMT_YUVJ420P,			PIX_FMT_YUV420P)
 		(PIX_FMT_YUVJ422P,			PIX_FMT_YUV422P);
-AVCodecBase::AVCodecBase(Log &_log, pThreadBase parent, std::string id, yuri::sint_t inp, yuri::sint_t outp)
+AVCodecBase::AVCodecBase(log::Log &_log, core::pwThreadBase parent, std::string id, yuri::sint_t inp, yuri::sint_t outp)
 	IO_THREAD_CONSTRUCTOR:
 	BasicIOThread(_log,parent,inp,outp,id),cc(0),c(0),codec_id(CODEC_ID_NONE),
 	current_format(YURI_FMT_NONE),opened(false)
@@ -84,7 +85,7 @@ bool AVCodecBase::init_codec(AVMediaType codec_type, int width, int height,
 	if (!cc) {  // Allocate codec context if none is provided
 		cc=avcodec_alloc_context3(c);
 		if (!cc) {
-			log[error] << "Failed to allocate codec context" << std::endl;
+			log[log::error] << "Failed to allocate codec context" << std::endl;
 			return false;
 		}
 		cc->codec_id=(CodecID)codec_id;
@@ -119,7 +120,7 @@ bool AVCodecBase::init_codec(AVMediaType codec_type, int width, int height,
 	current_format=yuri_pixelformat_from_av(cc->pix_fmt);
 	if (opened) avcodec_close(cc);
 	if (avcodec_open2(cc,c,0)<0) {
-		log[error] << "Opening codec failed! (" << c << ", " << cc << ")" << std::endl;
+		log[log::error] << "Opening codec failed! (" << c << ", " << cc << ")" << std::endl;
 		return false;
 	}
 	opened=true;
@@ -197,14 +198,14 @@ void AVCodecBase::do_map_frame_data(PixelFormat fmt, int width, int height,
 	memcpy(linesizes,pic.linesize,sizeof(int)*4);
 }
 
-shared_ptr<AVPicture> AVCodecBase::convert_to_avpicture(shared_ptr<BasicFrame> frame)
+shared_ptr<AVPicture> AVCodecBase::convert_to_avpicture(core::pBasicFrame  frame)
 {
 	assert(frame);
 	shared_ptr<AVPicture> pic(new AVPicture);
 	set_av_frame_or_picture(frame,pic);
 	return pic;
 }
-shared_ptr<AVFrame> AVCodecBase::convert_to_avframe(shared_ptr<BasicFrame> frame)
+shared_ptr<AVFrame> AVCodecBase::convert_to_avframe(core::pBasicFrame  frame)
 {
 	assert(frame);
 	shared_ptr<AVFrame> frm (avcodec_alloc_frame(),AVCodecBase::av_frame_deleter);
@@ -213,18 +214,18 @@ shared_ptr<AVFrame> AVCodecBase::convert_to_avframe(shared_ptr<BasicFrame> frame
 }
 CodecID AVCodecBase::get_codec_from_string(std::string codec)
 {
-	yuri::format_t fmt = BasicPipe::get_format_from_string(codec);
+	yuri::format_t fmt = core::BasicPipe::get_format_from_string(codec);
 	if (!fmt) return CODEC_ID_NONE;
 	return avcodec_from_yuri_format(fmt);
 }
 
 
-PixelFormat AVCodecBase::av_pixelformat_from_yuri(yuri::format_t format) throw (Exception)
+PixelFormat AVCodecBase::av_pixelformat_from_yuri(yuri::format_t format)
 {
 	if (yuri_pixel_map.count(format)) return yuri_pixel_map[format];
 	return PIX_FMT_NONE;
 }
-yuri::format_t AVCodecBase::yuri_pixelformat_from_av(PixelFormat format)throw (Exception)
+yuri::format_t AVCodecBase::yuri_pixelformat_from_av(PixelFormat format)
 {
 	std::pair<yuri::format_t, PixelFormat> fp;
 	PixelFormat pixfmt = format;
@@ -234,7 +235,7 @@ yuri::format_t AVCodecBase::yuri_pixelformat_from_av(PixelFormat format)throw (E
 	}
 	return YURI_FMT_NONE;
 }
-yuri::format_t AVCodecBase::yuri_format_from_avcodec(CodecID codec) throw (Exception)
+yuri::format_t AVCodecBase::yuri_format_from_avcodec(CodecID codec)
 {
 	std::pair<yuri::format_t, CodecID> fp;
 	BOOST_FOREACH(fp, yuri_codec_map) {
@@ -243,7 +244,7 @@ yuri::format_t AVCodecBase::yuri_format_from_avcodec(CodecID codec) throw (Excep
 	return YURI_FMT_NONE;
 }
 
-CodecID AVCodecBase::avcodec_from_yuri_format(yuri::format_t codec) throw (Exception)
+CodecID AVCodecBase::avcodec_from_yuri_format(yuri::format_t codec)
 {
 	if (yuri_codec_map.count(codec)) return yuri_codec_map[codec];
 	return CODEC_ID_NONE;

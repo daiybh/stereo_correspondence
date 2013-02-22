@@ -9,40 +9,40 @@
  */
 
 #include "Fetcher.h"
-
+#include "yuri/core/Module.h"
 namespace yuri {
 
-namespace io {
+namespace fetcher {
 
 REGISTER("curlfetcher",Fetcher)
 
-shared_ptr<BasicIOThread> Fetcher::generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception)
+core::pBasicIOThread Fetcher::generate(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters)
 {
 	shared_ptr<Fetcher> fetch (new Fetcher(_log,parent,
-			parameters["url"].get<string>()));
-	fetch->setUploadParams(parameters["filename"].get<string>(),
-			parameters["filetype"].get<string>(),
-			parameters["inputname"].get<string>());
+			parameters["url"].get<std::string>()));
+	fetch->setUploadParams(parameters["filename"].get<std::string>(),
+			parameters["filetype"].get<std::string>(),
+			parameters["inputname"].get<std::string>());
 	return fetch;
 }
-shared_ptr<Parameters> Fetcher::configure()
+core::pParameters Fetcher::configure()
 {
-	shared_ptr<Parameters> p (new Parameters());
-	(*p)["url"]=string();
-	(*p)["filename"]=string();
-	(*p)["filetype"]=string();
-	(*p)["inputname"]=string();
+	core::pParameters p (new core::Parameters());
+	(*p)["url"]=std::string();
+	(*p)["filename"]=std::string();
+	(*p)["filetype"]=std::string();
+	(*p)["inputname"]=std::string();
 	return p;
 }
 
 
-Fetcher::Fetcher(Log &_log, pThreadBase parent, string url) throw (Exception)
-	:BasicIOThread(_log,parent,1,1,"Fetcher"),url(url),
-	temp_data(ios::in|ios::out|ios::binary)
+Fetcher::Fetcher(log::Log &_log, core::pwThreadBase parent, std::string url)
+	:core::BasicIOThread(_log,parent,1,1,"Fetcher"),url(url),
+	temp_data(std::ios::in|std::ios::out|std::ios::binary)
 {
 	curl_global_init(CURL_GLOBAL_ALL);
 	curl.reset(curl_easy_init(),curl_session_deleter);
-	if (!curl) throw Exception("Can't initialize curl!");
+	if (!curl) throw exception::Exception("Can't initialize curl!");
 }
 
 Fetcher::~Fetcher()
@@ -50,10 +50,10 @@ Fetcher::~Fetcher()
 
 }
 
-shared_ptr<BasicFrame> Fetcher::fetch()
+core::pBasicFrame Fetcher::fetch()
 {
 	assert(curl);
-	shared_ptr<BasicFrame> f, f_dummy;
+	core::pBasicFrame f, f_dummy;
 	struct curl_httppost *first=0,*last=0;
 	int cerror = 0;
 	if (in[0]) {
@@ -67,8 +67,8 @@ shared_ptr<BasicFrame> Fetcher::fetch()
 	curl_easy_setopt(curl.get(),CURLOPT_USERAGENT,"Neneko @ libyuri");
 	if (f) { // Uploading a file
 		boost::mutex::scoped_lock(upload_lock);
-		log[debug] << "Uploading file " << fname << " with size "
-			<< f->get_size() << endl;
+		log[log::debug] << "Uploading file " << fname << " with size "
+			<< f->get_size() << std::endl;
 
 		if((cerror = curl_formadd(&first,&last,
 				CURLFORM_COPYNAME,iname.c_str(),
@@ -77,8 +77,8 @@ shared_ptr<BasicFrame> Fetcher::fetch()
 				CURLFORM_BUFFERPTR,PLANE_RAW_DATA(f,0),
 				CURLFORM_BUFFERLENGTH,PLANE_SIZE(f,0),
 				CURLFORM_END))) {
-			log[warning] << "Failed to pack file into httppost structure! "
-				<< "Error code " << printCurlFormaddError(cerror) << endl;
+			log[log::warning] << "Failed to pack file into httppost structure! "
+				<< "Error code " << printCurlFormaddError(cerror) << std::endl;
 
 			//delete f;
 			//f = 0;
@@ -88,22 +88,22 @@ shared_ptr<BasicFrame> Fetcher::fetch()
 			last = 0;
 		}
 	}
-	if (!sections.empty()) for (map<string,string>::iterator it = sections.begin();
+	if (!sections.empty()) for (std::map<std::string,std::string>::iterator it = sections.begin();
 		it != sections.end(); ++it) {
 		if ((cerror=curl_formadd(&first,&last,
 				CURLFORM_COPYNAME,(*it).first.c_str(),
 				CURLFORM_COPYCONTENTS,(*it).second.c_str(),
 				CURLFORM_END))) {
-			log[warning] << "Failed to pack section " << (*it).first
+			log[log::warning] << "Failed to pack section " << (*it).first
 				<< "into httppost structure! Error: "
-				<< printCurlFormaddError(cerror) << endl;
+				<< printCurlFormaddError(cerror) << std::endl;
 		}
 	}
 	if (first) curl_easy_setopt(curl.get(),CURLOPT_HTTPPOST,first);
 
-	log[debug] << "Fetching " << url << std::endl;
+	log[log::debug] << "Fetching " << url << std::endl;
 	if (curl_easy_perform(curl.get())) {
-		log[debug] << "failed!!" << endl;
+		log[log::debug] << "failed!!" << std::endl;
 		if (first) curl_formfree(first);
 		return f_dummy;
 	}
@@ -123,7 +123,7 @@ void Fetcher::run()
 
 bool Fetcher::step()
 {
-	shared_ptr<BasicFrame> f = fetch();
+	core::pBasicFrame f = fetch();
 	if (out[0] && f) {
 		out[0]->set_type(type);
 		push_raw_frame(0,f);
@@ -142,26 +142,26 @@ yuri::size_t Fetcher::writeCallback(void* data, size_t size, size_t num, void*st
 yuri::size_t Fetcher::writeData(void* data, size_t size, size_t num)
 {
 	yuri::size_t length = size*num;
-	log[verbose_debug] << "Writing " << length << " bytes to stringstream" << endl;
+	log[log::verbose_debug] << "Writing " << length << " bytes to std::stringstream" << std::endl;
 	temp_data.write((const char*)data,length);
 	if (temp_data.bad()) return 0;
 	return length;
 }
 
-shared_ptr<BasicFrame> Fetcher::dumpData()
+core::pBasicFrame Fetcher::dumpData()
 {
 	yuri::size_t length = temp_data.tellp();
-	shared_ptr<BasicFrame> frame (new BasicFrame(1));
+	core::pBasicFrame frame (new core::BasicFrame(1));
 	//shared_array<yuri::ubyte_t> mem = allocate_memory_block(length+1);
 	//(*frame)[0].set(mem,length+1);
 //	PLANE_DATA(frame,0).resize(length+1);
-	log[debug] << "Reading " << length << " bytes from stringstream" << endl;
+	log[log::debug] << "Reading " << length << " bytes from std::stringstream" << std::endl;
 	//char *mem = new char[length+1];
-	temp_data.seekg(0,ios::beg);
+	temp_data.seekg(0,std::ios::beg);
 //	temp_data.read(reinterpret_cast<char*>(mem.get()),length);
 	const std::string& str = temp_data.str();
 	frame->set_plane(0,reinterpret_cast<const yuri::ubyte_t *>(str.c_str()),str.size()+1);
-	temp_data.seekp(0,ios::beg);
+	temp_data.seekp(0,std::ios::beg);
 	temp_data.str().clear();
 //	PLANE_DATA(frame,0).push_back(0);
 //	mem[length]=0;
@@ -173,9 +173,9 @@ shared_ptr<BasicFrame> Fetcher::dumpData()
 
 	const char *c_ptr = 0;
 	curl_easy_getinfo(curl.get(),CURLINFO_CONTENT_TYPE,&c_ptr);
-	log[debug] << "Fetched media " << c_ptr << endl;
-	type = BasicPipe::set_frame_from_mime(frame,c_ptr);
-	log[debug] << "Format set to " << BasicPipe::get_format_string(frame->get_format()) << endl;
+	log[log::debug] << "Fetched media " << c_ptr << std::endl;
+	type = core::BasicPipe::set_frame_from_mime(frame,c_ptr);
+	log[log::debug] << "Format set to " << core::BasicPipe::get_format_string(frame->get_format()) << std::endl;
 	return frame;
 	/*
 	if (!out[0]) {
@@ -188,7 +188,7 @@ shared_ptr<BasicFrame> Fetcher::dumpData()
 	return length;*/
 }
 
-void Fetcher::setUploadParams(string filename, string filetype, string inputname)
+void Fetcher::setUploadParams(std::string filename, std::string filetype, std::string inputname)
 {
 	boost::mutex::scoped_lock(upload_lock);
 	fname = filename;
@@ -196,13 +196,13 @@ void Fetcher::setUploadParams(string filename, string filetype, string inputname
 	iname = inputname;
 }
 
-void Fetcher::addUploadSection(string name, string value)
+void Fetcher::addUploadSection(std::string name, std::string value)
 {
 	boost::mutex::scoped_lock(upload_lock);
 	sections[name]=value;
 }
 
-string Fetcher::printCurlFormaddError(int cerror)
+std::string Fetcher::printCurlFormaddError(int cerror)
 {
 	switch (cerror) {
 	case CURL_FORMADD_OK: return "CURL_FORMADD_OK";
@@ -222,7 +222,7 @@ void Fetcher::clearUploadSections()
 	sections.clear();
 }
 
-void Fetcher::setUrl(string new_url)
+void Fetcher::setUrl(std::string new_url)
 {
 	boost::mutex::scoped_lock(upload_lock);
 	url=new_url;

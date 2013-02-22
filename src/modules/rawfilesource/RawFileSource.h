@@ -11,30 +11,29 @@
 #ifndef RAWFILESOURCE_H_
 #define RAWFILESOURCE_H_
 
-#include "yuri/io/BasicIOThread.h"
-#include "yuri/config/RegisteredClass.h"
+#include "yuri/core/BasicIOThread.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace yuri {
 
-namespace io {
+namespace rawfilesource {
 
-using namespace yuri::config;
+
 using namespace boost::posix_time;
 
-class RawFileSource: public BasicIOThread
+class RawFileSource: public core::BasicIOThread
 {
 public:
-	RawFileSource(Log &_log, pThreadBase parent, Parameters &parameters);
+	RawFileSource(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters);
 	virtual ~RawFileSource();
-	static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,
-			Parameters& parameters) throw (Exception);
-	static shared_ptr<Parameters> configure();
+	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent,
+			core::Parameters& parameters);
+	static core::pParameters configure();
 	void run();
 protected:
-	virtual bool set_param(Parameter &parameter);
+	virtual bool set_param(const core::Parameter &parameter);
 	bool read_chunk();
-	pBasicFrame frame;
+	core::pBasicFrame frame;
 	yuri::size_t position, chunk_size, width, height;
 	yuri::format_t output_format;
 	double fps;

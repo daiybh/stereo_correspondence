@@ -11,7 +11,6 @@
 #ifndef CUDA_H_
 #define CUDA_H_
 #include "yuri/log/Log.h"
-#include <boost/smart_ptr.hpp>
 // cuda_runtime has some warnings about usage of long long, let's disable them for the moment (before upstream fixes them)
 #if defined __clang__
 #pragma clang diagnostic push

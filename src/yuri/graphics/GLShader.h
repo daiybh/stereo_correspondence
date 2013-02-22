@@ -16,8 +16,6 @@
 #include <GL/gl.h>
 #include <string>
 #include "yuri/log/Log.h"
-using namespace yuri::log;
-
 
 namespace yuri {
 
@@ -25,14 +23,14 @@ namespace graphics {
 
 class GLShader {
 public:
-	GLShader(Log &log_,GLenum type);
+	GLShader(log::Log &log_,GLenum type);
 	virtual ~GLShader();
 	bool load_file(std::string filename);
 	bool load(std::string text);
 	bool compile();
 	GLuint get_shader();
 protected:
-	Log log;
+	log::Log log;
 	GLenum type;
 	GLchar *shader_text;
 	GLint shader_size;

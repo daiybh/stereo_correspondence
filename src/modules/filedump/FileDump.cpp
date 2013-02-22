@@ -10,28 +10,29 @@
 
 #include "FileDump.h"
 #include <sstream>
-#include "yuri/config/RegisteredClass.h"
+#include <iomanip>
+#include "yuri/core/Module.h"
 namespace yuri
 {
-namespace io
+namespace dump
 {
 
 REGISTER("filedump",FileDump)
 
-shared_ptr<BasicIOThread> FileDump::generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception)
+core::pBasicIOThread FileDump::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
 {
 	shared_ptr<FileDump> dump;
 	try {
 		dump.reset(new FileDump(_log,parent,parameters));
 	}
 	catch (std::exception &e) {
-		throw InitializationFailed(std::string("Filedump constuctor failed: ") + e.what());
+		throw exception::InitializationFailed(std::string("Filedump constuctor failed: ") + e.what());
 	}
 	return dump;
 }
-shared_ptr<Parameters> FileDump::configure()
+core::pParameters FileDump::configure()
 {
-	shared_ptr<Parameters> p (new Parameters());
+	core::pParameters p (new core::Parameters());
 	p->set_description("Outputs frames to a file. It either dump all frames to one file of every frame to separate file. ");
 	(*p)["sequence"]["Number of digits in sequence number. Set to 0 to disable sequence and output all frames to one file."]=0;
 	(*p)["filename"]["Required parameter. Path of file to dump to"]=std::string();
@@ -39,7 +40,7 @@ shared_ptr<Parameters> FileDump::configure()
 	return p;
 }
 
-FileDump::FileDump(Log &log_,pThreadBase parent, Parameters &parameters):
+FileDump::FileDump(log::Log &log_,core::pwThreadBase parent,core::Parameters &parameters):
 	BasicIOThread(log_,parent,1,0,"Dump"),
 	dump_file(),filename(),seq_chars(0),seq_number(0),dumped_frames(0),
 	dump_limit(0)
@@ -61,7 +62,7 @@ FileDump::~FileDump()
 bool FileDump::step()
 {
 	if (!in[0]) return true;
-	pBasicFrame f;
+	core::pBasicFrame f;
 	while ((f = in[0]->pop_frame()).get()) {
 		if (seq_chars) {
 			std::stringstream ss;
@@ -70,9 +71,9 @@ bool FileDump::step()
 				<< filename.substr(filename.find_last_of('.'));
 			dump_file.open(ss.str().c_str(), std::ios::binary | std::ios::out);
 		}
-		log[debug]<<"Dumping " << f->get_planes_count() << " planes" << std::endl;
+		log[log::debug]<<"Dumping " << f->get_planes_count() << " planes" << std::endl;
 		for (yuri::size_t i=0; i<f->get_planes_count();++i) {
-			//log[debug]<<"Dumping plane " << i << ", size: " << (*f)[i].get_size() << std::endl;
+			//log[log::debug]<<"Dumping plane " << i << ", size: " << (*f)[i].get_size() << std::endl;
 //			dump_file.write((const char *)(*f)[i].data.get(),(*f)[i].size);
 			dump_file.write(reinterpret_cast<const char *>(PLANE_RAW_DATA(f,0)),PLANE_SIZE(f,0));
 		}
@@ -81,7 +82,7 @@ bool FileDump::step()
 		}
 		// The comparison is evaluated FIRST in order to have dumped_frames counted even if dump_limit is zero
 		if (++dumped_frames >= dump_limit && dump_limit) {
-			log[debug] << "Maximal number of frames reached, quitting." << std::endl;
+			log[log::debug] << "Maximal number of frames reached, quitting." << std::endl;
 			exitCode = YURI_EXIT_FINISHED;
 			request_end();
 			break;

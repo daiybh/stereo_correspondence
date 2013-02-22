@@ -11,22 +11,21 @@
 #ifndef FLIP_H_
 #define FLIP_H_
 
-#include "yuri/io/BasicIOThread.h"
-#include "yuri/config/RegisteredClass.h"
+#include "yuri/core/BasicIOThread.h"
 
 namespace yuri {
 
 namespace io {
 
-class Flip: public yuri::io::BasicIOThread {
+class Flip: public yuri::core::BasicIOThread {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
-	static shared_ptr<Parameters> configure();
-	virtual bool set_param(Parameter &parameter);
+	static core::pParameters configure();
+	virtual bool set_param(const core::Parameter &parameter);
 
 	virtual ~Flip();
 protected:
-	Flip(Log &_log, pThreadBase parent, Parameters &parameters) IO_THREAD_CONSTRUCTOR;
+	Flip(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters) IO_THREAD_CONSTRUCTOR;
 	virtual bool step();
 
 	bool flip_x, flip_y;

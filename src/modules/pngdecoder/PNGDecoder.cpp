@@ -9,23 +9,23 @@
  */
 
 #include "PNGDecoder.h"
-#include "yuri/config/RegisteredClass.h"
+#include "yuri/core/Module.h"
 namespace yuri {
 
-namespace io {
+namespace png {
 
 REGISTER("pngdecoder", PNGDecoder)
 
 IO_THREAD_GENERATOR(PNGDecoder)
 
-shared_ptr<Parameters> PNGDecoder::configure()
+core::pParameters PNGDecoder::configure()
 {
-	shared_ptr<Parameters> p = BasicIOThread::configure();
+	core::pParameters p = BasicIOThread::configure();
 	return p;
 }
 
-PNGDecoder::PNGDecoder(Log &_log, pThreadBase parent, Parameters& parameters):
-	BasicIOThread(_log,parent,1,1,"PNGDecoder")
+PNGDecoder::PNGDecoder(log::Log &_log, core::pwThreadBase parent,core::Parameters& parameters):
+	core::BasicIOThread(_log,parent,1,1,"PNGDecoder")
 {
 	IO_THREAD_INIT("PNGDecoder")
 }
@@ -38,22 +38,22 @@ bool PNGDecoder::step()
 	png_structp pngPtr = 0;
 	png_infop infoPtr = 0;
 	if (!in[0] || !(f = in[0]->pop_frame())) return true;
-	log[debug] << "Reading packet " << f->get_size() << " bytes long" << endl;
+	log[log::debug] << "Reading packet " << f->get_size() << " bytes long" << "\n";
 	boost::posix_time::ptime t1(boost::posix_time::microsec_clock::universal_time());
 	if (!validatePng(f)) {
 		f.reset();
 		return true;
 	}
-	log[debug] << "Validated" << endl;
+	log[log::debug] << "Validated\n";
 	pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 	if (!pngPtr) {
-		log[error] << "ERROR: Couldn't initialize png read struct" << std::endl;
+		log[log::error] << "ERROR: Couldn't initialize png read struct" << std::endl;
 		f.reset();
 		return true;
 	}
 	infoPtr = png_create_info_struct(pngPtr);
 	if (!infoPtr) {
-		log[error] << "ERROR: Couldn't initialize png info struct" << std::endl;
+		log[log::error] << "ERROR: Couldn't initialize png info struct" << std::endl;
 		png_destroy_read_struct(&pngPtr, (png_infopp)0, (png_infopp)0);
 		f.reset();
 		return true;
@@ -67,8 +67,8 @@ bool PNGDecoder::step()
 	uint depth = png_get_bit_depth(pngPtr, infoPtr);
 	uint channels = png_get_channels(pngPtr, infoPtr);
 	//uint color = png_get_color_type(pngPtr, infoPtr);
-	log[debug] << "Reading image: " << width	<< "x" << height << ", " << depth
-		<< " bpp, " << channels << " channels." << endl;
+	log[log::debug] << "Reading image: " << width	<< "x" << height << ", " << depth
+		<< " bpp, " << channels << " channels.\n";
 	if (png_get_valid(pngPtr, infoPtr, PNG_INFO_tRNS))
 	png_set_tRNS_to_alpha(pngPtr);
 	if (depth == 16) {
@@ -82,7 +82,7 @@ bool PNGDecoder::step()
 	if (colorspace!=YURI_FMT_NONE) {
 		std::vector<png_bytep> rows(height);
 		int row_size = width*depth*channels/8;
-		pBasicFrame outframe = allocate_empty_frame(colorspace, width, height, true);
+		core::pBasicFrame outframe = allocate_empty_frame(colorspace, width, height, true);
 		yuri::ubyte_t *mem=PLANE_RAW_DATA(outframe,0);
 		for (int i = 0; i< (int)height; ++i) rows[i]=(png_bytep)(mem+i*row_size);
 		png_read_image(pngPtr, &rows[0]);
@@ -91,14 +91,14 @@ bool PNGDecoder::step()
 	png_destroy_read_struct(&pngPtr, &infoPtr,(png_infopp)0);
 	boost::posix_time::ptime t2(boost::posix_time::microsec_clock::universal_time());
 	boost::posix_time::time_period tp(t1,t2);
-	log[debug] << "Decompression took: " << tp.length().total_microseconds()
-			<< " us" << endl;
+	log[log::debug] << "Decompression took: " << tp.length().total_microseconds()
+			<< " us\n";
 	f.reset();
 
 	return true;
 }
 
-bool PNGDecoder::validatePng(pBasicFrame f)
+bool PNGDecoder::validatePng(core::pBasicFrame f)
 {
 	if (!f || f->get_size() < 8) return false;
     return (!png_sig_cmp((png_byte*)(PLANE_RAW_DATA(f,0)), 0, 8));
@@ -115,7 +115,7 @@ void PNGDecoder::readData(png_bytep data, png_size_t length)
 	if (!f) return;
 	if (static_cast<yuri::size_t>(position) > f->get_size()) return;
 	if ((f->get_size() - position) < length) length=f->get_size() - position;
-	log[verbose_debug] << "Reading " << length << " bytes from position " << position
+	log[log::verbose_debug] << "Reading " << length << " bytes from position " << position
 		<< std::endl;
 	memcpy(data,(char*)(PLANE_RAW_DATA(f,0))+position,length);
 	position+=length;

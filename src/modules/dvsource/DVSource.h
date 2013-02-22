@@ -12,25 +12,25 @@
 #define DVSOURCE_H_
 
 #include "yuri/ieee1394/IEEE1394SourceBase.h"
-#include "yuri/config/RegisteredClass.h"
+
 
 namespace yuri {
 
-namespace io {
-using namespace yuri::config;
-class DVSource: public yuri::io::IEEE1394SourceBase {
+namespace ieee1394 {
+
+class DVSource: public IEEE1394SourceBase {
 public:
-	DVSource(Log &log_,pThreadBase parent, nodeid_t node=0, int port = 0, int64_t guid=-1);
+	DVSource(log::Log &log_,core::pwThreadBase parent, nodeid_t node=0, int port = 0, int64_t guid=-1);
 	virtual ~DVSource();
 
-	static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,Parameters& parameters);
-	static shared_ptr<Parameters> configure();
+	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters);
+	static core::pParameters configure();
 protected:
 	virtual bool start_receiving();
 	virtual bool stop_receiving();
 	static int receive_frame (unsigned char *data, int len, int complete, void *callback_data);
 	int process_frame(unsigned char *data, int length, int complete);
-	bool analyze_frame(shared_ptr<BasicFrame> frame);
+	bool analyze_frame(core::pBasicFrame frame);
 
 protected:
 	iec61883_dv_fb_t frame;

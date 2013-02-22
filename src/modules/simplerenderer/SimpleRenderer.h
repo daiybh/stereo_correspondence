@@ -11,22 +11,18 @@
 #ifndef SIMPLERENDERER_H_
 #define SIMPLERENDERER_H_
 
-#include "yuri/io/BasicIOThread.h"
+#include "yuri/core/BasicIOThread.h"
 #ifdef YURI_HAVE_GTKMM
 #include "yuri/graphics/GTKWindow.h"
 #else
 #include "yuri/graphics/GLXWindow.h"
 #endif
-#include "yuri/config/RegisteredClass.h"
 #include "yuri/graphics/GL.h"
 #include <boost/thread/mutex.hpp>
 namespace yuri {
 
-namespace io {
-using namespace yuri::config;
-using namespace yuri::graphics;
+namespace renderer {
 using boost::dynamic_pointer_cast;
-using boost::mutex;
 using boost::posix_time::time_duration;
 using boost::posix_time::ptime;
 namespace stereo {
@@ -36,19 +32,19 @@ namespace stereo {
 		quadbuffer
 	};
 }
-class SimpleRenderer: public yuri::io::BasicIOThread {
+class SimpleRenderer: public yuri::core::BasicIOThread {
 public:
-	SimpleRenderer(Log &log_,pThreadBase parent,Parameters &p);
+	SimpleRenderer(log::Log &log_,core::pwThreadBase parent, core::Parameters &p);
 	virtual ~SimpleRenderer();
-	static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception);
-	static shared_ptr<Parameters> configure();
+	IO_THREAD_GENERATOR_DECLARATION
+	static core::pParameters configure();
 	void run();
 	bool step();
 	void set_keep_aspect(bool a);
-	bool set_param(Parameter &parameter);
+	bool set_param(const core::Parameter &parameter);
 protected:
-	shared_ptr<Callback> drawcb, initcb;
-	std::vector<pBasicFrame > frames;
+	core::pCallback drawcb, initcb;
+	std::vector<core::pBasicFrame > frames;
 	mutex draw_lock;
 	//GLuint tid;
 	yuri::size_t c;
@@ -59,13 +55,13 @@ protected:
 	yuri::ubyte_t quality;
 	bool vsync;
 
-	static void init_gl(pThreadBase global, pThreadBase data);
-	static void draw_gl(pThreadBase global, pThreadBase data);
-	void _draw_gl(shared_ptr<WindowBase> win);
+	static void init_gl(core::pwThreadBase global, core::pwThreadBase data);
+	static void draw_gl(core::pwThreadBase global, core::pwThreadBase data);
+	void _draw_gl(shared_ptr<graphics::WindowBase> win);
 	void generate_texture(yuri::uint_t index = 0);
 	bool prepare_image(yuri::uint_t index = 0);
 
-	GL gl;
+	graphics::GL gl;
 	size_t measure;
 	time_duration accumulated_time;
 	size_t measurement_frames;

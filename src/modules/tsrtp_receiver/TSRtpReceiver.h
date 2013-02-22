@@ -10,14 +10,13 @@
 
 #ifndef TSRTPRECEIVER_H_
 #define TSRTPRECEIVER_H_
-#include "yuri/io/BasicIOThread.h"
-#include "yuri/config/RegisteredClass.h"
+#include "yuri/core/BasicIOThread.h"
 #include "yuri/asio/ASIOUDPSocket.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace yuri {
 
-namespace io {
+namespace rtp {
 
 
 struct RTPPacket {
@@ -32,19 +31,19 @@ struct RTPPacket {
 } __attribute__ ((packed));
 using namespace boost::posix_time;
 
-class TSRtpReceiver: public BasicIOThread {
+class TSRtpReceiver: public core::BasicIOThread {
 public:
-	static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent,Parameters& parameters) throw (Exception);
-	static shared_ptr<Parameters> configure();
+	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters);
+	static core::pParameters configure();
 
-	TSRtpReceiver(Log &log_, pThreadBase parent, Parameters& parameters);
+	TSRtpReceiver(log::Log &log_, core::pwThreadBase parent,core::Parameters& parameters);
 	virtual ~TSRtpReceiver();
 
 	bool set_endpoint(std::string address, yuri::size_t port);
 	yuri::size_t seq, pseq;
 	void run();
 protected:
-	shared_ptr<ASIOUDPSocket> socket;
+	shared_ptr<asio::ASIOUDPSocket> socket;
 	ptime first_packet;
 	yuri::size_t packets_received;
 	plane_t buffer, in_buffer;
