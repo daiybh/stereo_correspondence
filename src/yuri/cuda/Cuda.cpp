@@ -39,7 +39,7 @@ std::string Cuda::uint_vs(
 
 Cuda::Cuda(Log &_log):log(_log)
 {
-	log.setLabel("[CUDA] ");
+	log.set_label("[CUDA] ");
 }
 
 Cuda::~Cuda()

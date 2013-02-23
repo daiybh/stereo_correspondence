@@ -31,7 +31,7 @@ GLXWindow::GLXWindow(log::Log &log_, core::pwThreadBase parent, core::Parameters
 	core::pParameters def_params = configure();
 	params.merge(*def_params);
 	params.merge(p);
-	log.setLabel("[GLX] ");
+	log.set_label("[GLX] ");
 }
 
 GLXWindow::~GLXWindow()

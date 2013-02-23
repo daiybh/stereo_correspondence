@@ -39,7 +39,7 @@ HDVSource::HDVSource(log::Log &log_,core::pwThreadBase parent, nodeid_t node, in
 		total_packets(0),total_missing(0),buffer_size(0),buffer_position(0),
 		enable_checks(true)
 {
-	log.setLabel("[HDV Source] ");
+	log.set_label("[HDV Source] ");
 	// Default size. This is proved to work correctly and it's just to fit single RTP packet.
 	// User may change it any value he/she likes.
 	setOutputBufferSize(1320);

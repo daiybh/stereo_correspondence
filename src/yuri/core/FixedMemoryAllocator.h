@@ -47,7 +47,7 @@ public:
 	static bool remove_blocks(yuri::size_t size, yuri::size_t count=0);
 private:
 	bool step();
-	virtual bool set_param(Parameter &parameter);
+	virtual bool set_param(const Parameter &parameter);
 	static bool do_allocate_blocks(yuri::size_t size, yuri::size_t count);
 
 	/**\brief Global mutex protecting the pool */

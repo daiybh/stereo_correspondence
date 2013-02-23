@@ -116,7 +116,7 @@ std::string GL::fragment_shader_yuv_planar(
 
 GL::GL(log::Log &log_):log(log_),lq_422(0)
 {
-	log.setLabel("[GL] ");
+	log.set_label("[GL] ");
 }
 
 GL::~GL() {

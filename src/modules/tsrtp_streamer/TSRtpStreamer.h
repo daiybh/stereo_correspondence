@@ -34,11 +34,11 @@ struct RTPPacket {
 */
 
 struct RTPPacket {
-	char bytes[4];
+	uint8_t bytes[4];
 
 	//unsigned int sequence:16;
-	unsigned timestamp:32;
-	unsigned int SSRC:32;
+	uint32_t timestamp;
+	uint32_t SSRC;
 	//unsigned int CSRC:32;
 };
 using namespace boost::posix_time;

@@ -34,7 +34,7 @@ core::pParameters JPEGDecoder::configure()
 JPEGDecoder::JPEGDecoder(log::Log &_log, core::pwThreadBase parent)
 	:BasicIOThread(_log,parent,1,1),line_width_mult(1),aborted(false)
 {
-	log.setLabel("[JPEGDecoder]");
+	log.set_label("[JPEGDecoder]");
 }
 
 JPEGDecoder::~JPEGDecoder() {

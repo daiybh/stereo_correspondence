@@ -39,7 +39,7 @@ Config::Config(Log &log_):log(log_)
 	boost::mutex::scoped_lock l(default_config_mutex);
 	boost::mutex::scoped_lock ll(config_mutex);
 	if (!default_config) default_config=this;
-	log.setLabel("[Config] ");
+	log.set_label("[Config] ");
 	if (get_env(cf)) read_config_file(get_env(cf));
 }
 
@@ -48,7 +48,7 @@ Config::Config(Log &log_, const char *confname):log(log_)
 	boost::mutex::scoped_lock l(default_config_mutex);
 	boost::mutex::scoped_lock ll(config_mutex);
 	if (!default_config) default_config=this;
-	log.setLabel("[Config] ");
+	log.set_label("[Config] ");
 	if (get_env(cf)) read_config_file(get_env(cf));
 	ll.unlock();
 	init_config(1,(char**)&confname);

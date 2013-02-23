@@ -20,7 +20,7 @@ namespace asio
 ASIOUDPSocket::ASIOUDPSocket(log::Log &_log, core::pwThreadBase parent,yuri::ushort_t port):
 		core::SocketBase(_log,parent),socket(0)
 {
-	log.setLabel("[ASIO UDP] ");
+	log.set_label("[ASIO UDP] ");
 	try {
 		socket=new udp::socket(io_service);
 		socket->open(udp::v4());

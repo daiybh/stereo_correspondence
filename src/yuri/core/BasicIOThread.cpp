@@ -96,7 +96,7 @@ BasicIOThread::BasicIOThread(log::Log &log_,pwThreadBase parent, yuri::sint_t in
 	active_pipes(0),cpu_affinity(-1),fps_stats(0),pts_base(boost::posix_time::not_a_date_time)
 {
 	params.merge(*configure());
-	log.setLabel(std::string("[")+id+"] ");
+	log.set_label(std::string("[")+id+"] ");
 	resize(inp,outp);
 }
 
@@ -411,7 +411,7 @@ bool BasicIOThread::set_param(const Parameter &parameter)
 		debug = parameter.get<yuri::sint_t>();
 		if (debug) {
 			yuri::sint_t orig = log.get_flags();
-			log.setFlags(((orig&flag_mask)<<debug)|(orig&~flag_mask));
+			log.set_flags(((orig&flag_mask)<<debug)|(orig&~flag_mask));
 		}
 	}
 	return true;

@@ -25,7 +25,7 @@ namespace graphics {
 GLShader::GLShader(log::Log &log_, GLenum type):log(log_),type(type),shader_text(0),
 		shader_size(0),shader_object(0)
 {
-	log.setLabel("[GLShader] ");
+	log.set_label("[GLShader] ");
 }
 
 GLShader::~GLShader()

@@ -56,7 +56,7 @@ Log::~Log()
 	(*this)[verbose_debug] << "Destroying logger " << uid << std::endl;
 }
 
-void Log::setID(int id)
+void Log::set_id(int id)
 {
 	this->id=id;
 }
@@ -67,7 +67,7 @@ Log::Log(const Log &log):uid(uids++),out(log.out),id(log.id),ids(""),flags(log.f
 	(*this)[verbose_debug] << "Copying logger "	<< log.uid << " -> " << uid	<< std::endl;
 }
 
-void Log::setLabel(std::string s)
+void Log::set_label(std::string s)
 {
 	ids=s;
 }

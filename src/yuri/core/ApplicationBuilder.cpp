@@ -535,7 +535,7 @@ void ApplicationBuilder::init_local_params()
 	if 		(params["show_time"].get<bool>()) flags|=log::show_time;
 	if 		(params["show_level"].get<bool>()) flags|=log::show_level;
 	if 		(params["use_colors"].get<bool>()) flags|=log::use_colors;
-	log.setFlags(flags);
+	log.set_flags(flags);
 }
 
 void ApplicationBuilder::fetch_tids()

@@ -30,7 +30,7 @@ core::pParameters V4l2Source::configure()
 	(*p)["height"]["Height of the input image. Note that actual resolution from camera may differ."]=480;
 	(*p)["path"]["Path to the camera device. usually /dev/video0 or similar."]=std::string();
 	(*p)["method"]["Method used to get images from camera. Possible values are: none, mmap, user, read. For experts only"]="none";
-std::string fmts;
+	std::string fmts;
 	std::pair<yuri::format_t,yuri::uint_t> f;
 	BOOST_FOREACH(f,formats_map) {
 		FormatInfo_t pf = core::BasicPipe::get_format_info(f.first);

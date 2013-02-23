@@ -16,7 +16,7 @@ namespace graphics {
 
 GLProgram::GLProgram(log::Log &log_):log(log_)
 {
-	log.setLabel("[GLProgram] ");
+	log.set_label("[GLProgram] ");
 	program = glCreateProgram();
 }
 

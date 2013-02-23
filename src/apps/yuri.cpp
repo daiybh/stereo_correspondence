@@ -34,7 +34,7 @@ namespace po = boost::program_options;
 static yuri::shared_ptr<core::ApplicationBuilder> b;
 static po::options_description options("General options");
 static int verbosity;
-static Log l(std::clog);
+static yuri::log::Log l(std::clog);
 
 
 #ifdef __linux__
@@ -66,7 +66,7 @@ void usage()
 void list_registered(Log l_)
 {
 	l_[info]<<"List of registered objects:" << std::endl;
-std::string name;
+	std::string name;
 	shared_ptr<std::vector<std::string> > v = yuri::core::RegisteredClass::list_registered();
 	BOOST_FOREACH(name,*v) {
 		if (verbosity>=0)
@@ -160,8 +160,8 @@ int main(int argc, char**argv)
 	//yuri::uint_t verbosity;
 	std::string filename;
 	std::vector<std::string> arguments;
-	l.setLabel("[YURI] ");
-	l.setFlags(info);
+	l.set_label("[YURI] ");
+	l.set_flags(info);
 	options.add_options()
 		("help,h","print help")
 		("version,V","Show version of yuri and libyuri")
@@ -195,8 +195,8 @@ int main(int argc, char**argv)
 	else if (vm.count("verbose")) verbosity=1;
 
 	//cout << "Verbosity: " << verbosity << std::endl;
-	if (verbosity >=0)	l.setFlags((info<<(verbosity)));
-	else l.setFlags((info>>(-verbosity)));
+	if (verbosity >=0)	l.set_flags((info<<(verbosity)));
+	else l.set_flags((info>>(-verbosity)));
 	//cout << "Verbosity: " << verbosity << ", flags: " << (l.get_flags()&flag_mask)<<std::endl;
 	if (vm.count("help")) {
 		l.set_quiet(true);
@@ -215,7 +215,7 @@ int main(int argc, char**argv)
 		l.set_quiet(true);
 	std::string list_what = vm["list"].as<std::string>();
 		Log l_(std::cout);
-		l_.setFlags(l.get_flags());
+		l_.set_flags(l.get_flags());
 		l_.set_quiet(true);
 		l_[debug] << "Listing " << list_what <<std::endl;
 		if (iequals(list_what,"classes")) list_registered(l_);
@@ -248,7 +248,7 @@ int main(int argc, char**argv)
 		l[fatal] << "An error occurred during initialization: " << e.what() << std::endl;
 		exit(1);
 	}
-#ifdef __linux__
+#ifdef YURI_LINUX
 	memset (&act, '\0', sizeof(act));
 	act.sa_sigaction = &sigHandler;
 	act.sa_flags = SA_SIGINFO;

@@ -19,6 +19,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/thread/thread.hpp>
 
+//! All yuri related stuff belongs here
 namespace yuri {
 typedef boost::uint64_t usize_t;
 typedef usize_t size_t;

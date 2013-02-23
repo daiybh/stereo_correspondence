@@ -161,7 +161,7 @@ FixedMemoryAllocator::~FixedMemoryAllocator()
 }
 /** \brief Implementation of BasicIOThread::set_param
  */
-bool FixedMemoryAllocator::set_param(Parameter &parameter)
+bool FixedMemoryAllocator::set_param(const Parameter &parameter)
 {
 	if (parameter.name == "count") {
 		count=parameter.get<yuri::size_t>();

@@ -70,8 +70,8 @@ public:
 	virtual pid_t 			get_tid();
 protected:
 	virtual void 			run()=0;
-	//! Returns false is the thread should quit, true otherwise.
-	//! The method also processes events and should be called frequently
+	//! Returns false if the thread should quit, true otherwise.
+	//! The method also processes events and should be called occasionally
 	virtual bool 			still_running();
 	//! Adds and spawns new child thread
 	virtual bool 			spawn_thread(pThreadBase  thread);

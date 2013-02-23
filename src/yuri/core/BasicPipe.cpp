@@ -155,7 +155,7 @@ BasicPipe::BasicPipe(log::Log &log_, std::string name):log(log_),name(name),
 	notificationsEnabled(true),closed(false),bytes(0),count(0),limit(0),
 	totalBytes(0),totalCount(0),dropped(0),dropPolicy(YURI_DROP_NONE)
 {
-	log.setLabel("[Pipe "+name+"] ");
+	log.set_label("[Pipe "+name+"] ");
 }
 /*
  * TODO: statistics won't work on 32bit systems. It might need to be looked at.

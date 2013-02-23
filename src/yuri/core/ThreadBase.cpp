@@ -25,11 +25,11 @@ namespace core
 using namespace yuri::log;
 
 long ThreadBase::last_user_thread_id=YURI_THREAD_USER;
-boost::mutex ThreadBase::last_user_thread_id_mutex;
+yuri::mutex ThreadBase::last_user_thread_id_mutex;
 
 long ThreadBase::new_thread_id()
 {
-	boost::mutex::scoped_lock l(last_user_thread_id_mutex);
+	yuri::mutex::scoped_lock l(last_user_thread_id_mutex);
 	return ++last_user_thread_id;
 }
 ThreadBase::ThreadBase(log::Log &_log, pwThreadBase parent):log(_log),parent(parent),
@@ -59,7 +59,7 @@ void ThreadBase::operator()()
 
 void ThreadBase::finish()
 {
-	boost::mutex::scoped_lock l(end_lock);
+	yuri::mutex::scoped_lock l(end_lock);
 	// Death of a child is fatal
 	log[verbose_debug] << "finish()" << "\n";
 	log[debug] << "Finishind all threads" << "\n";
@@ -69,7 +69,7 @@ void ThreadBase::finish()
 
 bool ThreadBase::still_running()
 {
-	boost::mutex::scoped_lock l(end_lock);
+	yuri::mutex::scoped_lock l(end_lock);
 	do_pending_requests();
 	return !end && !end_requested;
 }

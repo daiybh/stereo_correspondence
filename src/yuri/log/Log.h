@@ -18,9 +18,10 @@
 #include <fstream>
 #include <string>
 
-
+//! @namespace yuri All yuri related stuff belongs here
 namespace yuri
 {
+//! @namespace yuri::log All logging related stuff belongs here
 namespace log {
 
 enum _debug_flags {
@@ -47,9 +48,9 @@ public:
 	Log(std::ostream &out);
 	Log(const Log& log);
 	virtual ~Log();
-	void setID(int id);
-	void setLabel(std::string s);
-	void setFlags(int f) { output_flags=f; }
+	void set_id(int id);
+	void set_label(std::string s);
+	void set_flags(int f) { output_flags=f; }
 	LogProxy<char> operator[](debug_flags f);
 	int get_flags() { return output_flags; }
 	void set_quiet(bool q) {quiet =q;}
