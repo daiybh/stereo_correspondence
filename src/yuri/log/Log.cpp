@@ -41,6 +41,11 @@ std::map<_debug_flags, std::string> level_colors=boost::assign::map_list_of<_deb
 (verbose_debug,"\033[36m")
 (trace,"\033[4;36m");
 }
+
+/**
+ * Creates a new Log instance
+ * @param out Stream to output to
+ */
 Log::Log(std::ostream &out):uid(uids++),out(new guarded_stream<char>(out)),
 #ifdef USE_MPI_
 id(-1),
@@ -51,6 +56,9 @@ ids(""),flags(normal),output_flags(normal),quiet(false)
 {
 }
 
+/**
+ * Destroys an instance
+ */
 Log::~Log()
 {
 	(*this)[verbose_debug] << "Destroying logger " << uid << std::endl;
@@ -61,17 +69,29 @@ void Log::set_id(int id)
 	this->id=id;
 }
 
+/**
+ * Creates a new Log instance as a copy of @em log.  The instance will get an unique uid.
+ * @param log Log instance to copy from
+ */
 Log::Log(const Log &log):uid(uids++),out(log.out),id(log.id),ids(""),flags(log.flags),
 		output_flags(log.output_flags),quiet(log.quiet)
 {
 	(*this)[verbose_debug] << "Copying logger "	<< log.uid << " -> " << uid	<< std::endl;
 }
-
+/**
+ * Sets textual label for current instance
+ * @param s new label
+ */
 void Log::set_label(std::string s)
 {
 	ids=s;
 }
 
+/**
+ * Return an instance of LogProxy that should be used for current level. It should not outlive the original Log object!
+ * @param f flag to compare with. If this flag represents log level higher than current, the LogProxy object will be 'dummy'
+ * @return An instance of LogProxy
+ */
 LogProxy<char> Log::operator[](debug_flags f)
 {
 	set_flag(f);
