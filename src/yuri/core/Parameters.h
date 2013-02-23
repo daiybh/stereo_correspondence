@@ -13,6 +13,7 @@
 #include <string>
 #include <map>
 #include <set>
+#include <vector>
 #include <boost/foreach.hpp>
 #include <yuri/exception/Exception.h>
 #include <yuri/exception/OutOfRange.h>
