@@ -77,4 +77,5 @@ OPTION (YURI_DISABLE_PNG "Disable building of CUDA helpers" OFF)
 # And finally submerge into source directories
 #################################################################
 add_subdirectory(src)
+add_subdirectory(doc)
 
