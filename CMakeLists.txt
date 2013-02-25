@@ -38,6 +38,7 @@ SET(LIBNAME_HELPER_CUDA yuri_helper_cuda)
 SET(LIBNAME_HELPER_X11 yuri_helper_x11)
 SET(LIBNAME_HELPER_IEEE1394 yuri_helper_ieee1394)
 SET(LIBNAME_HELPER_ASIO yuri_helper_asio)
+SET(LIBNAME_HELPER_DECKLINK yuri_helper_decklink)
 
 #################################################################
 # Set prefix for modules
@@ -71,6 +72,7 @@ OPTION (YURI_DISABLE_SAGE "Disable building of libsage related modules" OFF)
 OPTION (YURI_DISABLE_X11 "Explicitly disable building of X11 helpers and related modules" OFF)
 OPTION (YURI_DISABLE_IEEE1394 "Disable building of IEEE1394 helpers" OFF)
 OPTION (YURI_DISABLE_ASIO "Disable building of boost::asio helpers" OFF)
+OPTION (YURI_DISABLE_DECKLINK "Disable building of decklink API helpers" OFF)
 OPTION (YURI_DISABLE_PNG "Disable building of CUDA helpers" OFF)
 
 #################################################################
