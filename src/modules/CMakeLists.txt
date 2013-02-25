@@ -122,4 +122,5 @@ ENDIF()
 
 IF(CORE_DECKLINK AND DECKLINK_FOUND)
 	add_subdirectory(decklink_input)
+	add_subdirectory(decklink_output)
 ENDIF()
