@@ -46,6 +46,9 @@ ENDIF()
 pkg_check_modules(OpenCV opencv>=2.3.0)
 find_package(OPENNI2)
 
+IF (CORE_DECKLINK)
+	find_package(DECKLINK)
+ENDIF()
 #################################################################
 # Add optional modules based on results of the detection
 #################################################################
@@ -115,4 +118,8 @@ ENDIF()
 
 IF(${OPENNI2_FOUND})
 	add_subdirectory(openni)
+ENDIF()
+
+IF(CORE_DECKLINK AND DECKLINK_FOUND)
+	add_subdirectory(decklink_input)
 ENDIF()
