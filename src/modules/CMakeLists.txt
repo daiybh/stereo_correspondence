@@ -18,6 +18,7 @@ add_subdirectory(rawfilesource)
 add_subdirectory(split)
 add_subdirectory(dxt_compress)
 add_subdirectory(temperature)
+add_subdirectory(read_pcap)
 
 #################################################################
 # Let's check for libraries required 
