@@ -417,6 +417,7 @@ bool BasicIOThread::set_param(const Parameter &parameter)
 	return true;
 }
 
+
 pBasicFrame BasicIOThread::allocate_empty_frame(yuri::format_t format, yuri::size_t width, yuri::size_t height, bool large)
 {
 	pBasicFrame pic;
@@ -441,6 +442,18 @@ pBasicFrame BasicIOThread::allocate_empty_frame(yuri::format_t format, yuri::siz
 	}
 	pic->set_parameters(format,width,height);
 	return pic;
+}
+pBasicFrame BasicIOThread::allocate_empty_frame(size_t size, bool large)
+{
+	pBasicFrame frame = yuri::make_shared<BasicFrame>(1);
+	if (!large) {
+		frame->get_plane(0).resize(size);
+	} else {
+		FixedMemoryAllocator::memory_block_t block = FixedMemoryAllocator::get_block(size);
+		assert(block.first);
+		frame->get_plane(0).set(block.first,size,block.second);
+	}
+	return frame;
 }
 
 bool BasicIOThread::connect_threads(shared_ptr<BasicIOThread> src, yuri::sint_t s_idx, shared_ptr<BasicIOThread> target, yuri::sint_t t_idx, Log &log,std::string name, shared_ptr<Parameters> params)

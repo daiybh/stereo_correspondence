@@ -71,6 +71,7 @@ public:
 	static pBasicFrame 			duplicate_frame(pBasicFrame frame);
 	static pBasicFrame 			allocate_empty_frame(yuri::format_t format,
 			yuri::size_t width, yuri::size_t height, bool large=false);
+	static pBasicFrame 			allocate_empty_frame(size_t size, bool large=false);
 	static bool 				connect_threads(pBasicIOThread,
 			yuri::sint_t, pBasicIOThread, yuri::sint_t, log::Log &log,
 			std::string name, pParameters params = pParameters());
