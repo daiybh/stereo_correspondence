@@ -118,7 +118,8 @@ std::map<yuri::format_t, const FormatInfo_t> BasicPipe::formats=map_list_of<yuri
 		(YURI_FMT_V210_MVTP, 	FormatInfo::raw_format("V210 20bit (MVTP ordering)", list_of<std::string>("mvtp_v210")("v210mvtp"), true, 20, list_of(10)(10)(10)))
 		(YURI_FMT_MVTP_FULL_FRAME,	FormatInfo::raw_format("MVTP Fullframe", list_of<std::string>("mvtp_full"), true, 20, list_of(10)(10)(10)))
 		(YURI_FMT_MVTP_AUX_DATA,FormatInfo::raw_format("MVTP Auxdata", list_of<std::string>("mvtp_aux"), true, 20, list_of(10)(10)(10)))
-		(YURI_FMT_BAYER_RGGB,FormatInfo::raw_format("Bayer patter RGGB", list_of<std::string>("bayer")("bayer_rggb"), true, 8))
+		(YURI_FMT_BAYER_RGGB,FormatInfo::raw_format("Bayer patter RGGB", list_of<std::string>("bayer")("bayer_rggb"), false, 8, list_of(8),list_of("@")))
+		(YURI_FMT_BAYER_BGGR,FormatInfo::raw_format("Bayer patter BGGR", list_of<std::string>("ba81")("bayer_rggb"), false, 8, list_of(8),list_of("@")))
 		////////////////// Image formats  (complete files with headers) //////////////////
 		(YURI_IMAGE_JPEG,		FormatInfo::image_format("JPEG",list_of<std::string>("jpeg")("jpg"),list_of<std::string>("image/jpeg")))
 		(YURI_IMAGE_PNG,		FormatInfo::image_format("PNG",list_of<std::string>("png"),list_of<std::string>("image/png")))
