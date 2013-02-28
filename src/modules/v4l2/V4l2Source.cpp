@@ -57,7 +57,9 @@ std::map<yuri::format_t, yuri::uint_t> V4l2Source::formats_map=
 		(YURI_FMT_YUV420_PLANAR, V4L2_PIX_FMT_YUV420)
 		(YURI_VIDEO_DV, V4L2_PIX_FMT_DV)
 		(YURI_VIDEO_MJPEG, V4L2_PIX_FMT_MJPEG)
-		(YURI_IMAGE_JPEG, V4L2_PIX_FMT_JPEG);
+		(YURI_IMAGE_JPEG, V4L2_PIX_FMT_JPEG)
+		(YURI_FMT_BAYER_BGGR, V4L2_PIX_FMT_SBGGR8)
+		(YURI_FMT_BAYER_RGGB, V4L2_PIX_FMT_SRGGB8);
 
 
 std::map<std::string, yuri::uint_t> V4l2Source::special_formats=boost::assign::map_list_of<std::string,yuri::uint_t>
