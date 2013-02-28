@@ -98,7 +98,7 @@ bool OpenCV::step()
 		}
 		int in_type 	= CV_MAKETYPE(in_base,  in_fi->components[0].size());
 		int out_type	= CV_MAKETYPE(out_base, out_fi->components[0].size());
-		core::pBasicFrame output = allocate_empty_frame(format,width,height);
+		core::pBasicFrame output = allocate_empty_frame(format,width,height,true);
 		cv::Mat in_mat(height,width,in_type,PLANE_RAW_DATA(frame,0));
 		cv::Mat out_mat(height,width,out_type,PLANE_RAW_DATA(output,0));
 		cv::cvtColor(in_mat,out_mat,it->second);
