@@ -19,17 +19,18 @@ namespace video
 REGISTER("avscaler",AVScaler)
 
 
-core::pBasicIOThread AVScaler::generate(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters)
-{
-	long format = core::BasicPipe::get_format_from_string(parameters["format"].get<std::string>(),YURI_FMT);
-	if (format == YURI_FMT_NONE) throw exception::InitializationFailed(
-		std::string("Wrong output format ")+parameters["format"].get<std::string>());
-	shared_ptr<AVScaler> s(new AVScaler(_log,parent));
-	s->set_output_format(parameters["width"].get<yuri::ssize_t>(),
-			parameters["height"].get<yuri::ssize_t>(),
-			format);
-	return s;
-}
+IO_THREAD_GENERATOR(AVScaler)
+//core::pBasicIOThread AVScaler::generate(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters)
+//{
+//	long format = core::BasicPipe::get_format_from_string(parameters["format"].get<std::string>(),YURI_FMT);
+//	if (format == YURI_FMT_NONE) throw exception::InitializationFailed(
+//		std::string("Wrong output format ")+parameters["format"].get<std::string>());
+//	shared_ptr<AVScaler> s(new AVScaler(_log,parent));
+//	s->set_output_format(parameters["width"].get<yuri::ssize_t>(),
+//			parameters["height"].get<yuri::ssize_t>(),
+//			format);
+//	return s;
+//}
 core::pParameters AVScaler::configure()
 {
 	core::pParameters p =BasicIOThread::configure();
@@ -62,13 +63,22 @@ bool AVScaler::configure_converter(core::Parameters& parameters,long format_in,
 }
 
 
-AVScaler::AVScaler(log::Log &_log, core::pwThreadBase parent):
+AVScaler::AVScaler(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters):
 	AVCodecBase(_log,parent,"AVScaler"),f_in(PIX_FMT_NONE),f_out(PIX_FMT_NONE),
 	format_in(YURI_FMT_NONE),format_out(YURI_FMT_NONE),w_in(0),h_in(0),w_out(0),
 	h_out(0),scaling(false),transforming(false),valid_contexts(false),
 	input_pipe_connected(false),scaling_disabled(false),pts(0),duration(0)
 {
 	latency=100000;
+	IO_THREAD_INIT("AVScaler")
+	long format = core::BasicPipe::get_format_from_string(parameters["format"].get<std::string>(),YURI_FMT);
+	if (format == YURI_FMT_NONE) throw exception::InitializationFailed(
+			std::string("Wrong output format ")+parameters["format"].get<std::string>());
+
+	set_output_format(parameters["width"].get<yuri::ssize_t>(),
+				parameters["height"].get<yuri::ssize_t>(),
+				format);
+
 }
 
 AVScaler::~AVScaler()
