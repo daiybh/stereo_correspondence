@@ -3,18 +3,10 @@
 # This module searches libsage, the library for working with PNG images.
 #
 # It defines the following variables
-#  PNG_INCLUDE_DIRS, where to find png.h, etc.
-#  PNG_LIBRARIES, the libraries to link against to use PNG.
-#  PNG_DEFINITIONS - You should add_definitons(${PNG_DEFINITIONS}) before compiling code that includes png library files.
-#  PNG_FOUND, If false, do not try to use PNG.
-#  PNG_VERSION_STRING - the version of the PNG library found (since CMake 2.8.8)
-# Also defined, but not for general use are
-#  PNG_LIBRARY, where to find the PNG library.
-# For backward compatiblity the variable PNG_INCLUDE_DIR is also set. It has the same value as PNG_INCLUDE_DIRS.
-#
-# Since PNG depends on the ZLib compression library, none of the above will be
-# defined unless ZLib can be found.
-
+#  SAGE_INCLUDE_DIRS, where to find png.h, etc.
+#  SAGE_LIBRARIES, the libraries to link against to use PNG.
+#  SAGE_DEFINITIONS - You should add_definitons(${PNG_DEFINITIONS}) before compiling code that includes png library files.
+#  SAGE_FOUND, If false, do not try to use PNG.
 #=============================================================================
 # Copyright 2013 Zdenek Travnicek, Institute of Intermedia (www.iim.cz)
 #
@@ -49,13 +41,13 @@ find_path(SAGE_SAGE_INCLUDE_DIR libsage.h
       SET(SAGE_INCLUDE_DIRS ${SAGE_SAGE_INCLUDE_DIR} )
       SET(SAGE_INCLUDE_DIR ${SAGE_SAGE_INCLUDE_DIRS} ) # for backward compatiblity
       SET(SAGE_LIBRARY ${SAGE_SAIL_LIBRARY})
+      SET(SAGE_LIBRARIES ${SAGE_SAIL_LIBRARY})
       SET(SAGE_VERSION "3.0")
 	endif()      
-# handle the QUIETLY and REQUIRED arguments and set PNG_FOUND to TRUE if
-# all listed variables are TRUE
+
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(SAGE
                                   REQUIRED_VARS SAGE_LIBRARY SAGE_SAGE_INCLUDE_DIR
                                   VERSION_VAR SAGE_VERSION)
 
-mark_as_advanced(SAGE_SAGE_INCLUDE_DIR PNG_LIBRARY )
+mark_as_advanced(SAGE_SAGE_INCLUDE_DIR SAGE_SAGE_LIBRARY )
