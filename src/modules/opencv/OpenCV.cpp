@@ -58,6 +58,11 @@ bool OpenCV::step()
 {
 	const core::pBasicFrame frame = in[0]->pop_frame();
 	if (frame) {
+		// Pass through for no-op conversion
+		if (frame->get_format() == format) {
+			push_raw_frame(0,frame);
+			return true;
+		}
 		fmt_pair fmts = std::make_pair(frame->get_format(), format);
 		fmt_map_iter it = format_map.find(fmts);
 		if (it==format_map.end()) {
