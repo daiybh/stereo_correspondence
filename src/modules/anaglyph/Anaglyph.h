@@ -30,13 +30,15 @@ public:
 	/// @param _log  logger
 	/// @param parent  parent thread
 	/// @param correction Correction in pixels meaning how many pixels to the right should be right image shifted
-	Anaglyph(log::Log &_log, core::pwThreadBase parent, int correction = 0, bool fast = true);
+	Anaglyph(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters);
 	virtual ~Anaglyph();
-	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
+	//static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
+	IO_THREAD_GENERATOR_DECLARATION
 	static core::pParameters configure();
 protected:
 	virtual bool step();
 	template<typename T> core::pBasicFrame makeAnaglyph(const core::pBasicFrame& left, const core::pBasicFrame& right);
+	bool set_param(const core::Parameter& param);
 protected:
 	int correction;
 	bool fast;

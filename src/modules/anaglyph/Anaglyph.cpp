@@ -18,16 +18,10 @@ namespace anaglyph {
 
 REGISTER("anaglyph",Anaglyph)
 
-core::pBasicIOThread Anaglyph::generate(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters)
-
-{
-	shared_ptr<Anaglyph> a (new Anaglyph(_log,parent,
-			parameters["correction"].get<int>()));
-	return a;
-}
+IO_THREAD_GENERATOR(Anaglyph)
 core::pParameters Anaglyph::configure()
 {
-	core::pParameters p (new core::Parameters());
+	core::pParameters p = core::BasicIOThread::configure();
 	(*p)["correction"]["Number of pixels the images get shifted (width of the final image gets shorter by the same amount)"]=0;
 	(*p)["fast"]["Skips old frames in the pipe. Setting this to false forces processing of all frames"]=true;
 	p->set_max_pipes(2,1);
@@ -39,9 +33,10 @@ core::pParameters Anaglyph::configure()
 }
 
 
-Anaglyph::Anaglyph(log::Log &_log, core::pwThreadBase parent, int correction, bool fast)
-	:core::BasicIOThread(_log,parent,2,1,"Anaglyph"),correction(correction),fast(fast)
+Anaglyph::Anaglyph(log::Log &_log, core::pwThreadBase parent, core::Parameters &parameters)
+	:core::BasicIOThread(_log,parent,2,1,"Anaglyph"),correction(0),fast(true)
 {
+	IO_THREAD_INIT("Anaglyph")
 }
 
 Anaglyph::~Anaglyph() {
@@ -54,8 +49,8 @@ bool Anaglyph::step()
 		return true;
 	core::pBasicFrame left, right, out_frame;
 	if (fast) {
-		while (!in[0]->is_empty())	left = in[0]->pop_frame();
-		while (!in[1]->is_empty())	right = in[1]->pop_frame();
+		left = in[0]->pop_latest();
+		right = in[1]->pop_latest();
 	} else {
 		left = in[0]->pop_frame();
 		right = in[1]->pop_frame();
@@ -63,7 +58,7 @@ bool Anaglyph::step()
 	assert(left && right);
 
 	if (left->get_format() != right->get_format()) {
-		log[log::error] << "Both eyes have different colorspaces, this is not supported now\n";
+		log[log::error] << "The eyes have different colorspaces, this is not supported now\n";
 		return true;
 	}
 	if (left->get_format() != YURI_FMT_RGB && left->get_format() != YURI_FMT_RGBA) {
@@ -159,6 +154,16 @@ template<typename T> core::pBasicFrame Anaglyph::makeAnaglyph(const core::pBasic
 		}
 	}
 	return out_frame;
+}
+
+bool Anaglyph::set_param(const core::Parameter& param)
+{
+	if (param.name == "correction") {
+		correction = param.get<int>();
+	} else if (param.name == "fast") {
+		fast = param.get<bool>();
+	} else return BasicIOThread::set_param(param);
+	return true;
 }
 
 }
