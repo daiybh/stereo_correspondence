@@ -104,7 +104,11 @@ public:
 		const std::string msg = buffer_.str();
 		if (!dummy_) std::async([&msg,this](){stream_.write(msg);});
 #else
-		if (!dummy_) stream_.write(buffer_.str());
+		if (!dummy_) {
+			const typename gstream_t::string_t str = buffer_.str();
+			if (str.size()>0 && str[str.size()-1]!=stream_.widen('\n')) buffer_<<stream_.widen('\n');
+			stream_.write(buffer_.str());
+		}
 #endif
 	}
 private:
