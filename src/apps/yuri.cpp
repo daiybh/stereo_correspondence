@@ -42,8 +42,12 @@ static void sigHandler(int sig, siginfo_t *siginfo, void *context);
 static struct sigaction act;
 
 
-void sigHandler(int /*sig*/, siginfo_t */*siginfo*/, void */*context*/)
+void sigHandler(int sig, siginfo_t */*siginfo*/, void */*context*/)
 {
+	if (sig==SIGRTMIN) {
+		l[warning] << "Realtime signal 0! Ignoring...";
+		return;
+	}
 	if (b)
 		b->request_end();
 	act.sa_handler = SIG_DFL;
@@ -253,6 +257,7 @@ int main(int argc, char**argv)
 	act.sa_sigaction = &sigHandler;
 	act.sa_flags = SA_SIGINFO;
 	sigaction(SIGINT,&act,0);
+	sigaction(SIGRTMIN,&act,0);
 #endif
 	try {
 		(*b)();
