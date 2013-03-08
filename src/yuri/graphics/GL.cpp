@@ -31,6 +31,15 @@ std::string GL::fragment_shader_yuv422_very_lq(
 		"float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;\n"
 		"gl_FragColor = vec4(r, g, b, 1.0);\n"
 		"}\n");
+std::string GL::fragment_shader_uyvy422_very_lq(
+		"uniform sampler2D tex0;\n"
+		"void main()\n"
+		"{\n"
+		"vec4 col = texture2D(tex0, gl_TexCoord[0].st);\n"
+		"float y = col.g - 0.0625 , u = col.r - 0.5, v = col.b - 0.5;\n"
+		"float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;\n"
+		"gl_FragColor = vec4(r, g, b, 1.0);\n"
+		"}\n");
 
 /*
  *
@@ -96,6 +105,20 @@ std::string GL::fragment_shader_yuv444(
 		"float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;\n"
 		"gl_FragColor = vec4(r, g, b, 1.0);\n"
 		"}\n");
+/// @bug: This is actually the LQ version....
+std::string GL::fragment_shader_uyvy422_lq(
+		"uniform sampler2D tex0, tex1;\n"
+		"void main()\n"
+		"{\n"
+		"vec4 col0 = texture2D(tex0, gl_TexCoord[0].st);\n"
+		"vec4 col1 = texture2D(tex1, gl_TexCoord[0].st);\n"
+		//"float y = 0.5/*col1.g - 0.0625*/, u = col0.r - 0.5, v = col0.b - 0.5;\n"
+
+		"float y = col0.g - 0.0625 , u = col0.r - 0.5, v = col0.b - 0.5;\n"
+		"float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;\n"
+		"gl_FragColor = vec4(r, g, b, 1.0);\n"
+		"}\n");
+
 std::string GL::fragment_shader_yuv_planar(
 		"uniform sampler2D tex0;\n"
 		"uniform sampler2D tex1;\n"
@@ -212,7 +235,9 @@ void GL::generate_texture(uint tid, core::pBasicFrame frame)
 			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,simple_fragment_shader);
 		}break;
 		case YURI_FMT_YUV444:
-		case YURI_FMT_YUV422: {
+		case YURI_FMT_YUV422:
+		case YURI_FMT_UYVY422:
+		{
 			if (wh != textures[tid].wh) {
 				yuri::ubyte_t *image;
 				if (!lq_422 || frame->get_format()==YURI_FMT_YUV444) {
@@ -235,26 +260,37 @@ void GL::generate_texture(uint tid, core::pBasicFrame frame)
 				yuri::ubyte_t *p = PLANE_RAW_DATA(frame,0);
 				yuri::ubyte_t *ty = img, *tu=img+1, *tv=img+2;
 //				yuri::ubyte_t y,u,v;
-				for (int i=0;i<static_cast<int>(w*h/2);++i) {
-					/* *t++=*p++;
-					u = *t++ = *p++;
-					y = *p++;
-					v = *t++ = *p++;
-					*t++ = y;
-					*t++ = u;
-					*t++ = v;*/
-					*ty = *p++;
-					ty+=3;
-					*tu = *p;
-					tu+=3;
-					*tu = *p++;
-					tu+=3;
-					*ty = *p++;
-					ty+=3;
-					*tv = *p;
-					tv+=3;
-					*tv = *p++;
-					tv+=3;
+				if (frame->get_format()==YURI_FMT_YUV422) {
+					for (int i=0;i<static_cast<int>(w*h/2);++i) {
+						*ty = *p++;
+						ty+=3;
+						*tu = *p;
+						tu+=3;
+						*tu = *p++;
+						tu+=3;
+						*ty = *p++;
+						ty+=3;
+						*tv = *p;
+						tv+=3;
+						*tv = *p++;
+						tv+=3;
+					}
+				} else {
+					for (int i=0;i<static_cast<int>(w*h/2);++i) {
+						*tu = *p;
+						tu+=3;
+						*tu = *p++;
+						tu+=3;
+						*ty = *p++;
+						ty+=3;
+						*tv = *p;
+						tv+=3;
+						*tv = *p++;
+						tv+=3;
+						*ty = *p++;
+						ty+=3;
+
+					}
 				}
 				prepare_texture(tid,0,img,w, h,3,GL_RGB,true);
 				delete [] img;
@@ -264,10 +300,16 @@ void GL::generate_texture(uint tid, core::pBasicFrame frame)
 					prepare_texture(tid,1,PLANE_RAW_DATA(frame,0),w, h,GL_LUMINANCE8_ALPHA8,GL_LUMINANCE_ALPHA,true);
 				}
 			}
-		std::string fs;
-			if (!lq_422 || frame->get_format()==YURI_FMT_YUV444) fs = fragment_shader_yuv444;
-			else if (lq_422==1) fs = fragment_shader_yuv422_lq;
-			else fs = fragment_shader_yuv422_very_lq;
+			std::string fs;
+//			if (frame->get_format()==YURI_FMT_UYVY422) {
+//				if (!lq_422) fs = fragment_shader_uyvy444;
+//				else if (lq_422==1) fs = fragment_shader_uyvy422_lq;
+//				else fs = fragment_shader_uyvy422_very_lq;
+//			} else {
+				if (!lq_422 || frame->get_format()==YURI_FMT_YUV444) fs = fragment_shader_yuv444;
+				else if (lq_422==1) fs = frame->get_format()==YURI_FMT_YUV422?fragment_shader_yuv422_lq:fragment_shader_uyvy422_lq;
+				else fs = frame->get_format()==YURI_FMT_YUV422?fragment_shader_yuv422_very_lq:fragment_shader_uyvy422_very_lq;
+//			}
 			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,fs);
 		}break;
 		case YURI_FMT_YUV420_PLANAR:
