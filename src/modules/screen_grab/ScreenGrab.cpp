@@ -34,9 +34,9 @@ core::BasicIOThread(log_,parent,1,1,std::string("screen_grab")),win(0)
 {
 	IO_THREAD_INIT("ScreenGrab")
 	dpy.reset(XOpenDisplay(display.c_str()),DisplayDeleter());
-		if (!dpy) {
-			throw exception::InitializationFailed("Failed to open connection to X display at '"+display+"'")
-		}
+	if (!dpy) {
+		throw exception::InitializationFailed("Failed to open connection to X display at '"+display+"'");
+	}
 }
 
 ScreenGrab::~ScreenGrab()
