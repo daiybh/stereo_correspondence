@@ -109,6 +109,8 @@ protected:
 	static std::string simple_vertex_shader, simple_fragment_shader,
 		fragment_shader_yuv444,
 		fragment_shader_yuv422_lq, fragment_shader_yuv422_very_lq,
+		fragment_shader_uyvy444,
+		fragment_shader_uyvy422_lq, fragment_shader_uyvy422_very_lq,
 		fragment_shader_yuv_planar;
 	yuri::uint_t lq_422;
 };

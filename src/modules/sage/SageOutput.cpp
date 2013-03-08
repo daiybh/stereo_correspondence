@@ -10,8 +10,11 @@
 
 #include "SageOutput.h"
 #include "yuri/core/Module.h"
+
 // Unexported method from libsage, needed to register sharing without using processMessages
 void addNewClient(sail *sageInf, char *fsIP);
+#include "boost/assign.hpp"
+
 namespace yuri {
 namespace sage {
 
@@ -23,22 +26,28 @@ core::pParameters SageOutput::configure()
 {
 	core::pParameters p = BasicIOThread::configure();
 
-	(*p)["address"]["SAGE address"]=std::string("127.0.0.1");
-	(*p)["width"]["Image width"]=800;
-	(*p)["height"]["Image height"]=600;
+	(*p)["address"]["SAGE address (ignored)"]=std::string("127.0.0.1");
+	(*p)["width"]["Force image width. -1 to use input image size"]=-1;
+	(*p)["height"]["Force image height. -1 to use input image size"]=-1;
 	return p;
 }
 
+namespace {
+std::map<format_t, sagePixFmt> yuri_sage_fmt_map = boost::assign::map_list_of<format_t, sagePixFmt>
+(YURI_FMT_UYVY422, PIXFMT_YUV)
+(YURI_FMT_YUV422, PIXFMT_YUV)
+(YURI_FMT_RGB24, PIXFMT_888)
+(YURI_FMT_BGR, PIXFMT_888_INV)
+(YURI_FMT_RGB32, PIXFMT_8888)
+(YURI_FMT_BGRA, PIXFMT_8888_INV)
+(YURI_FMT_DXT1, PIXFMT_DXT);
+}
 
 SageOutput::SageOutput(yuri::log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters)
-:BasicIOThread(log_,parent,1,0,"SageOutput"),sail_info(0),width(800),height(600),
- fmt(YURI_FMT_YUV422),sage_fmt(PIXFMT_YUV),sage_address("127.0.0.1")
+:BasicIOThread(log_,parent,1,0,"SageOutput"),sail_info(0),width(-1),height(-1),
+ fmt(YURI_FMT_NONE),sage_fmt(PIXFMT_NULL),sage_address("127.0.0.1")
 {
 	IO_THREAD_INIT("SageOutput")
-
-		log[yuri::log::info] << "Connecting to SAGE @ " << sage_address << "\n";
-	sail_info = createSAIL("yuri",width,height,sage_fmt,0,TOP_TO_BOTTOM);//sage_address.c_str());
-	if (!sail_info) throw yuri::exception::InitializationFailed("Failed to connect to SAIL");
 }
 
 
@@ -81,6 +90,23 @@ bool SageOutput::step()
 	if (!in[0]) return true;
 	core::pBasicFrame frame = in[0]->pop_latest();
 	if (!frame) return true;
+	if (fmt == YURI_FMT_NONE) {
+		const format_t tmp_fmt = frame->get_format();
+		if (!yuri_sage_fmt_map.count(tmp_fmt)) {
+			log[log::warning] << "Unsupported input format";
+			return true;
+		}
+		fmt = tmp_fmt;
+		sage_fmt=yuri_sage_fmt_map[fmt];
+		log[yuri::log::info] << "Connecting to SAGE @ " << sage_address << "\n";
+		sail_info = createSAIL("yuri",width,height,sage_fmt,0,TOP_TO_BOTTOM);//sage_address.c_str());
+		if (!sail_info) {
+			//throw yuri::exception::InitializationFailed(
+			log[log::fatal] << "Failed to connect to SAIL";
+			request_end();
+			return false;
+		}
+	}
 	if (frame->get_format() != fmt) return true;
 	const yuri::FormatInfo_t finfo = core::BasicPipe::get_format_info(fmt);
 	const yuri::size_t sage_line_width = finfo->bpp*width/8;
@@ -99,8 +125,27 @@ bool SageOutput::step()
 			std::copy(data_start,data_start+copy_width/2,sail_buffer+line*sage_line_width/2);
 		}
 	}
+<<<<<<< HEAD
 	//swapBuffer(sail_info);
 	sail_info->swapBuffer(SAGE_NON_BLOCKING);
+=======
+	else if (!finfo->compressed){
+		ubyte_t* sail_buffer = reinterpret_cast<ubyte_t*>(nextBuffer(sail_info));
+		if (!sail_buffer) {
+			log[yuri::log::fatal] << "Got empty buffer from the SAIL library. Assuming connection is closed and bailing out.\n";
+			return false;
+		}
+		for (yuri::size_t line = 0; line < copy_lines; ++line) {
+			const yuri::ubyte_t* data_start = reinterpret_cast<yuri::ubyte_t*>(PLANE_RAW_DATA(frame,0) + line*input_line_width);
+			std::copy(data_start,data_start+copy_width,sail_buffer+line*sage_line_width);
+		}
+	} else {
+		ubyte_t* sail_buffer = reinterpret_cast<ubyte_t*>(nextBuffer(sail_info));
+		const yuri::ubyte_t* data_start = reinterpret_cast<yuri::ubyte_t*>(PLANE_RAW_DATA(frame,0));
+		std::copy(data_start,data_start+PLANE_SIZE(frame,0),sail_buffer);
+	}
+	swapBuffer(sail_info);
+>>>>>>> branch 'master' of git@git.iim.cz:yuri-light
 	return true;
 }
 

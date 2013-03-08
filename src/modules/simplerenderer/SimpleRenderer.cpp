@@ -234,6 +234,7 @@ bool SimpleRenderer::prepare_image(yuri::uint_t index)
 		case YURI_FMT_BGRA:
 		case YURI_FMT_YUV422:
 		case YURI_FMT_YUV444:
+		case YURI_FMT_UYVY422:
 		case YURI_FMT_YUV420_PLANAR:
 		case YURI_FMT_YUV422_PLANAR:
 		case YURI_FMT_YUV444_PLANAR:

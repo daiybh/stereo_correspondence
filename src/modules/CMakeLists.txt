@@ -20,7 +20,11 @@ add_subdirectory(dxt_compress)
 add_subdirectory(temperature)
 add_subdirectory(read_pcap)
 add_subdirectory(fps_fixer)
+<<<<<<< HEAD
 add_subdirectory(ts_demuxer)
+=======
+add_subdirectory(combine)
+>>>>>>> branch 'master' of git@git.iim.cz:yuri-light
 
 #################################################################
 # Let's check for libraries required 
@@ -80,7 +84,7 @@ IF(CORE_LIBAV)
 	ENDIF()
 	IF (${libavformat_FOUND})
 		add_subdirectory(tsmuxer)
-		#add_subdirectory(avdemuxer)
+		add_subdirectory(avdemuxer)
 	ENDIF()
 	IF (${libswscale_FOUND})
 		add_subdirectory(avscaler)
