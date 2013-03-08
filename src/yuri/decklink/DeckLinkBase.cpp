@@ -62,7 +62,7 @@ DeckLinkBase::connection_strings=boost::assign::map_list_of<std::string, BMDVide
 
 std::map<BMDPixelFormat, yuri::format_t>
 DeckLinkBase::pixel_format_map=boost::assign::map_list_of<BMDPixelFormat, yuri::format_t>
-		(bmdFormat8BitYUV,	YURI_FMT_YUV422)
+		(bmdFormat8BitYUV,	YURI_FMT_UYVY422)
 		(bmdFormat10BitYUV,	YURI_FMT_V210);
 //		(bmdFormat8BitARGB)
 //		(bmdFormat8BitBGRA)

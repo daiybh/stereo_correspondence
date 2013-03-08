@@ -100,14 +100,14 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 			yuri::size_t data_size = videoFrame->GetRowBytes() * height;
 //			log[log::info] << "Allocating " << data_size << " bytes for " << height << " lines, " << videoFrame->GetRowBytes() << " bytes each" << "\n";
 			frame = allocate_frame_from_memory(data,data_size);
-			if (output_format==YURI_FMT_YUV422) {
-				yuri::ubyte_t *dta = PLANE_RAW_DATA(frame,0);
-				yuri::ubyte_t *dta_end=dta+data_size;
-				while (dta<dta_end) {
-					swap(*dta,*(dta+1));
-					dta+=2;
-				}
-			}
+//			if (output_format==YURI_FMT_YUV422) {
+//				yuri::ubyte_t *dta = PLANE_RAW_DATA(frame,0);
+//				yuri::ubyte_t *dta_end=dta+data_size;
+//				while (dta<dta_end) {
+//					swap(*dta,*(dta+1));
+//					dta+=2;
+//				}
+//			}
 		}
 		if (audioPacket && audio_pipe>=0) {
 			yuri::size_t samples = audioPacket->GetSampleFrameCount();
@@ -145,12 +145,12 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 			} else {
 				yuri::size_t data_size = rightframe->GetRowBytes() * height;
 				core::pBasicFrame frame2 = allocate_frame_from_memory(data2,data_size);
-				yuri::ubyte_t *dta = PLANE_RAW_DATA(frame2,0);
-				yuri::ubyte_t *dta_end=dta+data_size;
-				while (dta<dta_end) {
-					swap(*dta,*(dta+1));
-					dta+=2;
-				}
+//				yuri::ubyte_t *dta = PLANE_RAW_DATA(frame2,0);
+//				yuri::ubyte_t *dta_end=dta+data_size;
+//				while (dta<dta_end) {
+//					swap(*dta,*(dta+1));
+//					dta+=2;
+//				}
 				frame2->set_info(frame_info);
 				if (output_format!=YURI_FMT_NONE) push_video_frame(1,frame2,output_format,width,height,0,1e6*value/scale,0);
 				videoFrame->Release();
@@ -232,7 +232,7 @@ bool DeckLinkInput::start_capture()
 		}
 		int64_t x;
 		cfg->GetInt(bmdDeckLinkConfigVideoInputConnection,&x);
-		log[log::debug] << "SUpported connections: " << x << "\n";
+		log[log::debug] << "Supported connections: " << x << "\n";
 
 	}
 	res=S_FALSE;
