@@ -42,7 +42,8 @@ std::map<yuri::format_t, PixelFormat> AVCodecBase::yuri_pixel_map=boost::assign:
 		(YURI_FMT_YUV422,			PIX_FMT_YUYV422)
 		(YURI_FMT_YUV420_PLANAR,	PIX_FMT_YUV420P)
 		(YURI_FMT_YUV422_PLANAR,	PIX_FMT_YUV422P)
-		(YURI_FMT_YUV444_PLANAR,	PIX_FMT_YUV444P);
+		(YURI_FMT_YUV444_PLANAR,	PIX_FMT_YUV444P)
+		(YURI_FMT_UYVY422,			PIX_FMT_UYVY422);
 std::map<PixelFormat, PixelFormat> AVCodecBase::av_identity=boost::assign::map_list_of
 		(PIX_FMT_YUVJ420P,			PIX_FMT_YUV420P)
 		(PIX_FMT_YUVJ422P,			PIX_FMT_YUV422P);
