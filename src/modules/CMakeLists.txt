@@ -52,6 +52,7 @@ find_package(OPENNI2)
 IF (CORE_DECKLINK)
 	find_package(DECKLINK)
 ENDIF()
+find_package( X11 )
 #################################################################
 # Add optional modules based on results of the detection
 #################################################################
@@ -126,4 +127,8 @@ ENDIF()
 IF(CORE_DECKLINK AND DECKLINK_FOUND)
 	add_subdirectory(decklink_input)
 	add_subdirectory(decklink_output)
+ENDIF()
+
+IF(X11_FOUND)
+	add_subdirectory(screen_grab)
 ENDIF()
