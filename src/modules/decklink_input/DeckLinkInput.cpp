@@ -64,7 +64,6 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 {
 	using std::swap;
 	int res = S_OK;
-	log[log::warning] << "vifa\n";
 	log[log::debug] << "VideoInputFrameArrived" << "\n";
 	if (videoFrame->GetFlags()&bmdFrameHasNoInputSource) {
 		//LOG(log,warning,"No input detected");
