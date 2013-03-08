@@ -82,7 +82,7 @@ bool process_sail_messages(sail* sail_info) {
 }
 bool SageOutput::step()
 {
-	if (!process_sail_messages(sail_info)) {
+	if (sail_info &&  !process_sail_messages(sail_info)) {
 		log[log::info] << "Sail lost connection, quitting";
 		request_end();
 		return false;
@@ -125,10 +125,6 @@ bool SageOutput::step()
 			std::copy(data_start,data_start+copy_width/2,sail_buffer+line*sage_line_width/2);
 		}
 	}
-<<<<<<< HEAD
-	//swapBuffer(sail_info);
-	sail_info->swapBuffer(SAGE_NON_BLOCKING);
-=======
 	else if (!finfo->compressed){
 		ubyte_t* sail_buffer = reinterpret_cast<ubyte_t*>(nextBuffer(sail_info));
 		if (!sail_buffer) {
@@ -144,8 +140,8 @@ bool SageOutput::step()
 		const yuri::ubyte_t* data_start = reinterpret_cast<yuri::ubyte_t*>(PLANE_RAW_DATA(frame,0));
 		std::copy(data_start,data_start+PLANE_SIZE(frame,0),sail_buffer);
 	}
-	swapBuffer(sail_info);
->>>>>>> branch 'master' of git@git.iim.cz:yuri-light
+	//swapBuffer(sail_info);
+	sail_info->swapBuffer(SAGE_NON_BLOCKING);
 	return true;
 }
 
