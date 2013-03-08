@@ -10,6 +10,8 @@
 
 #include "SageOutput.h"
 #include "yuri/core/Module.h"
+// Unexported method from libsage, needed to register sharing without using processMessages
+void addNewClient(sail *sageInf, char *fsIP);
 namespace yuri {
 namespace sage {
 
@@ -50,10 +52,32 @@ struct swap_yuv {
 	yuri::ubyte_t b;
 	swap_yuv(const ushort_t rhs):a((rhs&0xFF00)>>8),b(rhs&0xFF) {}
 } __attribute__((packed));
+
+
+bool process_sail_messages(sail* sail_info) {
+	sageMessage msg;
+	if (sail_info->checkMsg(msg, false) > 0) {
+		switch (msg.getCode()) {
+			case APP_QUIT:
+
+				return false;
+				break;
+			case EVT_APP_SHARE:
+				addNewClient(sail_info,reinterpret_cast<char*>(msg.getData()));
+				break;
+		}
+	}
+	return true;
+}
+
 }
 bool SageOutput::step()
 {
-	processMessages(sail_info,0,0);
+	if (!process_sail_messages(sail_info)) {
+		log[log::info] << "Sail lost connection, quitting";
+		request_end();
+		return false;
+	}
 	if (!in[0]) return true;
 	core::pBasicFrame frame = in[0]->pop_latest();
 	if (!frame) return true;
@@ -75,7 +99,8 @@ bool SageOutput::step()
 			std::copy(data_start,data_start+copy_width/2,sail_buffer+line*sage_line_width/2);
 		}
 	}
-	swapBuffer(sail_info);
+	//swapBuffer(sail_info);
+	sail_info->swapBuffer(SAGE_NON_BLOCKING);
 	return true;
 }
 
