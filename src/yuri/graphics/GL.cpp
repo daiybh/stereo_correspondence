@@ -227,11 +227,11 @@ void GL::generate_texture(uint tid, core::pBasicFrame frame)
 			assert(fi && fi->planes==1);
 			if (wh != textures[tid].wh) {
 				yuri::ubyte_t *image = new yuri::ubyte_t[wh * wh * 4];
-				prepare_texture(tid,0,image,wh, wh,GL_BGRA,GL_BGRA,false);
+				prepare_texture(tid,0,image,wh, wh,GL_RGBA,GL_BGRA,false);
 				delete[] image;
 				textures[tid].wh = wh;
 			}
-			prepare_texture(tid,0,PLANE_RAW_DATA(frame,0),w, h,GL_BGRA,GL_BGRA,true);
+			prepare_texture(tid,0,PLANE_RAW_DATA(frame,0),w, h,GL_RGBA,GL_BGRA,true);
 			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,simple_fragment_shader);
 		}break;
 		case YURI_FMT_YUV444:
