@@ -19,10 +19,15 @@ private:
 	ScreenGrab(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
 	virtual void run();
 	virtual bool set_param(const core::Parameter &param);
+	bool grab();
 	std::string display;
 	double fps;
 	yuri::shared_ptr<Display> dpy;
 	Window win;
+	ssize_t x;
+	ssize_t y;
+	ssize_t width;
+	ssize_t height;
 public:
 	virtual ~ScreenGrab();
 	IO_THREAD_GENERATOR_DECLARATION
