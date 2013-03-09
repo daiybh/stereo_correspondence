@@ -7,6 +7,8 @@
 #include "ScreenGrab.h"
 #include "yuri/core/Module.h"
 #include "X11/Xutil.h"
+#include "X11/Xatom.h"
+#include <string>
 namespace yuri {
 namespace screen {
 
@@ -23,6 +25,8 @@ core::pParameters ScreenGrab::configure()
 	(*p)["y"]["Y offset of the grabbed image"]=0;
 	(*p)["width"]["Width of the grabbed image (set to -1 to grab full image)"]=-1;
 	(*p)["height"]["Height of the grabbed image (set to -1 to grab full image)"]=-1;
+	(*p)["win_name"]["Window name (set to empty string to grab whole screen)"]=std::string();
+	(*p)["pid"]["Window PID (set to 0 to grab whole screen)"]=0;
 	p->set_max_pipes(1,1);
 	return p;
 }
@@ -33,19 +37,81 @@ struct DisplayDeleter{
 struct ImageDeleter{
 	void operator()(XImage*i) { XDestroyImage(i); }
 };
+std::string get_win_name(Display* dpy, Window win)
+{
+	std::string str;
+	char *win_name;
+	XFetchName(dpy, win, &win_name);
+	if (win_name) {
+		str = win_name;
+		XFree(win_name);
+	}
+	return str;
+}
+size_t get_win_pid(Display* dpy, Window win)
+{
+	Atom atom = XInternAtom(dpy, "_NET_WM_PID", True);
+	if (atom==None) return 0;
+	Atom           type;
+	int            format;
+	unsigned long  nItems;
+	unsigned long  bytesAfter;
+	unsigned char *pid_ = 0;
+	size_t 	pid = 0;
+	if(XGetWindowProperty(dpy, win, atom, 0, 1, False, XA_CARDINAL, &type, &format, &nItems, &bytesAfter, &pid_)==Success)
+	{
+		if(pid_ != 0)
+		{
+			pid = *reinterpret_cast<unsigned long *>(pid_);
+			XFree(pid_);
+		}
+	}
+	return pid;
+}
+
+template<typename T, typename F>
+Window find_child(Display* dpy, Window top, T val, F func)
+{
+	if (func(dpy, top)==val) return top;
+	Window dummy_win;
+	Window *childs;
+	Window found_win = 0;
+	unsigned int child_count;
+	XQueryTree(dpy,top,&dummy_win,&dummy_win,&childs,&child_count);
+	if (childs && child_count) {
+		for (unsigned int i=0; i<child_count;++i) {
+			if((found_win = find_child(dpy,childs[i],val,func))!=0) break;
+		}
+	}
+	XFree(childs);
+	return found_win;
+}
 }
 
 ScreenGrab::ScreenGrab(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
 core::BasicIOThread(log_,parent,1,1,std::string("screen_grab")),win(0),x(0),y(0),
-width(-1),height(-1)
+width(-1),height(-1),pid(0)
 {
 	IO_THREAD_INIT("ScreenGrab")
+	XInitThreads();
 	dpy.reset(XOpenDisplay(display.c_str()),DisplayDeleter());
 	if (!dpy) {
 		throw exception::InitializationFailed("Failed to open connection to X display at '"+display+"'");
 	}
 	log[log::info] << "Connected to display " << display;
 	win = DefaultRootWindow(dpy.get());
+	if (!win_name.empty()) {
+		win = find_child(dpy.get(),win,win_name,get_win_name);
+		if (!win) {
+			throw exception::InitializationFailed("Failed to find window "+win_name);
+		}
+	} else if (pid) {
+		win = find_child(dpy.get(),win,pid,get_win_pid);
+		if (!win) {
+			throw exception::InitializationFailed("Failed to find window for specified PID");
+		}
+	}
+	log[log::info] << "Grabbing window " << get_win_name(dpy.get(), win);
 
 }
 
@@ -125,6 +191,10 @@ bool ScreenGrab::set_param(const core::Parameter &param)
 		width = param.get<ssize_t>();
 	} else if (param.name == "height") {
 		height = param.get<ssize_t>();
+	} else if (param.name == "win_name") {
+		win_name = param.get<std::string>();
+	} else if (param.name == "pid") {
+		pid = param.get<size_t>();
 	} else return core::BasicIOThread::set_param(param);
 	return true;
 }

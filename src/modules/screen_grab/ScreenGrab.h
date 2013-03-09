@@ -28,6 +28,8 @@ private:
 	ssize_t y;
 	ssize_t width;
 	ssize_t height;
+	std::string win_name;
+	size_t pid;
 public:
 	virtual ~ScreenGrab();
 	IO_THREAD_GENERATOR_DECLARATION
