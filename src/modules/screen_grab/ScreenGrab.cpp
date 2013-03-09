@@ -19,14 +19,15 @@ core::pParameters ScreenGrab::configure()
 {
 	core::pParameters p = core::BasicIOThread::configure();
 	p->set_description("ScreenGrab module.");
-	(*p)["display"]["X display"]=std::string(":0");
+	(*p)["display"]["X display"]=std::string();
 	(*p)["fps"]["Frames per second"]=10.0;
 	(*p)["x"]["X offset of the grabbed image"]=0;
 	(*p)["y"]["Y offset of the grabbed image"]=0;
 	(*p)["width"]["Width of the grabbed image (set to -1 to grab full image)"]=-1;
 	(*p)["height"]["Height of the grabbed image (set to -1 to grab full image)"]=-1;
 	(*p)["win_name"]["Window name (set to empty string to grab whole screen)"]=std::string();
-	(*p)["pid"]["Window PID (set to 0 to grab whole screen)"]=0;
+	(*p)["pid"]["PID of application that created the window (set to 0 to grab whole screen)"]=0;
+	(*p)["win_id"]["Window ID (set to 0 to grab whole screen)"]=0;
 	p->set_max_pipes(1,1);
 	return p;
 }
@@ -68,7 +69,10 @@ size_t get_win_pid(Display* dpy, Window win)
 	}
 	return pid;
 }
-
+// Dummy method just to be able to use find)child bellow
+Window get_win_id(Display* dpy, Window win) {
+	return win;
+}
 template<typename T, typename F>
 Window find_child(Display* dpy, Window top, T val, F func)
 {
@@ -90,7 +94,7 @@ Window find_child(Display* dpy, Window top, T val, F func)
 
 ScreenGrab::ScreenGrab(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
 core::BasicIOThread(log_,parent,1,1,std::string("screen_grab")),win(0),x(0),y(0),
-width(-1),height(-1),pid(0)
+width(-1),height(-1),pid(0),win_id_(0)
 {
 	IO_THREAD_INIT("ScreenGrab")
 	XInitThreads();
@@ -100,7 +104,12 @@ width(-1),height(-1),pid(0)
 	}
 	log[log::info] << "Connected to display " << display;
 	win = DefaultRootWindow(dpy.get());
-	if (!win_name.empty()) {
+	if (win_id_ != 0) {
+		win = find_child(dpy.get(),win,win_id_,get_win_id);
+		if (!win) {
+			throw exception::InitializationFailed("Failed to find window with specified ID");
+		}
+	} else if (!win_name.empty()) {
 		win = find_child(dpy.get(),win,win_name,get_win_name);
 		if (!win) {
 			throw exception::InitializationFailed("Failed to find window "+win_name);
@@ -195,6 +204,8 @@ bool ScreenGrab::set_param(const core::Parameter &param)
 		win_name = param.get<std::string>();
 	} else if (param.name == "pid") {
 		pid = param.get<size_t>();
+	} else if (param.name == "win_id") {
+		win_id_ = param.get<Window>();
 	} else return core::BasicIOThread::set_param(param);
 	return true;
 }
