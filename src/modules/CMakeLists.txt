@@ -1,4 +1,4 @@
-find_package( Boost 1.46 )
+find_package( Boost 1.46 COMPONENTS regex)
 include_directories( ${Boost_INCLUDE_DIRS})
 link_directories (${Boost_LIBRARY_DIRS})
 
@@ -14,7 +14,7 @@ add_subdirectory(dup)
 add_subdirectory(filedump)
 add_subdirectory(flip)
 add_subdirectory(null)
-add_subdirectory(rawfilesource)
+
 add_subdirectory(split)
 add_subdirectory(dxt_compress)
 add_subdirectory(temperature)
@@ -132,4 +132,8 @@ ENDIF()
 
 IF(X11_FOUND)
 	add_subdirectory(screen_grab)
+ENDIF()
+
+IF (Boost_REGEX_FOUND)
+	add_subdirectory(rawfilesource)
 ENDIF()

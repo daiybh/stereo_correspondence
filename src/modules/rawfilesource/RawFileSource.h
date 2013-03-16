@@ -2,7 +2,7 @@
  * @file 		RawFileSource.h
  * @author 		Zdenek Travnicek
  * @date 		31.3.2011
- * @date		16.2.2013
+ * @date		16.3.2013
  * @copyright	Institute of Intermedia, 2011 - 2013
  * 				Distributed under GNU Public License 3.0
  *
@@ -33,6 +33,7 @@ public:
 protected:
 	virtual bool set_param(const core::Parameter &parameter);
 	bool read_chunk();
+	std::string next_file();
 	core::pBasicFrame frame;
 	yuri::size_t position, chunk_size, width, height;
 	yuri::format_t output_format;
@@ -43,6 +44,8 @@ protected:
 	bool keep_alive,loop, failed_read, sequence;
 	yuri::usize_t block;
 	yuri::size_t loop_number;
+	size_t sequence_pos;
+
 };
 
 }

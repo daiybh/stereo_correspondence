@@ -2,7 +2,7 @@
  * @file 		RawFileSource.cpp
  * @author 		Zdenek Travnicek
  * @date 		31.3.2011
- * @date		16.2.2013
+ * @date		16.3.2013
  * @copyright	Institute of Intermedia, 2011 - 2013
  * 				Distributed under GNU Public License 3.0
  *
@@ -12,7 +12,8 @@
 #include "yuri/core/Module.h"
 #include <fstream>
 #include <boost/assign.hpp>
-
+#include <boost/regex.hpp>
+#include <iomanip>
 namespace yuri {
 
 namespace rawfilesource {
@@ -49,7 +50,7 @@ RawFileSource::RawFileSource(log::Log &_log, core::pwThreadBase parent,core::Par
 			core::BasicIOThread(_log,parent,1,2,"RawFileSource"), position(0),
 			chunk_size(0), width(0), height(0),output_format(YURI_FMT_NONE),
 			fps(25.0),last_send(not_a_date_time),keep_alive(true),loop(true),
-			failed_read(false),sequence(false),block(0),loop_number(0)
+			failed_read(false),sequence(false),block(0),loop_number(0),sequence_pos(0)
 {
 	IO_THREAD_INIT("Raw file source")
 	latency = 1000;
@@ -78,8 +79,9 @@ void RawFileSource::run()
 			last_send=microsec_clock::local_time();
 		}
 		if (out[0]) {
-			push_raw_frame(0,frame);
+			if (frame) push_raw_frame(0,frame);
 			if (chunk_size) frame.reset();
+			else if (sequence && !chunk_size) frame.reset();
 			if (!loop && loop_number) break;
 		}
 	}
@@ -92,9 +94,24 @@ void RawFileSource::run()
 bool RawFileSource::read_chunk()
 {
 	try {
+		frame.reset();
 		bool first_read = false;
 		if (!file.is_open()) {
-			file.open(path.c_str(),std::ifstream::in);
+			std::string filepath;
+			if (!sequence) {
+				filepath = path;
+			} else {
+				filepath = next_file();
+			}
+			file.open(filepath.c_str(),std::ifstream::in);
+			if (file.fail()) {
+				log[log::warning] << "Failed to open " << filepath;
+				if (sequence_pos) {
+					log[log::info] << "Resetting sequence to the beginning";
+					sequence_pos=0;
+				}
+				return true;
+			}
 			file.seekg(position,std::ios_base::beg);
 			first_read = true;
 		}
@@ -133,8 +150,12 @@ bool RawFileSource::read_chunk()
 			file.read(reinterpret_cast<char*>(PLANE_RAW_DATA(frame,i)),plane_length);
 			if (static_cast<yuri::size_t>(file.gcount()) != plane_length ) {
 				if (first_read) {
-					failed_read=true;
-					log[log::warning]<< "Wrong length of the file (read " << file.gcount() << ", expected " << plane_length << ")" << std::endl;
+					if (!sequence || sequence_pos==0) {
+						failed_read=true;
+						log[log::warning]<< "Wrong length of the file (read " << file.gcount() << ", expected " << plane_length << ")" << std::endl;
+					} else {
+						sequence_pos = 0;
+					}
 				}
 				file.close();
 				frame.reset();++loop_number;
@@ -143,14 +164,22 @@ bool RawFileSource::read_chunk()
 //			(*frame)[i].set(data,plane_length);
 		}
 		if (file.eof()) {
+			log[log::info] << "EOF";
 			file.close();
 			++loop_number;
+		} else if (sequence && !chunk_size) {
+			file.close();
 		}
 		//frame.reset(new BasicFrame(1));
 		//(*frame)[0].set(data,length);
 		frame->set_parameters(output_format, width, height);
 	}
 	catch (std::exception &e) {
+		frame.reset();
+		if (sequence && sequence_pos) {
+			sequence_pos = 0;
+			return true;
+		}
 		log[log::error] << "Failed to process file " << params["path"].get<std::string>()
 				<< " (" << e.what() << ")"<<std::endl;
 		failed_read=true;
@@ -173,7 +202,7 @@ bool RawFileSource::set_param(const core::Parameter &parameter)
 		log[log::info] << "output format " << output_format << std::endl;
 	} else if (parameter.name == "path") {
 		path=parameter.get<std::string>();
-		if (path.find("%d")!=std::string::npos) {
+		if (path.find("%")!=std::string::npos) {
 			sequence = true;
 		}
 	} else if (parameter.name == "keep_alive") {
@@ -188,6 +217,31 @@ bool RawFileSource::set_param(const core::Parameter &parameter)
 	return true;
 }
 
+std::string RawFileSource::next_file()
+{
+	boost::regex reg("^(.*)%([0-9]+)d(.*)$");
+	boost::smatch match;
+	if (!boost::regex_match(path, match, reg)) {
+		log[log::error] << "sequence specification not found in " << path;
+		return path;
+	}
+//	log[log::info] << "Sequence specs found! '"<<match[1]<<"' XXX '"<<match[2]<<"' XXX '"<<match[3]<<"'";
+	size_t width =0;
+	try {
+		width = boost::lexical_cast<size_t>(match[2]);
+	}
+	catch (boost::bad_lexical_cast& e) {
+		return path;
+	}
+	std::stringstream spath;
+	spath << match[1] << std::setfill('0') << std::setw(width) << sequence_pos++ << match[3];
+//	log[log::info] << "Returning path " << spath.str();
+	return spath.str();
 
+
+
+
+
+}
 }
 }

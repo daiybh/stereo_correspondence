@@ -9,6 +9,6 @@ SET (SRC RawFileSource.cpp
 
 # You shouldn't need to edit anything below this line 
 add_library(${MODULE} MODULE ${SRC})
-target_link_libraries(${MODULE} ${LIBNAME})
+target_link_libraries(${MODULE} ${LIBNAME} ${Boost_REGEX_LIBRARY})
 
 YURI_INSTALL_MODULE(${MODULE})
