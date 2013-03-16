@@ -22,15 +22,17 @@ namespace jpg {
 
 class JPEGDecoder:public core::BasicIOThread {
 public:
-	JPEGDecoder(log::Log &_log, core::pwThreadBase parent);
+	JPEGDecoder(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters);
 	virtual ~JPEGDecoder();
-	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters);
+	//static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters);
+	IO_THREAD_GENERATOR_DECLARATION
 	static core::pParameters configure();
 
 	static bool validate(core::pBasicFrame f);
 	virtual bool step();
-	void forceLineWidthMult(int mult) { if (mult>1)line_width_mult = mult; else mult=1; }
-protected:
+//	void forceLineWidthMult(int mult) { if (mult>1)line_width_mult = mult; else mult=1; }
+private:
+	bool set_param(const core::Parameter& param);
 	void setDestManager(jpeg_decompress_struct* cinfo);
 	static void initSrc(jpeg_decompress_struct* cinfo);
 	//void initSource(jpeg_decompress_struct* cinfo);
@@ -41,9 +43,13 @@ protected:
 	static void termSource(jpeg_decompress_struct* cinfo);
 	static void errorExit(jpeg_common_struct* cinfo);
 	void abort();
+
 	core::pBasicFrame frame;
 	int line_width_mult;
 	bool aborted;
+	format_t format_;
+	bool raw_;
+	bool fast_;
 
 };
 
