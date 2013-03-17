@@ -23,6 +23,7 @@ add_subdirectory(fps_fixer)
 add_subdirectory(ts_demuxer)
 add_subdirectory(combine)
 add_subdirectory(split_frames)
+add_subdirectory(merge_frames)
 
 #################################################################
 # Let's check for libraries required 
