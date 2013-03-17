@@ -47,6 +47,7 @@ private:
 	yuri::format_t fmt;
 	sagePixFmt sage_fmt;
 	std::string sage_address;
+	std::string app_name_;
 
 	virtual bool set_param(const core::Parameter &parameter);
 	virtual bool step();

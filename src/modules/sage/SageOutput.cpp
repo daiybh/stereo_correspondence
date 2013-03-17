@@ -27,6 +27,7 @@ core::pParameters SageOutput::configure()
 	core::pParameters p = BasicIOThread::configure();
 
 	(*p)["address"]["SAGE address (ignored)"]=std::string("127.0.0.1");
+	(*p)["app_name"]["Application name to use when registering to SAGE"]=std::string("yuri");
 	(*p)["width"]["Force image width. -1 to use input image size"]=-1;
 	(*p)["height"]["Force image height. -1 to use input image size"]=-1;
 	return p;
@@ -45,7 +46,7 @@ std::map<format_t, sagePixFmt> yuri_sage_fmt_map = boost::assign::map_list_of<fo
 
 SageOutput::SageOutput(yuri::log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters)
 :BasicIOThread(log_,parent,1,0,"SageOutput"),sail_info(0),width(-1),height(-1),
- fmt(YURI_FMT_NONE),sage_fmt(PIXFMT_NULL),sage_address("127.0.0.1")
+ fmt(YURI_FMT_NONE),sage_fmt(PIXFMT_NULL),sage_address("127.0.0.1"),app_name_("yuri")
 {
 	IO_THREAD_INIT("SageOutput")
 }
@@ -99,7 +100,7 @@ bool SageOutput::step()
 		fmt = tmp_fmt;
 		sage_fmt=yuri_sage_fmt_map[fmt];
 		log[yuri::log::info] << "Connecting to SAGE @ " << sage_address << "\n";
-		sail_info = createSAIL("yuri",width,height,sage_fmt,0,TOP_TO_BOTTOM);//sage_address.c_str());
+		sail_info = createSAIL(app_name_.c_str(),width,height,sage_fmt,0,TOP_TO_BOTTOM);//sage_address.c_str());
 		if (!sail_info) {
 			//throw yuri::exception::InitializationFailed(
 			log[log::fatal] << "Failed to connect to SAIL";
@@ -149,6 +150,8 @@ bool SageOutput::set_param(const core::Parameter &parameter)
 {
 	if (parameter.name == "address")
 		sage_address=parameter.get<std::string>();
+	else if (parameter.name == "app_name")
+		app_name_ =parameter.get<std::string>();
 	else if (parameter.name == "width")
 		width=parameter.get<yuri::size_t>();
 	else if (parameter.name == "height")
