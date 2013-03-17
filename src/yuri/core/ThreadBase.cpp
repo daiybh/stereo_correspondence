@@ -91,9 +91,10 @@ void ThreadBase::child_ends(pwThreadBase child, int code)
 ///
 /// Method notifie it's parent, that it wants/needs to quit.
 /// if there's no parent, it is finished immediately
-void ThreadBase::request_end()
+void ThreadBase::request_end(int code)
 {
-	log[verbose_debug] << "request_end()" << "\n";
+	log[verbose_debug] << "request_end(): " << code;
+	exitCode = code;
 	yuri::mutex::scoped_lock l(end_lock);
 	if (end || end_requested) return;
 	end_requested=true;

@@ -66,7 +66,7 @@ public:
 	virtual void 			operator()();
 	virtual void 			child_ends(pwThreadBase child, int code);
 	virtual void 			finish();
-	virtual void 			request_end();
+	virtual void 			request_end(int code = YURI_EXIT_USER_BREAK);
 	virtual pid_t 			get_tid();
 protected:
 	virtual void 			run()=0;
