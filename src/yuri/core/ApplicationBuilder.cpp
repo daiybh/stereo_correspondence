@@ -325,6 +325,9 @@ std::string targetnode = target.substr(0,target_ipos);
 		}
 	}
 	log[log::debug] << "Storing link " << name <<"\n";
+	if (links.count(name)) {
+		log[log::warning] << "Reaplacing link '" << name <<"'. This is probably an error ;)";
+	}
 	links[name]=l;
 	return true;
 }
