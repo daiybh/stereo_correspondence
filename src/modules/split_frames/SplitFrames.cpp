@@ -26,7 +26,7 @@ core::pParameters SplitFrames::configure()
 
 
 SplitFrames::SplitFrames(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,1,1,std::string("pass")),outputs_(2),current_output_(0)
+core::BasicIOThread(log_,parent,1,1,std::string("split_frames")),outputs_(2),current_output_(0)
 {
 	IO_THREAD_INIT("SplitFrames")
 	resize(1,outputs_);
