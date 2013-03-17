@@ -22,6 +22,7 @@ add_subdirectory(read_pcap)
 add_subdirectory(fps_fixer)
 add_subdirectory(ts_demuxer)
 add_subdirectory(combine)
+add_subdirectory(split_frames)
 
 #################################################################
 # Let's check for libraries required 
