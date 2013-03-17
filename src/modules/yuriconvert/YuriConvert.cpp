@@ -52,6 +52,8 @@ template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_YUV422,YURI_FMT_V21
 template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V210_MVTP,false>(core::pBasicFrame frame);
 template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI_FMT_YUV422,false>(core::pBasicFrame frame);
 template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_R210,YURI_FMT_RGB24,false>(core::pBasicFrame frame);
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_YUV444, YURI_FMT_YUV422, false>(core::pBasicFrame frame);
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_YUV444, YURI_FMT_UYVY422, false>(core::pBasicFrame frame);
 #ifdef YURI_HAVE_LIBMVTP
 template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_V210,YURI_FMT_V210_MVTP,false>(core::pBasicFrame frame);
 template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI_FMT_V210,false>(core::pBasicFrame frame);
@@ -68,7 +70,9 @@ YuriConvertor::converters
 		(std::make_pair(YURI_FMT_YUV422,	YURI_FMT_V210_MVTP),&YuriConvertor::convert<YURI_FMT_YUV422, 	YURI_FMT_V210_MVTP,	false>)
 		(std::make_pair(YURI_FMT_RGB,		YURI_FMT_V210_MVTP),&YuriConvertor::convert<YURI_FMT_RGB, 		YURI_FMT_V210_MVTP,	false>)
 		(std::make_pair(YURI_FMT_V210_MVTP, YURI_FMT_YUV422),	&YuriConvertor::convert<YURI_FMT_V210_MVTP,	YURI_FMT_YUV422,	false>)
-		(std::make_pair(YURI_FMT_R210, 		YURI_FMT_RGB24),	&YuriConvertor::convert<YURI_FMT_R210,		YURI_FMT_RGB24,	false>)
+		(std::make_pair(YURI_FMT_R210, 		YURI_FMT_RGB24),	&YuriConvertor::convert<YURI_FMT_R210,		YURI_FMT_RGB24,		false>)
+		(std::make_pair(YURI_FMT_YUV444,	YURI_FMT_YUV422),	&YuriConvertor::convert<YURI_FMT_YUV444, 	YURI_FMT_YUV422,	false>)
+		(std::make_pair(YURI_FMT_YUV444,	YURI_FMT_UYVY422),	&YuriConvertor::convert<YURI_FMT_YUV444, 	YURI_FMT_UYVY422,	false>)
 #endif
 #ifdef YURI_HAVE_LIBMVTP
 		(std::make_pair(YURI_FMT_V210, 		YURI_FMT_V210_MVTP),&YuriConvertor::convert<YURI_FMT_V210,		YURI_FMT_V210_MVTP,	false>)
@@ -136,7 +140,9 @@ bool YuriConvertor::step()
 #endif
 	if (converters.count(conv_pair)) converter = converters[conv_pair];
 	if (converter) outframe= (this->*converter)(frame);
-	else {
+	else if (frame->get_format() == format) {
+		outframe = frame;
+	} else {
 		log[log::debug] << "Unknown format combination " << core::BasicPipe::get_format_string(frame->get_format()) << " -> "
 				<< core::BasicPipe::get_format_string(format) << "\n";
 		return true;
@@ -583,6 +589,69 @@ template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_R210,YURI_FMT_RGB24
 		*dest++=(R210_G(*src)>>2)&0xFF;
 		*dest++=(R210_B(*src)>>2)&0xFF;
 		src++;
+	}
+	return output;
+}
+
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_YUV444, YURI_FMT_YUV422, false>(core::pBasicFrame frame)
+{
+	core::pBasicFrame output;
+	yuri::size_t w = frame->get_width();
+	yuri::size_t h = frame->get_height();
+	output=allocate_empty_frame(YURI_FMT_YUV422,w,h,true);
+	yuri::ubyte_t *yi = PLANE_RAW_DATA(frame,0);
+	yuri::ubyte_t *ui = PLANE_RAW_DATA(frame,0)+1;
+	yuri::ubyte_t *vi = PLANE_RAW_DATA(frame,0)+2;
+
+	yuri::ubyte_t *yo = PLANE_RAW_DATA(output,0)+0;
+	yuri::ubyte_t *uo = PLANE_RAW_DATA(output,0)+1;
+	yuri::ubyte_t *vo = PLANE_RAW_DATA(output,0)+3;
+	for (size_t h_ =0;h_<h;++h_) {
+//		yuri::ubyte_t *yi = PLANE_RAW_DATA(frame,0)+h_*w*3;
+//		yuri::ubyte_t *ui = PLANE_RAW_DATA(frame,0)+h_*w*3+1;
+//		yuri::ubyte_t *vi = PLANE_RAW_DATA(frame,0)+h_*w*3+2;
+//
+//		yuri::ubyte_t *yo = PLANE_RAW_DATA(output,0)+h_*w*2;
+//		yuri::ubyte_t *uo = PLANE_RAW_DATA(output,0)+h_*w*2+1;
+//		yuri::ubyte_t *vo = PLANE_RAW_DATA(output,0)+h_*w*2+3;
+		for (size_t w_ =0;w_<w/2;++w_) {
+			*yo = *yi;
+			yo+=2;yi+=3;
+			*yo = *yi;
+			yo+=2;yi+=3;
+			*uo = *ui/2 + *(ui+3)/2;
+			uo+=4;ui+=6;
+			*vo = *vi/2 + *(vi+3)/2;
+			vo+=4;vi+=6;
+		}
+	}
+	return output;
+}
+
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_YUV444, YURI_FMT_UYVY422, false>(core::pBasicFrame frame)
+{
+	core::pBasicFrame output;
+	yuri::size_t w = frame->get_width();
+	yuri::size_t h = frame->get_height();
+	output=allocate_empty_frame(YURI_FMT_UYVY422,w,h,true);
+	yuri::ubyte_t *yi = PLANE_RAW_DATA(frame,0);
+	yuri::ubyte_t *ui = PLANE_RAW_DATA(frame,0)+1;
+	yuri::ubyte_t *vi = PLANE_RAW_DATA(frame,0)+2;
+
+	yuri::ubyte_t *yo = PLANE_RAW_DATA(output,0)+1;
+	yuri::ubyte_t *uo = PLANE_RAW_DATA(output,0)+0;
+	yuri::ubyte_t *vo = PLANE_RAW_DATA(output,0)+2;
+	for (size_t h_ =0;h_<h;++h_) {
+		for (size_t w_ =0;w_<w/2;++w_) {
+			*yo = *yi;
+			yo+=2;yi+=3;
+			*yo = *yi;
+			yo+=2;yi+=3;
+			*uo = *ui/2 + *(ui+3)/2;
+			uo+=4;ui+=6;
+			*vo = *vi/2 + *(vi+3)/2;
+			vo+=4;vi+=6;
+		}
 	}
 	return output;
 }
