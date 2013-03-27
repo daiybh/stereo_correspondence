@@ -35,6 +35,13 @@ struct guarded_stream {
 		yuri::mutex::scoped_lock l(mutex_);
 		str_ << msg;
 	}
+
+	template<class T>
+	guarded_stream& operator<<(const T& val) {
+		yuri::mutex::scoped_lock l(mutex_);
+		str_ << val;
+		return *this;
+	}
 	guarded_stream(stream_t& str):str_(str) {}
 	char_t widen(char c) { return str_.widen(c); }
 private:
@@ -105,9 +112,11 @@ public:
 		if (!dummy_) std::async([&msg,this](){stream_.write(msg);});
 #else
 		if (!dummy_) {
+			// TODO: Creating a copy of str() just for detecting the trailing newline shouldn't be necessary...
 			const typename gstream_t::string_t str = buffer_.str();
 			if (str.size()>0 && str[str.size()-1]!=stream_.widen('\n')) buffer_<<stream_.widen('\n');
-			stream_.write(buffer_.str());
+			// Avoiding unnecessary copy of the rdbuf by writing it directly
+			stream_ << buffer_.rdbuf();
 		}
 #endif
 	}
