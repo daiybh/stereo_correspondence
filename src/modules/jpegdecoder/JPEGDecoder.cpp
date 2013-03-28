@@ -56,6 +56,10 @@ format_t get_format(const jpeg_decompress_struct& cinfo)
 	if (cinfo.comp_info[0].h_samp_factor ==2 && cinfo.comp_info[0].v_samp_factor==1 &&
 			cinfo.comp_info[1].h_samp_factor == 1 && cinfo.comp_info[1].v_samp_factor==1 &&
 			cinfo.comp_info[2].h_samp_factor == 1 && cinfo.comp_info[2].v_samp_factor==1) {
+		return YURI_FMT_YUV422_PLANAR;
+	} else if (cinfo.comp_info[0].h_samp_factor ==2 && cinfo.comp_info[0].v_samp_factor==2 &&
+			cinfo.comp_info[1].h_samp_factor == 1 && cinfo.comp_info[1].v_samp_factor==1 &&
+			cinfo.comp_info[2].h_samp_factor == 1 && cinfo.comp_info[2].v_samp_factor==1) {
 		return YURI_FMT_YUV420_PLANAR;
 	}
 	return YURI_FMT_NONE;
@@ -92,22 +96,24 @@ bool JPEGDecoder::step() {
 		//log[log::info] << "jpg colorspace: " << cinfo.jpeg_color_space << ", out csp: " << cinfo.out_color_space;
 			cinfo.out_color_space = yuri_to_jpg_formats[format_];
 			colorspace = format_;
-			if (fast_) {
-				cinfo.do_fancy_upsampling=false;
-				cinfo.dct_method = JDCT_IFAST;
-//				cinfo.dct_method = JDCT_FLOAT;
-				cinfo.do_block_smoothing = false;
-//				cinfo.quantize_colors = false;
-			}
 		} else {
 			cinfo.out_color_space = cinfo.jpeg_color_space;
 			cinfo.raw_data_out = true;
 			colorspace = get_format(cinfo);
 		}
-		if (colorspace == YURI_FMT_NONE) aborted = true;
+		if (fast_) {
+			cinfo.do_fancy_upsampling=false;
+			cinfo.dct_method = JDCT_IFAST;
+			cinfo.do_block_smoothing = false;
+//				cinfo.quantize_colors = false;
+		}
+		if (colorspace == YURI_FMT_NONE) {
+			aborted = true;
+			log[log::warning] << "Aborting decompression, unknown format";
+		}
 		jpeg_start_decompress(&cinfo);
 //		log[log::info] << "jpg colorspace: " << cinfo.jpeg_color_space << ", out csp: " << cinfo.out_color_space<<", componenets: "<<cinfo.output_components;
-		//for (int i=0;i<3;++i) log[log::info] << "comp " << i << ", x: " << cinfo.comp_info[i].h_samp_factor <<", y: " << cinfo.comp_info[i].v_samp_factor;
+//		for (int i=0;i<3;++i) log[log::info] << "comp " << i << ", x: " << cinfo.comp_info[i].h_samp_factor <<", y: " << cinfo.comp_info[i].v_samp_factor;
 		if (aborted) throw (yuri::exception::Exception("Decoding failed"));
 		width = cinfo.image_width;
 		if (line_width_mult > 1 && (width % line_width_mult))
@@ -128,14 +134,16 @@ bool JPEGDecoder::step() {
 		std::vector<std::vector<JSAMPROW> > row_pointers(planes);
 		for (int p=0;p<planes;++p) {
 			row_pointers[p].resize(height);
-			int ls = linesize*cinfo.comp_info[p].h_samp_factor/cinfo.comp_info[0].h_samp_factor;
-			for (int h=0;h<height;++h) {
+			int ls = linesize*cinfo.comp_info[p].v_samp_factor/cinfo.comp_info[0].v_samp_factor;
+
+//			log[log::info] << "ls: " << ls;
+			for (int h=0;h<height*cinfo.comp_info[p].h_samp_factor/cinfo.comp_info[0].h_samp_factor;++h) {
 				row_pointers[p][h]=PLANE_RAW_DATA(out_frame,p) + h*ls;
 			}
 		}
 		std::vector<JSAMPARRAY> arrays_pointers(planes);
 		for (int p=0;p<planes;++p) {
-			arrays_pointers[p]=&row_pointers[p][0];
+			arrays_pointers[p]=&(row_pointers[p][0]);
 		}
 
 		yuri::size_t completed = 0, processed=0;
@@ -143,15 +151,18 @@ bool JPEGDecoder::step() {
 //		JSAMPARRAY &ptrs = row_pointers[0][0];
 		while (cinfo.output_scanline < cinfo.image_height) {
 //			row_pointer = (JSAMPROW) PLANE_RAW_DATA(out_frame,0) + i*linesize;
-			if (!raw_) processed = jpeg_read_scanlines(&cinfo, &row_pointers[0][cinfo.output_scanline], height);
+			if (!raw_) processed = jpeg_read_scanlines(&cinfo, &row_pointers[0][cinfo.output_scanline], height-cinfo.output_scanline);
 			else {
-//				log[log::info] << "processing raw line " << cinfo.output_scanline;
+				log[log::info] << "processing raw line " << cinfo.output_scanline;
 				//JSAMPARRAY arr_pointer = &row_pointers[0];
 				for (int p=0;p<planes;++p) {
-					arrays_pointers[p]=&row_pointers[p][0]+cinfo.output_scanline;
+					size_t off = cinfo.output_scanline*cinfo.comp_info[p].v_samp_factor/cinfo.comp_info[0].v_samp_factor;
+					arrays_pointers[p]=&row_pointers[p][off];
+					log[log::info] << p<< " Setting ptr at offset " << std::distance(row_pointers[p][0],row_pointers[p][off]);
 				}
 				JSAMPIMAGE img = &arrays_pointers[0];
 				processed = jpeg_read_raw_data(&cinfo, img, height-cinfo.output_scanline);
+				log[log::info] << "processed " << processed;
 			}
 			if (aborted) throw (yuri::exception::Exception("Decoding failed"));
 //			completed += processed;
@@ -161,12 +172,13 @@ bool JPEGDecoder::step() {
 				break;
 			}
 		}
+//		log[log::info] << "done";
 		if (processed) {
 			jpeg_finish_decompress(&cinfo);
-			if (aborted) throw (yuri::exception::Exception("Decoding failed"));
+//			if (aborted) throw (yuri::exception::Exception("Decoding failed"));
 			decompressed = true;
 			jpeg_destroy_decompress(&cinfo);
-			if (aborted) throw (yuri::exception::Exception("Decoding failed"));
+//			if (aborted) throw (yuri::exception::Exception("Decoding failed"));
 		} else {
 			decompressed = false;
 			jpeg_destroy_decompress(&cinfo);
