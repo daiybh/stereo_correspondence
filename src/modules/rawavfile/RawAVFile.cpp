@@ -126,7 +126,7 @@ void RawAVFile::run()
 			frame.reset();
 			continue;
 		}
-		if (av_read_packet(fmtctx,&packet)<0) {
+		if (av_read_frame(fmtctx,&packet)<0) {
 			log[log::error] << "Failed to read next packet";
 			request_end(YURI_EXIT_FINISHED);
 			break;
@@ -153,14 +153,18 @@ void RawAVFile::run()
 				log[log::warning] << "Failed to decode frame";
 				continue;
 			}
-			assert(format_out_);
+			if (decoded_size != packet.size) {
+				log[log::warning] << "Used only " << decoded_size << " bytes out of " << packet.size;
+			}
+			//assert(format_out_);
 			format_t fmt = yuri_pixelformat_from_av(static_cast<PixelFormat>(av_frame->format));
 			if (format_out_ != fmt) {
 				log[log::warning] << "Unexpected frame format! Expected '" << core::BasicPipe::get_format_string(format_out_)
 				<< "', but got '" << core::BasicPipe::get_format_string(fmt) << "'";
 				format_out_ = fmt;
 			}
-			frame = allocate_empty_frame(format_out_,width, height);
+			if (format_out_ == YURI_FMT_NONE) continue;
+			frame = allocate_empty_frame(format_out_,width, height, true);
 			FormatInfo_t fi = core::BasicPipe::get_format_info(format_out_);
 			for (int i=0;i<4;++i) {
 				if ((av_frame->linesize[i] == 0) || (!av_frame->data[i])) break;
