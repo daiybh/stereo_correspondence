@@ -21,7 +21,7 @@ core::pParameters RawAVFile::configure()
 	(*p)["filename"]["File to open"]="";
 	(*p)["decode"]["Decode the stream and push out raw video"]=true;
 	(*p)["format"]["Format to decode to"]="YUV422";
-	(*p)["fps"]["Override framerate. Specify 0 to use origina, or negative value to maximal speed."]=0;
+	(*p)["fps"]["Override framerate. Specify 0 to use original, or negative value to maximal speed."]=0;
 	return p;
 }
 
@@ -95,18 +95,36 @@ RawAVFile::~RawAVFile()
 
 void RawAVFile::run()
 {
+	using namespace boost::posix_time;
 	IO_THREAD_PRE_RUN
 	AVPacket packet;
 	av_init_packet(&packet);
 	AVFrame *av_frame = avcodec_alloc_frame();
-
+	next_time_ = microsec_clock::local_time();
+	time_duration time_delta;
+	if (fps_>0) time_delta = microseconds(1e6/fps_);
+	else if (fps_ == 0.0) {
+		time_delta = microseconds(video_stream->r_frame_rate.den*1e6/video_stream->r_frame_rate.num);
+	}
 	while (still_running()) {
-//		av_free_packet(&packet);
 		if (block) {
 			if (out[0] && out[0]->get_size()>=block) {
 				sleep(latency);
 				continue;
 			}
+		}
+		if (frame) {
+			if (fps_>=0) {
+				ptime curr_time = microsec_clock::local_time();
+				if (curr_time < next_time_) {
+					sleep(latency);
+					continue;
+				}
+				next_time_ = next_time_+time_delta;
+			}
+			push_raw_video_frame(0,frame);
+			frame.reset();
+			continue;
 		}
 		if (av_read_packet(fmtctx,&packet)<0) {
 			log[log::error] << "Failed to read next packet";
@@ -115,14 +133,14 @@ void RawAVFile::run()
 		}
 		if (packet.stream_index != video_stream->index) continue;
 		if (!decode_) {
-			core::pBasicFrame frame = allocate_frame_from_memory(packet.data, packet.size);
+			frame = allocate_frame_from_memory(packet.data, packet.size);
 			log[log::debug] << "Pushing packet with size: " << PLANE_SIZE(frame,0);
 			size_t dur = packet.duration*video_stream->r_frame_rate.den*1e6/video_stream->r_frame_rate.num;
 			if (!dur) dur = video_stream->r_frame_rate.den*1e6/video_stream->r_frame_rate.num;
 			size_t pts = 1e3*packet.pts*video_stream->r_frame_rate.den/video_stream->r_frame_rate.num;
 			size_t dts = 1e3*packet.dts*video_stream->r_frame_rate.den/video_stream->r_frame_rate.num;
-			push_video_frame(0,frame,format_, video_stream->codec->width, video_stream->codec->height,
-					dur, pts, dts);
+			frame->set_parameters(format_, video_stream->codec->width, video_stream->codec->height);
+			frame->set_time(dur, pts, dts);
 			log[log::debug] << "Found packet! (pts: " << pts << ", dts: " << dts << ", dur: " << dur;
 			log[log::debug] << "num/den:" << video_stream->r_frame_rate.num << "/" << video_stream->r_frame_rate.den;
 			log[log::debug] << "orig pts: " << packet.pts << ", dts: " << packet.dts << ", dur: " << packet.duration;
@@ -142,7 +160,7 @@ void RawAVFile::run()
 				<< "', but got '" << core::BasicPipe::get_format_string(fmt) << "'";
 				format_out_ = fmt;
 			}
-			core::pBasicFrame frame = allocate_empty_frame(format_out_,width, height);
+			frame = allocate_empty_frame(format_out_,width, height);
 			FormatInfo_t fi = core::BasicPipe::get_format_info(format_out_);
 			for (int i=0;i<4;++i) {
 				if ((av_frame->linesize[i] == 0) || (!av_frame->data[i])) break;
@@ -160,8 +178,7 @@ void RawAVFile::run()
 								PLANE_RAW_DATA(frame,i)+l*line_size);
 				}
 			}
-			push_raw_video_frame(0,frame);
-
+			//push_raw_video_frame(0,frame);
 		}
 	}
 	av_free(av_frame);

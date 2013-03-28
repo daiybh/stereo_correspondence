@@ -11,6 +11,8 @@
 extern "C" {
 	#include <libavformat/avformat.h>
 }
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 namespace yuri {
 namespace video {
 
@@ -32,6 +34,9 @@ private:
 	format_t 			format_out_;
 	bool				decode_;
 	double 				fps_;
+	boost::posix_time::ptime
+						next_time_;
+	core::pBasicFrame	frame;
 
 };
 
