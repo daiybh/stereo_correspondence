@@ -56,6 +56,10 @@ IF (CORE_DECKLINK)
 	find_package(DECKLINK)
 ENDIF()
 find_package( X11 )
+
+find_path(VIDEOMASTER_INCLUDE_DIR VideoMasterHD_Sdi.h
+          HINTS /usr/local/include/videomaster )
+          
 #################################################################
 # Add optional modules based on results of the detection
 #################################################################
@@ -138,4 +142,8 @@ ENDIF()
 
 IF (Boost_REGEX_FOUND)
 	add_subdirectory(rawfilesource)
+ENDIF()
+
+IF(VIDEOMASTER_INCLUDE_DIR)
+	add_subdirectory(delta)
 ENDIF()
