@@ -259,7 +259,7 @@ bool DeckLinkOutput::step()
 	if (!frame || (stereo_usable && !frame2)) return true;
 	BMDPixelFormat pfmt = 0;
 	switch (frame->get_format()) {
-		case YURI_FMT_YUV422:pfmt = bmdFormat8BitYUV;break;
+		case YURI_FMT_UYVY422:pfmt = bmdFormat8BitYUV;break;
 		case YURI_FMT_V210:pfmt = bmdFormat10BitYUV;break;
 		default: pfmt = 0;
 	}
