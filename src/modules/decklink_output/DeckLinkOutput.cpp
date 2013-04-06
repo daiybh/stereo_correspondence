@@ -135,6 +135,7 @@ bool DeckLinkOutput::verify_display_mode()
 	switch (pixel_format) {
 		case bmdFormat8BitYUV: linesize=width*2;break;
 		case bmdFormat8BitARGB: linesize=width*4;break;
+		case bmdFormat10BitYUV: linesize=16*(width/6+(width%6?1:0));break;
 		default: log[log::error] << "Unsupported pixel format\n";return false;
 	}
 	out_frames.clear();
@@ -261,10 +262,10 @@ bool DeckLinkOutput::step()
 	switch (frame->get_format()) {
 		case YURI_FMT_UYVY422:pfmt = bmdFormat8BitYUV;break;
 		case YURI_FMT_V210:pfmt = bmdFormat10BitYUV;break;
-		default: pfmt = 0;
+		default: pfmt = 0;break;
 	}
 	if (!pfmt) {
-		log[log::error] << "Unsupported pixel format\n";
+		log[log::error] << "Unsupported pixel format: "<<core::BasicPipe::get_format_string(frame->get_format());
 		frame.reset();
 		frame2.reset();
 		return true;
@@ -368,25 +369,40 @@ void DeckLinkOutput::do_rotate_buffers()
 }
 bool DeckLinkOutput::fill_frame(core::pBasicFrame source, shared_ptr<DeckLink3DVideoFrame> output)
 {
+	assert(source);
+	yuri::uint_t line_width = 0, copy_width, target_width,copy_lines;
 	FormatInfo_t fi = core::BasicPipe::get_format_info(source->get_format());
-	yuri::uint_t line_width, copy_width, target_width,copy_lines;
-	line_width=source->get_width()*(fi->bpp >> 3);
+	if (fi) {
+		line_width=source->get_width()*(fi->bpp >> 3);
+	}
+
 	target_width=width*(fi->bpp >> 3);	
 	if (source->get_format() == YURI_FMT_V210) {
+		const size_t w = source->get_width();
+		yuri::size_t in_line_width6 = w/6;// + (w%6?1:0);
+		if (w==1280) in_line_width6 = 216;
 		yuri::size_t line_width6 = width/6 + (width%6?1:0);
 		if (width==1280) line_width6 = 216;
-		line_width=line_width6*16;
+		line_width=in_line_width6*16;
 		target_width=line_width6*16;
-		
 	}
-	copy_width=std::min(line_width-2,target_width);
-	copy_lines=source->get_height()>height?height:source->get_height();
+	if (line_width == 0) {
+		return false;
+	}
+
+	copy_width=std::min(line_width,target_width);
+	copy_lines=std::min(source->get_height(),static_cast<size_t>(height));
 	log[log::debug] << "Copying " << copy_lines << " lines of " << copy_width << " bytes (of " << line_width << " total bytes)\n";
+	if (line_width*copy_lines>PLANE_SIZE(source,0)) {
+		log[log::warning] << "not enough data to copy!!!";
+		return false;
+	}
 	yuri::ubyte_t *data = PLANE_RAW_DATA(source,0);
 	yuri::ubyte_t *data2;
 
 	//back_oframe->GetBytes(reinterpret_cast<void**>(&data2));
 	output->GetBytes(reinterpret_cast<void**>(&data2));
+	assert(data2);
 	for (int h=0;h<copy_lines;++h) {
 		memcpy(data2,data,copy_width);
 		data+=line_width;
