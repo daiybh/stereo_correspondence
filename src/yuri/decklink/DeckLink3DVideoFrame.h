@@ -37,9 +37,10 @@ public:
     shared_ptr<DeckLink3DVideoFrame> get_right();
 protected:
     yuri::usize_t width, height;
+    yuri::size_t linesize_;
     BMDPixelFormat format;
     yuri::ubyte_t *buffer;
-    yuri::size_t bpp;
+//    yuri::size_t bpp;
     BMDFrameFlags flags;
     shared_ptr<DeckLink3DVideoFrame> right;
     BMDVideo3DPackingFormat packing;

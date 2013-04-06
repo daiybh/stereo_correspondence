@@ -20,12 +20,16 @@ bool operator==(const REFIID & first, const REFIID & second)
 }
 
 DeckLink3DVideoFrame::DeckLink3DVideoFrame(yuri::usize_t width, yuri::usize_t height, BMDPixelFormat format, BMDFrameFlags flags)
-:width(width),height(height),format(format),buffer(0),bpp(0),flags(flags),
+:width(width),height(height),format(format),buffer(0),flags(flags),
  packing(bmdVideo3DPackingFramePacking)
 {
-	if (format == bmdFormat8BitYUV) bpp = 16;
-	else if (format == bmdFormat8BitARGB || format==bmdFormat8BitBGRA) bpp = 32;
-	buffer = new yuri::ubyte_t[(width*height*bpp)>>3];
+
+	if (format == bmdFormat8BitYUV) linesize_ = width*2;
+	else if (format == bmdFormat8BitARGB || format==bmdFormat8BitBGRA) linesize_ = width*4;
+	else if (format == bmdFormat10BitYUV) {
+		linesize_ = (width/6 + (width%6?1:0))*16;
+	}
+	buffer = new yuri::ubyte_t[height*linesize_];
 
 }
 
@@ -45,7 +49,7 @@ long DeckLink3DVideoFrame::GetHeight ()
 long DeckLink3DVideoFrame::GetRowBytes ()
 {
 	//std::cerr << "GetRowBytes " << __FILE__ << ":" << __LINE__ << std::endl;
-	return (bpp*width)>>3;
+	return linesize_;
 }
 BMDPixelFormat DeckLink3DVideoFrame::GetPixelFormat ()
 {
