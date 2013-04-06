@@ -57,7 +57,43 @@ DeckLinkInput::~DeckLinkInput()
 
 HRESULT DeckLinkInput::VideoInputFormatChanged (BMDVideoInputFormatChangedEvents notificationEvents, IDeckLinkDisplayMode *newDisplayMode, BMDDetectedVideoInputFormatFlags detectedSignalFlags)
 {
-	log[log::debug] << "VideoInputFormatChanged" << "\n";
+	log[log::info] << "VideoInputFormatChanged. " <<
+					"Format changed: " << (notificationEvents&bmdVideoInputDisplayModeChanged?"YES":"NO") << ", "
+					"dominance changed: " << (notificationEvents&bmdVideoInputFieldDominanceChanged?"YES":"NO") << ". "
+					"colorspace changed: " << (notificationEvents&bmdVideoInputColorspaceChanged?"YES":"NO") << "\n";
+	std::string dom="unknown";
+	const char * name;
+	bool new_format_is_psf = false;
+	bool new_format_is_progressive = false;
+	bool new_format_is_interlace = false;
+	switch (newDisplayMode->GetFieldDominance()) {
+		case bmdLowerFieldFirst: dom="interlace, LFF"; new_format_is_interlace = true; break;
+		case bmdUpperFieldFirst: dom="interlace, TFF"; new_format_is_interlace = true; break;
+		case bmdProgressiveFrame: dom="progressive"; new_format_is_progressive = true; break;
+		case bmdProgressiveSegmentedFrame: dom="PsF"; new_format_is_psf = true; new_format_is_progressive = true; break;
+	}
+	newDisplayMode->GetName(&name);
+	log[log::info] << "New format: " << name << ", " << newDisplayMode->GetWidth() << "x" << newDisplayMode->GetHeight() <<
+				", dom: " << dom << "\n";
+	BMDDisplayMode new_mode = newDisplayMode->GetDisplayMode();
+//	if (force_psf && actual_format_is_psf && !new_format_is_psf) {
+//		if (new_format_is_progressive) log[info] << "Requested PsF, but got progressive. getting progressive\n";
+//		else {
+//			if (interlace_to_progressive.find(new_mode) != interlace_to_progressive.end()) {
+//				new_mode = interlace_to_progressive[new_mode];
+//				if (new_mode == mode) {
+//					log[info] << "Requested Psf, but BMD returned corresponding interlace. Ignoring!\n";
+//					return S_OK;
+//				}
+//				log[info] << "Wanna PsF, so chenging new mode to progressive\n";
+//			}
+//		}
+//	}
+//	actual_format_is_psf = new_format_is_psf;
+	mode = new_mode;
+	current_format_name_ = get_mode_name(mode);
+	restart_streams();
+
 	return S_OK;
 }
 HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFrame, IDeckLinkAudioInputPacket* audioPacket)
