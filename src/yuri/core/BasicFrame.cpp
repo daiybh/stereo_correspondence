@@ -116,6 +116,7 @@ pBasicFrame BasicFrame::get_copy()
 	pBasicFrame tmp ( new BasicFrame(planes.size()));
 	tmp->set_parameters(format, width, height);
 	tmp->set_time(pts,dts,duration);
+	tmp->set_info(info);
 	for (yuri::size_t i = 0; i < planes.size(); ++i) {
 		tmp->get_plane(i)=const_cast<const plane_t&>(get_plane(i));
 	}
