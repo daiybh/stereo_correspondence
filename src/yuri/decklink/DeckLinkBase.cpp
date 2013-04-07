@@ -77,6 +77,7 @@ core::pParameters DeckLinkBase::configure()
 	(*p)["format"]["Format"]="1080p25";
 	(*p)["audio"]["Enable audio"]=false;
 	(*p)["pixel_format"]["Select pixel format. Possible values are: (yuv, v210, argb, bgra, r210)"]="yuv";
+	(*p)["audio_channels"]["Number of audio channels to process"]=2;
 	return p;
 }
 
@@ -165,6 +166,8 @@ bool DeckLinkBase::set_param(const core::Parameter &p)
 			<< ". Using default 8bit YUV 4:2:2." << std::endl;
 			pixel_format=bmdFormat8BitYUV;
 		}
+	} else if (iequals(p.name, "audio_channels")) {
+		audio_channels=p.get<size_t>();
 	} else return BasicIOThread::set_param(p);
 	return true;
 }
