@@ -327,7 +327,7 @@ bool DeckLinkOutput::step()
 					samples[2*i]=sample>>8;
 					//samples[4*i+1]=data[1];//>>8)|(data[0]);
 					//if (samples[2*i]==0) zeroes++;
-					if (chan>1) samples[2*i+1] << (data[3]<<8)|(data[4]);
+					if (chan>1) samples[2*i+1] = (data[3]<<8)|(data[4]);
 					else samples[2*i+1] = 0;
 					//samples[2*i+1]=((0xFF*i)%480);
 //					samples[4*i+3]=((0xFF*i)%480)>>8;
