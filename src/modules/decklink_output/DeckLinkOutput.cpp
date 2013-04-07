@@ -27,6 +27,7 @@ core::pParameters DeckLinkOutput::configure()
 	(*p)["connection"]["Output connection (HDMI, SDI, SVideo, ...). Please note that enabling one output will also enable other compatible outputs"]=std::string("HDMI");
 	(*p)["sync"]["Use synchronous frame display."]=true;
 	(*p)["stereo"]["Output stereo image."]=false;
+	(*p)["format_detection"]["Try to detect video format."]=1;
 	return p;
 }
 
@@ -87,7 +88,9 @@ void DeckLinkOutput::run()
 bool DeckLinkOutput::set_param(const core::Parameter &p)
 {
 	using boost::iequals;
-	if (iequals(p.name, "prebuffer")) {
+	if (iequals(p.name, "format_detection")) {
+		detect_format=p.get<bool>();
+	} else if (iequals(p.name, "prebuffer")) {
 		prebuffer=p.get<yuri::ushort_t>();
 	} else if (iequals(p.name, "sync")) {
 		sync=p.get<bool>();
@@ -276,6 +279,23 @@ bool DeckLinkOutput::step()
 			frame.reset();
 			frame2.reset();
 			return true;
+		}
+	}
+	core::pFrameInfo fi = frame->get_info();
+	if (detect_format && fi) {
+		BMDDisplayMode m = parse_format(fi->format);
+		if (m==bmdModeUnknown) {
+			log[log::warning] << "Format specified in incoming frame is not supported!";
+		} else if (m!=mode) {
+			pixel_format = pfmt;
+			mode = m;
+			if (!verify_display_mode()) {
+				log[log::error] << "Failed to verify display mode for incoming frame\n";
+				frame.reset();
+				frame2.reset();
+				return true;
+			}
+			log[log::info] << "Format changed to " << fi->format;
 		}
 	}
 	if (pfmt!=pixel_format) {
