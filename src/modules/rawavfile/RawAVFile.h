@@ -11,6 +11,7 @@
 extern "C" {
 	#include <libavformat/avformat.h>
 }
+#include <vector>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace yuri {
@@ -25,18 +26,31 @@ public:
 private:
 	RawAVFile(log::Log &_log, core::pwThreadBase parent, core::Parameters &parameters) IO_THREAD_CONSTRUCTOR;
 	virtual void 		run();
-	AVFormatContext* 	fmtctx;
-	AVCodec*			video_codec;
+	AVFormatContext*	fmtctx;
+	std::vector<AVCodec*>
+						video_codecs_;
+	std::vector<AVCodec*>
+						audio_codecs_;
 	yuri::size_t 		block;
 	std::string 		filename;
-	AVStream* 			video_stream;
-	format_t 			format_;
+	std::vector<AVStream*>
+						video_streams_;
+	std::vector<AVStream*>
+						audio_streams_;
+	std::vector<format_t>
+						video_formats_;
+	std::vector<format_t>
+						video_formats_out_;
 	format_t 			format_out_;
+	format_t 			video_format_out_;
 	bool				decode_;
 	double 				fps_;
-	boost::posix_time::ptime
-						next_time_;
-	core::pBasicFrame	frame;
+	std::vector<boost::posix_time::ptime>
+						next_times_;
+	std::vector<core::pBasicFrame>
+						frames_;
+	size_t 				max_video_streams_;
+	size_t 				max_audio_streams_;
 
 };
 
