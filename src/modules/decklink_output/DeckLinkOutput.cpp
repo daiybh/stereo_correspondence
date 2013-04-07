@@ -28,6 +28,7 @@ core::pParameters DeckLinkOutput::configure()
 	(*p)["sync"]["Use synchronous frame display."]=true;
 	(*p)["stereo"]["Output stereo image."]=false;
 	(*p)["format_detection"]["Try to detect video format."]=1;
+	(*p)["audio_channels"]["Number of audio channels to output"]=2;
 	return p;
 }
 
@@ -206,7 +207,7 @@ bool DeckLinkOutput::start_stream()
 		return false;
 	}
 	if (audio_enabled) {
-		output->EnableAudioOutput(bmdAudioSampleRate48kHz,bmdAudioSampleType16bitInteger,2,bmdAudioOutputStreamContinuous);
+		output->EnableAudioOutput(bmdAudioSampleRate48kHz,bmdAudioSampleType16bitInteger,audio_channels,bmdAudioOutputStreamContinuous);
 	} else {
 		output->DisableAudioOutput();
 	}
@@ -314,23 +315,25 @@ bool DeckLinkOutput::step()
 		core::pBasicFrame audio_frame=in[2]->pop_frame();
 		if (audio_frame) {
 			uint32_t writen;
-			std::vector<yuri::sshort_t> samples(audio_frame->get_sample_count()*2);
+			std::vector<yuri::sshort_t> samples(audio_frame->get_sample_count()*audio_channels);
 			if (audio_frame->get_format() == YURI_AUDIO_PCM_S24_BE) {
-//				log[log::warning] << "Got S24BE"  << endl;
 				const yuri::ubyte_t *data = PLANE_RAW_DATA(audio_frame,0);
 				yuri::size_t zeroes=0;
-				yuri::size_t chan = audio_frame->get_channel_count();
-				yuri::size_t skip =3*chan;
+				const yuri::size_t chan = audio_frame->get_channel_count();
+				const size_t copy_chans = std::min(chan,static_cast<size_t>(audio_channels));
+				const size_t zero_chans = audio_channels - copy_chans;
+				yuri::size_t skip =(chan-copy_chans)*3;
 				yuri::sint_t sample;
+				std::vector<yuri::sshort_t>::iterator sample_iter=samples.begin();
 				for (int i=0;i<audio_frame->get_sample_count();++i) {
-					sample = (data[0]<<16)|(data[1]<<8)|data[2];
-					samples[2*i]=sample>>8;
-					//samples[4*i+1]=data[1];//>>8)|(data[0]);
-					//if (samples[2*i]==0) zeroes++;
-					if (chan>1) samples[2*i+1] = (data[3]<<8)|(data[4]);
-					else samples[2*i+1] = 0;
-					//samples[2*i+1]=((0xFF*i)%480);
-//					samples[4*i+3]=((0xFF*i)%480)>>8;
+					for (int ch=0;ch<copy_chans;++ch) {
+						sample = (data[0]<<16)|(data[1]<<8)|data[2];
+						*sample_iter++=sample>>8;
+						data+=3;
+					}
+					for (int ch=0;ch<zero_chans;++ch) {
+						*sample_iter++=0;
+					}
 					data+=skip;
 				}
 //				log[log::info] << "Zeroes " << zeroes << "/" <<audio_frame->get_sample_count()<<endl;
