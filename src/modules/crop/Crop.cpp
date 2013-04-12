@@ -27,8 +27,8 @@ core::pParameters Crop::configure()
 	(*p)["width"]["width"]=-1;
 	(*p)["height"]["height"]=-1;
 	p->set_max_pipes(1,1);
-	p->add_input_format(YURI_FMT_RGB);
-	p->add_output_format(YURI_FMT_RGB);
+//	p->add_input_format(YURI_FMT_RGB);
+//	p->add_output_format(YURI_FMT_RGB);
 	return p;
 }
 
@@ -49,40 +49,51 @@ bool Crop::step()
 	if (!in[0] || !(frame = in[0]->pop_frame()))
 		return true;
 
+	const size_t in_width = frame->get_width();
+	const size_t in_height = frame->get_height();
 	yuri::ssize_t x = dest_x, y = dest_y, w = dest_w, h = dest_h;
-	if (x >= static_cast<yuri::ssize_t>(frame->get_width()) || y >= static_cast<yuri::ssize_t>(frame->get_height()))
+	if (x >= static_cast<yuri::ssize_t>(in_width) || y >= static_cast<yuri::ssize_t>(in_height))
 		return true;
 	if (w < 0) {
-		w = frame->get_width() - x;
-	} else 	if (x + w > static_cast<yuri::ssize_t>(frame->get_width())) {
-		w = frame->get_width() - x;
+		w = in_width - x;
+	} else 	if (x + w > static_cast<yuri::ssize_t>(in_width)) {
+		w = in_width - x;
 	}
 	if (h < 0) {
-		h = static_cast<yuri::ssize_t>(frame->get_height()) - y;
-	} else if (y + h > static_cast<yuri::ssize_t>(frame->get_height())) {
-		h = frame->get_width() - y;
+		h = static_cast<yuri::ssize_t>(in_height) - y;
+	} else if (y + h > static_cast<yuri::ssize_t>(in_height)) {
+		h = in_width - y;
 	}
 	log[log::verbose_debug] << "X: " << x << ", Y: " << y << ", W: " << w<< ", H: " << h <<std::endl;
-	if (!x && !y && w==static_cast<yuri::ssize_t>(frame->get_width())
-			&& h==static_cast<yuri::ssize_t>(frame->get_height())) {
+	if (!x && !y && w==static_cast<yuri::ssize_t>(in_width)
+			&& h==static_cast<yuri::ssize_t>(in_height)) {
 		log[log::verbose_debug] << "Passing thru" << std::endl;
 		push_raw_video_frame(0,frame);
 		return true;
 	}
 
-	core::pBasicFrame frame_out = allocate_empty_frame(frame->get_format(),w, h);
-	FormatInfo_t info = core::BasicPipe::get_format_info(frame->get_format());
+	core::pBasicFrame frame_out = allocate_empty_frame(frame->get_format(),w, h, true);
+	const FormatInfo_t info = core::BasicPipe::get_format_info(frame->get_format());
 	assert(info);
 	if (info->planes!=1) {
 		log[log::warning] << "Received frame has more that a single plane. \n";
 		return true;
 	}
+	if (info->bpp&0x07) {
+		log[log::warning] << "Currently only formats with bit depth divisible by 8 are supported.";
+		return true;
+	}
 	yuri::size_t Bpp = info->bpp >> 3;
 	log[log::verbose_debug] << "size: " << w <<"x"<<h<<"+"<<x<<"+"<<y<<" at "<<Bpp<<"Bpp"<<std::endl;
-	yuri::ubyte_t  *out_ptr=PLANE_RAW_DATA(frame,0);
-	for (int i=y;i<(h+y);++i) {
-		yuri::ubyte_t *ptr = PLANE_RAW_DATA(frame,0)+(i*frame->get_width()+x)*Bpp;
-		for (int j=0;j<(int)(w*Bpp);++j) *out_ptr++ = *ptr++;
+	yuri::ubyte_t  *out_ptr=PLANE_RAW_DATA(frame_out,0);
+	const size_t in_line_width = in_width * Bpp;
+	const size_t out_line_width = w * Bpp;
+	log[log::verbose_debug] << "in_line_width: " << in_line_width << ", out_line_width: " << out_line_width;
+	const yuri::ubyte_t *ptr = PLANE_RAW_DATA(frame,0)+(y * in_line_width) + x*Bpp;
+	for (int i = 0; i < h; ++i) {
+		std::copy(ptr, ptr + out_line_width, out_ptr);
+		out_ptr+=out_line_width;
+		ptr+=in_line_width;
 	}
 	push_video_frame(0,frame_out,frame->get_format(),w, h);
 	return true;
