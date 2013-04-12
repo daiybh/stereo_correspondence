@@ -101,6 +101,11 @@ void SimpleRenderer::run()
 		glx.reset(new GTKWindow(log,get_this_ptr(),params));
 	} else
 #endif
+	if (stereo_3d && stereo_type == stereo::quadbuffer) {
+		params["stereo"]=true;
+	}  else {
+		params["stereo"]=false;
+	}
 	glx.reset(new graphics::GLXWindow(log,get_this_ptr(),params));
 
 
