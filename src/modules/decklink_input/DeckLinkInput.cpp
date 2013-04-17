@@ -89,9 +89,9 @@ HRESULT DeckLinkInput::VideoInputFormatChanged (BMDVideoInputFormatChangedEvents
 //			}
 //		}
 //	}
-//	actual_format_is_psf = new_format_is_psf;
+	actual_format_is_psf = new_format_is_psf;
 	mode = new_mode;
-	current_format_name_ = get_mode_name(mode);
+	current_format_name_ = get_mode_name(mode, actual_format_is_psf);
 	restart_streams();
 
 	return S_OK;
