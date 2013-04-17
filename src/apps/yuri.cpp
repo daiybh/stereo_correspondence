@@ -165,7 +165,7 @@ int main(int argc, char**argv)
 	std::string filename;
 	std::vector<std::string> arguments;
 	l.set_label("[YURI] ");
-	l.set_flags(info);
+	l.set_flags(info|show_level);
 	options.add_options()
 		("help,h","print help")
 		("version,V","Show version of yuri and libyuri")
@@ -199,8 +199,8 @@ int main(int argc, char**argv)
 	else if (vm.count("verbose")) verbosity=1;
 
 	//cout << "Verbosity: " << verbosity << std::endl;
-	if (verbosity >=0)	l.set_flags((info<<(verbosity)));
-	else l.set_flags((info>>(-verbosity)));
+	if (verbosity >=0)	l.set_flags((info<<(verbosity))|show_level);
+	else l.set_flags((info>>(-verbosity))|show_level);
 	//cout << "Verbosity: " << verbosity << ", flags: " << (l.get_flags()&flag_mask)<<std::endl;
 	if (vm.count("help")) {
 		l.set_quiet(true);
