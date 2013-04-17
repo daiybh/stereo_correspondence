@@ -75,7 +75,7 @@ DeckLinkBase::pixel_format_map=boost::assign::map_list_of<BMDPixelFormat, yuri::
 std::map<std::string, std::string>
 progresive_to_psf=boost::assign::map_list_of<std::string, std::string>
 ("1080p24", "1080p24PsF")
-("1080p2398", "1080p238PsF");
+("1080p2398", "1080p2398PsF");
 core::pParameters DeckLinkBase::configure()
 {
 	core::pParameters p = BasicIOThread::configure();
