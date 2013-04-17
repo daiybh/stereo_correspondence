@@ -37,11 +37,13 @@ protected:
 	BMDAudioSampleType audio_sample_type;
 	yuri::uint_t audio_channels;
 	bool audio_enabled;
+	bool actual_format_is_psf;
 	static std::map<std::string, BMDDisplayMode, yuri::core::compare_insensitive> mode_strings;
 	static std::map<std::string, BMDPixelFormat, yuri::core::compare_insensitive> pixfmt_strings;
 	static std::map<std::string, BMDVideoConnection, yuri::core::compare_insensitive> connection_strings;
 	static std::map<BMDPixelFormat, yuri::format_t> pixel_format_map;
-	static std::string get_mode_name(BMDDisplayMode);
+	static std::string get_mode_name(BMDDisplayMode, bool psf=false);
+	static bool is_psf(std::string name);
 
 };
 

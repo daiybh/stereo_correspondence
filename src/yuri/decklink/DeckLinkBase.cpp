@@ -38,6 +38,9 @@ DeckLinkBase::mode_strings = boost::assign::map_list_of<std::string,BMDDisplayMo
 		("1080i50",		bmdModeHD1080i50)
 		("1080i5994",	bmdModeHD1080i5994)
 		("1080i60",		bmdModeHD1080i6000)
+// PsF modes
+		("1080p24PsF",	bmdModeHD1080p24)
+		("1080p2398PsF",bmdModeHD1080p2398)
 // 2k Modes
 		("2k24",		bmdMode2k24)
 		("2k2398",		bmdMode2k2398)
@@ -69,6 +72,10 @@ DeckLinkBase::pixel_format_map=boost::assign::map_list_of<BMDPixelFormat, yuri::
 //		(bmdFormat10BitRGB)
 ;
 
+std::map<std::string, std::string>
+progresive_to_psf=boost::assign::map_list_of<std::string, std::string>
+("1080p24", "1080p24PsF")
+("1080p2398", "1080p238PsF");
 core::pParameters DeckLinkBase::configure()
 {
 	core::pParameters p = BasicIOThread::configure();
@@ -128,7 +135,7 @@ DeckLinkBase::DeckLinkBase(log::Log &log_, core::pwThreadBase parent, yuri::sint
 	:BasicIOThread(log_,parent,inp,outp,name),device(0),device_index(0),connection(bmdVideoConnectionHDMI),
 	 mode(bmdModeHD1080p25),pixel_format(bmdFormat8BitYUV),
 	 audio_sample_rate(bmdAudioSampleRate48kHz),audio_sample_type(bmdAudioSampleType16bitInteger),
-	 audio_channels(2),audio_enabled(false)
+	 audio_channels(2),audio_enabled(false),actual_format_is_psf(false)
 {
 
 }
@@ -151,9 +158,12 @@ bool DeckLinkBase::set_param(const core::Parameter &p)
 			mode = bmdModeHD1080p25;
 			log[log::error] << "Failed to parse format, falling back "
 					"to 1080p25\n";
+			actual_format_is_psf = false;
 		} else {
 			mode = m;
+			actual_format_is_psf = is_psf(p.get<std::string>());
 		}
+
 	} else if (iequals(p.name, "audio")) {
 		audio_enabled=p.get<bool>();
 	} else if (iequals(p.name, "pixel_format")) {
@@ -207,13 +217,28 @@ bool DeckLinkBase::init_decklink()
 	}
 	return true;
 }
-std::string DeckLinkBase::get_mode_name(BMDDisplayMode mode)
+std::string DeckLinkBase::get_mode_name(BMDDisplayMode mode, bool psf)
 {
 	for (std::map<std::string, BMDDisplayMode, yuri::core::compare_insensitive>::iterator it=mode_strings.begin();
 			it!=mode_strings.end();++it) {
-		if (it->second == mode) return it->first;
+		if (it->second == mode) {
+			if (psf) {
+				if (progresive_to_psf.count(it->first)) {
+					return progresive_to_psf[it->first];
+				}
+			}
+			return it->first;
+		}
 	}
 	return std::string();
+}
+bool DeckLinkBase::is_psf(std::string name)
+{
+	typedef std::map<std::string, std::string>::iterator miter;
+	for (miter it=progresive_to_psf.begin();it!=progresive_to_psf.end();++it) {
+		if (it->second == name) return true;
+	}
+	return false;
 }
 }
 
