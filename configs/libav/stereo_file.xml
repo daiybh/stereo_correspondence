@@ -1,0 +1,75 @@
+<?xml version="1.0" ?>
+<!-- Simple example of lib yuri function.
+     The application connects to video4lionux2 device (web camera)
+     shows the image.
+     
+     [ webcam ] -> [ renderer ]
+     
+      -->
+<app name="stereo">
+<!-- Specify variables for command line substitution -->
+<variable name="width" default="800"/>
+<variable name="height" default="600"/>
+<variable name="left" default=""/>
+<variable name="right" default=""/>
+<variable name="stats" default="100"/>
+<variable name="display" default=":0"/>
+<variable name="format" default="yuv422"/>
+<variable name="stereo" default="anaglyph"/>
+<variable name="cor" default="0.0"/>
+
+<!-- General settings -->
+<general>
+<!-- Unlimited run time -->
+  <parameter name="run_limit">-1</parameter>
+<!-- Moderate debug informations -->
+  <parameter name="debug">0</parameter>
+  <parameter name="use_colors">1</parameter>
+</general>
+
+<!-- Units -->
+<!-- Video4Linux2 device source -->
+<node class="rawavsource" name="left">
+  <parameter name="filename">@left</parameter>
+  <parameter name="fps_stats">@stats</parameter>
+  <parameter name="decode">1</parameter>
+</node>
+
+<node class="avscaler" name="scale1">
+  <parameter name="width">-1</parameter>
+  <parameter name="height">-1</parameter>
+  <parameter name="fps_stats">@stats</parameter>
+  <parameter name="format">@format</parameter>
+</node>
+<node class="rawavsource" name="right">
+  <parameter name="filename">@right</parameter>
+  <parameter name="fps_stats">@stats</parameter>
+  <parameter name="decode">1</parameter>
+</node>
+
+<node class="avscaler" name="scale2">
+  <parameter name="width">-1</parameter>
+  <parameter name="height">-1</parameter>
+  <parameter name="fps_stats">@stats</parameter>
+  <parameter name="format">@format</parameter>
+</node>
+
+<!-- And finally simple rendering window -->
+<node class="simple_renderer" name="renderer">
+        <parameter name="display">@display</parameter>
+        <parameter name="width">@width</parameter>
+        <parameter name="height">@height</parameter>
+        <parameter name="cursor">0</parameter>
+        <parameter name="keep_aspect">1</parameter>
+        <parameter name="stereo">1</parameter>
+        <parameter name="stereo_type">@stereo</parameter>
+        <parameter name="correction">@cor</parameter>
+</node>
+
+<!-- Link specifications -->
+<link name="left_raw" source="left:0" target="scale1:0"/>
+<link name="left_scaled" source="scale1:0" target="renderer:0"/>
+<link name="right_raw" source="right:0" target="scale2:0"/>
+<link name="right_scaled" source="scale2:0" target="renderer:1"/>
+
+</app>

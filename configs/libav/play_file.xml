@@ -1,0 +1,48 @@
+<?xml version="1.0" ?>
+<app name="play_file">
+<!-- Specify variables for command line substitution -->
+<variable name="width" default="800"/>
+<variable name="height" default="600"/>
+<variable name="display" default=":0"/>
+<variable name="path" default=""/>
+<variable name="fps" default="0"/>
+
+<!-- General settings -->
+<general>
+<!-- Unlimited run time -->
+  <parameter name="run_limit">-1</parameter>
+<!-- Moderate debug informations -->
+  <parameter name="debug">0</parameter>
+</general>
+
+<!-- Units -->
+<node class="rawavsource" name="source">
+        <parameter name="decode">1</parameter>
+        <parameter name="filename">@path</parameter>
+        <parameter name="fps">@fps</parameter>
+</node>
+
+<node class="avscaler" name="scale">
+	<parameter name="format">YUV422</parameter>
+</node>
+
+<!-- And finally simple rendering window -->
+<node class="simple_renderer" name="renderer">
+        <parameter name="display">@display</parameter>
+        <parameter name="width">@width</parameter>
+        <parameter name="height">@height</parameter>
+        <parameter name="cursor">0</parameter>
+        <parameter name="keep_aspect">1</parameter>
+</node>
+
+<!-- Link specifications -->
+<link name="raw_file" source="source:0" target="scale:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+<link name="image" source="scale:0" target="renderer:0">
+        <parameter name="limit">1</parameter>
+        <parameter name="limit_type">count</parameter>
+</link>
+
+</app>
