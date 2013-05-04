@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+
+<app name="test">
+<variable name="debayer" default="1"/>
+
+<general>
+  <parameter name="run_limit">-1</parameter>
+  <parameter name="debug">0</parameter>  
+</general>
+
+<variable name="file" default=""/>
+
+<node class="read_pcap" name="pcap">
+        <parameter name="filename">@file</parameter>
+</node>
+
+
+<node class="mvtp_receiver" name="mvtp">
+        <parameter name="debug">2</parameter>
+</node>
+
+<node class="simple_renderer" name="render">
+        <parameter name="filename">dump0_.raw</parameter>
+        <parameter name="sequence">4</parameter>
+</node>
+
+<node class="mvtp_convert" name="conv">
+        <parameter name="filename">dump1_.raw</parameter>
+        <parameter name="sequence">4</parameter>
+</node>
+
+<link name="input" source="pcap:0" target="mvtp:0"/>
+
+<link name="input0" source="mvtp:0" target="conv:0"/>
+<link name="input1" source="conv:0" target="render:0"/>
+
+</app>

@@ -1,0 +1,64 @@
+<?xml version="1.0" ?>
+
+<app name="test">
+
+<general>
+  <parameter name="run_limit">-1</parameter>
+  <parameter name="debug">0</parameter>  
+</general>
+
+<variable name="file" default=""/>
+<variable name="debayer" default="1"/>
+
+<node class="read_pcap" name="pcap">
+        <parameter name="filename">@file</parameter>
+</node>
+
+
+<node class="mvtp_receiver" name="mvtp">
+        <parameter name="debug">2</parameter>
+        <parameter name="clear">1</parameter>
+</node>
+
+<node class="simple_renderer" name="render0">
+        <parameter name="width">800</parameter>
+        <parameter name="height">600</parameter>
+        <parameter name="x">0</parameter>
+        
+</node>
+<node class="simple_renderer" name="render1">
+        <parameter name="width">800</parameter>
+        <parameter name="height">600</parameter>
+        <parameter name="x">800</parameter>
+</node>
+
+
+<node class="mvtp_convert" name="conv0"/>
+<node class="mvtp_convert" name="conv1"/>
+<node class="mvtp_convert" name="conv2"/>
+<node class="mvtp_convert" name="conv3"/>
+
+<node class="mvtp_combine" name="comb0">
+<parameter name="fps_stats">10</parameter>
+<parameter name="debayer">@debayer</parameter>
+</node>
+<node class="mvtp_combine" name="comb1">
+ <parameter name="fps_stats">10</parameter>
+</node>
+
+<link name="input" source="pcap:0" target="mvtp:0"/>
+
+<link name="input0" source="mvtp:0" target="conv0:0"/>
+<link name="input1" source="mvtp:1" target="conv1:0"/>
+<link name="input2" source="mvtp:2" target="conv2:0"/>
+<link name="input3" source="mvtp:3" target="conv3:0"/>
+
+<link name="comb0" source="conv0:0" target="comb0:0"/>
+<link name="comb1" source="conv1:0" target="comb0:1"/>
+<link name="comb2" source="conv2:0" target="comb1:0"/>
+<link name="comb3" source="conv3:0" target="comb1:1"/>
+
+<link name="show0" source="comb0:0" target="render0:0"/>
+<link name="show1" source="comb1:0" target="render1:0"/>
+
+</app>
