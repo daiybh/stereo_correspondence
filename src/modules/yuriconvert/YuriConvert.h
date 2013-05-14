@@ -64,6 +64,7 @@ protected:
 	static yuri::ushort_t rgb_cr[1<<24];
 	static yuri::ushort_t rgb_cb[1<<24];
 
+	static yuri::ushort_t tenbits_reverse[1<<10];
 	static boost::mutex tables_lock;
 
 #ifdef YURI_HAVE_CUDA

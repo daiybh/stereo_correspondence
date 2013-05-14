@@ -51,6 +51,7 @@ using boost::iequals;
 template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_YUV422,YURI_FMT_V210_MVTP,false>(core::pBasicFrame frame);
 template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_RGB,YURI_FMT_V210_MVTP,false>(core::pBasicFrame frame);
 template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI_FMT_YUV422,false>(core::pBasicFrame frame);
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_V210_SDI, YURI_FMT_YUV422,false>(core::pBasicFrame frame);
 template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_R210,YURI_FMT_RGB24,false>(core::pBasicFrame frame);
 template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_YUV444, YURI_FMT_YUV422, false>(core::pBasicFrame frame);
 template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_YUV444, YURI_FMT_UYVY422, false>(core::pBasicFrame frame);
@@ -70,6 +71,7 @@ YuriConvertor::converters
 		(std::make_pair(YURI_FMT_YUV422,	YURI_FMT_V210_MVTP),&YuriConvertor::convert<YURI_FMT_YUV422, 	YURI_FMT_V210_MVTP,	false>)
 		(std::make_pair(YURI_FMT_RGB,		YURI_FMT_V210_MVTP),&YuriConvertor::convert<YURI_FMT_RGB, 		YURI_FMT_V210_MVTP,	false>)
 		(std::make_pair(YURI_FMT_V210_MVTP, YURI_FMT_YUV422),	&YuriConvertor::convert<YURI_FMT_V210_MVTP,	YURI_FMT_YUV422,	false>)
+		(std::make_pair(YURI_FMT_V210_SDI,  YURI_FMT_YUV422),	&YuriConvertor::convert<YURI_FMT_V210_SDI,	YURI_FMT_YUV422,	false>)
 		(std::make_pair(YURI_FMT_R210, 		YURI_FMT_RGB24),	&YuriConvertor::convert<YURI_FMT_R210,		YURI_FMT_RGB24,		false>)
 		(std::make_pair(YURI_FMT_YUV444,	YURI_FMT_YUV422),	&YuriConvertor::convert<YURI_FMT_YUV444, 	YURI_FMT_YUV422,	false>)
 		(std::make_pair(YURI_FMT_YUV444,	YURI_FMT_UYVY422),	&YuriConvertor::convert<YURI_FMT_YUV444, 	YURI_FMT_UYVY422,	false>)
@@ -465,7 +467,20 @@ template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_YUV422,YURI_FMT_RGB
 	return output;
 #endif
 }
-
+namespace {
+ushort_t reverse_ten_bits(ushort_t number)
+{
+	ushort_t res 		= 0;
+	ushort_t mask_in	= 1;
+	ushort_t mask_out 	= 0x300;
+	for (int i=0;i<10;++i) {
+		if (number&mask_in) res = res | mask_out;
+		mask_in <<=1;
+		mask_out>>=1;
+	}
+	return res;
+}
+}
 void YuriConvertor::generate_tables()
 {
 	boost::mutex::scoped_lock l(tables_lock);
@@ -535,6 +550,11 @@ void YuriConvertor::generate_tables()
 		rgb_cr[i]=Cr;
 
 	}
+	// Generate table to revert 10 bits
+	for (ushort_t i=0;i<(1<<10);++i) {
+		tenbits_reverse[i]=reverse_ten_bits(i);
+	}
+
 	log[log::info] << "Tables generated" <<std::endl;
 	tables_initialized = true;
 }
@@ -566,6 +586,40 @@ template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_V210_MVTP,YURI_FMT_
 	}
 	return output;
 }
+
+template<> core::pBasicFrame YuriConvertor::convert<YURI_FMT_V210_SDI,YURI_FMT_YUV422,false>(core::pBasicFrame frame)
+{
+	core::pBasicFrame output;
+	yuri::size_t w = frame->get_width();
+	yuri::size_t h = frame->get_height();
+	yuri::size_t pixel_pairs = (w*h)>>1;
+	output=allocate_empty_frame(YURI_FMT_YUV422,w,h,true);
+	yuri::ubyte_t *src = PLANE_RAW_DATA(frame,0);
+	yuri::ubyte_t *dest= PLANE_RAW_DATA(output,0);
+	yuri::ushort_t y1,y2,u,v;
+	while(pixel_pairs--) {
+
+		y1=(*src++&0xFF)<<2;
+		y1|=(*src&0xC0)>>6;
+
+		u=(*src++&0x3F)<<4;
+		u|=(*src&0xF0)>>4;
+
+		y2=(*src++&0x0F)<<6;
+		y2|=(*src&0xFC)>>2;
+
+		v=(*src++&0x03)<<2;
+		v|=(*src++&0xFF)>>0;
+
+		*dest++=(tenbits_reverse[y1&0x3FF]>>2)&0xFF;
+		*dest++=(tenbits_reverse[u&0x3FF]>>2)&0xFF;
+		*dest++=(tenbits_reverse[y2&0x3FF]>>2)&0xFF;
+		*dest++=(tenbits_reverse[v&0x3FF]>>2)&0xFF;
+	}
+	return output;
+}
+
+
 namespace {
 #define R210_R(x) (((((x)&0x0000003F)<<4) | (((x)&0x0000F000)>>12)))
 #define R210_G(x) (((((x)&0x00000F00)>>2) | (((x)&0x00FC0000)>>18)))
