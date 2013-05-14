@@ -164,8 +164,11 @@ std::string long_name;
 #define YURI_FMT_BAYER_GRBG								YURI_FMT + 46
 #define YURI_FMT_BAYER_GBRG								YURI_FMT + 46
 #define YURI_FMT_UYVY422								YURI_FMT + 47
+#define YURI_FMT_VYUY422								YURI_FMT + 48
+#define YURI_FMT_YVYU422								YURI_FMT + 49
+#define YURI_FMT_V210_SDI								YURI_FMT + 50
 
-#define YURI_FMT_MAX									YURI_FMT_UYVY444
+#define YURI_FMT_MAX									YURI_FMT_V210_SDI
 
 #define YURI_IMAGE										0x1000
 #define YURI_IMAGE_JPEG									YURI_IMAGE + 1
