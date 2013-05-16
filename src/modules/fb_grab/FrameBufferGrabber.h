@@ -89,7 +89,7 @@ protected:
 	static void flip_memory(_context_info& ctx, core::pBasicFrame& data);
 	void draw_avatar();
 	bool do_add_grabbing_context(GLXContext ctx);
-	static std::map<yuri::format_t, GLenum> yuri_gl_formats;
+	//static std::map<yuri::format_t, GLenum> yuri_gl_formats;
 
 };
 

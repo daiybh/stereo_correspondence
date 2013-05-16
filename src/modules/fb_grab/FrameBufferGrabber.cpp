@@ -36,13 +36,13 @@ core::pParameters FrameBufferGrabber::configure()
 	(*p)["measure"]["Number of samples to measure read-back time. ) to disable"]=0;
 	return p;
 }
-
-std::map<yuri::format_t, GLenum> FrameBufferGrabber::yuri_gl_formats = boost::assign::map_list_of<yuri::format_t, GLenum>
+namespace {
+std::map<yuri::format_t, GLenum> yuri_gl_formats = boost::assign::map_list_of<yuri::format_t, GLenum>
 			(YURI_FMT_RGB, GL_RGB)
 			(YURI_FMT_RGBA, GL_RGBA)
 			(YURI_FMT_BGR, GL_BGR)
 			(YURI_FMT_BGRA, GL_BGRA);
-
+}
 FrameBufferGrabber::FrameBufferGrabber(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters):
 		BasicIOThread(_log,parent,1,0,"Frame Buffer Grabber"),
 		method(YURI_GRAB_NONE),update_method(YURI_GRAB_ACTUAL),flip_y(true),
