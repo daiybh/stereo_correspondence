@@ -23,6 +23,30 @@ REGISTER("v4l2source",V4l2Source)
 
 IO_THREAD_GENERATOR(V4l2Source)
 
+namespace {
+	std::map<yuri::format_t, yuri::uint_t> formats_map=
+			boost::assign::map_list_of<yuri::format_t,yuri::uint_t>
+			(YURI_FMT_RGB,V4L2_PIX_FMT_RGB24)
+			(YURI_FMT_RGBA, V4L2_PIX_FMT_RGB32)
+			(YURI_FMT_BGR, V4L2_PIX_FMT_BGR24)
+			(YURI_FMT_BGRA, V4L2_PIX_FMT_BGR32)
+			(YURI_FMT_YUV422, V4L2_PIX_FMT_YUYV)
+			(YURI_FMT_YUV420_PLANAR, V4L2_PIX_FMT_YUV420)
+			(YURI_VIDEO_DV, V4L2_PIX_FMT_DV)
+			(YURI_VIDEO_MJPEG, V4L2_PIX_FMT_MJPEG)
+			(YURI_IMAGE_JPEG, V4L2_PIX_FMT_JPEG)
+			(YURI_FMT_BAYER_BGGR, V4L2_PIX_FMT_SBGGR8)
+			(YURI_FMT_BAYER_RGGB, V4L2_PIX_FMT_SRGGB8)
+			(YURI_FMT_BAYER_GRBG, V4L2_PIX_FMT_SGRBG8)
+			(YURI_FMT_BAYER_GBRG, V4L2_PIX_FMT_SGBRG8);
+
+
+	std::map<std::string, yuri::uint_t> special_formats=boost::assign::map_list_of<std::string,yuri::uint_t>
+		("S920", V4L2_PIX_FMT_SN9C20X_I420)
+		("BA81", V4L2_PIX_FMT_SBGGR8);
+
+}
+
 core::pParameters V4l2Source::configure()
 {
 	core::pParameters p = BasicIOThread::configure();
@@ -47,26 +71,6 @@ core::pParameters V4l2Source::configure()
 	return p;
 }
 
-std::map<yuri::format_t, yuri::uint_t> V4l2Source::formats_map=
-		boost::assign::map_list_of<yuri::format_t,yuri::uint_t>
-		(YURI_FMT_RGB,V4L2_PIX_FMT_RGB24)
-		(YURI_FMT_RGBA, V4L2_PIX_FMT_RGB32)
-		(YURI_FMT_BGR, V4L2_PIX_FMT_BGR24)
-		(YURI_FMT_BGRA, V4L2_PIX_FMT_BGR32)
-		(YURI_FMT_YUV422, V4L2_PIX_FMT_YUYV)
-		(YURI_FMT_YUV420_PLANAR, V4L2_PIX_FMT_YUV420)
-		(YURI_VIDEO_DV, V4L2_PIX_FMT_DV)
-		(YURI_VIDEO_MJPEG, V4L2_PIX_FMT_MJPEG)
-		(YURI_IMAGE_JPEG, V4L2_PIX_FMT_JPEG)
-		(YURI_FMT_BAYER_BGGR, V4L2_PIX_FMT_SBGGR8)
-		(YURI_FMT_BAYER_RGGB, V4L2_PIX_FMT_SRGGB8)
-		(YURI_FMT_BAYER_GRBG, V4L2_PIX_FMT_SGRBG8)
-		(YURI_FMT_BAYER_GBRG, V4L2_PIX_FMT_SGBRG8);
-
-
-std::map<std::string, yuri::uint_t> V4l2Source::special_formats=boost::assign::map_list_of<std::string,yuri::uint_t>
-	("S920", V4L2_PIX_FMT_SN9C20X_I420)
-	("BA81", V4L2_PIX_FMT_SBGGR8);
 
 V4l2Source::V4l2Source(log::Log &log_,core::pwThreadBase parent, core::Parameters &parameters)
 	IO_THREAD_CONSTRUCTOR
@@ -561,7 +565,7 @@ bool V4l2Source::open_file()
 		log[log::error] << "Failed to open file " << filename << std::endl;
 		throw exception::Exception("Failed to open file "+filename);
 	}
-	log[log::info] << filename << " opened successfully" << std::endl;
+	log[log::info] << filename << " opened successfully";
 	//}
 //	catch (boost::sy)
 

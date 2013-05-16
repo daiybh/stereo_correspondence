@@ -111,8 +111,8 @@ protected:
 	bool combine_frames;
 	std::vector<yuri::uint_t> supported_formats;
 	yuri::size_t number_of_inputs;
-	static std::map<yuri::format_t,yuri::uint_t> formats_map;
-	static std::map<std::string, yuri::uint_t> special_formats;
+//	static std::map<yuri::format_t,yuri::uint_t> formats_map;
+//	static std::map<std::string, yuri::uint_t> special_formats;
 	yuri::size_t fps;
 	yuri::size_t frame_duration;
 };
