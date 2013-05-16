@@ -148,7 +148,7 @@ void ReadPcap::run()
 	}
 	log[log::info] << "Read total " << packet_count << " packets\n";
 	IO_THREAD_POST_RUN
-	request_end();
+	request_end(YURI_EXIT_OK);
 	/*if (!in[0]) return true;
 	core::pBasicFrame frame = in[0]->pop_frame();
 	if (!frame) return true;
