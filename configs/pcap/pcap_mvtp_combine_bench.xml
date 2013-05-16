@@ -9,6 +9,8 @@
 
 <variable name="file" default=""/>
 <variable name="debayer" default="1"/>
+<variable name="fmt" default="uyvy422"/>
+
 
 <node class="read_pcap" name="pcap">
         <parameter name="filename">@file</parameter>
@@ -49,10 +51,18 @@
 </node>
 
 
-<node class="mvtp_convert" name="conv0"/>
-<node class="mvtp_convert" name="conv1"/>
-<node class="mvtp_convert" name="conv2"/>
-<node class="mvtp_convert" name="conv3"/>
+<node class="mvtp_convert" name="conv0">
+        <parameter name="format">@fmt</parameter>
+</node>
+<node class="mvtp_convert" name="conv1">
+        <parameter name="format">@fmt</parameter>
+</node>
+<node class="mvtp_convert" name="conv2">
+        <parameter name="format">@fmt</parameter>
+</node>
+<node class="mvtp_convert" name="conv3">
+        <parameter name="format">@fmt</parameter>
+</node>
 
 <node class="mvtp_combine" name="comb0">
 <parameter name="fps_stats">100</parameter>

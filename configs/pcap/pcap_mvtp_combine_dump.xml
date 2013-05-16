@@ -21,19 +21,21 @@
         <parameter name="clear">1</parameter>
 </node>
 
-<node class="simple_renderer" name="render0">
-        <parameter name="width">800</parameter>
-        <parameter name="height">600</parameter>
-        <parameter name="x">0</parameter>
-        
+<node class="filedump" name="dump0">
+        <parameter name="filename">dump0_.png</parameter>
+        <parameter name="sequence">4</parameter>      
 </node>
-<node class="simple_renderer" name="render1">
-        <parameter name="width">800</parameter>
-        <parameter name="height">600</parameter>
-        <parameter name="x">800</parameter>
+<node class="filedump" name="dump1">
+        <parameter name="filename">dump1_.png</parameter>
+        <parameter name="sequence">4</parameter>      
 </node>
 
-
+<node class="pngencoder" name="png0">
+	<parameter name="level">90</parameter>
+</node>
+<node class="pngencoder" name="png1">
+	<parameter name="level">90</parameter>
+</node>
 <node class="mvtp_convert" name="conv0">
         <parameter name="format">@fmt</parameter>
 </node>
@@ -47,10 +49,9 @@
         <parameter name="format">@fmt</parameter>
 </node>
 
-
 <node class="mvtp_combine" name="comb0">
-<parameter name="fps_stats">10</parameter>
-<parameter name="debayer">@debayer</parameter>
+	<parameter name="fps_stats">2</parameter>
+	<parameter name="debayer">@debayer</parameter>
 </node>
 <node class="mvtp_combine" name="comb1">
  <parameter name="fps_stats">10</parameter>
@@ -68,7 +69,9 @@
 <link name="comb2" source="conv2:0" target="comb1:0"/>
 <link name="comb3" source="conv3:0" target="comb1:1"/>
 
-<link name="show0" source="comb0:0" target="render0:0"/>
-<link name="show1" source="comb1:0" target="render1:0"/>
+<link name="show0" source="comb0:0" target="png0:0"/>
+<link name="show1" source="comb1:0" target="png1:0"/>
+<link name="jpg0" source="png0:0" target="dump0:0"/>
+<link name="jpg1" source="png1:0" target="dump1:0"/>
 
 </app>
