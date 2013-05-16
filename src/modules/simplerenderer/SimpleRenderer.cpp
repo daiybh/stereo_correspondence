@@ -51,12 +51,12 @@ core::pParameters SimpleRenderer::configure()
 	p->add_input_format(YURI_FMT_YUV422);
 	return p;
 }
-
-std::map<std::string,stereo::_type> SimpleRenderer::stereo_types = boost::assign::map_list_of<std::string,stereo::_type>
+namespace {
+std::map<std::string,stereo::_type> stereo_types = boost::assign::map_list_of<std::string,stereo::_type>
 	("none",stereo::none)
 	("anaglyph",stereo::anaglyph)
 	("quadbuffer",stereo::quadbuffer);
-
+}
 SimpleRenderer::SimpleRenderer(log::Log &log_,core::pwThreadBase parent, core::Parameters &parameters)
 	:BasicIOThread(log_,parent,1,0,"SimpleRenderer"),keep_aspect(false),
 	 flip_x(false),flip_y(false),flip_y_right(false),quality(1),vsync(false),gl(log),
@@ -305,6 +305,8 @@ bool SimpleRenderer::set_param(const core::Parameter &parameter)
 	} else if (parameter.name == "stereo_type") {
 	std::string stype = parameter.get<std::string>();
 		boost::algorithm::to_lower(stype);
+		log[log::info] << stereo_types.size();
+		log[log::info] << stereo_types["none"];
 		if (stereo_types.count(stype)) {
 			stereo_type = stereo_types[stype];
 		} else stereo_type = stereo::none;

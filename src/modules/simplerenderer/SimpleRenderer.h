@@ -69,7 +69,6 @@ protected:
 	stereo::_type stereo_type;
 	float stereo_correction;
 	bool swap_eyes;
-	static std::map<std::string,stereo::_type> stereo_types;
 };
 
 }
