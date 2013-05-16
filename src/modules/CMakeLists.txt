@@ -104,7 +104,9 @@ add_subdirectory(yuriconvert)
 
 IF(${CORE_X11})
 	add_subdirectory(simplerenderer)
+	add_subdirectory(fb_grab)
 ENDIF()
+
 IF(${SAGE_FOUND})
 	add_subdirectory(sage)
 ENDIF()
