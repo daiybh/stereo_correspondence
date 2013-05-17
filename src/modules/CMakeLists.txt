@@ -25,6 +25,7 @@ add_subdirectory(combine)
 add_subdirectory(split_frames)
 add_subdirectory(merge_frames)
 add_subdirectory(rotate)
+add_subdirectory(repack_audio)
 
 #################################################################
 # Let's check for libraries required 
