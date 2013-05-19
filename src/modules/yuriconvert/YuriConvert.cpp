@@ -42,6 +42,8 @@ yuri::ubyte_t YuriConvertor::rgb_y3[1<<24];
 yuri::ushort_t YuriConvertor::rgb_cr[1<<24];
 yuri::ushort_t YuriConvertor::rgb_cb[1<<24];
 
+yuri::ushort_t YuriConvertor::tenbits_reverse[1<<10];
+
 boost::mutex YuriConvertor::tables_lock;
 
 
