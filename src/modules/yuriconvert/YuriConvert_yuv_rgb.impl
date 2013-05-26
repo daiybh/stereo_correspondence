@@ -1,0 +1,409 @@
+/* ***************************************************************************
+ * 					Helpers
+ *************************************************************************** */
+
+template<size_t wr, size_t wb>
+struct colorimetry_traits {
+	static inline double Wr() { return static_cast<double>(wr)/10000.0; }
+	static inline double Wb() { return static_cast<double>(wb)/10000.0; }
+	static inline double Wg() { return 1.0 - Wr() - Wb(); }
+	static inline double Kb() { return 0.5 / (1.0 - Wb()); }
+	static inline double Kr() { return 0.5 / (1.0 - Wr()); }
+	static inline double WbKbWg() { return  Wb()/Kb()/Wg(); }
+	static inline double WrKrWg() { return  Wr()/Kr()/Wg(); }
+	
+};
+
+template<template <class, bool> class func, class colorimetry>
+void convert_rgb_yuv_dispatch(plane_t::const_iterator src, plane_t::iterator dest, size_t width, bool full_range)
+{
+	if (full_range) func<colorimetry, true>()(src, dest, width);
+	else func<colorimetry, false>()(src, dest, width);
+}
+template<template <class, bool> class func>
+void convert_rgb_yuv_dispatch(plane_t::const_iterator src, plane_t::iterator dest, size_t width, colorimetry_t col, bool full_range)
+{
+	switch (col) {
+		case YURI_COLORIMETRY_REC601: 
+			convert_rgb_yuv_dispatch<func, colorimetry_traits<Wr_601, Wb_601> >(src, dest, width, full_range);
+			break;
+		case YURI_COLORIMETRY_REC2020: 
+			convert_rgb_yuv_dispatch<func, colorimetry_traits<Wr_2020, Wb_2020> >(src, dest, width, full_range);
+			break;
+		case YURI_COLORIMETRY_REC709:
+		default:
+			convert_rgb_yuv_dispatch<func, colorimetry_traits<Wr_709, Wb_709> >(src, dest, width, full_range);
+			break;
+	}
+}
+
+template<bool full_range>
+ubyte_t convert_y_from_double(double value);
+
+template<>
+ubyte_t convert_y_from_double<true>(double value)
+{
+	return static_cast<ubyte_t>(value*255.0);
+}
+template<>
+ubyte_t convert_y_from_double<false>(double value)
+{
+	return static_cast<ubyte_t>(value*219.0)+16;
+}
+
+template<bool full_range>
+ubyte_t convert_c_from_double(double value);
+
+template<>
+ubyte_t convert_c_from_double<true>(double value)
+{
+	return static_cast<ubyte_t>(255.0 * std::min(std::max((value+0.5),0.0),1.0));
+}
+template<>
+ubyte_t convert_c_from_double<false>(double value)
+{
+	return static_cast<ubyte_t>(224.0 * std::min(std::max((value+0.5),0.0),1.0))+16;
+}
+
+
+template<bool full_range>
+ubyte_t convert_rgb_from_double(double value);
+
+template<>
+ubyte_t convert_rgb_from_double<true>(double value)
+{
+	return static_cast<ubyte_t>(std::min(std::max(value,0.0),1.0)*255.0);
+}
+template<>
+ubyte_t convert_rgb_from_double<false>(double value)
+{
+	return static_cast<ubyte_t>(std::min(std::max(value*255.0/235.0,0.0),1.0)*255.0);
+}
+
+template<class colorimetry, bool full_range>
+void set_yuv444_from_rgb(plane_t::iterator& dest, const double r, const double g, const double b)
+{
+	const double y = 	colorimetry::Wr() * r + 
+						colorimetry::Wg() * g +
+						colorimetry::Wb() * b;
+	*dest++ =  	convert_y_from_double<full_range>(y);
+	*dest++ =   convert_c_from_double<full_range>(
+					(b - y) * colorimetry::Kb());
+	*dest++ =   convert_c_from_double<full_range>(
+					(r - y) * colorimetry::Kr());
+}
+
+template<class colorimetry, bool full_range>
+void set_yuv422_from_rgb(plane_t::iterator& dest, const double r, const double g, const double b,
+		const double r2, const double g2, const double b2)
+{
+	const double y = 	colorimetry::Wr() * r + 
+						colorimetry::Wg() * g +
+						colorimetry::Wb() * b;
+	const double u = (b - y) * colorimetry::Kb();
+	const double v = (r - y) * colorimetry::Kr();
+	const double y2 = 	colorimetry::Wr() * r2 + 
+						colorimetry::Wg() * g2 +
+						colorimetry::Wb() * b2;
+	const double u2 = (b2 - y2) * colorimetry::Kb();
+	const double v2 = (r2 - y2) * colorimetry::Kr();
+	*dest++ =  	convert_y_from_double<full_range>(y);
+	*dest++ =   convert_c_from_double<full_range>((u+u2)/2);
+	*dest++ =	convert_y_from_double<full_range>(y2);
+	*dest++ =   convert_c_from_double<full_range>((v+v2)/2);
+}
+
+template<class colorimetry, bool full_range>
+void set_rgb_from_yuv(plane_t::iterator& dest, const double y, const double u, const double v)
+{
+	*dest++ =  	convert_rgb_from_double<full_range>(y + v / colorimetry::Kr());
+	*dest++ =   convert_rgb_from_double<full_range>(y  - v*colorimetry::WrKrWg() - u*colorimetry::WbKbWg());
+	*dest++ =   convert_rgb_from_double<full_range>(y + u / colorimetry::Kb());				
+}
+
+/* ***************************************************************************
+ * 					Conversions
+ *************************************************************************** */
+
+// This has to be functor in order to use dispatch templates above.
+template<class colorimetry, bool full_range>
+struct convert_line_rgb_yuv444{
+	void operator()
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		const double r = (*src++)/255.0;
+		const double g = (*src++)/255.0;
+		const double b = (*src++)/255.0;
+		set_yuv444_from_rgb<colorimetry, full_range>(dest, r, g, b);			
+	}
+}
+};
+
+
+template<>
+void convert_line<YURI_FMT_RGB24, YURI_FMT_YUV444>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_rgb_yuv444>(src, dest, width, col, full_range);
+}
+
+template<class colorimetry, bool full_range>
+struct convert_line_rgba_yuv444{
+	void operator()
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		const double r = (*src++)/255.0;
+		const double g = (*src++)/255.0;
+		const double b = (*src++)/255.0;
+		src++;
+		set_yuv444_from_rgb<colorimetry, full_range>(dest, r, g, b);				
+	}
+}
+};
+
+template<>
+void convert_line<YURI_FMT_RGBA, YURI_FMT_YUV444>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_rgba_yuv444>(src, dest, width, col, full_range);
+}
+
+template<class colorimetry, bool full_range>
+struct convert_line_bgr_yuv444{
+	void operator()
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		const double b = (*src++)/255.0;
+		const double g = (*src++)/255.0;
+		const double r = (*src++)/255.0;
+		set_yuv444_from_rgb<colorimetry, full_range>(dest, r, g, b);				
+	}
+}
+};
+
+template<>
+void convert_line<YURI_FMT_BGR, YURI_FMT_YUV444>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_bgr_yuv444>(src, dest, width, col, full_range);
+}
+
+template<class colorimetry, bool full_range>
+struct convert_line_bgra_yuv444{
+	void operator()
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		const double b = (*src++)/255.0;
+		const double g = (*src++)/255.0;
+		const double r = (*src++)/255.0;
+		src++;
+		set_yuv444_from_rgb<colorimetry, full_range>(dest, r, g, b);				
+	}
+}
+};
+
+template<>
+void convert_line<YURI_FMT_BGRA, YURI_FMT_YUV444>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_bgra_yuv444>(src, dest, width, col, full_range);
+}
+
+// YUV422
+template<class colorimetry, bool full_range>
+struct convert_line_rgb_yuv422{
+	void operator()
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width/2; ++pixel) {
+		const double r = (*src++)/255.0;
+		const double g = (*src++)/255.0;
+		const double b = (*src++)/255.0;
+		const double r2 = (*src++)/255.0;
+		const double g2 = (*src++)/255.0;
+		const double b2 = (*src++)/255.0;
+		set_yuv422_from_rgb<colorimetry, full_range>(dest, r, g, b, r2, g2, b2);			
+	}
+}
+};
+
+
+template<>
+void convert_line<YURI_FMT_RGB24, YURI_FMT_YUV422>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_rgb_yuv422>(src, dest, width, col, full_range);
+}
+
+template<class colorimetry, bool full_range>
+struct convert_line_rgba_yuv422{
+	void operator()
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width/2; ++pixel) {
+		const double r = (*src++)/255.0;
+		const double g = (*src++)/255.0;
+		const double b = (*src++)/255.0;
+		src++;
+		const double r2 = (*src++)/255.0;
+		const double g2 = (*src++)/255.0;
+		const double b2 = (*src++)/255.0;
+		src++;
+		set_yuv422_from_rgb<colorimetry, full_range>(dest, r, g, b, r2, g2, b2);				
+	}
+}
+};
+
+template<>
+void convert_line<YURI_FMT_RGBA, YURI_FMT_YUV422>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_rgba_yuv422>(src, dest, width, col, full_range);
+}
+
+template<class colorimetry, bool full_range>
+struct convert_line_bgr_yuv422{
+	void operator()
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width/2; ++pixel) {
+		const double b = (*src++)/255.0;
+		const double g = (*src++)/255.0;
+		const double r = (*src++)/255.0;
+		const double b2 = (*src++)/255.0;
+		const double g2 = (*src++)/255.0;
+		const double r2 = (*src++)/255.0;
+		set_yuv422_from_rgb<colorimetry, full_range>(dest, r, g, b, r2, g2, b2);				
+	}
+}
+};
+
+template<>
+void convert_line<YURI_FMT_BGR, YURI_FMT_YUV422>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_bgr_yuv422>(src, dest, width, col, full_range);
+}
+
+template<class colorimetry, bool full_range>
+struct convert_line_bgra_yuv422{
+	void operator()
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width/2; ++pixel) {
+		const double b = (*src++)/255.0;
+		const double g = (*src++)/255.0;
+		const double r = (*src++)/255.0;
+		src++;
+		const double b2 = (*src++)/255.0;
+		const double g2 = (*src++)/255.0;
+		const double r2 = (*src++)/255.0;
+		src++;
+		set_yuv422_from_rgb<colorimetry, full_range>(dest, r, g, b, r2, g2, b2);
+				
+	}
+}
+};
+
+template<>
+void convert_line<YURI_FMT_BGRA, YURI_FMT_YUV422>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_bgra_yuv422>(src, dest, width, col, full_range);
+}
+
+
+template<class colorimetry, bool full_range>
+struct convert_line_yuv444_rgb{
+	void operator()
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		const double y = (*src++)/255.0;
+		const double u = (*src++)/255.0 - 0.5;
+		const double v = (*src++)/255.0 - 0.5;
+		set_rgb_from_yuv<colorimetry, full_range>(dest, y, u, v);
+				
+	}
+}
+};
+
+template<>
+void convert_line<YURI_FMT_YUV444, YURI_FMT_RGB24>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_yuv444_rgb>(src, dest, width, col, full_range);
+}
+
+template<class colorimetry, bool full_range>
+struct convert_line_yuv422_rgb{
+	void operator()
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width/2; ++pixel) {
+		const double y = (*src++)/255.0;
+		const double u = (*src++)/255.0 - 0.5;
+		const double y2 = (*src++)/255.0;
+		const double v = (*src++)/255.0 - 0.5;
+		set_rgb_from_yuv<colorimetry, full_range>(dest, y, u, v);
+		set_rgb_from_yuv<colorimetry, full_range>(dest, y2, u, v);
+				
+	}
+}
+};
+
+template<>
+void convert_line<YURI_FMT_YUV422, YURI_FMT_RGB24>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_yuv422_rgb>(src, dest, width, col, full_range);
+}
+template<class colorimetry, bool full_range>
+struct convert_line_uyvy422_rgb{
+	void operator()
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width/2; ++pixel) {
+		const double u = (*src++)/255.0 - 0.5;
+		const double y = (*src++)/255.0;
+		const double v = (*src++)/255.0 - 0.5;
+		const double y2 = (*src++)/255.0;
+		set_rgb_from_yuv<colorimetry, full_range>(dest, y, u, v);
+		set_rgb_from_yuv<colorimetry, full_range>(dest, y2, u, v);
+				
+	}
+}
+};
+
+template<>
+void convert_line<YURI_FMT_UYVY422, YURI_FMT_RGB24>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_uyvy422_rgb>(src, dest, width, col, full_range);
+}

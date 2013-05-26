@@ -1,0 +1,273 @@
+/* ***************************************************************************
+ * 					RGB conversions
+ *************************************************************************** */
+
+void rgb_rgba(plane_t::const_iterator src, plane_t::iterator dest, size_t width, ubyte_t alpha)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*src++;
+		*dest++=*src++;
+		*dest++=*src++;
+		*dest++=alpha;
+	}
+}
+template<>
+void convert_line<YURI_FMT_RGB24, YURI_FMT_RGBA>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	rgb_rgba(src, dest, width, 255);
+}
+template<>
+void convert_line<YURI_FMT_BGR, YURI_FMT_BGRA>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	rgb_rgba(src, dest, width, 255);
+}
+
+void rgba_rgb(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*src++;
+		*dest++=*src++;
+		*dest++=*src++;
+		src++;
+	}
+}
+template<>
+void convert_line<YURI_FMT_RGBA, YURI_FMT_RGB24>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	rgba_rgb(src, dest, width);
+}
+template<>
+void convert_line<YURI_FMT_BGRA, YURI_FMT_BGR>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	rgba_rgb(src, dest, width);
+}
+
+void rgba_bgra(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*(src+2);
+		*dest++=*(src+1);
+		*dest++=*(src+0);
+		*dest++=*(src+3);
+		src+=4;
+	}
+}
+template<>
+void convert_line<YURI_FMT_BGRA, YURI_FMT_RGBA>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	rgba_bgra(src, dest, width);
+}
+template<>
+void convert_line<YURI_FMT_RGBA, YURI_FMT_BGRA>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	rgba_bgra(src, dest, width);
+}
+void rgb_bgra (plane_t::const_iterator src, plane_t::iterator dest, size_t width, ubyte_t alpha)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*(src+2);
+		*dest++=*(src+1);
+		*dest++=*(src+0);
+		*dest++=alpha;
+		src+=3;
+	}
+}
+
+template<>
+void convert_line<YURI_FMT_RGB24, YURI_FMT_BGRA>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	rgb_bgra(src, dest, width, 255);
+}
+template<>
+void convert_line<YURI_FMT_BGR, YURI_FMT_RGBA>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	rgb_bgra(src, dest, width, 255);
+}
+void bgra_rgb (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*(src+2);
+		*dest++=*(src+1);
+		*dest++=*(src+0);
+		src+=4;
+	}
+}
+
+template<>
+void convert_line<YURI_FMT_BGRA, YURI_FMT_RGB24>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	bgra_rgb(src, dest, width);
+}
+template<>
+void convert_line<YURI_FMT_RGBA, YURI_FMT_BGR>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	bgra_rgb(src, dest, width);
+}
+void bgr_rgb (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*(src+2);
+		*dest++=*(src+1);
+		*dest++=*(src+0);
+		src+=3;
+	}
+}
+
+template<>
+void convert_line<YURI_FMT_BGR, YURI_FMT_RGB24>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	bgr_rgb(src, dest, width);
+}
+template<>
+void convert_line<YURI_FMT_RGB24, YURI_FMT_BGR>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	bgr_rgb(src, dest, width);
+}
+
+/* ***************************************************************************
+ * 					YUV conversions
+ *************************************************************************** */
+#include "YuriConvert_yuv422.impl"
+
+
+
+template<>
+void convert_line<YURI_FMT_YUV422, YURI_FMT_YUV444>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	ubyte_t y, u, v;
+	for (size_t pixel = 0; pixel < width/2; ++pixel) {
+		*dest++=*src++;
+		u=*dest++=*src++;
+		y=*src++;
+		v=*src++;
+		*dest++=v;
+		*dest++=y;
+		*dest++=u;
+		*dest++=v;
+	}
+}
+template<>
+void convert_line<YURI_FMT_YUV444, YURI_FMT_YUV422>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width/2; ++pixel) {
+		*dest++=*src++;
+		*dest++=*src++;
+		src++;
+		*dest++=*src++;
+		src++;
+		*dest++=*src++;
+	}
+}
+
+/* ***************************************************************************
+ * 					YUV - RGB conversions
+ *************************************************************************** */
+#include "YuriConvert_yuv_rgb.impl"
+
+/* ***************************************************************************
+ * 					V210 conversions
+ *************************************************************************** */
+
+template<>
+size_t get_linesize<YURI_FMT_V210>(size_t width)
+{
+	return 8 * (width / 3) + 4 * (width % 3);
+}
+
+template<>
+core::pBasicFrame allocate_frame<YURI_FMT_V210>(size_t width, size_t height)
+{
+	core::pBasicFrame frame = core::BasicIOThread::allocate_empty_frame(get_linesize<YURI_FMT_V210>(width)*height,true);
+	frame->set_parameters(YURI_FMT_V210, width, height);
+	return frame;
+}
+#define V210_B0(x) (((x)&0x000003FF)>> 0)
+#define V210_B1(x) (((x)&0x000FFC00)>>10)
+#define V210_B2(x) (((x)&0x3FF00000)>>20)
+// Full range
+template<>
+void convert_line<YURI_FMT_V210, YURI_FMT_YUV422>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	const uint32_t* src_pixels = reinterpret_cast<const uint32_t*>(src);
+	for (size_t pixel = 0; pixel < width/3; ++pixel) {
+		*dest++=V210_B0(*src_pixels)>>2;
+		*dest++=V210_B1(*src_pixels)>>2;
+		*dest++=V210_B2(*src_pixels)>>2;
+		src_pixels++;
+		*dest++=V210_B0(*src_pixels)>>2;
+		*dest++=V210_B1(*src_pixels)>>2;
+		*dest++=V210_B2(*src_pixels)>>2;
+		src_pixels++;
+	}
+}
+
+
+// Full range
+template<>
+void convert_line<YURI_FMT_YUV422, YURI_FMT_V210>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	uint32_t* dest_pixels = reinterpret_cast<uint32_t*>(dest);
+	for (size_t pixel = 0; pixel < width/3; ++pixel) {
+		*dest_pixels++=(  (*(src+0))<<2 ) | (  (*(src+1))<<12 ) | (  (*(src+2))<<22 ); 
+		src+=3;
+		*dest_pixels++=(  (*(src+0))<<2 ) | (  (*(src+1))<<12 ) | (  (*(src+2))<<22 );
+		src+=3;
+	}
+}
+
+/* ***************************************************************************
+ * 					Default template definitions
+ *************************************************************************** */
+
+template<format_t fmt_in, format_t fmt_out>
+void convert_line(plane_t::const_iterator src, plane_t::iterator dest, size_t width, const YuriConvertor&)
+{
+	return convert_line<fmt_in, fmt_out>(src, dest, width);
+}
+
+template<format_t fmt>
+core::pBasicFrame allocate_frame(size_t width, size_t height)
+{
+	return core::BasicIOThread::allocate_empty_frame(fmt, width, height, true);
+}
+template<format_t fmt> size_t get_linesize(size_t width)
+{
+	FormatInfo_t fi_in			= core::BasicPipe::get_format_info(fmt);
+	assert (fi_in && !(fi_in->bpp % 8));
+	return (width * fi_in->bpp) / 8;
+}
+
+template<format_t fmt_in, format_t fmt_out>
+core::pBasicFrame convert_formats(const core::pBasicFrame& frame, const YuriConvertor& conv)
+{
+	const size_t width 			= frame->get_width();
+	const size_t height			= frame->get_height();
+	const size_t linesize_in 	= get_linesize<fmt_in>(width);
+	const size_t linesize_out 	= get_linesize<fmt_out>(width);
+	core::pBasicFrame outframe 	= allocate_frame<fmt_out>(width, height);
+	plane_t::const_iterator src	= PLANE_DATA(frame,0).begin();
+	plane_t::iterator dest		= PLANE_DATA(outframe,0).begin();
+	for (size_t line = 0; line < height; ++line) {
+		convert_line<fmt_in, fmt_out>(src, dest, width, conv);
+		src+=linesize_in;
+		dest+=linesize_out;
+	}
+	return outframe;
+}
+
