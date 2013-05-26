@@ -26,7 +26,7 @@ IO_THREAD_GENERATOR(YuriConvertor)
 /* ***************************************************************************
   Adding a new converter:
 
-  For most cases, it should be enough to specialize template convert_line
+  For most cases, it should be enough to specialize function template convert_line
   and add ADD_CONVERSION to converters below
 
   in special cases you may need to specialize get_linesize or allocate_frame
@@ -95,8 +95,11 @@ namespace {
 		ADD_CONVERSION(YURI_FMT_VYUY422, 	YURI_FMT_YUV422)
 		ADD_CONVERSION(YURI_FMT_YUV422,		YURI_FMT_VYUY422)
 		ADD_CONVERSION(YURI_FMT_YVYU422,	YURI_FMT_UYVY422)
+
 		ADD_CONVERSION(YURI_FMT_YUV422, 	YURI_FMT_YUV444)
 		ADD_CONVERSION(YURI_FMT_YUV444, 	YURI_FMT_YUV422)
+		ADD_CONVERSION(YURI_FMT_UYVY422, 	YURI_FMT_YUV444)
+		ADD_CONVERSION(YURI_FMT_YUV444, 	YURI_FMT_UYVY422)
 
 		ADD_CONVERSION(YURI_FMT_RGB24, 		YURI_FMT_YUV444)
 		ADD_CONVERSION(YURI_FMT_RGBA, 		YURI_FMT_YUV444)
@@ -113,7 +116,9 @@ namespace {
 		ADD_CONVERSION(YURI_FMT_UYVY422,	YURI_FMT_RGB24)
 
 		ADD_CONVERSION(YURI_FMT_V210, 		YURI_FMT_YUV422)
+		ADD_CONVERSION(YURI_FMT_V210, 		YURI_FMT_UYVY422)
 		ADD_CONVERSION(YURI_FMT_YUV422,		YURI_FMT_V210)
+		ADD_CONVERSION(YURI_FMT_UYVY422,	YURI_FMT_V210)
 
 	;
 

@@ -173,6 +173,39 @@ void convert_line<YURI_FMT_YUV444, YURI_FMT_YUV422>
 	}
 }
 
+template<>
+void convert_line<YURI_FMT_UYVY422, YURI_FMT_YUV444>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	ubyte_t y, u, v;
+	for (size_t pixel = 0; pixel < width/2; ++pixel) {
+		u=*src++;
+		*dest++=*src++;
+		*dest++=u;
+		v=*src++;
+		y=*src++;
+		*dest++=v;
+		*dest++=y;
+		*dest++=u;
+		*dest++=v;
+	}
+}
+template<>
+void convert_line<YURI_FMT_YUV444, YURI_FMT_UYVY422>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	ubyte_t y;
+	for (size_t pixel = 0; pixel < width/2; ++pixel) {
+		y=*src++;
+		*dest++=*src++;
+		*dest++=y;
+		src++;
+		y=*src++;
+		src++;
+		*dest++=*src++;
+		*dest++=y;
+	}
+}
 /* ***************************************************************************
  * 					YUV - RGB conversions
  *************************************************************************** */
@@ -198,9 +231,26 @@ core::pBasicFrame allocate_frame<YURI_FMT_V210>(size_t width, size_t height)
 #define V210_B0(x) (((x)&0x000003FF)>> 0)
 #define V210_B1(x) (((x)&0x000FFC00)>>10)
 #define V210_B2(x) (((x)&0x3FF00000)>>20)
+
 // Full range
 template<>
 void convert_line<YURI_FMT_V210, YURI_FMT_YUV422>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	const uint32_t* src_pixels = reinterpret_cast<const uint32_t*>(src);
+	for (size_t pixel = 0; pixel < width/3; ++pixel) {
+		*dest++=V210_B1(*src_pixels)>>2;
+		*dest++=V210_B0(*src_pixels)>>2;
+		*dest++=V210_B0(*(src_pixels+1))>>2;
+		*dest++=V210_B2(*src_pixels)>>2;
+		*dest++=V210_B2(*(src_pixels+1))>>2;
+		*dest++=V210_B1(*(src_pixels+1))>>2;
+		src_pixels+=2;
+	}
+}
+
+template<>
+void convert_line<YURI_FMT_V210, YURI_FMT_UYVY422>
 (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 {
 	const uint32_t* src_pixels = reinterpret_cast<const uint32_t*>(src);
@@ -215,11 +265,21 @@ void convert_line<YURI_FMT_V210, YURI_FMT_YUV422>
 		src_pixels++;
 	}
 }
-
-
 // Full range
 template<>
 void convert_line<YURI_FMT_YUV422, YURI_FMT_V210>
+(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+{
+	uint32_t* dest_pixels = reinterpret_cast<uint32_t*>(dest);
+	for (size_t pixel = 0; pixel < width/3; ++pixel) {
+		*dest_pixels++=(  (*(src+1))<<2 ) | (  (*(src+0))<<12 ) | (  (*(src+3))<<22 ); 
+		*dest_pixels++=(  (*(src+2))<<2 ) | (  (*(src+5))<<12 ) | (  (*(src+4))<<22 );
+		src+=6;
+	}
+}
+// Full range
+template<>
+void convert_line<YURI_FMT_UYVY422, YURI_FMT_V210>
 (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 {
 	uint32_t* dest_pixels = reinterpret_cast<uint32_t*>(dest);
