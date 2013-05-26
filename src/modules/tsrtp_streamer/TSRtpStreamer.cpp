@@ -88,7 +88,7 @@ bool TSRtpStreamer::step()
 		yuri::uint_t ts = (microsec_clock::local_time()-first_packet).total_microseconds()*90/1000;
 		//log[log::debug] << "ts: " << ts << std::endl;
 		p->timestamp = htonl(ts);
-		*((yuri::uint_t*)p->bytes) = htonl(hdr|pseq++);
+		*reinterpret_cast<yuri::uint_t*>(p->bytes) = htonl(hdr|pseq++);
 
 		/*p->bytes[2] = (pseq >> 8)&0xFF;
 		p->bytes[3] = pseq++ & 0xFF;*/

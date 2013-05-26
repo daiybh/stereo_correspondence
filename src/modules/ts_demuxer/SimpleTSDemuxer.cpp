@@ -122,7 +122,7 @@ bool SimpleTSDemuxer::process_packet(yuri::ubyte_t *dataraw)
 	char sync = data[0];
 	bool start = static_cast<bool>(data[1]&0x40);
 	yuri::size_t skip_bytes = 4;
-	yuri::size_t seq /*YURI_UNUSED */= static_cast<yuri::size_t>(data[3]&0xF);
+	//yuri::size_t seq /*YURI_UNUSED */= static_cast<yuri::size_t>(data[3]&0xF);
 	if (sync != 0x47) {
 		log[log::debug] << "Sync not found! skipping frame\n";
 		return true;
@@ -140,13 +140,13 @@ bool SimpleTSDemuxer::process_packet(yuri::ubyte_t *dataraw)
 		log[log::info] << "Found adaptation field, skipping " << skip_bytes << "\n";
 		}
 	if (skip_bytes >= 188) return true;
-	bool rai = false;
+/*	bool rai = false;
 	//log[log::debug] << "Adaptation " << adaptation << endl;
 	if (adaptation) {
 		rai = static_cast<bool>(data[6]&0x40);
 			//log[log::debug] << "Adaptation: rai: " << static_cast<bool>(data[6]&0x40)
 				//<< ", start: " << start << endl;
-	}
+	}*/
 	if (start) {
 		log[log::debug] << "pts: " << pts << ", start: " << start << "\n";
 	}

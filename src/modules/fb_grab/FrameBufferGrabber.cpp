@@ -385,8 +385,8 @@ bool FrameBufferGrabber::do_add_grabbing_context(GLXContext context)
 	log[log::info] << "Found new context "<< std::hex << context << std::dec << ". Assigning to index " << no_contexts;
 	contexts[context].index=no_contexts;
 	Display *dpy = glXGetCurrentDisplay();
-	int screen, connection;
-	connection = XConnectionNumber(dpy);
+	int screen;/*, connection;
+	connection = XConnectionNumber(dpy);*/
 	glXQueryContext(dpy,context,GLX_SCREEN,&screen);
 	/*log[info] << "Setting up viewport " << width << "x" << height << " @ " << x
 							<< "x" << y << ". Context: " << hex << context

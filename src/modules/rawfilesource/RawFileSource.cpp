@@ -212,7 +212,7 @@ bool RawFileSource::set_param(const core::Parameter &parameter)
 	} else if (parameter.name == "loop") {
 		loop=parameter.get<bool>();
 	} else if (parameter.name == "block") {
-		block=parameter.get<yuri::size_t>();
+		block=parameter.get<usize_t>();
 	} else return BasicIOThread::set_param(parameter);
 	return true;
 }

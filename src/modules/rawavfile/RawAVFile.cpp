@@ -210,7 +210,7 @@ void RawAVFile::run()
 			if (format_out_ == YURI_FMT_NONE) continue;
 			frames_[idx] = allocate_empty_frame(format_out_,width, height, true);
 			FormatInfo_t fi = core::BasicPipe::get_format_info(format_out_);
-			for (int i=0;i<4;++i) {
+			for (size_t i=0;i<4;++i) {
 				if ((av_frame->linesize[i] == 0) || (!av_frame->data[i])) break;
 				if (i >= frames_[idx]->get_planes_count()) {
 					log[log::warning] << "BUG? Inconsistent number of planes";
@@ -220,7 +220,7 @@ void RawAVFile::run()
 				size_t lines = height/fi->plane_y_subs[i];
 				assert(line_size <= static_cast<yuri::size_t>(av_frame->linesize[i]));
 				//assert(av_frame->linesize[i]*height <= PLANE_SIZE(frame,i));
-				for (int l=0;l<lines;++l) {
+				for (size_t l=0;l<lines;++l) {
 					std::copy(av_frame->data[i]+l*av_frame->linesize[i],
 								av_frame->data[i]+l*av_frame->linesize[i]+line_size,
 								PLANE_RAW_DATA(frames_[idx],i)+l*line_size);

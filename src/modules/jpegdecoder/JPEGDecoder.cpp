@@ -146,7 +146,7 @@ bool JPEGDecoder::step() {
 			arrays_pointers[p]=&(row_pointers[p][0]);
 		}
 
-		yuri::size_t completed = 0, processed=0;
+		yuri::size_t /*completed = 0,*/ processed=0;
 		//for (int i=0;i<height;++i) {
 //		JSAMPARRAY &ptrs = row_pointers[0][0];
 		while (cinfo.output_scanline < cinfo.image_height) {

@@ -44,7 +44,7 @@ void FpsFixer::run()
 	BasicIOThread::print_id();
 	core::pBasicFrame frame;
 	time_duration time_delta = microseconds(fps_nom*1e6/fps);
-	yuri::size_t act_index = 0;
+	//yuri::size_t act_index = 0;
 	ptime next_time = microsec_clock::local_time();
 	start_time = next_time;
 	time_duration offset = next_time.time_of_day();
