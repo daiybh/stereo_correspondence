@@ -97,6 +97,8 @@ std::map<yuri::format_t, const FormatInfo_t> BasicPipe::formats=map_list_of<yuri
 		(YURI_FMT_YUV422_PLANAR,FormatInfo::raw_format("YUV Planar (YUYV) 4:2:2 16bit", list_of<std::string>("YUV422P"), false, 16, list_of(8)(8)(8),list_of("Y")("U")("V"),list_of(1)(2)(2),list_of(1)(1)(1)))
 		(YURI_FMT_YUV444_PLANAR,FormatInfo::raw_format("YUV Planar (YUYV) 4:4:4 24bit", list_of<std::string>("YUV444P"), false, 16, list_of(8)(8)(8),list_of("Y")("U")("V"),list_of(1)(1)(1),list_of(1)(1)(1)))
 		(YURI_FMT_UYVY422, 		FormatInfo::raw_format("YUV (UYVY) 4:2:2 16bit", list_of<std::string>("UYVY422")("UYVY"), false, 16, list_of(8)(8)(8),list_of("UYVY"),list_of(1),list_of(1)))
+		(YURI_FMT_YVYU422, 		FormatInfo::raw_format("YUV (YVYU) 4:2:2 16bit", list_of<std::string>("YVYU422")("YVYU"), false, 16, list_of(8)(8)(8),list_of("YVYU"),list_of(1),list_of(1)))
+		(YURI_FMT_VYUY422, 		FormatInfo::raw_format("YUV (VYUY) 4:2:2 16bit", list_of<std::string>("VYUY422")("VYUY"), false, 16, list_of(8)(8)(8),list_of("VYUY"),list_of(1),list_of(1)))
 
 		(YURI_FMT_V210_SDI,		FormatInfo::raw_format("V210 SDI", list_of<std::string>("v210_sdi")("sdi"), true, 20, list_of(10)(10),list_of("YUYV"),list_of(1),list_of(1)))
 		//////////////////      10bit formats        //////////////////
