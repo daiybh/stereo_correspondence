@@ -27,6 +27,8 @@ add_subdirectory(merge_frames)
 add_subdirectory(rotate)
 add_subdirectory(repack_audio)
 
+add_subdirectory(color_key)
+
 #################################################################
 # Let's check for libraries required 
 # for optional modules, respecting YURI_DISABLE_*
