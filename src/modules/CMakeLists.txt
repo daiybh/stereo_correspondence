@@ -28,6 +28,7 @@ add_subdirectory(rotate)
 add_subdirectory(repack_audio)
 
 add_subdirectory(color_key)
+add_subdirectory(overlay)
 
 #################################################################
 # Let's check for libraries required 
