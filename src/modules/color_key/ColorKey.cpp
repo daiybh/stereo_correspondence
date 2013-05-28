@@ -27,7 +27,7 @@ core::pParameters ColorKey::configure()
 	(*p)["b"]["B value of the key color"]=0;
 	(*p)["delta"]["Threshold for determining same colors"]=90;
 	(*p)["delta2"]["Threshold for determining similar colors"]=30;
-	(*p)["diff"]["Method for computing differences (linear, quadratic)"]=90;
+	(*p)["diff"]["Method for computing differences (linear, quadratic)"]="linear";
 	return p;
 }
 
@@ -101,6 +101,34 @@ static ushort_t difference(plane_t::const_iterator data, ubyte_t r, ubyte_t g, u
 }
 };
 template<class diff_method>
+struct simple_kernel<YURI_FMT_RGBA, diff_method> {
+static void eval(plane_t::const_iterator& src_pix, plane_t::iterator& dest_pix, ushort_t total, ushort_t delta, ushort_t delta2)
+{
+	if (total < delta) {
+		*dest_pix++=255;
+		*dest_pix++=255;
+		*dest_pix++=255;
+		*dest_pix++=0;
+		src_pix+=4;
+	} else if (total < (delta + delta2)) {
+		const double a = static_cast<double>(total - delta)/static_cast<double>(delta2);
+		*dest_pix++=*src_pix++;
+		*dest_pix++=*src_pix++;
+		*dest_pix++=*src_pix++;
+		*dest_pix++=static_cast<ubyte_t>(*src_pix++*a);
+	} else {
+		*dest_pix++=*src_pix++;
+		*dest_pix++=*src_pix++;
+		*dest_pix++=*src_pix++;
+		*dest_pix++=*src_pix++;
+	}
+}
+static ushort_t difference(plane_t::const_iterator data, ubyte_t r, ubyte_t g, ubyte_t b)
+{
+	return diff_method::combine(diff(*(data+0),r), diff(*(data+1),g), diff(*(data+2),b));
+}
+};
+template<class diff_method>
 struct simple_kernel<YURI_FMT_BGR, diff_method>:
 public simple_kernel<YURI_FMT_RGB, diff_method>{
 
@@ -109,8 +137,17 @@ static ushort_t difference(plane_t::const_iterator data, ubyte_t r, ubyte_t g, u
 	return diff_method::combine(diff(*(data+0),b), diff(*(data+1),g), diff(*(data+2),r));
 }
 };
-}
+template<class diff_method>
+struct simple_kernel<YURI_FMT_BGRA, diff_method>:
+public simple_kernel<YURI_FMT_RGBA, diff_method>{
 
+static ushort_t difference(plane_t::const_iterator data, ubyte_t r, ubyte_t g, ubyte_t b)
+{
+	return diff_method::combine(diff(*(data+0),b), diff(*(data+1),g), diff(*(data+2),r));
+}
+};
+
+}
 template<class kernel>
 core::pBasicFrame ColorKey::find_key(const core::pBasicFrame& frame)
 {
@@ -156,8 +193,12 @@ bool ColorKey::step()
 			case YURI_FMT_BGR:
 				outframe = dispatch_find_key<YURI_FMT_BGR>(frame);
 				break;
-//case YURI_FMT_RGBA:
-//				break;
+			case YURI_FMT_RGBA:
+				outframe = dispatch_find_key<YURI_FMT_RGBA>(frame);
+				break;
+			case YURI_FMT_BGRA:
+				outframe = dispatch_find_key<YURI_FMT_BGRA>(frame);
+				break;
 			default:
 				log[log::warning] << "Unsupported frame format";
 				return true;
