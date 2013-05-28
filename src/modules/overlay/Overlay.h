@@ -21,14 +21,16 @@ public:
 	IO_THREAD_GENERATOR_DECLARATION
 	static core::pParameters configure();
 	virtual ~Overlay();
+	template<class kernel>
+	core::pBasicFrame combine(const core::pBasicFrame& frame_0, const core::pBasicFrame& frame_1);
 private:
 	Overlay(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
 	virtual bool step();
 	virtual bool set_param(const core::Parameter& param);
 	core::pBasicFrame frame_0;
 	core::pBasicFrame frame_1;
-	size_t x_;
-	size_t y_;
+	ssize_t x_;
+	ssize_t y_;
 };
 
 } /* namespace overlay */
