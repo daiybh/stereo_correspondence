@@ -17,8 +17,8 @@ struct colorimetry_traits {
 template<template <class, bool> class func, class colorimetry>
 void convert_rgb_yuv_dispatch(plane_t::const_iterator src, plane_t::iterator dest, size_t width, bool full_range)
 {
-	if (full_range) func<colorimetry, true>()(src, dest, width);
-	else func<colorimetry, false>()(src, dest, width);
+	if (full_range) func<colorimetry, true>::eval(src, dest, width);
+	else func<colorimetry, false>::eval(src, dest, width);
 }
 template<template <class, bool> class func>
 void convert_rgb_yuv_dispatch(plane_t::const_iterator src, plane_t::iterator dest, size_t width, colorimetry_t col, bool full_range)
@@ -128,7 +128,7 @@ void set_rgb_from_yuv(plane_t::iterator& dest, const double y, const double u, c
 // This has to be functor in order to use dispatch templates above.
 template<class colorimetry, bool full_range>
 struct convert_line_rgb_yuv444{
-	void operator()
+static void eval
 (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width; ++pixel) {
@@ -152,7 +152,7 @@ void convert_line<YURI_FMT_RGB24, YURI_FMT_YUV444>
 
 template<class colorimetry, bool full_range>
 struct convert_line_rgba_yuv444{
-	void operator()
+static void eval
 (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width; ++pixel) {
@@ -176,7 +176,7 @@ void convert_line<YURI_FMT_RGBA, YURI_FMT_YUV444>
 
 template<class colorimetry, bool full_range>
 struct convert_line_bgr_yuv444{
-	void operator()
+static void eval
 (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width; ++pixel) {
@@ -199,7 +199,7 @@ void convert_line<YURI_FMT_BGR, YURI_FMT_YUV444>
 
 template<class colorimetry, bool full_range>
 struct convert_line_bgra_yuv444{
-	void operator()
+static void eval
 (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width; ++pixel) {
@@ -224,7 +224,7 @@ void convert_line<YURI_FMT_BGRA, YURI_FMT_YUV444>
 // YUV422
 template<class colorimetry, bool full_range>
 struct convert_line_rgb_yuv422{
-	void operator()
+static void eval
 (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width/2; ++pixel) {
@@ -251,7 +251,7 @@ void convert_line<YURI_FMT_RGB24, YURI_FMT_YUV422>
 
 template<class colorimetry, bool full_range>
 struct convert_line_rgba_yuv422{
-	void operator()
+static void eval
 (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width/2; ++pixel) {
@@ -279,7 +279,7 @@ void convert_line<YURI_FMT_RGBA, YURI_FMT_YUV422>
 
 template<class colorimetry, bool full_range>
 struct convert_line_bgr_yuv422{
-	void operator()
+static void eval
 (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width/2; ++pixel) {
@@ -305,7 +305,7 @@ void convert_line<YURI_FMT_BGR, YURI_FMT_YUV422>
 
 template<class colorimetry, bool full_range>
 struct convert_line_bgra_yuv422{
-	void operator()
+static void eval
 (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width/2; ++pixel) {
@@ -335,7 +335,7 @@ void convert_line<YURI_FMT_BGRA, YURI_FMT_YUV422>
 
 template<class colorimetry, bool full_range>
 struct convert_line_yuv444_rgb{
-	void operator()
+static void eval
 (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width; ++pixel) {
@@ -359,7 +359,7 @@ void convert_line<YURI_FMT_YUV444, YURI_FMT_RGB24>
 
 template<class colorimetry, bool full_range>
 struct convert_line_yuv422_rgb{
-	void operator()
+static void eval
 (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width/2; ++pixel) {
@@ -384,7 +384,7 @@ void convert_line<YURI_FMT_YUV422, YURI_FMT_RGB24>
 }
 template<class colorimetry, bool full_range>
 struct convert_line_uyvy422_rgb{
-	void operator()
+static void eval
 (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width/2; ++pixel) {
