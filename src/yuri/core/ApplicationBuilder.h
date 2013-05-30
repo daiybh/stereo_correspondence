@@ -70,7 +70,7 @@ public:
 	bool prepare_threads();
 	bool find_modules();
 	bool load_modules();
-protected:
+private:
 	bool process_module_dir(TiXmlElement &element);
 	bool process_module(TiXmlElement &element);
 	bool process_node(TiXmlElement &element);
@@ -95,11 +95,13 @@ protected:
 	void fetch_tids();
 	pParameters assign_variables(std::map<std::string, std::string> vars);
 	void parse_argv(std::vector<std::string> argv);
-protected:
+	bool set_param(const core::Parameter& parameter);
+private:
 	std::string filename;
+	std::string description;
 	TiXmlDocument doc;
 
-	bool document_loaded, threads_prepared;
+	bool document_loaded, threads_prepared, skip_verification;
 	boost::posix_time::time_duration run_limit;
 	boost::posix_time::ptime start_time;
 	pParameters default_pipe_param;

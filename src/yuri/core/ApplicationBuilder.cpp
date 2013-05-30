@@ -27,13 +27,14 @@ IO_THREAD_GENERATOR(ApplicationBuilder)
 
 pParameters ApplicationBuilder::configure()
 {
-	pParameters p (new Parameters());
+	pParameters p = core::BasicIOThread::configure();
 	(*p)["run_limit"]["Runtime limit in seconds"]=-1.0;
 	(*p)["config"]["Config file"]="";
 	(*p)["debug"]["Debug level (2 most verbose, -2 least verbose)"]="0";
 	(*p)["show_time"]["show timestamps"]=true;
 	(*p)["show_level"]["show debug levels"]=true;
 	(*p)["use_colors"]["Use color output"]=true;
+	(*p)["skip_verification"]["Skips verification for required variables. Should NOT be set unless you know what you're doing."]=false;
 	return p;
 }
 
@@ -46,7 +47,7 @@ ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent, Para
 	default_pipe_param=BasicPipe::configure();
 	params.merge(p);
 	init();
-	check_variables();
+	if (!skip_verification) check_variables();
 }
 
 ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::string filename,std::vector<std::string> argv)
@@ -61,7 +62,7 @@ ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::
 	params["config"]=filename;
 	init();
 	parse_argv(argv);
-	check_variables();
+	if (!skip_verification) check_variables();
 }
 
 ApplicationBuilder::~ApplicationBuilder()
@@ -513,8 +514,8 @@ pBasicIOThread ApplicationBuilder::get_node(std::string id)
 void ApplicationBuilder::init()
 {
 	log[log::info] << "Populating default module paths\n";
-		module_dirs.push_back("./modules/");
-		module_dirs.push_back("./bin/modules/");
+	module_dirs.push_back("./modules/");
+	module_dirs.push_back("./bin/modules/");
 	#ifdef INSTALL_PREFIX
 		module_dirs.push_back(INSTALL_PREFIX "/lib/yuri2/");
 	#else
@@ -529,16 +530,7 @@ void ApplicationBuilder::init()
 
 void ApplicationBuilder::init_local_params()
 {
-	int flags = 0;
-	if 		(params["debug"].get<int>() >   1) flags|=log::verbose_debug;
-	else if (params["debug"].get<int>() ==  1) flags|=log::debug;
-	else if (params["debug"].get<int>() ==  0) flags|=log::normal;
-	else if (params["debug"].get<int>() == -1) flags|=log::warning;
-	else if (params["debug"].get<int>() <  -1) flags|=log::error;
-	if 		(params["show_time"].get<bool>()) flags|=log::show_time;
-	if 		(params["show_level"].get<bool>()) flags|=log::show_level;
-	if 		(params["use_colors"].get<bool>()) flags|=log::use_colors;
-	log.set_flags(flags);
+	set_params(params);
 }
 
 void ApplicationBuilder::fetch_tids()
@@ -605,6 +597,23 @@ std::string arg;
 		}
 
 	}
+}
+bool ApplicationBuilder::set_param(const core::Parameter& parameter)
+{
+	using boost::iequals;
+	if (iequals(parameter.name, "show_time")) {
+		bool val = parameter.get<bool>();
+		log.set_flags((log.get_flags()&~log::show_time)|(val?log::show_time:0));
+	} else if (iequals(parameter.name, "show_level")) {
+		bool val = parameter.get<bool>();
+		log.set_flags((log.get_flags()&~log::show_level)|(val?log::show_level:0));
+	} else if (iequals(parameter.name, "use_colors")) {
+		bool val = parameter.get<bool>();
+		log.set_flags((log.get_flags()&~log::use_colors)|(val?log::use_colors:0));
+	} else if (iequals(parameter.name, "skip_verification")) {
+		skip_verification = parameter.get<bool>();
+	} else return core::BasicIOThread::set_param(parameter);
+	return true;
 }
 bool ApplicationBuilder::check_variables()
 {

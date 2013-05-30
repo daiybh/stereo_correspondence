@@ -243,7 +243,7 @@ bool RegisteredClass::load_module(std::string path)
 		std::cerr << "Module doesn't export libyuri2 interface\n";
 	}
 	if (valid && RegisteredClass::is_registered(get_name())) {
-		std::cerr << "Module already registered\n";
+		//std::cerr << "Module already registered\n";
 		valid = false;
 	}
 	if (!valid) {//	std::cout << "Not a valid module\n";
