@@ -253,11 +253,11 @@ int main(int argc, char**argv)
 	}
 	catch (exception::Exception &e) {
 		l[fatal] << "failed to initialize application: " << e.what() << std::endl;
-		exit(1);
+		return 1;
 	}
 	catch (std::exception &e) {
 		l[fatal] << "An error occurred during initialization: " << e.what() << std::endl;
-		exit(1);
+		return 1;
 	}
 
 	if (show_info) {

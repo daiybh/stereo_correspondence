@@ -193,8 +193,7 @@ Parameter& Parameters::operator[] (const std::string id)
 
 bool Parameters::is_defined(std::string id)
 {
-	if (params.find(id) == params.end()) return false;
-	return true;
+	return !(params.find(id) == params.end());
 }
 
 void Parameters::merge(Parameters &p)
