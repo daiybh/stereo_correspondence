@@ -166,6 +166,7 @@ int main(int argc, char**argv)
 	std::vector<std::string> arguments;
 	l.set_label("[YURI] ");
 	l.set_flags(info|show_level);
+	bool show_info = false;
 	options.add_options()
 		("help,h","print help")
 		("version,V","Show version of yuri and libyuri")
@@ -174,7 +175,8 @@ int main(int argc, char**argv)
 		("verbosity",po::value<int> (&verbosity)->default_value(0),"Verbosity level <-3, 4>")
 		("input-file,f",po::value<std::string>(&filename),"Input XML file")
 		("parameter,p",po::value<std::vector<std::string> >(&arguments),"Parameters to pass to libyuri builder")
-		("list,l",po::value<std::string>()->implicit_value("classes"),"List registered objects/formats");
+		("list,l",po::value<std::string>()->implicit_value("classes"),"List registered objects/formats")
+		("app-info,a","Show info about XML file");
 
 
 
@@ -227,7 +229,12 @@ int main(int argc, char**argv)
 		else if (iequals(list_what,"converters")) list_converters(l_);
 		else std::cout << "Wrong value for --list parameter" << std::endl;
 
-		exit(0);
+		return 0;
+	}
+	if (vm.count("app-info")) {
+		show_info=true;
+		l.set_flags(fatal);
+		l.set_quiet(true);
 	}
 	/*if (iequals(argv[1],"--converters")) {
 
@@ -242,7 +249,7 @@ int main(int argc, char**argv)
 
 	l[debug] << "Loading file " << filename << std::endl;
 	try {
-		b.reset( new core::ApplicationBuilder (l, core::pwThreadBase(),filename,arguments));
+		b.reset( new core::ApplicationBuilder (l, core::pwThreadBase(),filename,arguments, show_info));
 	}
 	catch (exception::Exception &e) {
 		l[fatal] << "failed to initialize application: " << e.what() << std::endl;
@@ -252,6 +259,32 @@ int main(int argc, char**argv)
 		l[fatal] << "An error occurred during initialization: " << e.what() << std::endl;
 		exit(1);
 	}
+
+	if (show_info) {
+		const std::map<std::string,shared_ptr<core::VariableRecord> >& vars = b->get_variables();
+		l[fatal] << "Application " << b->get_appname();
+		l[fatal] << "  ";
+		l[fatal] << "Description: " << b->get_description();
+		std::string reqs;
+		for (std::map<std::string,shared_ptr<core::VariableRecord> >::const_iterator it=vars.begin();
+				it != vars.end(); ++it) {
+			if (it->second->required) reqs=reqs + " " + it->second->name + "=<value>";
+		}
+		l[fatal] << "Usage: " << argv[0] << " " << filename << reqs;
+		l[fatal] <<"  ";
+		l[fatal] << "Variables:";
+		for (std::map<std::string,shared_ptr<core::VariableRecord> >::const_iterator it=vars.begin();
+				it != vars.end(); ++it) {
+			const yuri::shared_ptr<core::VariableRecord>& var = it->second;
+			std::string filler(20-var->name.size(),' ');
+			l[fatal] << var->name << ":" << filler << var->description
+					<< " [default value: " << var->def
+					<< ", actual value: " << var->value << "]";
+		}
+		l[fatal] <<"  ";
+		return 0;
+	}
+
 #ifdef YURI_LINUX
 	memset (&act, '\0', sizeof(act));
 	act.sa_sigaction = &sigHandler;

@@ -48,17 +48,17 @@ struct VariableLinkDependency{
 	std::string parameter;
 };
 struct VariableRecord {
-	std::string name, def, value;
+	std::string name, def, value, description;
 	bool required;
-	VariableRecord(std::string name, std::string def, bool required = false):name(name),def(def),value(def),required(required) {}
-	VariableRecord():required(false) {}
+	VariableRecord(std::string name, std::string def, bool required = false, std::string desc=std::string()):name(name),def(def),value(def),description(desc),required(required) {}
+	//VariableRecord():required(false) {}
 	std::vector<shared_ptr<VariableNodeDependency> > node_dependencies;
 	std::vector<shared_ptr<VariableLinkDependency> > linkdependencies;
 };
 
 class EXPORT ApplicationBuilder: public BasicIOThread {
 public:
-	ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::string filename="", std::vector<std::string> argv=std::vector<std::string>());
+	ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::string filename="", std::vector<std::string> argv=std::vector<std::string>(), bool skip=false);
 	ApplicationBuilder(log::Log &_log, pwThreadBase parent, Parameters &params);
 	virtual ~ApplicationBuilder();
 	IO_THREAD_GENERATOR_DECLARATION
@@ -70,6 +70,11 @@ public:
 	bool prepare_threads();
 	bool find_modules();
 	bool load_modules();
+
+	std::string get_appname();
+	std::string get_description();
+	const std::map<std::string,shared_ptr<VariableRecord> >& get_variables();
+
 private:
 	bool process_module_dir(TiXmlElement &element);
 	bool process_module(TiXmlElement &element);
@@ -99,6 +104,7 @@ private:
 private:
 	std::string filename;
 	std::string description;
+	std::string appname;
 	TiXmlDocument doc;
 
 	bool document_loaded, threads_prepared, skip_verification;

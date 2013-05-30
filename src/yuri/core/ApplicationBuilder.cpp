@@ -41,8 +41,9 @@ pParameters ApplicationBuilder::configure()
 
 ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent, Parameters &p)
 	:BasicIOThread(_log,parent,0,0,"AppBuilder"),filename(""),
-	document_loaded(false),threads_prepared(false),
+	document_loaded(false),threads_prepared(false),skip_verification(false),
 	run_limit(boost::posix_time::pos_infin),start_time(boost::posix_time::not_a_date_time)
+
 {
 	default_pipe_param=BasicPipe::configure();
 	params.merge(p);
@@ -50,9 +51,9 @@ ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent, Para
 	if (!skip_verification) check_variables();
 }
 
-ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::string filename,std::vector<std::string> argv)
+ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::string filename,std::vector<std::string> argv, bool skip)
 	:BasicIOThread(_log,parent,0,0,"AppBuilder"),filename(filename),document_loaded(false),
-	threads_prepared(false),run_limit(boost::posix_time::pos_infin),
+	threads_prepared(false),skip_verification(skip),run_limit(boost::posix_time::pos_infin),
 	start_time(boost::posix_time::not_a_date_time)
 
 {
@@ -60,6 +61,7 @@ ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::
 	pParameters p = configure();
 	params.merge(*p);
 	params["config"]=filename;
+	params["skip_verification"]=skip;
 	init();
 	parse_argv(argv);
 	if (!skip_verification) check_variables();
@@ -163,18 +165,19 @@ bool ApplicationBuilder::load_file(std::string path)
 	clear_tree();
 	document_loaded = false;
 	log[log::info] << "Loading " << path <<"\n";
-	//doc.reset(new TiXmlDocument(path));
 	if (! doc.LoadFile(path)) {
 		log[log::error] <<  "Failed to load file! " << doc.ErrorDesc()<<"\n";
 		return false;
 	}
-	//log[log::debug] << "Loaded "<<"\n";
 	TiXmlElement * root = doc.RootElement();
 	if (!root) {
-		//doc.reset();;
 		return false;
 	}
-	//log[log::debug] << "Got root element!" <<"\n";
+	if (root->QueryValueAttribute("name",&appname)!=TIXML_SUCCESS) {
+		appname="yuri";
+	}
+
+
 	TiXmlElement* node=0;
 	node = root->FirstChildElement("general");
 	if (node) {
@@ -208,6 +211,11 @@ bool ApplicationBuilder::load_file(std::string path)
 	node = 0;
 	while ((node = dynamic_cast<TiXmlElement*>(root->IterateChildren("link",node)))) {
 		if (!process_link(*node)) continue;
+	}
+	node=0;
+	node = root->FirstChildElement("description");
+	if (node) {
+		description=node->GetText();
 	}
 	return (document_loaded = true);
 }
@@ -354,7 +362,10 @@ bool ApplicationBuilder::process_variable(TiXmlElement &node)
 	if (node.QueryValueAttribute("required",&required)!=TIXML_SUCCESS) {
 		required = false;
 	}
-	shared_ptr<VariableRecord> var(new VariableRecord(name,def_value,required));
+	std::string desc;
+	const char *d = node.GetText();
+	if (d) desc = d;
+	shared_ptr<VariableRecord> var(new VariableRecord(name,def_value,required,desc));
 	log[log::debug] << "Storing variable " << name <<"\n";
 	variables[name]=var;
 	return true;
@@ -626,7 +637,18 @@ bool ApplicationBuilder::check_variables()
 	}
 	return true;
 }
-
+std::string ApplicationBuilder::get_appname()
+{
+	return appname;
+}
+std::string ApplicationBuilder::get_description()
+{
+	return description;
+}
+const std::map<std::string,shared_ptr<VariableRecord> >& ApplicationBuilder::get_variables()
+{
+	return variables;
+}
 }
 
 }
