@@ -49,7 +49,9 @@ struct VariableLinkDependency{
 };
 struct VariableRecord {
 	std::string name, def, value;
-	VariableRecord(std::string name, std::string def):name(name),def(def),value(def) {}
+	bool required;
+	VariableRecord(std::string name, std::string def, bool required = false):name(name),def(def),value(def),required(required) {}
+	VariableRecord():required(false) {}
 	std::vector<shared_ptr<VariableNodeDependency> > node_dependencies;
 	std::vector<shared_ptr<VariableLinkDependency> > linkdependencies;
 };
@@ -76,6 +78,7 @@ protected:
 	bool process_variable(TiXmlElement &element);
 	bool parse_parameters(TiXmlElement &element,Parameters &params);
 	void clear_tree();
+	bool check_variables();
 	//bool check_links();
 
 

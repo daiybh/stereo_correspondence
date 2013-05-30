@@ -46,6 +46,7 @@ ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent, Para
 	default_pipe_param=BasicPipe::configure();
 	params.merge(p);
 	init();
+	check_variables();
 }
 
 ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::string filename,std::vector<std::string> argv)
@@ -60,6 +61,7 @@ ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::
 	params["config"]=filename;
 	init();
 	parse_argv(argv);
+	check_variables();
 }
 
 ApplicationBuilder::~ApplicationBuilder()
@@ -196,6 +198,8 @@ bool ApplicationBuilder::load_file(std::string path)
 		if (!process_variable(*node)) continue;
 	}
 
+//	if (!check_variables()) return false;
+
 	node=0;
 	while ((node = dynamic_cast<TiXmlElement*>(root->IterateChildren("node",node)))) {
 		if (!process_node(*node)) continue;
@@ -277,7 +281,7 @@ std::string name,cl;
 
 bool ApplicationBuilder::process_link(TiXmlElement &node)
 {
-std::string name,src,target;
+	std::string name,src,target;
 	if (node.QueryValueAttribute("name",&name)!=TIXML_SUCCESS) {
 		log[log::error] << "Failed to load name attribute!" <<"\n";
 		return false;
@@ -294,8 +298,8 @@ std::string name,src,target;
 	}
 	int src_ipos = src.find_last_of(':');
 	int target_ipos = target.find_last_of(':');
-std::string srcnode = src.substr(0,src_ipos);
-std::string targetnode = target.substr(0,target_ipos);
+	std::string srcnode = src.substr(0,src_ipos);
+	std::string targetnode = target.substr(0,target_ipos);
 	int srci = boost::lexical_cast<int>(src.substr(src_ipos+1));
 	int targeti = boost::lexical_cast<int>(target.substr(target_ipos+1));
 	log[log::debug] << "link from " <<  srcnode << "[" << srci << "]" <<
@@ -326,7 +330,7 @@ std::string targetnode = target.substr(0,target_ipos);
 	}
 	log[log::debug] << "Storing link " << name <<"\n";
 	if (links.count(name)) {
-		log[log::warning] << "Reaplacing link '" << name <<"'. This is probably an error ;)";
+		log[log::warning] << "Replacing link '" << name <<"'. This is probably an error ;)";
 	}
 	links[name]=l;
 	return true;
@@ -334,7 +338,8 @@ std::string targetnode = target.substr(0,target_ipos);
 
 bool ApplicationBuilder::process_variable(TiXmlElement &node)
 {
-std::string name,def_value;
+	std::string name,def_value;
+	bool required;
 	if (node.QueryValueAttribute("name",&name)!=TIXML_SUCCESS) {
 		log[log::error] << "Failed to load name attribute!" <<"\n";
 		return false;
@@ -345,7 +350,10 @@ std::string name,def_value;
 		return false;
 	}
 
-	shared_ptr<VariableRecord> var(new VariableRecord(name,def_value));
+	if (node.QueryValueAttribute("required",&required)!=TIXML_SUCCESS) {
+		required = false;
+	}
+	shared_ptr<VariableRecord> var(new VariableRecord(name,def_value,required));
 	log[log::debug] << "Storing variable " << name <<"\n";
 	variables[name]=var;
 	return true;
@@ -378,15 +386,7 @@ bool ApplicationBuilder::parse_parameters(TiXmlElement &element,Parameters &para
 
 void ApplicationBuilder::clear_tree()
 {
-	/*pair<std::string, shared_ptr<NodeRecord> > n;
-	BOOST_FOREACH(n,nodes) {
-		delete n.second;
-	}*/
 	nodes.clear();
-	/*pair<std::string, shared_ptr<LinkRecord> > l;
-	BOOST_FOREACH(l,links) {
-		delete l.second;
-	}*/
 	links.clear();
 }
 
@@ -605,6 +605,17 @@ std::string arg;
 		}
 
 	}
+}
+bool ApplicationBuilder::check_variables()
+{
+	for (std::map<std::string, shared_ptr<VariableRecord> >::const_iterator it = variables.begin();
+			it != variables.end(); ++it) {
+		const shared_ptr<VariableRecord>& v = it->second;
+		if (v->required && v->value.empty()) {
+			throw InitializationFailed(std::string("No value specified for required variable '")+v->name+std::string("'"));
+		}
+	}
+	return true;
 }
 
 }
