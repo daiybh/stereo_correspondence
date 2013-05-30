@@ -74,7 +74,8 @@ public:
 	std::string get_appname();
 	std::string get_description();
 	const std::map<std::string,shared_ptr<VariableRecord> >& get_variables();
-
+	virtual void 				connect_in(yuri::sint_t index, pBasicPipe pipe);
+	virtual void 				connect_out(yuri::sint_t index, pBasicPipe pipe);
 private:
 	bool process_module_dir(TiXmlElement &element);
 	bool process_module(TiXmlElement &element);
@@ -119,6 +120,8 @@ private:
 	std::vector<std::string> modules;
 	std::vector<std::string> module_dirs;
 	std::map<std::string,pid_t > tids;
+	std::map<size_t, std::pair<shared_ptr<LinkRecord>, pBasicPipe > > input_pipes;
+	std::map<size_t, std::pair<shared_ptr<LinkRecord>, pBasicPipe > > output_pipes;
 
 };
 

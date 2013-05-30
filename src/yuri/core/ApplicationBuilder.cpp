@@ -48,7 +48,9 @@ ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent, Para
 	default_pipe_param=BasicPipe::configure();
 	params.merge(p);
 	init();
-	if (!skip_verification) check_variables();
+	if (!skip_verification) {
+		check_variables();
+	}
 }
 
 ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::string filename,std::vector<std::string> argv, bool skip)
@@ -64,7 +66,9 @@ ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::
 	params["skip_verification"]=skip;
 	init();
 	parse_argv(argv);
-	if (!skip_verification) check_variables();
+	if (!skip_verification) {
+		check_variables();
+	}
 }
 
 ApplicationBuilder::~ApplicationBuilder()
@@ -128,7 +132,7 @@ void ApplicationBuilder::run()
 }
 bool ApplicationBuilder::find_modules()
 {
-	log[log::info] << "Looking for modules ("<<module_dirs.size() <<")!\n";
+//	log[log::info] << "Looking for modules ("<<module_dirs.size() <<")!\n";
 	BOOST_FOREACH(std::string p, module_dirs) {
 		boost::filesystem::path p_(p);
 		if (boost::filesystem::exists(p_) &&
@@ -139,9 +143,9 @@ bool ApplicationBuilder::find_modules()
 				boost::filesystem::directory_entry d = *dit;
 				const std::string name = d.path().filename().string();
 				if (name.substr(0,13)=="yuri2_module_") {
-					log[log::info] << "\tFound module " << name << "\n";
+					log[log::debug] << "\tFound module " << name << "\n";
 					modules.push_back(d.path().string());
-				} else log[log::info] << "" << name.substr(0,13) << "\n";
+				}
 			}
 		}
 	}
@@ -152,7 +156,8 @@ bool ApplicationBuilder::load_modules()
 	BOOST_FOREACH(std::string s, modules) {
 		try{
 			bool loaded = RegisteredClass::load_module(s);
-			log[log::info] << "Loading " << s<< ": "<<(loaded?"OK":"Failed") << "\n";
+			//log[log::debug] << "Loading " << s<< ": "<<(loaded?"OK":"Failed") << "\n";
+			if (loaded) log[log::info] << "Module " << s << " loaded successfully";
 		}
 		catch (yuri::exception::Exception &) {}
 
@@ -311,17 +316,21 @@ bool ApplicationBuilder::process_link(TiXmlElement &node)
 	std::string targetnode = target.substr(0,target_ipos);
 	int srci = boost::lexical_cast<int>(src.substr(src_ipos+1));
 	int targeti = boost::lexical_cast<int>(target.substr(target_ipos+1));
-	log[log::debug] << "link from " <<  srcnode << "[" << srci << "]" <<
-			"to " << targetnode << "[" <<targeti << "]" <<"\n";
-	if (nodes.find(srcnode)==nodes.end()) {
-		log[log::warning] << "Source node for the link (" << srcnode
-				<< ") not specified! Discarding link." <<"\n";
-		return false;
-	}
-	if (nodes.find(targetnode)==nodes.end()) {
-		log[log::warning] << "Target node for the link (" << targetnode
-				<< ") not specified! Discarding link." <<"\n";
-		return false;
+	bool remote_link = false;
+	if (srcnode == "$$" || targetnode=="$$") remote_link = true;
+	if (!remote_link) {
+		log[log::debug] << "link from " <<  srcnode << "[" << srci << "]" <<
+				"to " << targetnode << "[" <<targeti << "]" <<"\n";
+		if (nodes.find(srcnode)==nodes.end()) {
+			log[log::warning] << "Source node for the link (" << srcnode
+					<< ") not specified! Discarding link." <<"\n";
+			return false;
+		}
+		if (nodes.find(targetnode)==nodes.end()) {
+			log[log::warning] << "Target node for the link (" << targetnode
+					<< ") not specified! Discarding link." <<"\n";
+			return false;
+		}
 	}
 	shared_ptr<LinkRecord> l(new LinkRecord(name,srcnode,targetnode,srci,targeti));
 	if (!parse_parameters(node,l->params)) {
@@ -338,10 +347,20 @@ bool ApplicationBuilder::process_link(TiXmlElement &node)
 		}
 	}
 	log[log::debug] << "Storing link " << name <<"\n";
-	if (links.count(name)) {
-		log[log::warning] << "Replacing link '" << name <<"'. This is probably an error ;)";
+	if (!remote_link) {
+		if (links.count(name)) {
+			log[log::warning] << "Replacing link '" << name <<"'. This is probably an error ;)";
+		}
+		links[name]=l;
+	} else {
+		if (srcnode == "$$") {
+			input_pipes[srci]=std::make_pair(l,pBasicPipe());
+			resize(std::max<size_t>(in_ports,srci+1),out_ports);
+		} else {
+			output_pipes[targeti]=std::make_pair(l,pBasicPipe());
+			resize(srci,std::max<size_t>(out_ports,targeti+1));
+		}
 	}
-	links[name]=l;
 	return true;
 }
 
@@ -468,7 +487,21 @@ bool ApplicationBuilder::prepare_links()
 		threads[link.second->source_node]->connect_out(link.second->source_index,p);
 		threads[link.second->target_node]->connect_in(link.second->target_index,p);
 		pipes[link.first]=p;
-
+	}
+	std::map<size_t, std::pair<shared_ptr<LinkRecord>, pBasicPipe > >::iterator it = input_pipes.begin();
+	for (;it != input_pipes.end(); ++it) {
+		std::pair<shared_ptr<LinkRecord>, pBasicPipe >& l = it->second;
+		log[log::info] << "Connecting input pipe " <<  it->first << " " << l.first->name << " to " << l.first->target_node;
+		pBasicIOThread node = get_node(l.first->target_node);
+		node->connect_in(l.first->target_index, l.second);
+		l.second.reset();
+	}
+	for (it=output_pipes.begin();it != output_pipes.end(); ++it) {
+		std::pair<shared_ptr<LinkRecord>, pBasicPipe >& l = it->second;
+		log[log::info] << "Connecting output pipe " <<  it->first << " " << l.first->name << " to " << l.first->source_node;
+		pBasicIOThread node = get_node(l.first->source_node);
+		node->connect_in(l.first->source_index, l.second);
+		l.second.reset();
 	}
 	return true;
 }
@@ -628,9 +661,12 @@ bool ApplicationBuilder::set_param(const core::Parameter& parameter)
 }
 bool ApplicationBuilder::check_variables()
 {
-	for (std::map<std::string, shared_ptr<VariableRecord> >::const_iterator it = variables.begin();
+	for (std::map<std::string, shared_ptr<VariableRecord> >::iterator it = variables.begin();
 			it != variables.end(); ++it) {
-		const shared_ptr<VariableRecord>& v = it->second;
+		shared_ptr<VariableRecord>& v = it->second;
+		if (params.is_defined(v->name)) {
+			v->value = params[v->name].get<std::string>();
+		}
 		if (v->required && v->value.empty()) {
 			throw InitializationFailed(std::string("No value specified for required variable '")+v->name+std::string("'"));
 		}
@@ -648,6 +684,40 @@ std::string ApplicationBuilder::get_description()
 const std::map<std::string,shared_ptr<VariableRecord> >& ApplicationBuilder::get_variables()
 {
 	return variables;
+}
+void ApplicationBuilder::connect_in(yuri::sint_t index, pBasicPipe pipe)
+{
+	if (!input_pipes.count(index)) {
+		log[log::error] << "Attempt to connect input pipe to unpopulated index " << index;
+		return;
+	}
+	std::pair<shared_ptr<LinkRecord>, pBasicPipe>& link = input_pipes[index];
+	try {
+		log[log::info] << "Connecting input pipe " << link.first->name << " targeted to " << link.first->target_node;
+		link.second = pipe;
+		pipe->get_notification_fd();
+	}
+	catch (Exception& ) {
+//		log[log::error] << "Node ("<< link.second->target_node <<") specified for input pipe " << index << " was not created...";
+		return;
+	}
+
+}
+void ApplicationBuilder::connect_out(yuri::sint_t index, pBasicPipe pipe)
+{
+	if (!output_pipes.count(index)) {
+		log[log::error] << "Attempt to connect input pipe to unpopulated index " << index;
+		return;
+	}
+	std::pair<shared_ptr<LinkRecord>, pBasicPipe>& link = input_pipes[index];
+	try {
+		log[log::info] << "Connecting input pipe " << link.first->name << " targeted to " << link.first->target_node;
+		link.second = pipe;
+		pipe->get_notification_fd();
+	}
+	catch (Exception& ) {
+		return;
+	}
 }
 }
 
