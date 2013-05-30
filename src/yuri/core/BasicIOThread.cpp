@@ -39,6 +39,7 @@ shared_ptr<Parameters> BasicIOThread::configure()
 	(*p)["cpu"]["Bind thread to cpu"]=-1;
 	(*p)["fps_stats"]["Print out current FPS every n frames. Set to 0 to disable."]=0;
 	(*p)["debug"]["Change debug level. value 0 will keep inherited value from app, lower numbers will reduce verbosity, higher numbers will make output more verbose."]=0;
+	(*p)["node_name"]["Name of the node. Will be filled automatically by the builder."]=std::string();
 	return p;
 }
 
@@ -93,10 +94,11 @@ pBasicFrame BasicIOThread::duplicate_frame(pBasicFrame frame)
 
 BasicIOThread::BasicIOThread(log::Log &log_,pwThreadBase parent, yuri::sint_t inp, yuri::sint_t outp, std::string id):
 	ThreadBase(log_,parent),in_ports(inp),out_ports(outp),latency(200000),
-	active_pipes(0),cpu_affinity(-1),fps_stats(0),pts_base(boost::posix_time::not_a_date_time)
+	active_pipes(0),cpu_affinity(-1),fps_stats(0),pts_base(boost::posix_time::not_a_date_time),
+	node_id_(id)
 {
 	params.merge(*configure());
-	log.set_label(std::string("[")+id+"] ");
+	set_log_id();
 	resize(inp,outp);
 }
 
@@ -374,14 +376,14 @@ pBasicFrame BasicIOThread::timestamp_frame(pBasicFrame frame)
 	return frame;
 }
 // TODO Stub, not implemented!!!!!!
-pBasicFrame BasicIOThread::get_frame_as(yuri::sint_t index, yuri::format_t format)
-{
-	pBasicFrame frame;
-	if (index>=in_ports || !in[index] || in[index]->is_empty()) return frame;
-	if (format == YURI_FMT_NONE) return in[index]->pop_frame();
-
-	return pBasicFrame();
-}
+//pBasicFrame BasicIOThread::get_frame_as(yuri::sint_t index, yuri::format_t format)
+//{
+//	pBasicFrame frame;
+//	if (index>=in_ports || !in[index] || in[index]->is_empty()) return frame;
+//	if (format == YURI_FMT_NONE) return in[index]->pop_frame();
+//
+//	return pBasicFrame();
+//}
 void BasicIOThread::set_affinity(yuri::ssize_t affinity)
 {
 	cpu_affinity = affinity;
@@ -413,6 +415,9 @@ bool BasicIOThread::set_param(const Parameter &parameter)
 			yuri::sint_t orig = log.get_flags();
 			log.set_flags(((orig&flag_mask)<<debug)|(orig&~flag_mask));
 		}
+	} else if (parameter.name == "node_name") {
+		node_name_ = parameter.get<std::string>();
+		set_log_id();
 	}
 	return true;
 }
@@ -465,6 +470,15 @@ bool BasicIOThread::connect_threads(shared_ptr<BasicIOThread> src, yuri::sint_t 
 	src->connect_out(t_idx,pipe);
 	return true;
 }
+void BasicIOThread::set_log_id()
+{
+	if (node_name_.empty()) {
+		log.set_label(std::string("[")+node_id_+"] ");
+	} else {
+		log.set_label(std::string("[")+node_id_+"/"+node_name_+"] ");
+	}
+}
+
 }
 }
 

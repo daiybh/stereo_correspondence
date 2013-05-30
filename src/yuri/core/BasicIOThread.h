@@ -96,8 +96,8 @@ protected:
 			yuri::format_t format, yuri::usize_t channels, yuri::usize_t samples,
 			yuri::size_t pts, yuri::size_t duration, yuri::size_t dts);
 	virtual pBasicFrame 		timestamp_frame(pBasicFrame frame);
-	virtual pBasicFrame 		get_frame_as(yuri::sint_t index, yuri::format_t format) DEPRECATED;
-
+//	virtual pBasicFrame 		get_frame_as(yuri::sint_t index, yuri::format_t format) DEPRECATED;
+	virtual void				set_log_id();
 	Parameters 					params;
 	std::vector<PipeConnector > in;
 	std::vector<PipeConnector > out;
@@ -116,6 +116,8 @@ protected:
 	std::vector<boost::posix_time::ptime>
 								first_frame;
 	boost::posix_time::ptime 	pts_base;
+	std::string 				node_id_;
+	std::string					node_name_;
 };
 
 template<typename T> bool BasicIOThread::set_param(std::string name, T value)

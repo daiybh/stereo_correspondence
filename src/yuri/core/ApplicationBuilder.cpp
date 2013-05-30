@@ -431,6 +431,7 @@ bool ApplicationBuilder::prepare_threads()
 		assert(RegisteredClass::is_registered(node.second->type));
 		shared_ptr<Instance> instance = RegisteredClass::prepare_instance(node.second->type);
 		assert(instance.get());
+		(*instance->params)["node_name"]=node.first;
 		instance->params->merge(node.second->params);
 		pParameters vars = assign_variables(node.second->variables);
 		instance->params->merge(*vars);
