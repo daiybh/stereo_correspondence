@@ -357,8 +357,9 @@ bool ApplicationBuilder::process_link(TiXmlElement &node)
 			input_pipes[srci]=std::make_pair(l,pBasicPipe());
 			resize(std::max<size_t>(in_ports,srci+1),out_ports);
 		} else {
+			assert(l);
 			output_pipes[targeti]=std::make_pair(l,pBasicPipe());
-			resize(srci,std::max<size_t>(out_ports,targeti+1));
+			resize(in_ports,std::max<size_t>(out_ports,targeti+1));
 		}
 	}
 	return true;
@@ -501,9 +502,10 @@ bool ApplicationBuilder::prepare_links()
 		std::pair<shared_ptr<LinkRecord>, pBasicPipe >& l = it->second;
 		log[log::info] << "Connecting output pipe " <<  it->first << " " << l.first->name << " to " << l.first->source_node;
 		pBasicIOThread node = get_node(l.first->source_node);
-		node->connect_in(l.first->source_index, l.second);
+		node->connect_out(l.first->source_index, l.second);
 		l.second.reset();
 	}
+	resize(0,0);
 	return true;
 }
 bool ApplicationBuilder::spawn_threads()
@@ -710,7 +712,7 @@ void ApplicationBuilder::connect_out(yuri::sint_t index, pBasicPipe pipe)
 		log[log::error] << "Attempt to connect input pipe to unpopulated index " << index;
 		return;
 	}
-	std::pair<shared_ptr<LinkRecord>, pBasicPipe>& link = input_pipes[index];
+	std::pair<shared_ptr<LinkRecord>, pBasicPipe>& link = output_pipes[index];
 	try {
 		log[log::info] << "Connecting input pipe " << link.first->name << " targeted to " << link.first->target_node;
 		link.second = pipe;
