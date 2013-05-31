@@ -63,11 +63,11 @@ public:
 /* ****************************************************************************
  * 							Data allocation
  **************************************************************************** */
-//	static BasicFrame::plane_t allocate_memory_block(yuri::size_t size, bool large=false);
+
 	static pBasicFrame 			allocate_frame_from_memory(const yuri::ubyte_t *mem,
 			yuri::size_t size, bool large=false);
 	static pBasicFrame 			allocate_frame_from_memory(const plane_t& mem);
-//	static pBasicFrame allocate_frame_from_memory(shared_array<yuri::ubyte_t> mem, yuri::size_t size, bool large=false);
+
 	static pBasicFrame 			duplicate_frame(pBasicFrame frame);
 	static pBasicFrame 			allocate_empty_frame(yuri::format_t format,
 			yuri::size_t width, yuri::size_t height, bool large=false);
@@ -106,7 +106,7 @@ protected:
 	virtual void 				resize(yuri::sint_t inp, yuri::sint_t outp);
 	yuri::usize_t 				latency; // Latency in microseconds
 #ifdef YURI_LINUX
-	shared_array<struct pollfd> pipe_fds;
+	std::vector<struct pollfd> 	pipe_fds;
 #endif
 	yuri::uint_t 				active_pipes;
 	mutex 						port_lock;

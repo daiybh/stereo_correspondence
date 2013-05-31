@@ -14,7 +14,6 @@
 #include "yuri/core/uvector.h"
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
 #include <boost/smart_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/thread/thread.hpp>
@@ -38,7 +37,6 @@ typedef yuri::uvector<yuri::ubyte_t,false> plane_t;
 
 #if 1
 using boost::shared_ptr;
-using boost::shared_array;
 using boost::weak_ptr;
 using boost::make_shared;
 using boost::mutex;

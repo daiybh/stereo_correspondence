@@ -106,7 +106,7 @@ protected:
 	yuri::size_t				totalCount;
 	yuri::size_t				dropped;
 	yuri::ubyte_t 				dropPolicy;
-	shared_array<int> 			notifySockets;
+	std::vector<int> 			notifySockets;
 	pThreadBase			 		source;
 	pThreadBase					target;
 protected:

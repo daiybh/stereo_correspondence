@@ -91,9 +91,9 @@ bool PNGEncoder::step() {
 	png_set_write_fn(pngPtr, (void*) this, PNGEncoder::writeData,
 			PNGEncoder::flushData);
 
-	if (!memory || memSize != width * height * bpp) {
+	if (memSize != width * height * bpp) {
 		memSize = width * height * bpp;
-		memory.reset(new yuri::ubyte_t[memSize]);
+		memory.resize(memSize);
 	}
 	position = 0;
 	png_set_IHDR(pngPtr, infoPtr, width, height, 8, pngcolortype,
@@ -114,7 +114,7 @@ bool PNGEncoder::step() {
 	log[log::debug] << "Compression took: " << tp.length().total_microseconds()
 			<< " us" << std::endl;
 	if (position || out[0]) {
-		core::pBasicFrame out_frame = allocate_frame_from_memory(memory.get(),position);
+		core::pBasicFrame out_frame = allocate_frame_from_memory(&memory[0],position);
 		push_video_frame(0,out_frame,YURI_IMAGE_PNG,frame->get_width(),frame->get_height());
 	}
 	return true;
@@ -129,9 +129,10 @@ void PNGEncoder::flushData(png_structp /*pngPtr*/) {
 }
 
 void PNGEncoder::writeData(png_bytep data, png_size_t length) {
-	if (!memory)
+	if (!memory.size())
 		return;
-	memcpy(memory.get() + position, data, length);
+	//memcpy(memory.get() + position, data, length);
+	std::copy(data, data + length, memory.begin() + position);
 	position += length;
 }
 

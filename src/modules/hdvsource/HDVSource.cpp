@@ -112,7 +112,7 @@ int HDVSource::process_frame(unsigned char *data, int length, unsigned int dropp
 	total_packets++;
 	if (out[0]) {
 		boost::mutex::scoped_lock l(buffer_lock);
-		if (!output_buffer) {
+		if (!output_buffer.size()) {
 			//l.unlock();
 			//out[0]->push_frame(data,length);
 			do_send_data(reinterpret_cast<yuri::ubyte_t*>(data),length);
@@ -123,7 +123,8 @@ int HDVSource::process_frame(unsigned char *data, int length, unsigned int dropp
 				//out[0]->push_frame(data,length);
 				do_send_data(reinterpret_cast<yuri::ubyte_t*>(data),length);
 			} else {
-				memcpy(output_buffer.get() + buffer_position,data,length);
+				//memcpy(output_buffer.get() + buffer_position,data,length);
+				std::copy(data,data+length,output_buffer.begin()+buffer_position);
 				buffer_position += length;
 			}
 		}
@@ -140,15 +141,15 @@ void HDVSource::setOutputBufferSize(long size)
 	if (size == buffer_size) return;
 	do_sendOutputBuffer();
 	buffer_size = size;
-	if (size) output_buffer.reset(new yuri::ubyte_t[size]);
-	else output_buffer.reset();
+	if (size) output_buffer.resize(size);
+	else output_buffer.resize(0);
 
 }
 
 void HDVSource::do_sendOutputBuffer()
 {
-	if (buffer_position && output_buffer)
-	do_send_data(output_buffer.get(),buffer_position);
+	if (buffer_position && output_buffer.size())
+	do_send_data(&output_buffer[0],buffer_position);
 	buffer_position = 0;
 }
 

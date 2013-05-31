@@ -40,7 +40,7 @@ protected:
 	std::map<int,int> counters;
 	long total_packets, total_missing;
 	long buffer_size, buffer_position;
-	shared_array<yuri::ubyte_t> output_buffer;
+	std::vector<yuri::ubyte_t> output_buffer;
 	bool enable_checks;
 	boost::mutex buffer_lock;
 };

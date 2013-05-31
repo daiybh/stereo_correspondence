@@ -24,12 +24,6 @@ namespace {
 	(YURI_FMT_RGB,JCS_RGB)
 	(YURI_FMT_YUV444,JCS_YCbCr);
 }
-//core::pBasicIOThread JPEGDecoder::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
-//{
-//	shared_ptr<JPEGDecoder> j( new JPEGDecoder(_log,parent));
-//	j->forceLineWidthMult(parameters["line_multiply"].get<int>());
-//	return j;
-//}
 core::pParameters JPEGDecoder::configure()
 {
 	core::pParameters p = BasicIOThread::configure();
@@ -84,7 +78,6 @@ bool JPEGDecoder::step() {
 
 	int bpp;
 	int linesize;
-	shared_array<yuri::ubyte_t> mem;
 	core::pBasicFrame out_frame;// (new core::BasicFrame(1));
 	//while (cinfo.next_scanline < cinfo.image_height) {
 	try {
@@ -121,13 +114,8 @@ bool JPEGDecoder::step() {
 		height = cinfo.image_height;
 		bpp = cinfo.output_components;
 		linesize = width*bpp;
-		//colorspace= (bpp==3?YURI_FMT_RGB24:bpp==4?YURI_FMT_RGB32:YURI_FMT_NONE);
-//		log[log::verbose_debug] << "Allocating " << linesize * height << " bytes for image "
-//			<< width << "x" << height << " @ " << 8*bpp << "bpp" << std::endl;
-//		PLANE_DATA(out_frame,0).resize(linesize * height);
 		out_frame = allocate_empty_frame(colorspace,width,height);
-//		mem=allocate_memory_block(linesize * height);
-//		(*out_frame)[0].set(mem,linesize * height);
+
 
 
 		int planes = raw_?3:1;

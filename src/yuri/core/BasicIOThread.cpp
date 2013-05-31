@@ -27,12 +27,7 @@ namespace core
 #define DEBUG_LOCKS log[verbose_debug] << "Locking ports, " << __FILE__ << ":" << __LINE__ << " with lock @ " << (void*)(&port_lock) << "\n";
 #endif
 
-/*shared_ptr<BasicIOThread> BasicIOThread::generate(Log &_log,pThreadBase parent,
-		Parameters& parameters) throw (Exception)
-{
-	throw (InitializationFailed("Not implemented!"));
-}
-*/
+
 shared_ptr<Parameters> BasicIOThread::configure()
 {
 	shared_ptr<Parameters> p(new Parameters());
@@ -48,20 +43,10 @@ bool BasicIOThread::configure_converter(Parameters&, yuri::format_t,yuri::format
 	throw exception::NotImplemented();
 }
 
-//shared_array<yuri::ubyte_t> BasicIOThread::allocate_memory_block(yuri::size_t size, bool large)
-//{
-//	shared_array<yuri::ubyte_t> mem;
-//	if (!large) mem.reset(new yuri::ubyte_t[size]);
-//	else mem = FixedMemoryAllocator::get_block(size);
-//	return mem;
-//}
+
 pBasicFrame BasicIOThread::allocate_frame_from_memory(const yuri::ubyte_t *mem, yuri::size_t size, bool large)
 {
-//	shared_array<yuri::ubyte_t> smem = allocate_memory_block(size,large);
-//	memcpy(smem.get(),mem,size);
-//	return allocate_frame_from_memory(smem,size,large);
 	pBasicFrame f = make_shared<BasicFrame>(1);
-	//std::copy(mem,mem+size,f->get_plane(0).begin());
 	if (!large) {
 		f->set_plane(0,mem,size);
 	} else {
@@ -79,13 +64,6 @@ pBasicFrame BasicIOThread::allocate_frame_from_memory(const plane_t& mem)
 	return f;
 }
 
-//pBasicFrame BasicIOThread::allocate_frame_from_memory(shared_array<yuri::ubyte_t> mem, yuri::size_t size, bool /*large*/)
-//{
-//	pBasicFrame f(new BasicFrame());
-//	f->set_planes_count(1);
-//	(*f)[0].set(mem,size);
-//	return f;
-//}
 pBasicFrame BasicIOThread::duplicate_frame(pBasicFrame frame)
 {
 	pBasicFrame f = frame->get_copy();
@@ -122,8 +100,9 @@ void BasicIOThread::run()
 #ifdef __linux__
 				//log[verbose_debug] << "Requesting notifications" << "\n";
 				request_notifications();
+				assert(pipe_fds.size());
 				//log[verbose_debug] << "Polling" << "\n";
-				if (!(ret=poll(pipe_fds.get(),active_pipes,latency/1000))) continue;
+				if (!(ret=poll(&pipe_fds[0],active_pipes,latency/1000))) continue;
 				if (ret < 0) {
 					switch (errno) {
 						case EBADF: log[warning] << "Wrong fd set in fdset, file: "
@@ -200,9 +179,8 @@ void BasicIOThread::resize(yuri::sint_t inp, yuri::sint_t outp)
 	out.resize(outp,pc);
 	streamed_frames.resize(outp,0);
 	first_frame.resize(outp);
-	//if (pipe_fds) delete [] pipe_fds;
 #ifdef __linux__
-	pipe_fds.reset(new struct pollfd[inp]);
+	pipe_fds.resize(inp);//new struct pollfd[inp]);
 	for (yuri::sint_t i=0;i<inp;++i) pipe_fds[i].events=0;
 #endif
 	log[debug] << "Konec resize" << "\n";
@@ -261,12 +239,7 @@ int BasicIOThread::set_fds()
 
 void BasicIOThread::request_notifications()
 {
-	/*for (int i=0;i<in_ports;++i) {
-			if (in[i]) {
-				log[verbose_debug] << "Requesting notifications from pipe " << i << "\n";
-				in[i]->request_notify();
-			}
-	}*/
+
 	set_fds();
 }
 
@@ -441,8 +414,6 @@ pBasicFrame BasicIOThread::allocate_empty_frame(yuri::format_t format, yuri::siz
 			//std::copy(mem,mem+size,&block.first[0]);
 			pic->get_plane(i).set(block.first,planesize,block.second);
 		}
-		//shared_array<yuri::ubyte_t> mem = allocate_memory_block(planesize,large);
-//		(*pic)[i].set(mem,planesize);
 		pic->get_plane(i).resize(planesize);
 	}
 	pic->set_parameters(format,width,height);

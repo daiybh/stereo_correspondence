@@ -66,62 +66,24 @@ void GLXWindow::initAttr()
 
 void GLXWindow::addAttributes(int no, GLint *attrs)
 {
-	if (attributes) {
-		shared_array<GLint> newAttr(new GLint [noAttr+no]);
-		for (int i=0;i<noAttr-1;++i) newAttr[i]=attributes[i];
-		for (int i=0;i<no;++i) newAttr[noAttr+i-1]=attrs[i];
-		noAttr+=no;
-		newAttr[noAttr-1]=None;
-		//delete attributes;
-		attributes=newAttr;
-	} else {
-		attributes.reset(new GLint [no+1]);
-		for (int i=0;i<no;++i) attributes[i]=attrs[i];
-		attributes[no]=None;
-		noAttr=no+1;
+	if (!noAttr) {
+		noAttr=1;
 	}
+	attributes.resize(noAttr+no);
+	for (int i=0;i<no;++i) attributes[noAttr+i-1]=attrs[i];
+	noAttr+=no;
+	attributes[noAttr-1]=None;
+
 }
 
 void GLXWindow::addAttribute(GLint attr)
 {
 	addAttributes(1,&attr);
 }
-/*
-#define check_opt(o) s=prefix+"."+(o); if (!config->exists(s)) \
-	{ log[log::error]<< "Option " << prefix << "." << (o) << " is not present!" \
-	<< std::endl; return false;}
 
-#define load_opt(o,v) s=prefix+"."+(o); if (config->get_value(s,v)) \
-	log[log::verbose_debug] << s << " is " << v << std::endl; else { \
-	log[log::error] << "Error while loading " << (o) << std::endl; return false;}
-*/
 bool GLXWindow::load_config()
 {
-//	yuri::config::Config *config=yuri::config::Config::get_config();
-//	if (!config) {
-//		log[log::error] << "Can't get config!" << std::endl;
-//		return false;
-//	}
-	/*
-	// Check for required settings
-	std::string s;
-	log[log::debug] << "Checking config for required options" << std::endl;
-	check_opt("screen")
-	check_opt("x")
-	check_opt("y")
-	check_opt("width")
-	check_opt("height")
 
-
-	load_opt("x",x)
-	load_opt("y",y)
-	load_opt("width",width)
-	load_opt("height",height)
-	load_opt("screen",screen);
-	load_opt("stereo",use_stereo);
-
-	config->get_value(prefix+".name",winname,prefix);
-*/
 	screen = params["display"].get<std::string>();
 	use_stereo = params["stereo"].get<bool>();
 	show_cursor = params["cursor"].get<bool>();
@@ -129,8 +91,6 @@ bool GLXWindow::load_config()
 	y = params["y"].get<yuri::ssize_t>();
 	width = params["width"].get<yuri::size_t>();
 	height = params["height"].get<yuri::size_t>();
-	//std::string s = params["key_callback"].get<std::string>();
-	//keyCallback = config->get_callback(s);
 	return true;
 }
 
@@ -138,7 +98,7 @@ bool GLXWindow::create_window()
 {
 	display.reset(XOpenDisplay(screen.c_str()),DisplayDeleter());
 	if (!display) return false;
-	log[log::debug] << "Connected to display " << screen << std::endl;
+	log[log::debug] << "Connected to display " << screen;
 	std::string::size_type ind=screen.find_last_of(':');
 	if (ind!=std::string::npos) {
 		ind = screen.find_first_of('.',ind);
@@ -146,13 +106,13 @@ bool GLXWindow::create_window()
 			screen_number=atoi(screen.substr(ind+1).c_str());
 		}
 	}
-	log[log::debug] << "Screen number is " << screen_number << std::endl;
+	log[log::debug] << "Screen number is " << screen_number;
 	root=RootWindow(display.get(),screen_number);
 	if (!root) return false;
-	log[log::debug] << "Found root window" << std::endl;
-	vi = glXChooseVisual(display.get(), screen_number, attributes.get());
+	log[log::debug] << "Found root window";
+	vi = glXChooseVisual(display.get(), screen_number, &attributes[0]);
 	if (!vi) return false;
-	log[log::debug] << "Found visual " << vi->visualid << std::endl;
+	log[log::debug] << "Found visual " << vi->visualid;
 	cmap = XCreateColormap(display.get(), root, vi->visual, AllocNone);
 	swa.colormap = cmap;
 	swa.event_mask = ExposureMask | KeyPressMask | StructureNotifyMask
@@ -163,12 +123,12 @@ bool GLXWindow::create_window()
 	win = XCreateWindow(display.get(), root, x, y, width, height, 0, vi->depth,
 			InputOutput, vi->visual, CWBackPixel | CWBorderPixel |CWColormap
 			| CWEventMask, &swa);
-	log[log::debug] << "X Window Created" << std::endl;
+	log[log::debug] << "X Window Created";
 	return true;
 }
 bool GLXWindow::create()
 {
-	log[log::debug] << "creating GLX window" << std::endl;
+	log[log::debug] << "creating GLX window";
 	if (!load_config()) return false;
 	initAttr();
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
@@ -182,14 +142,12 @@ bool GLXWindow::create()
 	boost::mutex::scoped_lock bgl(GL::big_gpu_lock);
 	glc = glXCreateContext(display.get(), vi, NULL, GL_TRUE);
 	glXMakeCurrent(display.get(), win, glc);
-	log[log::debug] << "Created GLX Context" << std::endl;
+	log[log::debug] << "Created GLX Context";
 	bgl.unlock();
-	//yuri::config::Config *config=yuri::config::Config::get_config();
-	//if (config) config->get_value(prefix+".cursor",show_cursor,false);
-	log[log::debug] << "Cursor " << (show_cursor ? "will" : "won't") << " be shown"
-			<< std::endl;
+	log[log::debug] << "Cursor " << (show_cursor ? "will" : "won't") << " be shown";
+
 	if (!show_cursor) {
-		log[log::debug] << "Creating cursor" << std::endl;
+		log[log::debug] << "Creating cursor";
 		Pixmap pixmap;
 		Cursor cursor;
 		XColor color;
@@ -230,7 +188,7 @@ void GLXWindow::setHideDecoration(bool value)
 		hints.status = 0;
 		int r = XChangeProperty(display.get(), win,mh, mh, 32,PropModeReplace,
 				(unsigned char *) &hints, 5);
-		log[log::info] << "XChangeProperty returned " << r << std::endl;
+		log[log::info] << "XChangeProperty returned " << r;
 	}
 
 }

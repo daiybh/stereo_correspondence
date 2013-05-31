@@ -83,7 +83,7 @@ FixedMemoryAllocator::memory_block_t FixedMemoryAllocator::get_block(yuri::size_
 		}
 	}
 
-//	shared_array<yuri::ubyte_t>  tmp(memory_pool[size].back(),Deleter(size,memory_pool[size].back()));
+
 	yuri::ubyte_t * tmp = memory_pool[size].back();
 	memory_block_t block = std::make_pair(tmp,Deleter(size,tmp));
 	memory_pool[size].pop_back();
@@ -93,8 +93,7 @@ FixedMemoryAllocator::memory_block_t FixedMemoryAllocator::get_block(yuri::size_
 /** \brief Returns block to the pool.
  *
  * Method returns previously allocated block to the pool.
- * Intended to be called exclusively from Deleter::operator(), which on the turn
- * should be called only from boost::shared_array's destructor or reset.
+ * Intended to be called exclusively from Deleter::operator()
  *
  * \param size Size of the block
  * \param mem pointer to the memory block (Note, it is RAW pointer)
@@ -180,7 +179,6 @@ bool FixedMemoryAllocator::step()
 }
 /** \brief Returns specified block of memory to the memory pool.
  *
- * This should get called only in shared_array and \em nowhere else.
  * \param mem pointer to the memory block to be deleted.
  */
 void FixedMemoryAllocator::Deleter::operator()(void *mem)

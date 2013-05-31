@@ -34,7 +34,7 @@ protected:
 	void printError(int type, const char * msg);
 	long position;
 	core::pBasicFrame frame;
-	shared_array<yuri::ubyte_t> memory;
+	std::vector<yuri::ubyte_t> memory;
 	long memSize;
 };
 

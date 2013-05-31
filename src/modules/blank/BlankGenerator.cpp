@@ -69,17 +69,6 @@ bool BlankGenerator::set_param(const core::Parameter &p)
 }
 void BlankGenerator::run()
 {
-	/*const FormatInfo_t finfo = core::BasicPipe::get_format_info(format);
-	pBasicFrame frame(new BasicFrame(finfo->planes));
-	for (unsigned int i=0;i<finfo->planes;++i) {
-		unsigned long size = width * height * finfo->bpp /
-				finfo->plane_x_subs[i] / finfo->plane_y_subs[i];
-		shared_array<yuri::ubyte_t> data = allocate_memory_block(size);
-		memset(data.get(),0,size);
-		(*frame)[i].set(data,size);
-	}
-	frame->set_parameters(format,width,height);*/
-
 	time_duration delta = microseconds(1e6)/fps;
 	next_time=microsec_clock::local_time();
 	core::pBasicFrame frame;

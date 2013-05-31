@@ -137,15 +137,16 @@ void JPEGEncoder::initDestination(j_compress_ptr cinfo)
 	temp_data.seekg(0,std::ios::beg);
 	temp_data.seekp(0,std::ios::beg);
 	temp_data.str().clear();
-	if (!buffer) buffer.reset(new char[buffer_size]);
-	cinfo->dest->next_output_byte=(JOCTET *) buffer.get();
+	//if (!buffer.) buffer.reset(new char[buffer_size]);
+	buffer.resize(buffer_size);
+	cinfo->dest->next_output_byte=(JOCTET *) &buffer[0];
 	cinfo->dest->free_in_buffer=buffer_size;
 }
 int JPEGEncoder::emptyBuffer(j_compress_ptr cinfo)
 {
 	log[log::verbose_debug] << "flushing " << (buffer_size - cinfo->dest->free_in_buffer)
 		<< " bytes" << std::endl;
-	temp_data.write((const char*)buffer.get(),
+	temp_data.write((const char*)&buffer[0],
 			(buffer_size - cinfo->dest->free_in_buffer));
 	cinfo->dest->free_in_buffer=buffer_size;
 	return TRUE;

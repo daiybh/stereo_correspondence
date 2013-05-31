@@ -73,7 +73,7 @@ protected:
 	std::string 			screen;
 	shared_ptr<Display>		display;
 	Window					root, win;
-	shared_array<GLint>		attributes;
+	std::vector<GLint>		attributes;
 	int 					noAttr;
 	XVisualInfo*			vi;
 	Colormap				cmap;

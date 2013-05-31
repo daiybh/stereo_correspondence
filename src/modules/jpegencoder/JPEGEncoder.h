@@ -43,7 +43,7 @@ protected:
 	core::pBasicFrame frame;
 std::stringstream temp_data;
 	int level;
-	shared_array<char> buffer;
+	std::vector<char> buffer;
 	long buffer_size, width, height;
 };
 

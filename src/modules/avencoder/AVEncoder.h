@@ -33,7 +33,7 @@ protected:
 	void encode_frame();
 	virtual bool step();
 	shared_ptr<AVFrame> frame;
-	shared_array<yuri::ubyte_t> buffer;
+	std::vector<yuri::ubyte_t> buffer;
 	yuri::size_t buffer_size;
 	float time_step;
 	yuri::size_t width, height;

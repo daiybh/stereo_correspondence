@@ -365,10 +365,10 @@ bool BasicPipe::is_closed()
 int BasicPipe::do_get_notification_fd()
 {
 #ifdef __linux__
-	if (!notifySockets.get()) {
-		notifySockets.reset(new int [2]);
+	if (!notifySockets.size()) {
+		notifySockets.resize(2);
 
-		socketpair(AF_UNIX,SOCK_DGRAM|SOCK_NONBLOCK,0,notifySockets.get());
+		socketpair(AF_UNIX,SOCK_DGRAM|SOCK_NONBLOCK,0,&notifySockets[0]);
 		/*int flags = fcntl(notifySockets[0], F_GETFL, 0);
 		fcntl(notifySockets[0], F_SETFL, flags | O_NONBLOCK);
 		fcntl(notifySockets[1], F_SETFL, flags | O_NONBLOCK);*/
@@ -396,7 +396,7 @@ void BasicPipe::do_notify()
 {
 #ifdef __linux__
 	if (!notificationsEnabled) return;
-	if (!notifySockets.get()) {
+	if (!notifySockets.size()) {
 		log[log::error] << "No notification sockets!!!!!" << "\n";
 		return;
 	}
