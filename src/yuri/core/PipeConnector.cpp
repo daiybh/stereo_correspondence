@@ -46,7 +46,11 @@ void PipeConnector::reset()
 
 PipeConnector::operator bool()
 {
+#ifndef YURI_USE_CXX11
 	return pipe;
+#else
+	return pipe != nullptr;
+#endif
 }
 
 PipeConnector::operator shared_ptr<BasicPipe>()

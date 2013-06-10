@@ -15,7 +15,6 @@
 
 #include "yuri/core/ThreadChild.h"
 #include "yuri/core/ThreadSpawn.h"
-#include <boost/enable_shared_from_this.hpp>
 #include <map>
 #include <vector>
 #ifdef __linux__
@@ -57,7 +56,7 @@ namespace core
 {
 
 
-class EXPORT ThreadBase :public boost::enable_shared_from_this<ThreadBase>
+class EXPORT ThreadBase :public enable_shared_from_this<ThreadBase>
 {
 public:
 							ThreadBase(log::Log &_log, pwThreadBase parent);
@@ -109,12 +108,16 @@ protected:
 	pwThreadBase 			parent;
 	bool 					end;
 	bool					end_requested;
-	boost::mutex 			end_lock;
-	boost::mutex			finish_lock;
-	boost::timed_mutex 		children_lock;
+	mutex 					end_lock;
+	mutex					finish_lock;
+	timed_mutex 			children_lock;
+#ifndef YURI_USE_CXX11
 	std::map<pwThreadBase, pThreadChild >
+#else
+	std::map<pwThreadBase, pThreadChild, std::owner_less<pwThreadBase>>
+#endif
 							children;
-	boost::mutex 			timer_lock;
+	std::mutex 				timer_lock;
 #ifdef __linux__
 	struct timeval 			tv_start;
 	struct timeval			tv_stop;
@@ -122,12 +125,12 @@ protected:
 	yuri::size_t 			elsec;
 	yuri::size_t			elusec;
 	bool 					timer_started;
-	boost::posix_time::time_duration
-							join_timeout;
+	time_duration			join_timeout;
 	int 					exitCode;
 	threadId_t 				lastChild;
 	bool 					finishWhenChildEnds;
 	bool					quitWhenChildsEnd;
+
 	std::vector<pwThreadBase>
 							endingChilds;
 	pid_t 					own_tid;
@@ -136,9 +139,9 @@ public:
 protected:
 	static long 			last_user_thread_id;
 protected:
-	static yuri::mutex 	last_user_thread_id_mutex;
+	static yuri::mutex 		last_user_thread_id_mutex;
 public:
-	static void 			sleep (unsigned long microseconds);
+	static void 			sleep (unsigned long ms);
 };
 
 

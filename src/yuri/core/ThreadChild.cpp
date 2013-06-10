@@ -15,7 +15,7 @@ namespace yuri
 namespace core
 {
 	 
-ThreadChild::ThreadChild(shared_ptr<boost::thread> thread,
+ThreadChild::ThreadChild(shared_ptr<yuri::thread> thread,
 		shared_ptr<ThreadBase> child,bool spawned)
 	:thread_ptr(thread),thread(child),finished(false),spawned(spawned)
 {

@@ -109,8 +109,8 @@ private:
 	TiXmlDocument doc;
 
 	bool document_loaded, threads_prepared, skip_verification;
-	boost::posix_time::time_duration run_limit;
-	boost::posix_time::ptime start_time;
+	time_duration run_limit;
+	time_value start_time;
 	pParameters default_pipe_param;
 	std::map<std::string,shared_ptr<NodeRecord> > nodes;
 	std::map<std::string,shared_ptr<LinkRecord> > links;

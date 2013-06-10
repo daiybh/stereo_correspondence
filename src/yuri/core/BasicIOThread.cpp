@@ -15,7 +15,12 @@
 #include "yuri/core/BasicFrame.h"
 #include "yuri/core/BasicPipe.h"
 #include <algorithm>
+#ifndef YURI_USE_CXX11
 #include "boost/date_time/posix_time/posix_time.hpp"
+#endif
+#ifdef YURI_ANDROID
+#include <unistd.h>
+#endif
 using namespace yuri::log;
 
 namespace yuri
@@ -72,7 +77,12 @@ pBasicFrame BasicIOThread::duplicate_frame(pBasicFrame frame)
 
 BasicIOThread::BasicIOThread(log::Log &log_,pwThreadBase parent, yuri::sint_t inp, yuri::sint_t outp, std::string id):
 	ThreadBase(log_,parent),in_ports(inp),out_ports(outp),latency(200000),
-	active_pipes(0),cpu_affinity(-1),fps_stats(0),pts_base(boost::posix_time::not_a_date_time),
+	active_pipes(0),cpu_affinity(-1),fps_stats(0),
+#ifndef YURI_USE_CXX11
+	pts_base(boost::posix_time::not_a_date_time),
+#else
+	pts_base(),
+#endif
 	node_id_(id)
 {
 	params.merge(*configure());
@@ -95,9 +105,11 @@ void BasicIOThread::run()
 				//usleep(latency);
 				ThreadBase::sleep(latency);
 			}
-			boost::this_thread::interruption_point();
+#ifndef YURI_USE_CXX11
+			boost:this_thread::interruption_point();
+#endif
 			if (in_ports && !pipes_data_available()) {
-#ifdef __linux__
+#ifdef YURI_LINUX
 				//log[verbose_debug] << "Requesting notifications" << "\n";
 				request_notifications();
 				assert(pipe_fds.size());
@@ -125,9 +137,14 @@ void BasicIOThread::run()
 			if (!step()) break;
 		}
 	}
+#ifndef YURI_USE_CXX11
 	catch (boost::thread_interrupted &e)
 	{
 		log[debug] << "Thread interrupted" << "\n";
+	}
+#endif
+	catch (std::runtime_error& e) {
+		log[debug] << "Thread failed: " << e.what();
 	}
 	IO_THREAD_POST_RUN
 }
@@ -286,13 +303,24 @@ bool BasicIOThread::push_raw_frame(yuri::sint_t index, pBasicFrame frame)
 	out[index]->push_frame(frame);
 	if (fps_stats) {
 		if (streamed_frames[index]>=fps_stats) {
+#ifndef YURI_USE_CXX11
 			boost::posix_time::ptime end_time = boost::posix_time::microsec_clock::local_time();
 			boost::posix_time::time_duration delta= end_time - first_frame[index];
 			double fps = 1.0e6 * static_cast<double>(streamed_frames[index]) / static_cast<double>(delta.total_microseconds());
 			log[info] << "(output " << index << ") Streamed " << streamed_frames[index] << " in " << boost::posix_time::to_simple_string(delta) << ". That's " << fps << "fps" <<"\n";
+#else
+			time_value end_time = std::chrono::steady_clock::now();
+			time_duration delta = end_time - first_frame[index];
+			double fps = 1.0e6 * static_cast<double>(streamed_frames[index]) / static_cast<double>( std::chrono::duration_cast<std::chrono::microseconds>(delta).count());
+				log[info] << "(output " << index << ") Streamed " << streamed_frames[index] << " in " << std::chrono::duration_cast<std::chrono::seconds>(delta).count() << "s. That's " << fps << "fps" <<"\n";
+#endif
 			streamed_frames[index]=0;
 		}
+#ifndef YURI_USE_CXX11
 		if (!streamed_frames[index]) first_frame[index] = boost::posix_time::microsec_clock::local_time();
+#else
+		if (!streamed_frames[index]) first_frame[index] = std::chrono::steady_clock::now();
+#endif
 		streamed_frames[index]++;
 	}
 	return true;
@@ -343,9 +371,17 @@ bool BasicIOThread::push_audio_frame (yuri::sint_t index, pBasicFrame frame, yur
 }
 pBasicFrame BasicIOThread::timestamp_frame(pBasicFrame frame)
 {
+#ifndef YURI_USE_CXX11
 	if (pts_base==boost::posix_time::not_a_date_time) pts_base=boost::posix_time::microsec_clock::local_time();
 	boost::posix_time::time_duration pts = boost::posix_time::microsec_clock::local_time() - pts_base;
 	frame->set_time(pts.total_microseconds(),frame->get_dts(),frame->get_duration());
+#else
+	if (pts_base.time_since_epoch() == time_duration::zero()) {
+		pts_base = std::chrono::steady_clock::now();
+	}
+	time_duration pts = std::chrono::steady_clock::now() - pts_base;
+	frame->set_time(std::chrono::duration_cast<std::chrono::microseconds>(pts).count(),frame->get_dts(),frame->get_duration());
+#endif
 	return frame;
 }
 // TODO Stub, not implemented!!!!!!
@@ -363,8 +399,12 @@ void BasicIOThread::set_affinity(yuri::ssize_t affinity)
 }
 bool BasicIOThread::set_params(Parameters &parameters)
 {
+#ifndef YURI_USE_CXX11
 	std::pair<std::string,shared_ptr<Parameter> > par;
 	BOOST_FOREACH(par,(parameters.params)) {
+#else
+	for(auto& par: parameters.params) {
+#endif
 		if (par.second && !set_param(*(par.second))) return false;
 	}
 	return true;

@@ -41,7 +41,7 @@ pParameters FixedMemoryAllocator::configure()
 
 bool FixedMemoryAllocator::allocate_blocks(yuri::size_t size, yuri::size_t count)
 {
-	yuri::mutex::scoped_lock l(mem_lock);
+	lock l(mem_lock);
 	return do_allocate_blocks(size,count);
 }
 /** \brief allocate memory blocks and adds them to the pool
@@ -76,7 +76,7 @@ bool FixedMemoryAllocator::do_allocate_blocks(yuri::size_t size, yuri::size_t co
  */
 FixedMemoryAllocator::memory_block_t FixedMemoryAllocator::get_block(yuri::size_t size)
 {
-	boost::mutex::scoped_lock l(mem_lock);
+	lock l(mem_lock);
 	if (memory_pool.count(size)<1 || memory_pool[size].size()<1) {
 		if (!do_allocate_blocks(size,1)) {
 			throw std::bad_alloc();
@@ -101,7 +101,7 @@ FixedMemoryAllocator::memory_block_t FixedMemoryAllocator::get_block(yuri::size_
  */
 bool FixedMemoryAllocator::return_memory(yuri::size_t size, yuri::ubyte_t * mem)
 {
-	boost::mutex::scoped_lock l(mem_lock);
+	lock l(mem_lock);
 	if (!memory_pool.count(size)) memory_pool[size]=std::vector<yuri::ubyte_t*>();
 	memory_pool[size].push_back(mem);
 	//std::cout << "Returning page of " << size << ". have " << memory[size].size() << " in cache" << "\n";
@@ -118,7 +118,7 @@ bool FixedMemoryAllocator::return_memory(yuri::size_t size, yuri::ubyte_t * mem)
  */
 bool FixedMemoryAllocator::remove_blocks(yuri::size_t size, yuri::size_t count)
 {
-	boost::mutex::scoped_lock l(mem_lock);
+	lock l(mem_lock);
 	if (!memory_pool.count(size)) return true;
 	if (!count) count = memory_pool[size].size();
 	while (count-- > 0) {

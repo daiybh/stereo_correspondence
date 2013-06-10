@@ -38,5 +38,14 @@
 	#error Unsupported platform
 #endif
 
+#ifdef YURI_ANDROID
+#define YURI_USE_CXX11 1
+//#include <exception>
+//namespace std {
+//struct bad_cast : public exception {bad_cast operator()(){}};
+//struct out_of_range: public exception {out_of_range operator()(){}};
+//struct runtime_error: public exception {runtime_error operator()(){}};
+//}
+#endif
 
 #endif /* PLATFORM_H_ */

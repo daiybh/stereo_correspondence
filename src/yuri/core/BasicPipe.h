@@ -26,8 +26,9 @@
 #error "Unsupported platform"
 #endif
 #endif
-#include <boost/foreach.hpp>
+#ifndef YURI_USE_CXX11
 #include <boost/algorithm/string/predicate.hpp>
+#endif
 #include "yuri/log/Log.h"
 #include "BasicFrame.h"
 #include "pipe_types.h"
@@ -40,7 +41,7 @@ namespace core {
 
 struct compare_insensitive {
 	bool operator() (const std::string a, const std::string b) const
-			{ return boost::ilexicographical_compare(a,b); }
+			{ return iequals(a,b); }
 };
 
 class EXPORT BasicPipe {
@@ -77,9 +78,9 @@ public:
 								generator(log::Log &log, std::string name, Parameters &parameters);
 	static shared_ptr<Parameters>
 								configure();
-	static std::map<yuri::format_t, const FormatInfo_t>
+	static std::map<yuri::format_t, FormatInfo_t>
 								formats;
-	static boost::mutex 		format_lock;
+	static yuri::mutex 			format_lock;
 	static std::string 			get_type_string(yuri::format_t type);
 	static std::string 			get_format_string(yuri::format_t type);
 	static std::string 			get_simple_format_string(yuri::format_t type);

@@ -17,6 +17,9 @@
 #else
 #warning "Runtime object loading not supported on this platform"
 #endif
+#ifndef YURI_USE_CXX11
+#include <boost/foreach.hpp>
+#endif
 namespace yuri {
 
 namespace core {
@@ -43,44 +46,44 @@ RegisteredClass::~RegisteredClass() {
 
 bool RegisteredClass::is_registered(std::string id)
 {
-	if (!reg_mutex) reg_mutex=new boost::mutex();
-	mutex::scoped_lock l(*reg_mutex);
+	if (!reg_mutex) reg_mutex=new yuri::mutex();
+	lock l(*reg_mutex);
 	return do_is_registered(id);
 }
 
 void RegisteredClass::add_to_register(std::string id, RegisteredClass *r)
 {
-	if (!reg_mutex) reg_mutex=new boost::mutex();
-	mutex::scoped_lock l(*reg_mutex);
+	if (!reg_mutex) reg_mutex=new yuri::mutex();
+	lock l(*reg_mutex);
 	do_add_to_register(id,r);
 }
 
 
 shared_ptr<std::vector<std::string> > RegisteredClass::list_registered()
 {
-	if (!reg_mutex) reg_mutex=new boost::mutex();
-	mutex::scoped_lock l(*reg_mutex);
+	if (!reg_mutex) reg_mutex=new yuri::mutex();
+	lock l(*reg_mutex);
 	return do_list_registered();
 }
 
 shared_ptr<Parameters> RegisteredClass::get_params(std::string id)
 {
-	if (!reg_mutex) reg_mutex=new boost::mutex();
-	mutex::scoped_lock l(*reg_mutex);
+	if (!reg_mutex) reg_mutex=new yuri::mutex();
+	lock l(*reg_mutex);
 	return do_get_params(id);
 }
 
 
 shared_ptr<Instance> RegisteredClass::prepare_instance(std::string id)
 {
-	if (!reg_mutex) reg_mutex=new boost::mutex();
-	mutex::scoped_lock l(*reg_mutex);
+	if (!reg_mutex) reg_mutex=new yuri::mutex();
+	lock l(*reg_mutex);
 	return do_prepare_instance(id);
 }
 
 std::map<std::pair<long,long>, std::vector<shared_ptr<Converter > > > RegisteredClass::get_all_converters()
 {
-	mutex::scoped_lock l(converters_mutex);
+	lock l(converters_mutex);
 	if (converters.empty()) do_reload_converters();
 	return converters;
 }
@@ -90,7 +93,7 @@ std::vector<shared_ptr<Converter > > RegisteredClass::get_converters(long in, lo
 }
 std::vector<shared_ptr<Converter > > RegisteredClass::get_converters(std::pair<long, long> fmts)
 {
-	mutex::scoped_lock l(converters_mutex);
+	lock l(converters_mutex);
 	std::vector<shared_ptr<Converter> > v;
 	if (converters.empty()) do_reload_converters();
 	if (converters.find(fmts) == converters.end()) return v;
@@ -99,17 +102,25 @@ std::vector<shared_ptr<Converter > > RegisteredClass::get_converters(std::pair<l
 
 void RegisteredClass::reload_converters()
 {
-	mutex::scoped_lock l(converters_mutex);
+	lock l(converters_mutex);
 	do_reload_converters();
 }
 void RegisteredClass::do_reload_converters()
 {
+#ifndef YURI_USE_CXX11
 	std::pair<std::string,shared_ptr<RegisteredClass> > p;
 	BOOST_FOREACH(p,*registeredClasses) {
+#else
+	for(auto& p: *registeredClasses) {
+#endif
 		shared_ptr<Parameters> params = p.second->_get_params();
 		std::pair<std::pair<long,long>, shared_ptr<Converter> > conv;
 		if (params) {
+#ifndef YURI_USE_CXX11
 			BOOST_FOREACH(conv,params->get_converters()) {
+#else
+			for(auto& conv: params->get_converters()) {
+#endif
 				conv.second->id = p.first;
 				converters[conv.first].push_back(conv.second);
 			}
@@ -128,14 +139,18 @@ shared_ptr<Instance> RegisteredClass::get_converter(long format_in,
 	converters = get_converters(format_in, format_out);
 	if (!converters.empty()) { // Direct conversion available
 		sort(converters.begin(),converters.end(),RegisteredClass::conv_sort);
+#ifndef YURI_USE_CXX11
 		shared_ptr<Converter> conv;
 		BOOST_FOREACH(conv, converters) {
+#else
+		for(auto& conv: converters) {
+#endif
 			if (!is_registered(conv->id)) {
 				continue;
 			} else {
 				try {
 					shared_ptr<Instance> inst = prepare_instance(conv->id);
-					mutex::scoped_lock l(converters_mutex);
+					lock l(converters_mutex);
 					return (*registeredClasses)[conv->id]->_prepare_converter(
 							inst, format_in, format_out);
 				}
@@ -153,7 +168,7 @@ shared_ptr<Instance> RegisteredClass::get_converter(long format_in,
 	std::map<long,long> paths;
 	std::pair<long,long> tmp_pair;
 	long last_step = YURI_FMT_NONE;
-	mutex::scoped_lock l(converters_mutex);
+	lock l(converters_mutex);
 	sources.insert(format_in);
 	new_sources.insert(format_in);
 	paths[format_in]=YURI_FMT_NONE;
@@ -189,7 +204,12 @@ shared_ptr<std::vector<std::string> > RegisteredClass::do_list_registered()
 	//std::cout << "class object exists: " << (bool)(registeredClasses) << std::endl;
 	if (registeredClasses) {
 		//std::cout << "Number of classes: " << registeredClasses->size() << endl;
+#ifndef YURI_USE_CXX11
 		BOOST_FOREACH(p,*registeredClasses) {
+#else
+		for(auto& p: *registeredClasses) {
+#endif
+
 			regs->push_back(p.first);
 		}
 	}

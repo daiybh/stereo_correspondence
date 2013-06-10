@@ -14,10 +14,9 @@
 #include <map>
 #include <set>
 #include <vector>
-#include <boost/foreach.hpp>
 #include <yuri/exception/Exception.h>
 #include <yuri/exception/OutOfRange.h>
-#include <boost/lexical_cast.hpp>
+
 #include "Callback.h"
 namespace yuri {
 
@@ -98,13 +97,13 @@ template <typename T> T Parameter::get() const
 	try {
 	switch (type) {
 		case BoolType:
-		case IntegerType: return boost::lexical_cast<T>(ival);
-		case FloatType: return boost::lexical_cast<T>(fval);
-		case StringType: return boost::lexical_cast<T>(sval);
+		case IntegerType: return lexical_cast<T>(ival);
+		case FloatType: return lexical_cast<T>(fval);
+		case StringType: return lexical_cast<T>(sval);
 		default: return static_cast<T> (0);
 	}
 	}
-	catch (boost::bad_lexical_cast& ) {
+	catch (bad_lexical_cast& ) {
 		throw Exception(std::string("Bad cast in parameter ")+name);
 	}
 }

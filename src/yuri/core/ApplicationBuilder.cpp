@@ -11,17 +11,16 @@
 #include "ApplicationBuilder.h"
 #include "yuri/core/RegisteredClass.h"
 #include "yuri/core/BasicPipe.h"
-#include <boost/lexical_cast.hpp>
 #include <cassert>
+#ifndef YURI_USE_CXX11
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
+#endif
 namespace yuri {
 
 namespace core {
 
 REGISTER("appbuilder",ApplicationBuilder)
-
-using boost::lexical_cast;
 
 IO_THREAD_GENERATOR(ApplicationBuilder)
 
@@ -42,7 +41,7 @@ pParameters ApplicationBuilder::configure()
 ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent, Parameters &p)
 	:BasicIOThread(_log,parent,0,0,"AppBuilder"),filename(""),
 	document_loaded(false),threads_prepared(false),skip_verification(false),
-	run_limit(boost::posix_time::pos_infin),start_time(boost::posix_time::not_a_date_time)
+	run_limit(time_duration_infinity),start_time()
 
 {
 	default_pipe_param=BasicPipe::configure();
@@ -55,8 +54,8 @@ ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent, Para
 
 ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::string filename,std::vector<std::string> argv, bool skip)
 	:BasicIOThread(_log,parent,0,0,"AppBuilder"),filename(filename),document_loaded(false),
-	threads_prepared(false),skip_verification(skip),run_limit(boost::posix_time::pos_infin),
-	start_time(boost::posix_time::not_a_date_time)
+	threads_prepared(false),skip_verification(skip),run_limit(time_duration_infinity),
+	start_time()
 
 {
 	default_pipe_param=BasicPipe::configure();
@@ -74,7 +73,7 @@ ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::
 ApplicationBuilder::~ApplicationBuilder()
 {
 	clear_tree();
-#ifdef __linux__
+#if defined(YURI_LINUX) && !defined(YURI_ANDROID)
 	std::string destdir =std::string("/tmp/")+lexical_cast<std::string>(getpid());
 	boost::filesystem::path p(destdir);
 	if (boost::filesystem::exists(p)) {
@@ -88,13 +87,24 @@ void ApplicationBuilder::run()
 	//check_links();
 	double limit = params["run_limit"].get<double>();
 
-	if (limit<0) run_limit=boost::posix_time::pos_infin;
+	if (limit<0) run_limit=time_duration_infinity;
 	else {
+#ifndef YURI_USE_CXX11
 		run_limit = boost::posix_time::seconds(floor(limit))+
-			boost::posix_time::seconds(floor(1e6*(limit-floor(limit))));
+			boost::posix_time::miliseconds(floor(1e6*(limit-floor(limit))));
+#else
+		run_limit = std::chrono::seconds(static_cast<std::chrono::seconds::rep>(floor(limit)))+
+				std::chrono::milliseconds(static_cast<std::chrono::milliseconds::rep>(floor(1e6*(limit-floor(limit)))));
+#endif
 	}
+#ifndef YURI_USE_CXX11
 	log[log::debug] << "Got limit " << limit << ", which was converted to " << run_limit <<"\n";
+#endif
+#ifndef YURI_USE_CXX11
 	start_time=boost::posix_time::microsec_clock::local_time();
+#else
+	start_time=std::chrono::steady_clock::now();
+#endif
 	try {
 		if (!prepare_threads()) throw (exception::InitializationFailed("Failed to prepare threads!"));
 		log[log::debug] << "Threads prepared" <<"\n";
@@ -133,6 +143,7 @@ void ApplicationBuilder::run()
 bool ApplicationBuilder::find_modules()
 {
 //	log[log::info] << "Looking for modules ("<<module_dirs.size() <<")!\n";
+#ifndef YURI_USE_CXX11
 	BOOST_FOREACH(std::string p, module_dirs) {
 		boost::filesystem::path p_(p);
 		if (boost::filesystem::exists(p_) &&
@@ -149,11 +160,16 @@ bool ApplicationBuilder::find_modules()
 			}
 		}
 	}
+#endif
 	return true;
 }
 bool ApplicationBuilder::load_modules()
 {
+#ifndef YURI_USE_CXX11
 	BOOST_FOREACH(std::string s, modules) {
+#else
+	for(auto& s: modules) {
+#endif
 		try{
 			bool loaded = RegisteredClass::load_module(s);
 			//log[log::debug] << "Loading " << s<< ": "<<(loaded?"OK":"Failed") << "\n";
@@ -279,9 +295,13 @@ std::string name,cl;
 		//delete n;
 		return false;
 	}
+#ifndef YURI_USE_CXX11
 	std::pair<std::string,shared_ptr<Parameter> > parameter;
 	BOOST_FOREACH(parameter,n->params.params) {
-	std::string value = parameter.second->get<std::string>();
+#else
+	for (auto& parameter: n->params.params) {
+#endif
+		std::string value = parameter.second->get<std::string>();
 		if (value[0] == '@') {
 		std::string argname = value.substr(1);
 			n->variables[parameter.first]=argname;
@@ -314,8 +334,8 @@ bool ApplicationBuilder::process_link(TiXmlElement &node)
 	int target_ipos = target.find_last_of(':');
 	std::string srcnode = src.substr(0,src_ipos);
 	std::string targetnode = target.substr(0,target_ipos);
-	int srci = boost::lexical_cast<int>(src.substr(src_ipos+1));
-	int targeti = boost::lexical_cast<int>(target.substr(target_ipos+1));
+	int srci = lexical_cast<int>(src.substr(src_ipos+1));
+	int targeti = lexical_cast<int>(target.substr(target_ipos+1));
 	bool remote_link = false;
 	if (srcnode == "$$" || targetnode=="$$") remote_link = true;
 	if (!remote_link) {
@@ -338,8 +358,12 @@ bool ApplicationBuilder::process_link(TiXmlElement &node)
 		//delete l;
 		return false;
 	}
+#ifndef YURI_USE_CXX11
 	std::pair<std::string,shared_ptr<Parameter> > parameter;
 	BOOST_FOREACH(parameter,l->params.params) {
+#else
+	for (auto& parameter: l->params.params) {
+#endif
 	std::string value = parameter.second->get<std::string>();
 		if (value[0] == '@') {
 		std::string name = value.substr(1);
@@ -425,8 +449,12 @@ void ApplicationBuilder::clear_tree()
 bool ApplicationBuilder::prepare_threads()
 {
 	if (threads_prepared) return true;
+#ifndef YURI_USE_CXX11
 	std::pair<std::string,shared_ptr<NodeRecord> > node;
 	BOOST_FOREACH(node,nodes) {
+#else
+	for (auto& node: nodes) {
+#endif
 		log[log::debug] << "Preparing node " << node.first <<"\n";
 		assert(node.second.get());
 		assert(RegisteredClass::is_registered(node.second->type));
@@ -456,8 +484,13 @@ bool ApplicationBuilder::prepare_threads()
 
 void ApplicationBuilder::show_params(Parameters& _params, std::string prefix)
 {
+#ifndef YURI_USE_CXX11
 	std::pair<std::string,shared_ptr<Parameter> > par;
 	BOOST_FOREACH(par,(_params.params)) {
+#else
+	for(auto& par: _params.params) {
+#endif
+
 		if (par.second->type==GroupType) {
 			for (int i=0;;++i) {
 				try {
@@ -477,8 +510,13 @@ void ApplicationBuilder::show_params(Parameters& _params, std::string prefix)
 
 bool ApplicationBuilder::prepare_links()
 {
+#ifndef YURI_USE_CXX11
 	std::pair<std::string,shared_ptr<LinkRecord> > link;
 	BOOST_FOREACH(link,links) {
+#else
+	for (auto& link: links) {
+#endif
+
 		log[log::debug] << "Preparing link " << link.first <<"\n";
 		assert(link.second.get());
 		pParameters params (new Parameters(*default_pipe_param));
@@ -510,8 +548,12 @@ bool ApplicationBuilder::prepare_links()
 }
 bool ApplicationBuilder::spawn_threads()
 {
+#ifndef YURI_USE_CXX11
 	std::pair<std::string,pBasicIOThread > thread;
 	BOOST_FOREACH(thread,threads) {
+#else
+	for (auto& thread: threads) {
+#endif
 		spawn_thread(thread.second);
 		//log[log::info] << "Thread for object " << thread.first << " spawned as " << lexical_caststd::string>(children[thread.second]->thread_ptr->native_handle()) << ", boost id: "<< children[thread.second]->thread_ptr->get_id()<<"\n";
 		tids[thread.first]=0;
@@ -534,6 +576,7 @@ bool ApplicationBuilder::delete_pipes()
 
 bool ApplicationBuilder::step()
 {
+#ifndef YURI_USE_CXX11
 	if (!start_time.is_not_a_date_time()) {
 		if (start_time + run_limit < boost::posix_time::microsec_clock::local_time()) {
 			log[log::info] << "Time limit reached (" << to_simple_string(run_limit)
@@ -543,14 +586,19 @@ bool ApplicationBuilder::step()
 			return false;
 		}
 	}
+#endif
 	fetch_tids();
 	return true;
 }
 pBasicIOThread ApplicationBuilder::get_node(std::string id)
 {
 	if (threads.find(id)==threads.end()) {
+#ifndef YURI_USE_CXX11
 		std::pair<std::string,pBasicIOThread > p;
 		BOOST_FOREACH(p,threads) {
+#else
+		for (auto& p: threads) {
+#endif
 			log[log::debug] << "I have " << p.first <<"\n";
 		}
 		throw Exception(std::string(id)+" does not exist");
@@ -582,10 +630,14 @@ void ApplicationBuilder::init_local_params()
 
 void ApplicationBuilder::fetch_tids()
 {
-#ifdef __linux__
-	std::pair<std::string,pid_t> tid_record;
+#if defined(YURI_LINUX) && !defined(YURI_ANDROID)
 	bool changed = false;
+#ifndef YURI_USE_CXX11
+	std::pair<std::string,pid_t> tid_record;
 	BOOST_FOREACH(tid_record,tids) {
+#else
+	for (auto& tid_record: tids) {
+#endif
 		if (!tid_record.second) {
 			tids[tid_record.first] = threads[tid_record.first]->get_tid();
 			log[log::debug] << "Thread " << tid_record.first << " has tid " << tids[tid_record.first] <<"\n";
@@ -598,7 +650,11 @@ void ApplicationBuilder::fetch_tids()
 		if (!boost::filesystem::exists(p)) {
 			boost::filesystem::create_directory(p);
 		}
+#ifndef YURI_USE_CXX11
 		BOOST_FOREACH(tid_record,tids) {
+#else
+		for (auto& tid_record: tids) {
+#endif
 			if (tid_record.second) {
 				boost::filesystem::path p2 = p / lexical_cast<std::string>(tid_record.second); //(destdir+lexical_cast<std::string>(tid_record.second));
 				if (!boost::filesystem::exists(p2)) {
@@ -613,9 +669,13 @@ void ApplicationBuilder::fetch_tids()
 
 pParameters ApplicationBuilder::assign_variables(std::map<std::string, std::string> vars)
 {
-	std::pair<std::string, std::string> var;
 	pParameters var_params(new Parameters());
+#ifndef YURI_USE_CXX11
+	std::pair<std::string, std::string> var;
 	BOOST_FOREACH(var,vars) {
+#else
+	for (auto& var: vars) {
+#endif
 		if (variables.find(var.second) != variables.end()) {
 			(*var_params)[var.first] = variables[var.second]->value;
 		}
@@ -626,8 +686,12 @@ pParameters ApplicationBuilder::assign_variables(std::map<std::string, std::stri
 void ApplicationBuilder::parse_argv(std::vector<std::string> argv)
 {
 	log[log::debug] << "" << argv.size() << " arguments to parse" <<"\n";
-std::string arg;
+#ifndef YURI_USE_CXX11
+	std::string arg;
 	BOOST_FOREACH(arg,argv) {
+#else
+	for (auto& arg: argv) {
+#endif
 		size_t delim = arg.find('=');
 		if (delim==std::string::npos) {
 			log[log::warning] << "Failed to parse argument '" <<arg<<"'" <<"\n";
@@ -647,7 +711,7 @@ std::string arg;
 }
 bool ApplicationBuilder::set_param(const core::Parameter& parameter)
 {
-	using boost::iequals;
+	//using boost::iequals;
 	if (iequals(parameter.name, "show_time")) {
 		bool val = parameter.get<bool>();
 		log.set_flags((log.get_flags()&~log::show_time)|(val?log::show_time:0));

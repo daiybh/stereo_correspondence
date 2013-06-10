@@ -10,10 +10,13 @@
 
 #include "Parameters.h"
 #include <iostream>
+#ifndef YURI_USE_CXX11
+#include <boost/foreach.hpp>
+#endif
 namespace yuri {
 
 namespace core {
-using boost::lexical_cast;
+//using boost::lexical_cast;
 
 template<> shared_ptr<Callback> Parameter::get() const
 {
@@ -83,8 +86,13 @@ Parameter & Parameter::operator= (Parameter& par)
 		case Callback_functionType: cbval = par.get<shared_ptr<Callback> >(); break;
 		case GroupType: {
 
+
+#ifndef YURI_USE_CXX11
 			shared_ptr<Parameters> pr;
 			BOOST_FOREACH(pr,par.parameters_vector) {
+#else
+			for(auto& pr: par.parameters_vector) {
+#endif
 				shared_ptr<Parameters> par2(new Parameters(*pr));
 				parameters_vector.push_back(par2);
 			}
@@ -110,8 +118,14 @@ shared_ptr<Parameter> Parameter::get_copy()
 		case Callback_functionType: p.reset(new Parameter(name,cbval)); break;
 		case GroupType: {
 			p.reset(new Parameter(name));
+
+#ifndef YURI_USE_CXX11
 			shared_ptr<Parameters> par;
 			BOOST_FOREACH(par,parameters_vector) {
+#else
+			for (auto& par: parameters_vector) {
+#endif
+
 				shared_ptr<Parameters> par2(new Parameters(*par));
 				p->parameters_vector.push_back(par2);
 			}
@@ -171,8 +185,13 @@ Parameters::Parameters(Parameters& p):
 
 Parameters& Parameters::operator=(const Parameters& other)
 {
+#ifndef YURI_USE_CXX11
 	pair<std::string,shared_ptr<Parameter> > par;
 	BOOST_FOREACH(par,other.params) {
+#else
+	for (auto& par: other.params) {
+#endif
+
 		shared_ptr<Parameter> other = par.second->get_copy();
 		this->params[par.first]=other;
 	}
@@ -198,8 +217,12 @@ bool Parameters::is_defined(std::string id)
 
 void Parameters::merge(Parameters &p)
 {
+#ifndef YURI_USE_CXX11
 	pair<std::string,shared_ptr<Parameter> > par;
 	BOOST_FOREACH(par,p.params) {
+#else
+	for (auto& par: p.params) {
+#endif
 		(*this)[par.first]=*(par.second);
 	}
 }

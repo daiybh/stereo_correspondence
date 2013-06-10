@@ -11,7 +11,6 @@
 #include "ThreadBase.h"
 #include <sys/types.h>
 #include <string>
-#include "boost/lexical_cast.hpp"
 #ifdef YURI_LINUX
 #include <pthread.h>
 #include <sys/syscall.h>
@@ -29,13 +28,18 @@ yuri::mutex ThreadBase::last_user_thread_id_mutex;
 
 long ThreadBase::new_thread_id()
 {
-	yuri::mutex::scoped_lock l(last_user_thread_id_mutex);
+	lock l(last_user_thread_id_mutex);
 	return ++last_user_thread_id;
 }
 ThreadBase::ThreadBase(log::Log &_log, pwThreadBase parent):log(_log),parent(parent),
 	end(false),end_requested(false),
 	elsec(0),elusec(0),timer_started(false),
-	join_timeout(boost::posix_time::milliseconds(2500)),exitCode(YURI_EXIT_OK),
+#ifndef YURI_USE_CXX11
+	join_timeout(boost::posix_time::milliseconds(2500)),
+#else
+	join_timeout(2500000),
+#endif
+	exitCode(YURI_EXIT_OK),
 	lastChild(0),finishWhenChildEnds(false),quitWhenChildsEnd(true),own_tid(0)
 {
 	log[debug] << "Parent " << (void *)(parent.lock().get()) << "\n";
@@ -59,7 +63,7 @@ void ThreadBase::operator()()
 
 void ThreadBase::finish()
 {
-	yuri::mutex::scoped_lock l(end_lock);
+	lock l(end_lock);
 	// Death of a child is fatal
 	log[verbose_debug] << "finish()" << "\n";
 	log[debug] << "Finishind all threads" << "\n";
@@ -69,7 +73,7 @@ void ThreadBase::finish()
 
 bool ThreadBase::still_running()
 {
-	yuri::mutex::scoped_lock l(end_lock);
+	lock l(end_lock);
 	do_pending_requests();
 	return !end && !end_requested;
 }
@@ -95,7 +99,7 @@ void ThreadBase::request_end(int code)
 {
 	log[verbose_debug] << "request_end(): " << code;
 	exitCode = code;
-	yuri::mutex::scoped_lock l(end_lock);
+	lock l(end_lock);
 	if (end || end_requested) return;
 	end_requested=true;
 	log[verbose_debug] << "end_request placed" << "\n";
@@ -117,13 +121,13 @@ void ThreadBase::request_end(int code)
 /// @return true on success, false otherwise
 bool ThreadBase::spawn_thread(pThreadBase thread)
 {
-	boost::timed_mutex::scoped_lock l(children_lock);
+	timed_lock l(children_lock);
 	return do_spawn_thread(thread);
 }
 
 bool ThreadBase::add_child(pThreadBase thread)
 {
-	boost::timed_mutex::scoped_lock l(children_lock);
+	timed_lock l(children_lock);
 	return do_add_child(thread,false);
 }
 /// Finished the thread
@@ -133,7 +137,7 @@ bool ThreadBase::add_child(pThreadBase thread)
 /// @param join should the thread be joind after finishing? default value is false
 void ThreadBase::finish_thread(pwThreadBase child, bool join)
 {
-	boost::timed_mutex::scoped_lock l(children_lock);
+	timed_lock l(children_lock);
 	do_finish_thread(child,join);
 }
 /// Joins thread
@@ -144,7 +148,7 @@ void ThreadBase::finish_thread(pwThreadBase child, bool join)
 ///		is running in thread that is to be closed)
 void ThreadBase::join_thread(pwThreadBase child)
 {
-	boost::timed_mutex::scoped_lock l(children_lock);
+	timed_lock l(children_lock);
 	do_join_thread(child,true);
 }
 /// Finish all
@@ -152,7 +156,7 @@ void ThreadBase::join_thread(pwThreadBase child)
 /// Finishes all threads. Optionaly, it cas also join the threads.
 void ThreadBase::finish_all_threads(bool join)
 {
-	boost::timed_mutex::scoped_lock l(children_lock);
+	timed_lock l(children_lock);
 	log[debug] << "Finishing all childs" << "\n";
 	for (std::map<pwThreadBase,pThreadChild >::iterator i = children.begin();
 		i != children.end(); ++i) {
@@ -166,7 +170,7 @@ void ThreadBase::finish_all_threads(bool join)
 void ThreadBase::join_all_threads()
 {
 	log[debug] << "Joining all childs" << "\n";
-	boost::timed_mutex::scoped_lock l(children_lock);
+	timed_lock l(children_lock);
 	std::map<pwThreadBase,pThreadChild >::iterator i;
 	yuri::size_t s = children.size();
 	log[debug] << s << "\n";
@@ -197,7 +201,7 @@ bool ThreadBase::do_add_child(pThreadBase thread, bool spawned)
 		try {
 			t.reset(new yuri::thread(ThreadSpawn(thread)));
 		}
-		catch (boost::thread_resource_error&) {
+		catch (std::runtime_error&) {
 			return false;
 		}
 		if (!t.get()) return false;
@@ -248,13 +252,18 @@ void ThreadBase::do_join_thread(pwThreadBase child, bool check)
 		log[warning] << "Requested to join object that is not separate thread!"
 			<< "\n";
 	} else {
+#ifndef YURI_USE_CXX11
 		if (!children[child]->thread_ptr->timed_join(join_timeout)) {
 			log[warning] << "Failed to join thread " <<
 				children[child]->thread_ptr->get_id() << " with " <<
-				join_timeout.total_milliseconds() << "ms timeout." <<
+			join_timeout.total_milliseconds() << "ms timeout." <<
+
 				"Detaching thread." << "\n";
 			children[child]->thread_ptr->detach();
 		}
+#else
+		children[child]->thread_ptr->join();
+#endif
 	}
 	log[debug] << "Deleting child" << "\n";
 	children.erase(child);
@@ -264,8 +273,8 @@ void ThreadBase::do_join_thread(pwThreadBase child, bool check)
 
 void ThreadBase::request_finish_thread(pwThreadBase child)
 {
-	boost::mutex::scoped_lock l2(end_lock);
-	boost::timed_mutex::scoped_lock l(children_lock);
+	lock l2(end_lock);
+	timed_lock l(children_lock);
 
 
 	do_request_finish_thread(child);
@@ -289,14 +298,14 @@ void ThreadBase::do_pending_requests()
 		finish_thread(child,true);
 	}
 }
-void ThreadBase::sleep (unsigned long microseconds)
+void ThreadBase::sleep (unsigned long ms)
 {
-	boost::this_thread::sleep(boost::posix_time::microseconds(microseconds));
+	this_thread::sleep(microseconds(ms));
 }
 
 yuri::size_t ThreadBase::get_active_childs()
 {
-	boost::timed_mutex::scoped_lock l(children_lock);
+	timed_lock l(children_lock);
 	return children.size();
 }
 
@@ -312,7 +321,7 @@ pid_t ThreadBase::get_tid()
 
 pid_t ThreadBase::retrieve_tid()
 {
-#ifdef YURI_LINUX
+#if defined(YURI_LINUX) && !defined(YURI_ANDROID)
 	own_tid = syscall(SYS_gettid);
 	return own_tid;
 #else
@@ -328,7 +337,7 @@ void ThreadBase::print_id(_debug_flags f)
 
 bool ThreadBase::bind_to_cpu(yuri::uint_t cpu)
 {
-#ifdef YURI_LINUX
+#if defined(YURI_LINUX) && !defined(YURI_ANDROID)
 	cpu_set_t cpus;
 	CPU_ZERO(&cpus);
 	CPU_SET(cpu,&cpus);

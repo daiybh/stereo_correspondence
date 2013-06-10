@@ -10,13 +10,13 @@
 #ifndef BASICIOTHREAD_H_
 #define BASICIOTHREAD_H_
 
-#ifdef __linux__
+#ifdef YURI_LINUX
 #include <sched.h>
 #endif
 #include "yuri/core/forward.h"
 #include <vector>
 #include <string>
-#ifdef __linux__
+#ifdef YURI_LINUX
 #include <poll.h>
 #endif
 #include "yuri/core/PipeConnector.h"
@@ -44,9 +44,9 @@ public:
  * 							Input/Output
  **************************************************************************** */
 	virtual inline yuri::sint_t get_no_in_ports()
-		{ boost::mutex::scoped_lock l(port_lock); return in_ports; }
+		{ lock l(port_lock); return in_ports; }
 	virtual inline yuri::sint_t get_no_out_ports()
-		{ boost::mutex::scoped_lock l(port_lock); return out_ports; }
+		{ lock l(port_lock); return out_ports; }
 	virtual void 				connect_in(yuri::sint_t index, pBasicPipe pipe);
 	virtual void 				connect_out(yuri::sint_t index, pBasicPipe pipe);
 	virtual void 				close_pipes();
@@ -113,9 +113,8 @@ protected:
 	yuri::ssize_t 				cpu_affinity;
 	yuri::size_t 				fps_stats;
 	std::vector<yuri::size_t> 	streamed_frames;
-	std::vector<boost::posix_time::ptime>
-								first_frame;
-	boost::posix_time::ptime 	pts_base;
+	std::vector<time_value>		first_frame;
+	time_value				 	pts_base;
 	std::string 				node_id_;
 	std::string					node_name_;
 };

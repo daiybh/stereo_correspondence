@@ -10,8 +10,9 @@
 
 #include "Log.h"
 #include <map>
-#include <boost/assign.hpp>
+#ifndef YURI_ANDROID
 #include <boost/date_time/posix_time/posix_time.hpp>
+#endif
 namespace yuri
 {
 namespace log
@@ -21,7 +22,7 @@ namespace log
 int Log::uids=0;
 
 namespace {
-std::map<_debug_flags, std::string> level_names=boost::assign::map_list_of<_debug_flags, std::string>
+std::map<_debug_flags, std::string> level_names=map_list_of<_debug_flags, std::string>
 	(fatal,"FATAL ERROR")
 	(error,"ERROR")
 	(warning,"WARNING")
@@ -31,7 +32,7 @@ std::map<_debug_flags, std::string> level_names=boost::assign::map_list_of<_debu
 	(verbose_debug,"VERBOSE_DEBUG")
 	(trace,"TRACE");
 
-std::map<_debug_flags, std::string> level_colors=boost::assign::map_list_of<_debug_flags, std::string>
+std::map<_debug_flags, std::string> level_colors=map_list_of<_debug_flags, std::string>
 (fatal,"\033[4;31;42m") // Red, underscore, bg
 (error,"\033[31m") // Red
 (warning,"\033[35m")
@@ -112,11 +113,13 @@ std::string Log::print_time()
 {
 	std::string s;
 	std::stringstream ss;
+#ifndef YURI_ANDROID
 	if (output_flags & show_thread_id) {
 		 ss << boost::this_thread::get_id();
 		 s += std::string(" ") + ss.str();
 	}
 	if (output_flags & show_time) s += std::string(" ") + boost::posix_time::to_simple_string(boost::posix_time::microsec_clock::local_time().time_of_day());
+#endif
 	if (s.length()) s+=" ";
 	return s;
 }

@@ -10,10 +10,6 @@
 
 #ifndef CONFIG_H_
 #define CONFIG_H_
-//#include "yuri/yuriconf.h"
-#ifdef YURI_HAVE_LIBCONFIG
-#include <libconfig.h++>
-#endif
 #include "yuri/log/Log.h"
 #include <cstdlib>
 #include <string>
@@ -22,7 +18,6 @@
 #include <algorithm>
 #include <cctype>
 #include "ConfigException.h"
-#include <boost/filesystem.hpp>
 #include "yuri/exception/InitializationFailed.h"
 #include "yuri/exception/OutOfRange.h"
 #include "Callback.h"
@@ -73,22 +68,6 @@ template<typename T>  bool
 	Config::get_value(std::string /*path*/, T &/*out*/)
 {
 	boost::mutex::scoped_lock l(config_mutex);
-#ifdef YURI_HAVE_LIBCONFIG
-	if (configs.empty()) throw (ConfigException());
-	try {
-		for (std::deque<shared_ptr<libConfig> >::iterator i=configs.begin();
-							i!=configs.end();++i) {
-			if ((*i)->exists(path)) {
-				(*i)->lookupValue(path,out);
-				return true;
-			}
-		}
-		return false;
-	}
-	catch (libSettingNotFoundException) {
-		log[warning] << "Configuration option " << path << " not found" << std::endl;
-	}
-#endif
 	return false;
 }
 
@@ -102,22 +81,6 @@ template<>  inline bool
 		out = env;
 		return true;
 	}
-#ifdef YURI_HAVE_LIBCONFIG
-	if (configs.empty()) throw (ConfigException());
-	try {
-		for (std::deque<shared_ptr<libConfig> >::iterator i=configs.begin();
-							i!=configs.end();++i) {
-			if ((*i)->exists(path)) {
-				(*i)->lookupValue(path,out);
-				return true;
-			}
-		}
-		return false;
-	}
-	catch (libSettingNotFoundException) {
-		log[warning] << "Configuration option " << path << " not found" << std::endl;
-	}
-#endif
 	return false;
 }
 
@@ -125,21 +88,6 @@ template<typename T>  bool
 	Config::get_value_from_array(std::string /*path*/, int /*index*/, T &/*out*/)
 {
 	boost::mutex::scoped_lock l(config_mutex);
-#ifdef YURI_HAVE_LIBCONFIG
-	if (configs.empty()) throw (ConfigException());
-	try {
-		for (std::deque<shared_ptr<libConfig> >::iterator i=configs.begin();
-				i!=configs.end();++i) {
-			if ((*i)->exists(path)) {
-				out = (T) (*i)->lookup(path)[index];
-				return true;
-			}
-		}
-	}
-	catch (libSettingNotFoundException) {
-		log[warning] << "Configuration option " << path << " not found" << std::endl;
-	}
-#endif
 	return false;
 }
 
@@ -148,21 +96,7 @@ template<>  inline bool
 	Config::get_value_from_array<std::string> (std::string /*path*/, int /*index*/, std::string &/*out*/)
 {
 	boost::mutex::scoped_lock l(config_mutex);
-#ifdef YURI_HAVE_LIBCONFIG
-	if (configs.empty()) throw (ConfigException());
-	try {
-		for (std::deque<shared_ptr<libConfig> >::iterator i=configs.begin();
-				i!=configs.end();++i) {
-			if ((*i)->exists(path)) {
-				out = (const char *) (*i)->lookup(path)[index];
-				return true;
-			}
-		}
-	}
-	catch (libSettingNotFoundException) {
-		log[warning] << "Configuration option " << path << " not found" << std::endl;
-	}
-#endif
+
 	return false;
 }
 }

@@ -9,9 +9,14 @@
  */
 
 #include "BasicPipe.h"
+#ifndef YURI_USE_CXX11
 #include <boost/algorithm/string.hpp>
-#include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>
+#endif
+#ifdef YURI_ANDROID
+#include <unistd.h>
+
+#endif
 namespace yuri {
 
 FormatInfo_t FormatInfo::raw_format( std::string name, std::vector<std::string> shortnames,
@@ -40,9 +45,6 @@ FormatInfo_t FormatInfo::video_format( std::string name, std::vector<std::string
 
 namespace core {
 
-using boost::iequals;
-using boost::assign::list_of;
-using boost::assign::map_list_of;
 pBasicPipe BasicPipe::generator(log::Log &log,std::string name, Parameters &parameters)
 {
 	shared_ptr<BasicPipe> p (new BasicPipe(log,name));
@@ -62,48 +64,48 @@ pParameters BasicPipe::configure()
 	return p;
 }
 
-boost::mutex BasicPipe::format_lock;
-std::map<yuri::format_t, const FormatInfo_t> BasicPipe::formats=map_list_of<yuri::format_t, FormatInfo_t>
+yuri::mutex BasicPipe::format_lock;
+std::map<yuri::format_t, FormatInfo_t> BasicPipe::formats=map_list_of<yuri::format_t, FormatInfo_t>
 		(YURI_FMT_NONE, 		FormatInfo::raw_format("None", list_of<std::string>("none"), false, 0))
 		////////////////// Single component formats //////////////////
-		(YURI_FMT_RED8, 		FormatInfo::raw_format("Red 8bit", list_of<std::string>("red8")("red")("r")("r8"), false, 8,list_of(8),list_of("R"),list_of(1),list_of(1)))
-		(YURI_FMT_GREEN8, 		FormatInfo::raw_format("Green 8bit", list_of<std::string>("green8")("green")("g8")("g"), false, 8,list_of(8),list_of("G"),list_of(1),list_of(1)))
-		(YURI_FMT_BLUE8, 		FormatInfo::raw_format("Blue 8bit", list_of<std::string>("blue8")("blue")("b")("b8"), false, 8,list_of(8),list_of("B"),list_of(1),list_of(1)))
-		(YURI_FMT_Y8, 			FormatInfo::raw_format("Luminance 8bit", list_of<std::string>("Y8")("y")("grey8")("grey"), false, 8,list_of(8),list_of("Y"),list_of(1),list_of(1)))
-		(YURI_FMT_U8, 			FormatInfo::raw_format("Chroma (U) 8bit", list_of<std::string>("U8")("u"), false, 8,list_of(8),list_of("U"),list_of(1),list_of(1)))
-		(YURI_FMT_V8,	 		FormatInfo::raw_format("Chroma (V) 8bit", list_of<std::string>("V8")("v"), false, 8,list_of(8),list_of("V"),list_of(1),list_of(1)))
-		(YURI_FMT_DEPTH8, 		FormatInfo::raw_format("Depth 8bit", list_of<std::string>("DEPTH8")("depth")("d8"), false, 8,list_of(8),list_of("D"),list_of(1),list_of(1)))
-		(YURI_FMT_RED16, 		FormatInfo::raw_format("Red 16bit", list_of<std::string>("red16")("r16"), false, 16,list_of(16),list_of("R"),list_of(1),list_of(1)))
-		(YURI_FMT_GREEN16, 		FormatInfo::raw_format("Green 16bit", list_of<std::string>("green16")("g16"), false, 16,list_of(16),list_of("G"),list_of(1),list_of(1)))
-		(YURI_FMT_BLUE16, 		FormatInfo::raw_format("Blue 16bit", list_of<std::string>("blue16")("b16"), false, 16,list_of(16),list_of("B"),list_of(1),list_of(1)))
-		(YURI_FMT_Y16, 			FormatInfo::raw_format("Luminance 16bit", list_of<std::string>("y16")("grey16"), false, 16,list_of(16),list_of("Y"),list_of(1),list_of(1)))
-		(YURI_FMT_U16, 			FormatInfo::raw_format("Chroma (U) 16bit", list_of<std::string>("u16"), false, 16,list_of(16),list_of("U"),list_of(1),list_of(1)))
-		(YURI_FMT_V16,	 		FormatInfo::raw_format("Chroma (V) 16bit", list_of<std::string>("v16"), false, 16,list_of(16),list_of("V"),list_of(1),list_of(1)))
-		(YURI_FMT_DEPTH16, 		FormatInfo::raw_format("Depth 16bit", list_of<std::string>("DEPTH16")("d16"), false, 16,list_of(16),list_of("D"),list_of(1),list_of(1)))
-		(YURI_FMT_SINGLE_COMPONENT16, 		FormatInfo::raw_format("Single 16bit", list_of<std::string>("SINGLE16")("s16"), false, 16,list_of(16),list_of("D"),list_of(1),list_of(1)))
+		(YURI_FMT_RED8, 		FormatInfo::raw_format("Red 8bit", list_of<std::string>("red8")("red")("r")("r8"), false, 8,list_of<size_t>(8),list_of<std::string>("R"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_GREEN8, 		FormatInfo::raw_format("Green 8bit", list_of<std::string>("green8")("green")("g8")("g"), false, 8,list_of<size_t>(8),list_of<std::string>("G"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_BLUE8, 		FormatInfo::raw_format("Blue 8bit", list_of<std::string>("blue8")("blue")("b")("b8"), false, 8,list_of<size_t>(8),list_of<std::string>("B"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_Y8, 			FormatInfo::raw_format("Luminance 8bit", list_of<std::string>("Y8")("y")("grey8")("grey"), false, 8,list_of<size_t>(8),list_of<std::string>("Y"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_U8, 			FormatInfo::raw_format("Chroma (U) 8bit", list_of<std::string>("U8")("u"), false, 8,list_of<size_t>(8),list_of<std::string>("U"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_V8,	 		FormatInfo::raw_format("Chroma (V) 8bit", list_of<std::string>("V8")("v"), false, 8,list_of<size_t>(8),list_of<std::string>("V"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_DEPTH8, 		FormatInfo::raw_format("Depth 8bit", list_of<std::string>("DEPTH8")("depth")("d8"), false, 8,list_of<size_t>(8),list_of<std::string>("D"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_RED16, 		FormatInfo::raw_format("Red 16bit", list_of<std::string>("red16")("r16"), false, 16,list_of<size_t>(16),list_of<std::string>("R"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_GREEN16, 		FormatInfo::raw_format("Green 16bit", list_of<std::string>("green16")("g16"), false, 16,list_of<size_t>(16),list_of<std::string>("G"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_BLUE16, 		FormatInfo::raw_format("Blue 16bit", list_of<std::string>("blue16")("b16"), false, 16,list_of<size_t>(16),list_of<std::string>("B"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_Y16, 			FormatInfo::raw_format("Luminance 16bit", list_of<std::string>("y16")("grey16"), false, 16,list_of<size_t>(16),list_of<std::string>("Y"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_U16, 			FormatInfo::raw_format("Chroma (U) 16bit", list_of<std::string>("u16"), false, 16,list_of<size_t>(16),list_of<std::string>("U"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_V16,	 		FormatInfo::raw_format("Chroma (V) 16bit", list_of<std::string>("v16"), false, 16,list_of<size_t>(16),list_of<std::string>("V"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_DEPTH16, 		FormatInfo::raw_format("Depth 16bit", list_of<std::string>("DEPTH16")("d16"), false, 16,list_of<size_t>(16),list_of<std::string>("D"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_SINGLE_COMPONENT16, 		FormatInfo::raw_format("Single 16bit", list_of<std::string>("SINGLE16")("s16"), false, 16,list_of<size_t>(16),list_of<std::string>("D"),list_of<size_t>(1),list_of<size_t>(1)))
 		//////////////////      RGB formats        //////////////////
-		(YURI_FMT_RGB, 			FormatInfo::raw_format("RGB 24bit", list_of<std::string>("RGB")("RGB24"), false, 24,list_of(8)(8)(8),list_of("RGB"),list_of(1),list_of(1)))
-		(YURI_FMT_RGBA, 		FormatInfo::raw_format("RGBA 32bit", list_of<std::string>("RGBA")("RGB32")("RGBA32"), false, 32,list_of(8)(8)(8)(8),list_of("RGBA"),list_of(1),list_of(1)))
-		(YURI_FMT_RGB_PLANAR, 	FormatInfo::raw_format("Planar RGB 24bit", list_of<std::string>("RGBp")("RGB24p"), false, 24,list_of(8)(8)(8),list_of("R")("G")("B"),list_of(1)(1)(1),list_of(1)(1)(1)))
-		(YURI_FMT_RGBA_PLANAR, 	FormatInfo::raw_format("Planar RGBA 32bit", list_of<std::string>("RGBAp")("RGB32p")("RGBA32p"), false, 32,list_of(8)(8)(8)(8),list_of("R")("G")("B")("A"),list_of(1)(1)(1)(1),list_of(1)(1)(1)(1)))
-		(YURI_FMT_BGR, 			FormatInfo::raw_format("BGR 24bit", list_of<std::string>("BGR")("BGR24"), false, 24,list_of(8)(8)(8),list_of("BGR"),list_of(1),list_of(1)))
-		(YURI_FMT_BGRA, 		FormatInfo::raw_format("BGRA 32bit", list_of<std::string>("BGRA")("BGR32")("BGRA32"), false, 32,list_of(8)(8)(8)(8),list_of("BGRA"),list_of(1),list_of(1)))
+		(YURI_FMT_RGB, 			FormatInfo::raw_format("RGB 24bit", list_of<std::string>("RGB")("RGB24"), false, 24,list_of<size_t>(8)(8)(8),list_of<std::string>("RGB"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_RGBA, 		FormatInfo::raw_format("RGBA 32bit", list_of<std::string>("RGBA")("RGB32")("RGBA32"), false, 32,list_of<size_t>(8)(8)(8)(8),list_of<std::string>("RGBA"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_RGB_PLANAR, 	FormatInfo::raw_format("Planar RGB 24bit", list_of<std::string>("RGBp")("RGB24p"), false, 24,list_of<size_t>(8)(8)(8),list_of<std::string>("R")("G")("B"),list_of<size_t>(1)(1)(1),list_of<size_t>(1)(1)(1)))
+		(YURI_FMT_RGBA_PLANAR, 	FormatInfo::raw_format("Planar RGBA 32bit", list_of<std::string>("RGBAp")("RGB32p")("RGBA32p"), false, 32,list_of<size_t>(8)(8)(8)(8),list_of<std::string>("R")("G")("B")("A"),list_of<size_t>(1)(1)(1)(1),list_of<size_t>(1)(1)(1)(1)))
+		(YURI_FMT_BGR, 			FormatInfo::raw_format("BGR 24bit", list_of<std::string>("BGR")("BGR24"), false, 24,list_of<size_t>(8)(8)(8),list_of<std::string>("BGR"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_BGRA, 		FormatInfo::raw_format("BGRA 32bit", list_of<std::string>("BGRA")("BGR32")("BGRA32"), false, 32,list_of<size_t>(8)(8)(8)(8),list_of<std::string>("BGRA"),list_of<size_t>(1),list_of<size_t>(1)))
 
 		//////////////////      YUVformats        //////////////////
-		(YURI_FMT_YUV411, 		FormatInfo::raw_format("YUV (YUYV) 4:1:1 12bit", list_of<std::string>("YUV411"), false, 12, list_of(8)(8)(8),list_of("UYYYVYYY"),list_of(1),list_of(1)))
-		(YURI_FMT_YUV422, 		FormatInfo::raw_format("YUV (YUYV) 4:2:2 16bit", list_of<std::string>("YUV422")("YUYV"), false, 16, list_of(8)(8)(8),list_of("YUYV"),list_of(1),list_of(1)))
-		(YURI_FMT_YUV444, 		FormatInfo::raw_format("YUV (YUYV) 4:4:4 24bit", list_of<std::string>("YUV444"), false, 24, list_of(8)(8)(8),list_of("YUVYUV"),list_of(1),list_of(1)))
-		(YURI_FMT_YUV420_PLANAR,FormatInfo::raw_format("YUV Planar (YUYV) 4:2:0 12bit", list_of<std::string>("YUV420P"), false, 12, list_of(8)(8)(8),list_of("Y")("U")("V"),list_of(1)(2)(2),list_of(1)(2)(2)))
-		(YURI_FMT_YUV422_PLANAR,FormatInfo::raw_format("YUV Planar (YUYV) 4:2:2 16bit", list_of<std::string>("YUV422P"), false, 16, list_of(8)(8)(8),list_of("Y")("U")("V"),list_of(1)(2)(2),list_of(1)(1)(1)))
-		(YURI_FMT_YUV444_PLANAR,FormatInfo::raw_format("YUV Planar (YUYV) 4:4:4 24bit", list_of<std::string>("YUV444P"), false, 16, list_of(8)(8)(8),list_of("Y")("U")("V"),list_of(1)(1)(1),list_of(1)(1)(1)))
-		(YURI_FMT_UYVY422, 		FormatInfo::raw_format("YUV (UYVY) 4:2:2 16bit", list_of<std::string>("UYVY422")("UYVY"), false, 16, list_of(8)(8)(8),list_of("UYVY"),list_of(1),list_of(1)))
-		(YURI_FMT_YVYU422, 		FormatInfo::raw_format("YUV (YVYU) 4:2:2 16bit", list_of<std::string>("YVYU422")("YVYU"), false, 16, list_of(8)(8)(8),list_of("YVYU"),list_of(1),list_of(1)))
-		(YURI_FMT_VYUY422, 		FormatInfo::raw_format("YUV (VYUY) 4:2:2 16bit", list_of<std::string>("VYUY422")("VYUY"), false, 16, list_of(8)(8)(8),list_of("VYUY"),list_of(1),list_of(1)))
+		(YURI_FMT_YUV411, 		FormatInfo::raw_format("YUV (YUYV) 4:1:1 12bit", list_of<std::string>("YUV411"), false, 12, list_of<size_t>(8)(8)(8),list_of<std::string>("UYYYVYYY"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_YUV422, 		FormatInfo::raw_format("YUV (YUYV) 4:2:2 16bit", list_of<std::string>("YUV422")("YUYV"), false, 16, list_of<size_t>(8)(8)(8),list_of<std::string>("YUYV"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_YUV444, 		FormatInfo::raw_format("YUV (YUYV) 4:4:4 24bit", list_of<std::string>("YUV444"), false, 24, list_of<size_t>(8)(8)(8),list_of<std::string>("YUVYUV"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_YUV420_PLANAR,FormatInfo::raw_format("YUV Planar (YUYV) 4:2:0 12bit", list_of<std::string>("YUV420P"), false, 12, list_of<size_t>(8)(8)(8),list_of<std::string>("Y")("U")("V"),list_of<size_t>(1)(2)(2),list_of<size_t>(1)(2)(2)))
+		(YURI_FMT_YUV422_PLANAR,FormatInfo::raw_format("YUV Planar (YUYV) 4:2:2 16bit", list_of<std::string>("YUV422P"), false, 16, list_of<size_t>(8)(8)(8),list_of<std::string>("Y")("U")("V"),list_of<size_t>(1)(2)(2),list_of<size_t>(1)(1)(1)))
+		(YURI_FMT_YUV444_PLANAR,FormatInfo::raw_format("YUV Planar (YUYV) 4:4:4 24bit", list_of<std::string>("YUV444P"), false, 16, list_of<size_t>(8)(8)(8),list_of<std::string>("Y")("U")("V"),list_of<size_t>(1)(1)(1),list_of<size_t>(1)(1)(1)))
+		(YURI_FMT_UYVY422, 		FormatInfo::raw_format("YUV (UYVY) 4:2:2 16bit", list_of<std::string>("UYVY422")("UYVY"), false, 16, list_of<size_t>(8)(8)(8),list_of<std::string>("UYVY"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_YVYU422, 		FormatInfo::raw_format("YUV (YVYU) 4:2:2 16bit", list_of<std::string>("YVYU422")("YVYU"), false, 16, list_of<size_t>(8)(8)(8),list_of<std::string>("YVYU"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_VYUY422, 		FormatInfo::raw_format("YUV (VYUY) 4:2:2 16bit", list_of<std::string>("VYUY422")("VYUY"), false, 16, list_of<size_t>(8)(8)(8),list_of<std::string>("VYUY"),list_of<size_t>(1),list_of<size_t>(1)))
 
-		(YURI_FMT_V210_SDI,		FormatInfo::raw_format("V210 SDI", list_of<std::string>("v210_sdi")("sdi"), true, 20, list_of(10)(10),list_of("YUYV"),list_of(1),list_of(1)))
+		(YURI_FMT_V210_SDI,		FormatInfo::raw_format("V210 SDI", list_of<std::string>("v210_sdi")("sdi"), true, 20, list_of<size_t>(10)(10),list_of<std::string>("YUYV"),list_of<size_t>(1),list_of<size_t>(1)))
 		//////////////////      10bit formats        //////////////////
-		(YURI_FMT_V210, 		FormatInfo::raw_format("V210 20bit", list_of<std::string>("v210"), false, 20, list_of(10)(10)(10),list_of("YUYV"),list_of(1),list_of(1)))
-		(YURI_FMT_R210, 		FormatInfo::raw_format("R210 20bit", list_of<std::string>("r210"), false, 32, list_of(10)(10)(10),list_of("RGB"),list_of(1),list_of(1)))
+		(YURI_FMT_V210, 		FormatInfo::raw_format("V210 20bit", list_of<std::string>("v210"), false, 20, list_of<size_t>(10)(10)(10),list_of<std::string>("YUYV"),list_of<size_t>(1),list_of<size_t>(1)))
+		(YURI_FMT_R210, 		FormatInfo::raw_format("R210 20bit", list_of<std::string>("r210"), false, 32, list_of<size_t>(10)(10)(10),list_of<std::string>("RGB"),list_of<size_t>(1),list_of<size_t>(1)))
 		////////////////// Compressed raw formats (no header) //////////////////
 		(YURI_FMT_DXT1, 		FormatInfo::raw_format("DXT1", list_of<std::string>("dxt1")("bc1"), true, 4))
 		(YURI_FMT_DXT2, 		FormatInfo::raw_format("DXT2", list_of<std::string>("dxt2")("bc2"), true, 8))
@@ -120,14 +122,14 @@ std::map<yuri::format_t, const FormatInfo_t> BasicPipe::formats=map_list_of<yuri
 		(YURI_FMT_DXT5_WITH_MIPMAPS,FormatInfo::raw_format("DXT5 with mipmaps", list_of<std::string>("dxt5t"), true, 8))
 
 		////////////////// Custom formats //////////////////
-		(YURI_FMT_V210_MVTP, 	FormatInfo::raw_format("V210 20bit (MVTP ordering)", list_of<std::string>("mvtp_v210")("v210mvtp"), true, 20, list_of(10)(10)(10)))
-		(YURI_FMT_MVTP_FULL_FRAME,	FormatInfo::raw_format("MVTP Fullframe", list_of<std::string>("mvtp_full"), true, 20, list_of(10)(10)(10)))
-		(YURI_FMT_MVTP_AUX_DATA,FormatInfo::raw_format("MVTP Auxdata", list_of<std::string>("mvtp_aux"), true, 20, list_of(10)(10)(10)))
+		(YURI_FMT_V210_MVTP, 	FormatInfo::raw_format("V210 20bit (MVTP ordering)", list_of<std::string>("mvtp_v210")("v210mvtp"), true, 20, list_of<size_t>(10)(10)(10)))
+		(YURI_FMT_MVTP_FULL_FRAME,	FormatInfo::raw_format("MVTP Fullframe", list_of<std::string>("mvtp_full"), true, 20, list_of<size_t>(10)(10)(10)))
+		(YURI_FMT_MVTP_AUX_DATA,FormatInfo::raw_format("MVTP Auxdata", list_of<std::string>("mvtp_aux"), true, 20, list_of<size_t>(10)(10)(10)))
 		////////////////// Bayer patterns //////////////////
-		(YURI_FMT_BAYER_RGGB,FormatInfo::raw_format("Bayer patter RGGB", list_of<std::string>("bayer")("rggb")("bayer_rggb"), false, 8, list_of(8),list_of("@")))
-		(YURI_FMT_BAYER_BGGR,FormatInfo::raw_format("Bayer patter BGGR", list_of<std::string>("ba81")("bggr")("bayer_bggr"), false, 8, list_of(8),list_of("@")))
-		(YURI_FMT_BAYER_GRBG,FormatInfo::raw_format("Bayer patter GRBG", list_of<std::string>("grbg")("bayer_grbg"), false, 8, list_of(8),list_of("@")))
-		(YURI_FMT_BAYER_GRBG,FormatInfo::raw_format("Bayer patter GBRG", list_of<std::string>("gbrg")("bayer_gbrg"), false, 8, list_of(8),list_of("@")))
+		(YURI_FMT_BAYER_RGGB,FormatInfo::raw_format("Bayer patter RGGB", list_of<std::string>("bayer")("rggb")("bayer_rggb"), false, 8, list_of<size_t>(8),list_of<std::string>("@")))
+		(YURI_FMT_BAYER_BGGR,FormatInfo::raw_format("Bayer patter BGGR", list_of<std::string>("ba81")("bggr")("bayer_bggr"), false, 8, list_of<size_t>(8),list_of<std::string>("@")))
+		(YURI_FMT_BAYER_GRBG,FormatInfo::raw_format("Bayer patter GRBG", list_of<std::string>("grbg")("bayer_grbg"), false, 8, list_of<size_t>(8),list_of<std::string>("@")))
+		(YURI_FMT_BAYER_GRBG,FormatInfo::raw_format("Bayer patter GBRG", list_of<std::string>("gbrg")("bayer_gbrg"), false, 8, list_of<size_t>(8),list_of<std::string>("@")))
 		////////////////// Image formats  (complete files with headers) //////////////////
 		(YURI_IMAGE_JPEG,		FormatInfo::image_format("JPEG",list_of<std::string>("jpeg")("jpg"),list_of<std::string>("image/jpeg")))
 		(YURI_IMAGE_PNG,		FormatInfo::image_format("PNG",list_of<std::string>("png"),list_of<std::string>("image/png")))
@@ -186,50 +188,50 @@ std::string units = "Bytes";
 
 /*void BasicPipe::push_frame(BasicFrame *frame)
 {
-	mutex::scoped_lock l(framesLock);
+	lock l(framesLock);
 	pBasicFrame p(frame);
 	do_push_frame(p);
 }*/
 
 void BasicPipe::push_frame(pBasicFrame frame)
 {
-	boost::mutex::scoped_lock l(framesLock);
+	lock l(framesLock);
 	do_push_frame(frame);
 }
 
 pBasicFrame BasicPipe::pop_frame()
 {
-	boost::mutex::scoped_lock l(framesLock);
+	lock l(framesLock);
 	return do_pop_frame();
 }
 
 pBasicFrame BasicPipe::pop_latest()
 {
-	boost::mutex::scoped_lock l(framesLock);
+	lock l(framesLock);
 	return do_pop_latest();
 }
 
 void BasicPipe::set_limit(yuri::size_t limit0, yuri::ubyte_t policy)
 {
-	mutex::scoped_lock l(framesLock);
+	lock l(framesLock);
 	do_set_limit(limit0,policy);
 }
 
 void BasicPipe::set_type(yuri::format_t type)
 {
-	mutex::scoped_lock l(framesLock);
+	lock l(framesLock);
 	do_set_type(type);
 }
 
 yuri::format_t BasicPipe::get_type()
 {
-	mutex::scoped_lock l(framesLock);
+	lock l(framesLock);
 	return do_get_type();
 }
 
 bool BasicPipe::is_changed()
 {
-	mutex::scoped_lock l(framesLock);
+	lock l(framesLock);
 	if (changed) {
 		do_set_changed(false);
 		return true;
@@ -240,18 +242,18 @@ bool BasicPipe::is_changed()
 
 bool BasicPipe::is_empty()
 {
-	mutex::scoped_lock l(framesLock);
+	lock l(framesLock);
 	return frames.empty();
 }
 
 int BasicPipe::get_notification_fd()
 {
-	mutex::scoped_lock l(framesLock);
+	lock l(framesLock);
 	return do_get_notification_fd();
 }
 void BasicPipe::cancel_notifications()
 {
-	mutex::scoped_lock l(framesLock);
+	lock l(framesLock);
 	do_cancel_notifications();
 }
 /*
@@ -352,23 +354,26 @@ yuri::format_t BasicPipe::do_get_type()
 
 void BasicPipe::close()
 {
-	mutex::scoped_lock l(framesLock);
+	lock l(framesLock);
 	closed=true;
 }
 
 bool BasicPipe::is_closed()
 {
-	mutex::scoped_lock l(framesLock);
+	lock l(framesLock);
 	return closed;
 }
 
 int BasicPipe::do_get_notification_fd()
 {
-#ifdef __linux__
+#ifdef YURI_LINUX
 	if (!notifySockets.size()) {
 		notifySockets.resize(2);
-
+#ifndef YURI_ANDROID
 		socketpair(AF_UNIX,SOCK_DGRAM|SOCK_NONBLOCK,0,&notifySockets[0]);
+#else
+		socketpair(AF_UNIX,SOCK_DGRAM,0,&notifySockets[0]);
+#endif
 		/*int flags = fcntl(notifySockets[0], F_GETFL, 0);
 		fcntl(notifySockets[0], F_SETFL, flags | O_NONBLOCK);
 		fcntl(notifySockets[1], F_SETFL, flags | O_NONBLOCK);*/
@@ -385,7 +390,7 @@ int BasicPipe::do_get_notification_fd()
 void BasicPipe::do_cancel_notifications()
 {
 	notificationsEnabled = false;
-#ifdef __linux__
+#ifdef YURI_LINUX
 	::close(notifySockets[0]);
 	::close(notifySockets[1]);
 #endif
@@ -394,7 +399,7 @@ void BasicPipe::do_cancel_notifications()
 
 void BasicPipe::do_notify()
 {
-#ifdef __linux__
+#ifdef YURI_LINUX
 	if (!notificationsEnabled) return;
 	if (!notifySockets.size()) {
 		log[log::error] << "No notification sockets!!!!!" << "\n";
@@ -421,14 +426,14 @@ std::string BasicPipe::get_type_string(yuri::format_t type)
 }
 std::string BasicPipe::get_format_string(yuri::format_t format)
 {
-	boost::mutex::scoped_lock lock(format_lock);
+	lock lock(format_lock);
 	if (formats.count(format)) return formats[format]->long_name;
 	return std::string("INVALID VALUE");
 }
 
 std::string BasicPipe::get_simple_format_string(yuri::format_t format)
 {
-	boost::mutex::scoped_lock lock(format_lock);
+	lock lock(format_lock);
 	if (formats.count(format)) {
 		if (formats[format]->short_names.size())
 			return formats[format]->short_names[0];
@@ -438,18 +443,27 @@ std::string BasicPipe::get_simple_format_string(yuri::format_t format)
 
 yuri::size_t BasicPipe::get_bpp_from_format(yuri::format_t format)
 {
-	boost::mutex::scoped_lock lock(format_lock);
+	lock lock(format_lock);
 	if (formats.count(format)) return formats[format]->bpp;
 	return 0;
 }
 
 yuri::format_t BasicPipe::get_format_from_string(std::string format, yuri::format_t group)
 {
-	boost::mutex::scoped_lock lock(format_lock);
+	lock lock(format_lock);
+
+#ifndef YURI_USE_CXX11
 	std::pair<yuri::format_t,FormatInfo_t> fmt;
 	BOOST_FOREACH(fmt, formats) {
+#else
+	for (auto& fmt: formats) {
+#endif
 		if (group!=YURI_TYPE_NONE && fmt.second->type !=group) continue;
+#ifndef YURI_USE_CXX11
 		BOOST_FOREACH(std::string name, fmt.second->short_names) {
+#else
+		for(auto name: fmt.second->short_names) {
+#endif
 			if (iequals(name,format)) return fmt.first;
 		}
 	}
@@ -458,14 +472,14 @@ yuri::format_t BasicPipe::get_format_from_string(std::string format, yuri::forma
 
 yuri::format_t BasicPipe::get_format_group(yuri::format_t format)
 {
-	boost::mutex::scoped_lock lock(format_lock);
+	lock lock(format_lock);
 	if (formats.count(format)) return formats[format]->type;
 	return YURI_FMT_NONE;
 }
 
 FormatInfo_t BasicPipe::get_format_info(yuri::format_t format)
 {
-	boost::mutex::scoped_lock lock(format_lock);
+	lock lock(format_lock);
 	if (formats.count(format)) return formats[format];
 	return FormatInfo_t();
 }
@@ -484,10 +498,15 @@ yuri::format_t BasicPipe::set_frame_from_mime(pBasicFrame frame,std::string mime
 //		 */
 //		return YURI_TYPE_VIDEO;
 //	}
-	boost::mutex::scoped_lock lock(format_lock);
+	lock lock(format_lock);
+#ifndef YURI_USE_CXX11
 	std::pair<yuri::format_t,FormatInfo_t> fmt;
 	BOOST_FOREACH(fmt, formats) {
 		BOOST_FOREACH(std::string m, fmt.second->mime_types) {
+#else
+	for(auto& fmt: formats) {
+		for (auto& m: fmt.second->mime_types) {
+#endif
 			if (iequals(mime,m)) {
 				frame->set_parameters(fmt.first,0,0);
 				return fmt.second->type;
@@ -500,7 +519,7 @@ yuri::format_t BasicPipe::set_frame_from_mime(pBasicFrame frame,std::string mime
 /*
 void BasicPipe::set_mime_types()
 {
-	mutex::scoped_lock l(mime_conv_mutex);
+	lock l(mime_conv_mutex);
 	if (!mime_to_format.empty()) return;
 	add_to_formats("image/jpeg",YURI_IMAGE_JPEG);
 	add_to_formats("image/png",YURI_IMAGE_PNG);

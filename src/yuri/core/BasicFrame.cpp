@@ -9,7 +9,9 @@
  */
 
 #include "BasicFrame.h"
-#include <boost/foreach.hpp>
+//#ifndef YURI_USE_CXX11
+//#include <boost/foreach.hpp>
+//#endif
 #include "yuri/exception/OutOfRange.h"
 
 namespace yuri {

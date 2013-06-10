@@ -14,8 +14,6 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <boost/foreach.hpp>
-#include <boost/thread/mutex.hpp>
 #include "yuri/core/config_common.h"
 #include "yuri/core/forward.h"
 #include "yuri/exception/InitializationFailed.h"

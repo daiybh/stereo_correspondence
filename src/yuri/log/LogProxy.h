@@ -32,13 +32,13 @@ struct guarded_stream {
 	 * @param msg	String to write
 	 */
 	void write(const string_t msg) {
-		yuri::mutex::scoped_lock l(mutex_);
+		yuri::lock l(mutex_);
 		str_ << msg;
 	}
 
 	template<class T>
 	guarded_stream& operator<<(const T& val) {
-		yuri::mutex::scoped_lock l(mutex_);
+		yuri::lock l(mutex_);
 		str_ << val;
 		return *this;
 	}
