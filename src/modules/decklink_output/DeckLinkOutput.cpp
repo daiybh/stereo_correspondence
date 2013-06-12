@@ -133,8 +133,6 @@ bool DeckLinkOutput::verify_display_mode()
 	} else {
 		log[log::warning] << "Failed to get mode name!\n";
 	}
-	//if (act_oframe) act_oframe->Release();
-	//if (back_oframe) back_oframe->Release();
 	yuri::uint_t linesize;
 	switch (pixel_format) {
 		case bmdFormat8BitYUV: linesize=width*2;break;
@@ -282,6 +280,7 @@ bool DeckLinkOutput::step()
 			return true;
 		}
 	}
+	bool restart_needed = false;
 	core::pFrameInfo fi = frame->get_info();
 	if (detect_format && fi) {
 		BMDDisplayMode m = parse_format(fi->format);
@@ -297,6 +296,7 @@ bool DeckLinkOutput::step()
 				return true;
 			}
 			log[log::info] << "Format changed to " << fi->format;
+			restart_needed = true;
 		}
 	}
 	if (pfmt!=pixel_format) {
@@ -307,6 +307,11 @@ bool DeckLinkOutput::step()
 			frame2.reset();
 			return true;
 		}
+		restart_needed=true;
+	}
+	if (restart_needed) {
+		stop_stream();
+		start_stream();
 	}
 	shared_ptr<DeckLink3DVideoFrame> pf = get_next_buffer();
 	fill_frame(frame,pf);
