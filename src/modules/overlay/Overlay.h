@@ -10,12 +10,12 @@
 #ifndef OVERLAY_H_
 #define OVERLAY_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/BasicIOFilter.h"
 
 namespace yuri {
 namespace overlay {
 
-class Overlay: public core::BasicIOThread
+class Overlay: public core::BasicMultiIOFilter
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
@@ -25,10 +25,11 @@ public:
 	core::pBasicFrame combine(const core::pBasicFrame& frame_0, const core::pBasicFrame& frame_1);
 private:
 	Overlay(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
-	virtual bool step();
+	//virtual bool step();
+	virtual std::vector<core::pBasicFrame> do_single_step(const std::vector<core::pBasicFrame>&);
 	virtual bool set_param(const core::Parameter& param);
-	core::pBasicFrame frame_0;
-	core::pBasicFrame frame_1;
+//	core::pBasicFrame frame_0;
+//	core::pBasicFrame frame_1;
 	ssize_t x_;
 	ssize_t y_;
 };

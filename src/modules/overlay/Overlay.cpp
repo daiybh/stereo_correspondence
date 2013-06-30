@@ -29,7 +29,7 @@ core::pParameters Overlay::configure()
 
 
 Overlay::Overlay(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,2,1,std::string("overlay"))
+core::BasicMultiIOFilter(log_,parent,2,1,std::string("overlay"))
 {
 	IO_THREAD_INIT("overlay")
 }
@@ -317,18 +317,12 @@ core::pBasicFrame Overlay::combine(const core::pBasicFrame& frame_0, const core:
 	}
 	return outframe;
 }
-bool Overlay::step()
+std::vector<core::pBasicFrame> Overlay::do_single_step(const std::vector<core::pBasicFrame>& frames)
 {
-	if (!frame_0) frame_0 = in[0]->pop_frame();
-	if (!frame_1) frame_1 = in[1]->pop_frame();
-	if (!frame_0 || !frame_1) {
-		return true;
-	}
-	core::pBasicFrame outframe = dispatch(*this, frame_0, frame_1);
-	frame_0.reset();
-	frame_1.reset();
-	if (outframe) push_raw_video_frame(0, outframe);
-	return true;
+	assert(frames.size() == 2);
+	core::pBasicFrame outframe = dispatch(*this, frames[0], frames[1]);
+	if (outframe) return {outframe};
+	return {};
 }
 bool Overlay::set_param(const core::Parameter& param)
 {
