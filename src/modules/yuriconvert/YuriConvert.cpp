@@ -126,7 +126,7 @@ namespace {
 
 core::pParameters YuriConvertor::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
+	core::pParameters p = BasicIOFilter::configure();
 	(*p)["colorimetry"]["Colorimetry to use when converting from RGB (BT709, BT601, BT2020)"]="BT709";
 	(*p)["format"]["Output format"]=std::string("YUV422");
 	(*p)["full"]["Assume YUV values in full range"]=true;
@@ -134,7 +134,7 @@ core::pParameters YuriConvertor::configure()
 }
 
 YuriConvertor::YuriConvertor(log::Log &log_, core::pwThreadBase parent, core::Parameters& parameters) IO_THREAD_CONSTRUCTOR
-	:core::BasicIOThread(log_,parent,1,1,"YuriConv"),colorimetry_(YURI_COLORIMETRY_REC709),full_range_(true)
+	:core::BasicIOFilter(log_,parent,"YuriConv"),colorimetry_(YURI_COLORIMETRY_REC709),full_range_(true)
 {
 	IO_THREAD_INIT("Yuri Convert")
 		log[log::info] << "Initialized " << converters.size() << " converters";
@@ -149,11 +149,12 @@ YuriConvertor::YuriConvertor(log::Log &log_, core::pwThreadBase parent, core::Pa
 YuriConvertor::~YuriConvertor() {
 }
 
-bool YuriConvertor::step()
+core::pBasicFrame YuriConvertor::do_simple_single_step(const core::pBasicFrame& frame)
+//bool YuriConvertor::step()
 {
-	if (!in[0] || in[0]->is_empty()) return true;
-	core::pBasicFrame frame = in[0]->pop_frame();
-	if (!frame) return true;
+//	if (!in[0] || in[0]->is_empty()) return true;
+//	core::pBasicFrame frame = in[0]->pop_frame();
+	if (!frame) return core::pBasicFrame();
 	core::pBasicFrame outframe;
 	format_t in_fmt = frame->get_format();
 	format_pair_t conv_pair = std::make_pair(in_fmt, format_);
@@ -167,14 +168,15 @@ bool YuriConvertor::step()
 	} else {
 		log[log::debug] << "Unknown format combination " << core::BasicPipe::get_format_string(frame->get_format()) << " -> "
 				<< core::BasicPipe::get_format_string(format_) << "\n";
-		return true;
+		return core::pBasicFrame();
 	}
 	if (outframe) {
 		outframe->set_info(frame->get_info());
 		if (outframe->get_pts() == 0) outframe->set_time(frame->get_pts(), frame->get_dts(), frame->get_duration());
-		push_raw_video_frame (0,outframe);
+		//push_raw_video_frame (0,outframe);
+		return outframe;
 	}
-	return true;
+	return core::pBasicFrame();
 }
 
 
