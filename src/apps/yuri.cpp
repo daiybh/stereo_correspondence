@@ -18,15 +18,17 @@
 #include <memory>
 #include <exception>
 #include <signal.h>
+#ifndef YURI_USE_CXX11
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
+#endif
 #include "yuri/core/Parameters.h"
 #include "yuri/core/RegisteredClass.h"
 #include "yuri/core/BasicPipe.h"
 //using namespace std;
 using namespace yuri;
 using namespace yuri::log;
-using boost::iequals;
+using yuri::iequals;
 using yuri::shared_ptr;
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
