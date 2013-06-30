@@ -264,7 +264,8 @@ int main(int argc, char**argv)
 		const std::map<std::string,shared_ptr<core::VariableRecord> >& vars = b->get_variables();
 		l[fatal] << "Application " << b->get_appname();
 		l[fatal] << "  ";
-		l[fatal] << "Description: " << b->get_description();
+		const std::string desc = b->get_description();
+		if (!desc.empty()) l[fatal] << "Description: " << desc;
 		std::string reqs;
 		for (std::map<std::string,shared_ptr<core::VariableRecord> >::const_iterator it=vars.begin();
 				it != vars.end(); ++it) {
