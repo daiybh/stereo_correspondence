@@ -39,16 +39,16 @@ public:
 
 	BasicFrame(yuri::size_t planes = 1);
 	virtual ~BasicFrame();
-	virtual yuri::size_t 		get_size();
-	virtual yuri::size_t 		get_planes_count();
-	virtual yuri::usize_t 		get_width();
-	virtual yuri::usize_t 		get_height();
-	virtual yuri::format_t 		get_format();
-	virtual yuri::usize_t 		get_sample_count();
-	virtual yuri::usize_t 		get_channel_count();
-	virtual inline yuri::size_t get_pts() { return pts; }
-	virtual inline yuri::size_t get_dts() { return dts; }
-	virtual inline yuri::size_t get_duration() { return duration; }
+	virtual yuri::size_t 		get_size() const;
+	virtual yuri::size_t 		get_planes_count() const;
+	virtual yuri::usize_t 		get_width() const;
+	virtual yuri::usize_t 		get_height() const;
+	virtual yuri::format_t 		get_format() const ;
+	virtual yuri::usize_t 		get_sample_count() const;
+	virtual yuri::usize_t 		get_channel_count() const;
+	virtual inline yuri::size_t get_pts() const { return pts; }
+	virtual inline yuri::size_t get_dts() const { return dts; }
+	virtual inline yuri::size_t get_duration() const { return duration; }
 
 
 	virtual void 				set_planes_count(yuri::size_t count);
@@ -59,13 +59,15 @@ public:
 			size_t duration = 0);
 
 	virtual plane_t& 			get_plane(yuri::size_t index);
+//	virtual const plane_t&		get_plane(yuri::size_t index) const;
 	virtual plane_t& 			operator[](yuri::size_t index);
+//	virtual const plane_t& 			operator[](yuri::size_t index) const;
 	virtual void 				set_plane(yuri::size_t index, plane_t& plane);
 	virtual void 				set_plane(yuri::size_t index, const plane_t& plane);
 	virtual void				set_plane(yuri::size_t index, const yuri::ubyte_t *data, yuri::size_t data_size);
 
 	virtual pBasicFrame 		get_copy();
-	virtual pFrameInfo 			get_info() {return info;}
+	virtual pFrameInfo 			get_info() const {return info;}
 	virtual void 				set_info(pFrameInfo i) {info=i;}
 protected:
 	std::vector<plane_t> 		planes;

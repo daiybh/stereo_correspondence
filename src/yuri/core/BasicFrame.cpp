@@ -37,10 +37,22 @@ plane_t &BasicFrame::operator[](yuri::size_t index)
 {
 	return get_plane(index);
 }
-yuri::size_t BasicFrame::get_size()
+//const plane_t &BasicFrame::get_plane(yuri::size_t index) const
+//{
+//	if (index >= planes.size())
+//		throw exception::OutOfRange();
+//	return planes[index];
+//}
+//
+//const plane_t &BasicFrame::operator[](yuri::size_t index) const
+//{
+//	return get_plane(index);
+//}
+
+yuri::size_t BasicFrame::get_size() const
 {
 	yuri::size_t size = 0;
-	for (std::vector<plane_t>::iterator it=planes.begin();it!=planes.end();++it) {
+	for (std::vector<plane_t>::const_iterator it=planes.begin();it!=planes.end();++it) {
 		size += it->size();
 	}
 	return size;
@@ -51,7 +63,7 @@ void BasicFrame::set_planes_count(yuri::size_t count)
 	planes.resize(count);
 }
 
-yuri::size_t BasicFrame::get_planes_count()
+yuri::size_t BasicFrame::get_planes_count() const
 {
 	return planes.size();
 }
@@ -71,24 +83,24 @@ void BasicFrame::set_time(yuri::size_t pts, size_t dts, size_t duration)
 	this->duration = duration;
 }
 
-yuri::size_t BasicFrame::get_width()
+yuri::size_t BasicFrame::get_width() const
 {
 	return width;
 }
 
-yuri::size_t BasicFrame::get_height()
+yuri::size_t BasicFrame::get_height() const
 {
 	return height;
 }
-yuri::format_t BasicFrame::get_format()
+yuri::format_t BasicFrame::get_format() const
 {
 	return format;
 }
-yuri::usize_t BasicFrame::get_sample_count()
+yuri::usize_t BasicFrame::get_sample_count() const
 {
 	return samples;
 }
-yuri::usize_t BasicFrame::get_channel_count()
+yuri::usize_t BasicFrame::get_channel_count() const
 {
 	return channels;
 }
