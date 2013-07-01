@@ -36,14 +36,16 @@ core::pParameters AVEncoder::configure()
 	(*p)["buffer_size"]=10485760;
 
 	p->set_max_pipes(1,1);
-	yuri::format_t fmt1, fmt2;
-	BOOST_FOREACH(fmt1,get_supported_input_formats()) {
+//	yuri::format_t fmt1, fmt2;
+//	BOOST_FOREACH(fmt1,get_supported_input_formats()) {
+	for (const auto& fmt1: get_supported_input_formats()) {
 		p->add_input_format(fmt1);
-		BOOST_FOREACH(fmt2,get_supported_output_formats()) {
+//		BOOST_FOREACH(fmt2,get_supported_output_formats()) {
+		for (const auto& fmt2: get_supported_output_formats()) {
 			p->add_converter(fmt1,fmt2,0,false);
 		}
 	}
-	BOOST_FOREACH(fmt2,get_supported_output_formats()) {
+	for(const auto& fmt2: get_supported_output_formats()) {
 		p->add_output_format(fmt2);
 	}
 	return p;
