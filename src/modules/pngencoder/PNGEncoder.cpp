@@ -72,8 +72,8 @@ bool PNGEncoder::step() {
 		frame.reset();
 		return true;
 	}
-	boost::posix_time::ptime t1(
-			boost::posix_time::microsec_clock::universal_time());
+//	boost::posix_time::ptime t1(
+//			boost::posix_time::microsec_clock::universal_time());
 	pngPtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 	if (!pngPtr) {
 		log[log::error] << "ERROR: Couldn't initialize png read struct" << std::endl;
@@ -108,11 +108,11 @@ bool PNGEncoder::step() {
 	png_write_image(pngPtr, rows);
 	png_write_end(pngPtr, infoPtr);
 	png_destroy_write_struct(&pngPtr, &infoPtr);
-	boost::posix_time::ptime t2(
-			boost::posix_time::microsec_clock::universal_time());
-	boost::posix_time::time_period tp(t1, t2);
-	log[log::debug] << "Compression took: " << tp.length().total_microseconds()
-			<< " us" << std::endl;
+//	boost::posix_time::ptime t2(
+//			boost::posix_time::microsec_clock::universal_time());
+//	boost::posix_time::time_period tp(t1, t2);
+//	log[log::debug] << "Compression took: " << tp.length().total_microseconds()
+//			<< " us" << std::endl;
 	if (position || out[0]) {
 		core::pBasicFrame out_frame = allocate_frame_from_memory(&memory[0],position);
 		push_video_frame(0,out_frame,YURI_IMAGE_PNG,frame->get_width(),frame->get_height());
