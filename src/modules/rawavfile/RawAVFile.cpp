@@ -29,7 +29,8 @@ core::pParameters RawAVFile::configure()
 
 // TODO: number of output streams should be -1 and custom connect_out should be implemented.
 RawAVFile::RawAVFile(log::Log &_log, core::pwThreadBase parent, core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
-		AVCodecBase(_log,parent,"RawAVSource",1,1024),fmtctx(0),block(0),video_format_out_(YURI_FMT_NONE),
+		BasicIOThread(_log,parent,0,1024,"RawAVSource"),AVCodecBase(BasicIOThread::log),
+		fmtctx(0),block(0),video_format_out_(YURI_FMT_NONE),
 		decode_(true),fps_(0.0),max_video_streams_(1),max_audio_streams_(1)
 {
 	IO_THREAD_INIT("rawavsource")
@@ -251,7 +252,7 @@ bool RawAVFile::set_param(const core::Parameter &parameter)
 	} else if (parameter.name == "max_audio") {
 		max_audio_streams_ = parameter.get<double>();
 	} else {
-		return AVCodecBase::set_param(parameter);
+		return BasicIOThread::set_param(parameter);
 	}
 	return true;
 
