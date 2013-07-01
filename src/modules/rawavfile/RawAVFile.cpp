@@ -112,17 +112,17 @@ RawAVFile::~RawAVFile()
 
 void RawAVFile::run()
 {
-	using namespace boost::posix_time;
+//	using namespace boost::posix_time;
 	IO_THREAD_PRE_RUN
 	AVPacket packet;
 	av_init_packet(&packet);
 	AVFrame *av_frame = avcodec_alloc_frame();
-	next_times_.resize(video_streams_.size(),microsec_clock::local_time());
+	next_times_.resize(video_streams_.size(),std::chrono::steady_clock::now());
 	std::vector<time_duration> time_deltas(video_streams_.size());
 	for (size_t i=0;i<video_streams_.size();++i) {
-		if (fps_>0) time_deltas[i] = microseconds(1e6/fps_);
+		if (fps_>0) time_deltas[i] = nanoseconds(static_cast<nanoseconds::rep>(1e9/fps_));
 		else if (fps_ == 0.0) {
-			time_deltas[i] = microseconds(video_streams_[i]->r_frame_rate.den*1e6/video_streams_[i]->r_frame_rate.num);
+			time_deltas[i] = nanoseconds(static_cast<nanoseconds::rep>(video_streams_[i]->r_frame_rate.den*1e9/video_streams_[i]->r_frame_rate.num));
 		}
 	}
 	while (still_running()) {
@@ -143,7 +143,7 @@ void RawAVFile::run()
 		for (size_t i=0;i<video_streams_.size();++i) {
 			if (frames_[i]) {
 				if (fps_>=0) {
-					ptime curr_time = microsec_clock::local_time();
+					time_value curr_time = std::chrono::steady_clock::now();
 					if (curr_time < next_times_[i]) {
 						continue;
 					} else {
