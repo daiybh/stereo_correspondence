@@ -17,38 +17,19 @@ namespace core {
 class BasicMultiIOFilter: public BasicIOThread {
 public:
 							BasicMultiIOFilter(log::Log &log_, pwThreadBase parent,
-					yuri::sint_t inp, yuri::sint_t outp, std::string id = "FILTER")
-:BasicIOThread(log_, parent, inp, outp, id),stored_frames_(inp) {}
+					yuri::sint_t inp, yuri::sint_t outp, std::string id = "FILTER");
 
-	virtual 				~BasicMultiIOFilter() {}
+	virtual 				~BasicMultiIOFilter();
 
-	std::vector<pBasicFrame> single_step(const std::vector<pBasicFrame>& frames)
-	{
-		return do_single_step(frames);
-	};
-	virtual bool step()
-	{
-		bool ready = true;
-		assert(in_ports>0);
-		assert(stored_frames_.size() == static_cast<size_t>(in_ports));
-		for (sint_t i=0; i< in_ports; ++i) {
-			if (!stored_frames_[i]) stored_frames_[i]=in[i]->pop_frame();
-			if (!stored_frames_[i]) ready = false;
-		}
-		if (ready) {
-			auto outframes = single_step(stored_frames_);
-//			assert(outframes.size() == outputs);
-			for (size_t i=0; i< std::min(static_cast<size_t>(out_ports), outframes.size()); ++i) {
-				if (outframes[i]) push_raw_frame(i, outframes[i]);
-			}
-			for (auto& sf: stored_frames_) sf.reset();
-		}
-		return true;
-	}
+	std::vector<pBasicFrame> single_step(const std::vector<pBasicFrame>& frames);
+	virtual bool 			step();
+	static pParameters		configure();
+	virtual bool 			set_param(const Parameter &parameter);
 private:
 	virtual std::vector<pBasicFrame> do_single_step(const std::vector<pBasicFrame>& frames) = 0;
 	std::vector<pBasicFrame> stored_frames_;
-
+	bool 					realtime_;
+	ssize_t					main_input_;
 };
 
 class BasicIOFilter: public BasicMultiIOFilter
