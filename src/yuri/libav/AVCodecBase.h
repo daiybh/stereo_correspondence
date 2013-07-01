@@ -50,7 +50,7 @@ protected:
 	template<typename T> static void av_deleter(T *ptr) { if (ptr) av_free(ptr); }
 	static yuri::size_t calculate_time(yuri::size_t timestamp, AVRational &base);
 protected: 
-	static boost::mutex avcodec_lock;
+	static yuri::mutex avcodec_lock;
 	static bool avcodec_initialized;
 	static std::map<yuri::format_t, CodecID> yuri_codec_map;
 	static std::map<yuri::format_t, PixelFormat> yuri_pixel_map;

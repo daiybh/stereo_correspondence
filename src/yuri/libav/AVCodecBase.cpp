@@ -11,16 +11,15 @@
 #include "AVCodecBase.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/assign.hpp>
 
 namespace yuri
 {
 namespace video
 {
 
-boost::mutex AVCodecBase::avcodec_lock;
+yuri::mutex AVCodecBase::avcodec_lock;
 bool AVCodecBase::avcodec_initialized = false;
-std::map<yuri::format_t, CodecID> AVCodecBase::yuri_codec_map=boost::assign::map_list_of
+std::map<yuri::format_t, CodecID> AVCodecBase::yuri_codec_map=yuri::map_list_of<format_t, CodecID>
 		(YURI_VIDEO_MPEG2, 			CODEC_ID_MPEG2VIDEO)
 		(YURI_VIDEO_MPEG1, 			CODEC_ID_MPEG1VIDEO)
 		(YURI_VIDEO_HUFFYUV, 		CODEC_ID_HUFFYUV)
@@ -35,7 +34,7 @@ std::map<yuri::format_t, CodecID> AVCodecBase::yuri_codec_map=boost::assign::map
 		(YURI_VIDEO_THEORA,			CODEC_ID_THEORA)
 		(YURI_VIDEO_VP8,			CODEC_ID_VP8);
 
-std::map<yuri::format_t, PixelFormat> AVCodecBase::yuri_pixel_map=boost::assign::map_list_of
+std::map<yuri::format_t, PixelFormat> AVCodecBase::yuri_pixel_map=yuri::map_list_of<format_t, PixelFormat>
 		(YURI_FMT_RGB,	 			PIX_FMT_RGB24)
 		(YURI_FMT_BGR,	 			PIX_FMT_BGR24)
 		(YURI_FMT_RGBA,	 			PIX_FMT_RGBA)
@@ -44,7 +43,7 @@ std::map<yuri::format_t, PixelFormat> AVCodecBase::yuri_pixel_map=boost::assign:
 		(YURI_FMT_YUV422_PLANAR,	PIX_FMT_YUV422P)
 		(YURI_FMT_YUV444_PLANAR,	PIX_FMT_YUV444P)
 		(YURI_FMT_UYVY422,			PIX_FMT_UYVY422);
-std::map<PixelFormat, PixelFormat> AVCodecBase::av_identity=boost::assign::map_list_of
+std::map<PixelFormat, PixelFormat> AVCodecBase::av_identity=yuri::map_list_of<PixelFormat, PixelFormat>
 		(PIX_FMT_YUVJ420P,			PIX_FMT_YUV420P)
 		(PIX_FMT_YUVJ422P,			PIX_FMT_YUV422P);
 AVCodecBase::AVCodecBase(log::Log &_log, core::pwThreadBase parent, std::string id, yuri::sint_t inp, yuri::sint_t outp)
@@ -228,18 +227,27 @@ PixelFormat AVCodecBase::av_pixelformat_from_yuri(yuri::format_t format)
 }
 yuri::format_t AVCodecBase::yuri_pixelformat_from_av(PixelFormat format)
 {
-	std::pair<yuri::format_t, PixelFormat> fp;
+
 	PixelFormat pixfmt = format;
 	if (av_identity.count(format)) pixfmt=av_identity[format];
+#ifndef YURI_USE_CXX11
+	std::pair<yuri::format_t, PixelFormat> fp;
 	BOOST_FOREACH(fp, yuri_pixel_map) {
+#else
+	for(auto& fp: yuri_pixel_map) {
+#endif
 		if (fp.second==pixfmt) return fp.first;
 	}
 	return YURI_FMT_NONE;
 }
 yuri::format_t AVCodecBase::yuri_format_from_avcodec(CodecID codec)
 {
+#ifndef YURI_USE_CXX11
 	std::pair<yuri::format_t, CodecID> fp;
 	BOOST_FOREACH(fp, yuri_codec_map) {
+#else
+	for (auto& fp: yuri_codec_map) {
+#endif
 		if (fp.second==codec) return fp.first;
 	}
 	return YURI_FMT_NONE;
@@ -261,7 +269,7 @@ yuri::size_t AVCodecBase::calculate_time(yuri::size_t timestamp, AVRational &bas
 }
 void AVCodecBase::initialize_avcodec()
 {
-	boost::mutex::scoped_lock l(avcodec_lock);
+	yuri::lock l(avcodec_lock);
 	if (avcodec_initialized) return;
 	avcodec_register_all();
 	avcodec_initialized = true;
