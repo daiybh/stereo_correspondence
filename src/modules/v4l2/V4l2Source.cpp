@@ -9,10 +9,13 @@
  */
 
 #include "V4l2Source.h"
-#include <boost/algorithm/string.hpp>
+//#include <boost/algorithm/string.hpp>
 #include "yuri/core/Module.h"
 #include <string>
-#include <boost/assign.hpp>
+//#include <boost/assign.hpp>
+
+#include <unistd.h>
+#include <cstring>
 
 namespace yuri {
 
@@ -25,7 +28,7 @@ IO_THREAD_GENERATOR(V4l2Source)
 
 namespace {
 	std::map<yuri::format_t, yuri::uint_t> formats_map=
-			boost::assign::map_list_of<yuri::format_t,yuri::uint_t>
+			yuri::map_list_of<yuri::format_t,yuri::uint_t>
 			(YURI_FMT_RGB,V4L2_PIX_FMT_RGB24)
 			(YURI_FMT_RGBA, V4L2_PIX_FMT_RGB32)
 			(YURI_FMT_BGR, V4L2_PIX_FMT_BGR24)
@@ -41,7 +44,7 @@ namespace {
 			(YURI_FMT_BAYER_GBRG, V4L2_PIX_FMT_SGBRG8);
 
 
-	std::map<std::string, yuri::uint_t> special_formats=boost::assign::map_list_of<std::string,yuri::uint_t>
+	std::map<std::string, yuri::uint_t> special_formats=yuri::map_list_of<std::string,yuri::uint_t>
 		("S920", V4L2_PIX_FMT_SN9C20X_I420)
 		("BA81", V4L2_PIX_FMT_SBGGR8);
 
@@ -55,8 +58,9 @@ core::pParameters V4l2Source::configure()
 	(*p)["path"]["Path to the camera device. usually /dev/video0 or similar."]=std::string();
 	(*p)["method"]["Method used to get images from camera. Possible values are: none, mmap, user, read. For experts only"]="none";
 	std::string fmts;
-	std::pair<yuri::format_t,yuri::uint_t> f;
-	BOOST_FOREACH(f,formats_map) {
+	for (const auto& f: formats_map) {
+//	std::pair<yuri::format_t,yuri::uint_t> f;
+//	BOOST_FOREACH(f,formats_map) {
 		FormatInfo_t pf = core::BasicPipe::get_format_info(f.first);
 		if (!pf) continue;
 		if (!fmts.empty()) fmts+=std::string(", ");
@@ -444,8 +448,9 @@ yuri::uint_t V4l2Source::yuri_format_to_v4l2(yuri::format_t fmt)
 
 yuri::format_t V4l2Source::v4l2_format_to_yuri(yuri::uint_t fmt)
 {
-	std::pair<yuri::format_t, yuri::uint_t> f;
-	BOOST_FOREACH(f,formats_map) {
+//	std::pair<yuri::format_t, yuri::uint_t> f;
+//	BOOST_FOREACH(f,formats_map) {
+	for (const auto& f: formats_map) {
 		if (f.second==fmt) return f.first;
 	}
 	//	case V4L2_PIX_FMT_SN9C20X_I420:	return YURI_FMT_YUV420_PLANAR;
@@ -476,9 +481,9 @@ bool V4l2Source::set_param(const core::Parameter &param)
 	} else if (param.name == "method") {
 	std::string method_s;
 		method_s = param.get<std::string>();
-		if (boost::iequals(method_s,"user")) method = METHOD_USER;
-		else if (boost::iequals(method_s,"mmap")) method = METHOD_MMAP;
-		else if (boost::iequals(method_s,"read")) method = METHOD_READ;
+		if (iequals(method_s,"user")) method = METHOD_USER;
+		else if (iequals(method_s,"mmap")) method = METHOD_MMAP;
+		else if (iequals(method_s,"read")) method = METHOD_READ;
 		else method=METHOD_NONE;
 	} else if (param.name == "input") {
 		input_number = param.get<yuri::ushort_t>();
