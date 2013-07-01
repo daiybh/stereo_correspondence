@@ -119,7 +119,7 @@ bool Cuda::set_device(yuri::uint_t id)
 {
 	cudaError_t err;
 #ifdef YURI_HAVE_X11
-	boost::mutex::scoped_lock l(GL::big_gpu_lock);
+	yuri::lock l(GL::big_gpu_lock);
 #endif
 	if ((err=cudaSetDeviceFlags(cudaDeviceMapHost)) != cudaSuccess) {
 		log[log::warning] << "Failed to set flags for device:"<<cudaGetErrorString(err) << std::endl;
