@@ -22,6 +22,7 @@ namespace core
 
  	 class BasicFrame;
  	 typedef yuri::shared_ptr<class BasicFrame> pBasicFrame;
+ 	 typedef yuri::shared_ptr<const class BasicFrame> pcBasicFrame;
 
  	 class Parameters;
  	 typedef yuri::shared_ptr<class Parameters> pParameters;

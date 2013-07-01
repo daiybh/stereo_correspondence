@@ -34,37 +34,7 @@
 //! All yuri related stuff belongs here
 namespace yuri {
 #ifndef YURI_USE_CXX11
-typedef boost::uint64_t usize_t;
-typedef boost::int64_t ssize_t;
-typedef boost::uint32_t uint_t;
-typedef boost::int32_t sint_t;
-typedef boost::uint16_t ushort_t;
-typedef boost::int16_t sshort_t;
-typedef boost::uint8_t ubyte_t;
-typedef boost::int8_t sbyte_t;
-
-using boost::shared_ptr;
-using boost::weak_ptr;
-using boost::make_shared;
-using boost::mutex;
-using boost::timed_mutex;
-using boost::dynamic_pointer_cast;
-using boost::thread;
-typedef boost::mutex::scoped_lock lock;
-using boost::assign::map_list_of;
-using boost::assign::list_of;
-using boost::enable_shared_from_this;
-using boost::lexical_cast;
-using boost::bad_lexical_cast;
-using boost::iequals;
-using boost::posix_time::time_duration;
-const time_duration time_duration_infinity = boost::posix_time::pos_infin;
-typedef boost::posix_time::ptime timeval;
-using boost::posix_time::microseconds;
-using boost::posix_time::nanoseconds;
-namespace this_thread {
-using boost::this_thread::sleep;
-}
+#error C++11 mode is reuired now.
 #else
 typedef uint64_t usize_t;
 typedef int64_t ssize_t;
@@ -88,18 +58,19 @@ typedef std::mutex timed_mutex;
 typedef lock timed_lock;
 #endif
 using std::dynamic_pointer_cast;
+using std::static_pointer_cast;
 using std::thread;
 using std::enable_shared_from_this;
 typedef std::chrono::nanoseconds time_duration;
 const std::chrono::nanoseconds time_duration_infinity (std::chrono::duration_values<time_duration::rep>::max());
-typedef std::chrono::time_point<std::chrono::steady_clock> time_value;
+typedef std::chrono::time_point<std::chrono::steady_clock, time_duration> time_value;
 using std::chrono::nanoseconds;
 using std::chrono::microseconds;
 namespace this_thread {
 template<class Rep, class Period>
 void sleep(const std::chrono::duration<Rep, Period>& dur) { std::this_thread::sleep_for(dur);}
 }
-
+using std::this_thread::get_id;
 #endif
 typedef usize_t size_t;
 typedef ssize_t format_t;
