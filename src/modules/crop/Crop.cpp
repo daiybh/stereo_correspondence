@@ -64,10 +64,10 @@ bool Crop::step()
 	} else if (y + h > static_cast<yuri::ssize_t>(in_height)) {
 		h = in_width - y;
 	}
-	log[log::verbose_debug] << "X: " << x << ", Y: " << y << ", W: " << w<< ", H: " << h <<std::endl;
+	log[log::verbose_debug] << "X: " << x << ", Y: " << y << ", W: " << w<< ", H: " << h;
 	if (!x && !y && w==static_cast<yuri::ssize_t>(in_width)
 			&& h==static_cast<yuri::ssize_t>(in_height)) {
-		log[log::verbose_debug] << "Passing thru" << std::endl;
+		log[log::verbose_debug] << "Passing thru";
 		push_raw_video_frame(0,frame);
 		return true;
 	}
