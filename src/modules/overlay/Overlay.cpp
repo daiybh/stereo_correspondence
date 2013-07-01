@@ -326,7 +326,7 @@ std::vector<core::pBasicFrame> Overlay::do_single_step(const std::vector<core::p
 }
 bool Overlay::set_param(const core::Parameter& param)
 {
-	using boost::iequals;
+//	using boost::iequals;
 	if (iequals(param.name,"x")) {
 		x_ = param.get<ssize_t>();
 	} else if (iequals(param.name,"y")) {
