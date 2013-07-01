@@ -10,13 +10,13 @@
 #include "yuri/core/Module.h"
 #include <dlfcn.h>
 #include <GL/glu.h>
-#include <boost/assign.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
+//#include <boost/assign.hpp>
+//#include <boost/date_time/posix_time/posix_time.hpp>
 namespace yuri {
 
 namespace fbgrab {
 using yuri::graphics::GLXWindow;
-using boost::iequals;
+//using boost::iequals;
 REGISTER("fb_grabber",FrameBufferGrabber)
 
 IO_THREAD_GENERATOR(FrameBufferGrabber)
@@ -37,7 +37,7 @@ core::pParameters FrameBufferGrabber::configure()
 	return p;
 }
 namespace {
-std::map<yuri::format_t, GLenum> yuri_gl_formats = boost::assign::map_list_of<yuri::format_t, GLenum>
+std::map<yuri::format_t, GLenum> yuri_gl_formats = map_list_of<yuri::format_t, GLenum>
 			(YURI_FMT_RGB, GL_RGB)
 			(YURI_FMT_RGBA, GL_RGBA)
 			(YURI_FMT_BGR, GL_BGR)
@@ -73,7 +73,7 @@ FrameBufferGrabber::FrameBufferGrabber(log::Log &_log, core::pwThreadBase parent
 		log[log::error] << "Neither of the libraries was successfully opened.";
 		throw exception::InitializationFailed("No usable libraries");
 	}
-	grab_start = boost::posix_time::microsec_clock::local_time();
+	grab_start = std::chrono::steady_clock::now();
 	//putenv("DISPLAY=:0.0");
 }
 
@@ -84,14 +84,14 @@ FrameBufferGrabber::~FrameBufferGrabber()
 
 void *FrameBufferGrabber::get_function(std::string name)
 {
-	boost::mutex::scoped_lock l(resolve_lock);
+	yuri::lock l(resolve_lock);
 
 	if (functions.find(name) != functions.end())
 		return functions[name];
 	log[log::info] << "Looking up " << name;
-	void* handle=0, *ptr=0;
-	BOOST_FOREACH(handle,handles) {
-		ptr = dlsym(handle,name.c_str());
+//	void *ptr=0;
+	for (const auto& handle: handles) {
+		auto ptr = dlsym(handle,name.c_str());
 		if (ptr) {
 			functions[name]=ptr;
 			return ptr;
@@ -168,12 +168,12 @@ void FrameBufferGrabber::set_method(std::string method0)
 void FrameBufferGrabber::pre_swap_direct()
 {
 //	log[warning] << "Direct grabbing not implemented yet" << endl;
-	boost::posix_time::ptime _start_time;
-	if (measure) _start_time = boost::posix_time::microsec_clock::local_time();
+	time_value _start_time;
+	if (measure) _start_time = std::chrono::steady_clock::now();
 	GLint orig_read_buffer, orig_draw_buffer;
 	try {
-		boost::posix_time::time_duration duration = boost::posix_time::microsec_clock::local_time() - grab_start;
-		yuri::size_t pts = duration.total_microseconds();
+		time_duration duration = std::chrono::steady_clock::now() - grab_start;
+		yuri::size_t pts = duration.count()/1000;
 		_context_info &ctx = get_current_context_info();
 		if (ctx.local) return;
 		ctx.clean=true;
@@ -225,10 +225,10 @@ void FrameBufferGrabber::pre_swap_direct()
 		restore_gl(orig_read_buffer,orig_draw_buffer,true);
 		check_gl_error();
 		if (measure) {
-			boost::posix_time::ptime _end_time=boost::posix_time::microsec_clock::local_time();
+			time_value _end_time=std::chrono::steady_clock::now();
 			if (measurement_frames >= measure) {
-				log[log::info] << "Grabbing "<< measurement_frames<< " frames took " << boost::posix_time::to_simple_string(accumulated_time) << " that is " << (accumulated_time/measurement_frames).total_microseconds() << " us per frame";
-				accumulated_time = boost::posix_time::microseconds(0);
+				log[log::info] << "Grabbing "<< measurement_frames<< " frames took " << accumulated_time.count()/1000 << "us that is " << (accumulated_time/measurement_frames/1000).count() << " us per frame";
+				accumulated_time = nanoseconds(0);
 				measurement_frames=0;
 			}
 			accumulated_time += (_end_time - _start_time);

@@ -14,6 +14,9 @@ extern "C" {
 }
 #include "yuri/graphics/GL.h"
 
+#ifndef YURI_ANDROID
+//#include <boost/date_time/posix_time/posix_time.hpp>
+#endif
 namespace yuri {
 
 namespace fbgrab {
@@ -65,7 +68,7 @@ public:
 	bool set_param(const core::Parameter& parameter);
 protected:
 	std::vector<void*> handles;
-	boost::mutex resolve_lock;
+	yuri::mutex resolve_lock;
 	std::map<std::string,void*> functions;
 	std::map<GLXContext,_context_info> contexts;
 	long method, update_method;
@@ -73,9 +76,9 @@ protected:
 	bool flip_y, show_avatar;
 	graphics::GL gl;
 	core::pBasicFrame in_frame;
-	boost::posix_time::ptime grab_start;
+	time_value grab_start;
 	size_t measure;
-	boost::posix_time::time_duration accumulated_time;
+	time_duration accumulated_time;
 	size_t measurement_frames;
 	void pre_swap_direct();
 	void pre_swap_indirect();
