@@ -19,6 +19,7 @@
 #include <exception>
 #include <signal.h>
 #ifndef YURI_USE_CXX11
+#error "C++11 support required!"
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 #endif
@@ -39,7 +40,7 @@ static int verbosity;
 static yuri::log::Log l(std::clog);
 
 
-#ifdef __linux__
+#ifdef YURI_LINUX
 static void sigHandler(int sig, siginfo_t *siginfo, void *context);
 static struct sigaction act;
 
@@ -72,9 +73,10 @@ void usage()
 void list_registered(Log l_)
 {
 	l_[info]<<"List of registered objects:" << std::endl;
-	std::string name;
-	shared_ptr<std::vector<std::string> > v = yuri::core::RegisteredClass::list_registered();
-	BOOST_FOREACH(name,*v) {
+
+	auto reg = yuri::core::RegisteredClass::list_registered();
+	assert(reg.get());
+	for(auto& name: *reg) {
 		if (verbosity>=0)
 			l_[fatal] << "..:: " << name << " ::.." << std::endl;
 		else l_[fatal] << name << std::endl;
@@ -83,20 +85,19 @@ void list_registered(Log l_)
 		else {
 			if (!p->get_description().empty()) l_[info]<< "\t"
 					<< p->get_description() << std::endl;
-			long fmt;
+//			long fmt;
 			if (p->get_input_formats().size()) {
-				BOOST_FOREACH(fmt,p->get_input_formats()) {
+				for(auto fmt: p->get_input_formats()) {
 					l_[normal]<< "\t\tSupports input format: " << core::BasicPipe::get_format_string(fmt) << std::endl;
 				}
 			} else l_[normal] << "\t\tClass does not have any restrictions on input pipes defined." << std::endl;
 			if (p->get_output_formats().size()) {
-				BOOST_FOREACH(fmt,p->get_output_formats()) {
+				for(auto fmt: p->get_output_formats()) {
 					l_[normal]<< "\t\tSupports output format: " << core::BasicPipe::get_format_string(fmt) << std::endl;
 				}
 			} else l_[normal] << "\t\tClass does not have any restrictions on output pipes defined." << std::endl;
 			if (p->params.size()) {
-				std::pair<std::string,core::pParameter > par;
-				BOOST_FOREACH(par,p->params) {
+				for (auto& par: p->params) {
 					l_[info] << "\t\t'" << par.first << "' has default value \""
 							<< par.second->get<std::string>() << "\"" << std::endl;
 					if (!par.second->description.empty()) l_[info] << "\t\t\t"
@@ -109,17 +110,18 @@ void list_registered(Log l_)
 void list_formats(Log& l_)
 {
 	l_[info] << "List of registered formats:" << std::endl;
-std::string name;
-	boost::mutex::scoped_lock lock(core::BasicPipe::format_lock);
-	std::pair<yuri::format_t, yuri::FormatInfo_t > fmtp;
-	BOOST_FOREACH(fmtp, core::BasicPipe::formats) {
+	std::string name;
+	yuri::lock lock(core::BasicPipe::format_lock);
+//	std::pair<yuri::format_t, yuri::FormatInfo_t > fmtp;
+//	BOOST_FOREACH(fmtp, core::BasicPipe::formats) {
+	for (const auto& fmtp: core::BasicPipe::formats) {
 		yuri::FormatInfo_t fmt = fmtp.second;
 		l_[fatal] << fmt->long_name << std::endl;
 		if (fmt->short_names.size()) {
 			bool f = true;
-		std::stringstream ss;
+			std::stringstream ss;
 			ss << "\tAvailable as: ";
-			BOOST_FOREACH(std::string s,fmt->short_names) {
+			for(const auto& s: fmt->short_names) {
 				if (!f) ss << ", ";
 				f=false;
 				ss << s;
@@ -128,9 +130,9 @@ std::string name;
 		}
 		if (fmt->mime_types.size()) {
 			bool f = true;
-		std::stringstream ss;
+			std::stringstream ss;
 			ss << "\tUses mime types: ";
-			BOOST_FOREACH(std::string s,fmt->mime_types) {
+			for (const auto& s: fmt->mime_types) {
 				if (!f) ss << ", ";
 				f=false;
 				ss << s;
@@ -143,12 +145,10 @@ std::string name;
 
 void list_converters(Log l_)
 {
-	std::pair<std::pair<long,long>,std::vector<shared_ptr<core::Converter> > > conv;
-	BOOST_FOREACH(conv,core::RegisteredClass::get_all_converters()) {
+	for (const auto& conv: core::RegisteredClass::get_all_converters()) {
 		l_[info] << "Convertors from " << core::BasicPipe::get_format_string(conv.first.first)
 		 << " to " << core::BasicPipe::get_format_string(conv.first.second) << std::endl;
-		shared_ptr<core::Converter> c;
-		BOOST_FOREACH(c,conv.second) {
+		for(const auto& c: conv.second) {
 			if (!c) std::cout << "??" <<std::endl;
 			l_[info] << "\t" << c->id << std::endl;
 		}
@@ -156,7 +156,6 @@ void list_converters(Log l_)
 }
 void version()
 {
-	//l[fatal] << "yuri version " << YURI_VERSION << std::endl;
 	l[fatal] << "libyuri version " << yuri::yuri_version << std::endl;
 
 }
