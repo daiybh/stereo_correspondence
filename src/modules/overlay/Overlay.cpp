@@ -19,7 +19,7 @@ IO_THREAD_GENERATOR(Overlay)
 
 core::pParameters Overlay::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
+	core::pParameters p = core::BasicMultiIOFilter::configure();
 	p->set_description("Overlay");
 	p->set_max_pipes(1,1);
 	(*p)["x"]["X offset"]=0;
@@ -331,7 +331,7 @@ bool Overlay::set_param(const core::Parameter& param)
 		x_ = param.get<ssize_t>();
 	} else if (iequals(param.name,"y")) {
 		y_ = param.get<ssize_t>();
-	} else return core::BasicIOThread::set_param(param);
+	} else return core::BasicMultiIOFilter::set_param(param);
 	return true;
 }
 
