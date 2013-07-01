@@ -138,8 +138,7 @@ YuriConvertor::YuriConvertor(log::Log &log_, core::pwThreadBase parent, core::Pa
 {
 	IO_THREAD_INIT("Yuri Convert")
 		log[log::info] << "Initialized " << converters.size() << " converters";
-	for (std::map<format_pair_t, converter_t>::iterator it = converters.begin();
-			it!=converters.end(); ++it) {
+	for (auto it = converters.begin();	it!=converters.end(); ++it) {
 		const format_pair_t& fp = it->first;
 		log[log::debug] << "Converter: " << core::BasicPipe::get_format_string(fp.first) << " -> "
 				<< core::BasicPipe::get_format_string(fp.second);
@@ -182,7 +181,6 @@ core::pBasicFrame YuriConvertor::do_simple_single_step(const core::pBasicFrame& 
 
 bool YuriConvertor::set_param(const core::Parameter &p)
 {
-	using boost::iequals;
 	if (iequals(p.name,"colorimetry")) {
 		std::string clr = p.get<std::string>();
 		if (iequals(clr,"BT709") || iequals(clr,"REC709") || iequals(clr,"BT.709") || iequals(clr,"REC.709")) {
