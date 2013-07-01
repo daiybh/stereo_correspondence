@@ -18,13 +18,13 @@
 #include "yuri/graphics/GLXWindow.h"
 #endif
 #include "yuri/graphics/GL.h"
-#include <boost/thread/mutex.hpp>
+//#include <boost/thread/mutex.hpp>
 namespace yuri {
 
 namespace renderer {
-using boost::dynamic_pointer_cast;
-using boost::posix_time::time_duration;
-using boost::posix_time::ptime;
+//using boost::dynamic_pointer_cast;
+//using boost::posix_time::time_duration;
+//using boost::posix_time::ptime;
 namespace stereo {
 	enum _type {
 		none,

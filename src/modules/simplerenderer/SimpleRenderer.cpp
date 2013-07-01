@@ -13,11 +13,11 @@
 #include <boost/assign.hpp>
 #include <boost/algorithm/string.hpp>
 #include "yuri/core/Module.h"
-#include "boost/date_time/posix_time/posix_time.hpp"
+//#include "boost/date_time/posix_time/posix_time.hpp"
 namespace yuri {
 
 namespace renderer {
-using boost::posix_time::microsec_clock;
+//using boost::posix_time::microsec_clock;
 
 REGISTER("simple_renderer",SimpleRenderer)
 
@@ -189,7 +189,7 @@ bool SimpleRenderer::step()
 {
 	if (in[0] && !in[0]->is_empty()) {
 		while (!in[0]->is_empty()) {
-			mutex::scoped_lock l(draw_lock);
+			yuri::lock l(draw_lock);
 			frames[0] = in[0]->pop_frame();
 		}
 		assert(frames[0]);
@@ -197,7 +197,7 @@ bool SimpleRenderer::step()
 	}
 	if (stereo_3d && in[1] && !in[1]->is_empty()) {
 		while (!in[1]->is_empty()) {
-			mutex::scoped_lock l(draw_lock);
+			yuri::lock l(draw_lock);
 			frames[1] = in[1]->pop_frame();
 		}
 		assert(frames[1]);
@@ -208,16 +208,17 @@ bool SimpleRenderer::step()
 
 void SimpleRenderer::generate_texture(yuri::uint_t index)
 {
-	mutex::scoped_lock l(draw_lock);
+	yuri::lock l(draw_lock);
 	if (changed[index]) {
-		ptime _start_time;
-		if (measure) _start_time = microsec_clock::local_time();
+		time_value _start_time;
+		if (measure) _start_time = std::chrono::steady_clock::now();
 		gl.generate_texture(index,frames[index]);
 		if (measure) {
-			ptime _end_time=microsec_clock::local_time();
+			time_value _end_time=std::chrono::steady_clock::now();
 			if (measurement_frames >= measure) {
-				log[log::info] << "Generating "<< measurement_frames<< " textures took " << boost::posix_time::to_simple_string(accumulated_time) << " that is " << (accumulated_time/measurement_frames).total_microseconds() << " us per frame"  << std::endl;
-				accumulated_time = boost::posix_time::microseconds(0);
+//				log[log::info] << "Generating "<< measurement_frames<< " textures took " << boost::posix_time::to_simple_string(accumulated_time) << " that is " << (accumulated_time/measurement_frames).total_microseconds() << " us per frame"  << std::endl;
+				log[log::info] << "Generating "<< measurement_frames<< " textures took " << accumulated_time.count()/1000 << "ms that is " << (accumulated_time/measurement_frames/1000).count() << " us per frame";
+				accumulated_time = nanoseconds(0);
 				measurement_frames=0;
 			}
 			accumulated_time += (_end_time - _start_time);
@@ -283,7 +284,7 @@ void SimpleRenderer::set_keep_aspect(bool a)
 
 bool SimpleRenderer::set_param(const core::Parameter &parameter)
 {
-	mutex::scoped_lock l(draw_lock);
+	yuri::lock l(draw_lock);
 	if (parameter.name == "keep_aspect")
 		keep_aspect=parameter.get<bool>();
 	else if (parameter.name == "flip_x")
