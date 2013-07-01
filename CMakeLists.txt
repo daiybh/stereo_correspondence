@@ -26,7 +26,7 @@ git_describe(YURI_GIT_VERSION)
 # Add strict warning if building under linux
 #################################################################
 IF (UNIX)
-add_definitions("-Wall -pedantic -Wextra")
+add_definitions("-Wall -pedantic -Wextra -std=c++11 -DYURI_USE_CXX11") 
 ENDIF ()
 
 #################################################################
