@@ -34,7 +34,7 @@ core::pParameters BlankGenerator::configure()
 }
 
 BlankGenerator::BlankGenerator(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
-		BasicIOThread(log_,parent,0,1,"BlankGenerator"),next_time(not_a_date_time),
+		BasicIOThread(log_,parent,0,1,"BlankGenerator"),next_time(time_value::min()),
 		fps(25),width(640),height(480),format(YURI_FMT_YUV422)
 {
 	IO_THREAD_INIT("Blank generator")
@@ -69,11 +69,11 @@ bool BlankGenerator::set_param(const core::Parameter &p)
 }
 void BlankGenerator::run()
 {
-	time_duration delta = microseconds(1e6)/fps;
-	next_time=microsec_clock::local_time();
+	time_duration delta = nanoseconds(static_cast<size_t>(1e9/fps));
+	next_time=std::chrono::steady_clock::now();
 	core::pBasicFrame frame;
 	while(still_running()) {
-		if (microsec_clock::local_time() < next_time) {
+		if (std::chrono::steady_clock::now() < next_time) {
 			ThreadBase::sleep(latency);
 			continue;
 		}

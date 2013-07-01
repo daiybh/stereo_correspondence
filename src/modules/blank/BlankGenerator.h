@@ -12,12 +12,12 @@
 #define BLANKGENERATOR_H_
 
 #include "yuri/core/BasicIOThread.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
+//#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace yuri {
 
 namespace blank {
-using namespace boost::posix_time;
+//using namespace boost::posix_time;
 
 class BlankGenerator: public core::BasicIOThread {
 public:
@@ -32,7 +32,7 @@ protected:
 	core::pBasicFrame  generate_frame_yuv422();
 	core::pBasicFrame  generate_frame_rgb();
 	std::map<yuri::format_t,core::pBasicFrame  > blank_frames;
-	ptime next_time;
+	time_value next_time;
 	float fps;
 	yuri::ushort_t width;
 	yuri::ushort_t height;
