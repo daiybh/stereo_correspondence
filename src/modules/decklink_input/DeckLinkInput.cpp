@@ -307,7 +307,7 @@ bool DeckLinkInput::verify_display_mode()
 
 {
 	assert(input);
-	mutex::scoped_lock l(schedule_mutex);
+	yuri::lock l(schedule_mutex);
 	IDeckLinkDisplayMode *dm;
 	BMDDisplayModeSupport support;
 	BMDVideoInputFlags input_flags = capture_stereo?bmdVideoInputDualStream3D:bmdVideoInputFlagDefault;
@@ -359,7 +359,6 @@ bool DeckLinkInput::restart_streams()
 }
 bool DeckLinkInput::set_param(const core::Parameter &p)
 {
-	using boost::iequals;
 	if (iequals(p.name, "format_detection")) {
 		detect_format=p.get<bool>();
 	} else if (iequals(p.name, "force_detection")) {
