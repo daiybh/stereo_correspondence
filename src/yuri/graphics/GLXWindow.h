@@ -34,7 +34,7 @@ class GLXWindow: public WindowBase
 {
 protected:
 	static std::map<GLXContext,shared_ptr<GLXWindow> > used_contexts;
-	static boost::mutex contexts_map_mutex;
+	static yuri::mutex contexts_map_mutex;
 public:
 	static void add_used_context(GLXContext ctx,shared_ptr<GLXWindow> win);
 	static void remove_used_context(GLXContext ctx);
@@ -88,9 +88,9 @@ protected:
 	int 					screen_number;
 	std::string				winname;
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
-	static boost::mutex	global_mutex;
+	static yuri::mutex	global_mutex;
 #else
-	boost::mutex	local_mutex;
+	yuri::mutex	local_mutex;
 #endif
 	bool vsync;
 };

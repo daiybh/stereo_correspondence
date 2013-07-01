@@ -43,7 +43,7 @@ protected:
 	yuri::ssize_t x,y;
 	yuri::size_t width,height;
 	std::map<int,bool> keys;
-	boost::mutex keys_lock;
+	yuri::mutex keys_lock;
 	std::string name;
 	core::pCallback keyCallback;
 	core::Parameters params;

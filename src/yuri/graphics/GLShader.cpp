@@ -53,8 +53,10 @@ bool GLShader::load(std::string text)
 	if (!shader_size) return false;
 	if (shader_text) delete [] shader_text;
 	shader_text = new GLchar[++shader_size+1];
-	memset(shader_text,0,shader_size+1);
-	memcpy(shader_text,text.c_str(),shader_size-1);
+	std::fill(shader_text, shader_text+shader_size,0);
+//	memset(shader_text,0,shader_size+1);
+	std::copy_n(text.c_str(), shader_size-1, shader_text);
+//	memcpy(shader_text,text.c_str(),shader_size-1);
 	//std::cerr << "Allocating " << shader_size << endl;
 	shader_text[shader_size] = 0;
 	return true;

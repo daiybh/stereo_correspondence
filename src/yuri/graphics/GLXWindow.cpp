@@ -18,11 +18,11 @@ namespace yuri
 namespace graphics
 {
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
-boost::mutex	GLXWindow::global_mutex;
+yuri::mutex	GLXWindow::global_mutex;
 #endif
 
 std::map<GLXContext,shared_ptr<GLXWindow> > GLXWindow::used_contexts;
-boost::mutex GLXWindow::contexts_map_mutex;
+yuri::mutex GLXWindow::contexts_map_mutex;
 
 GLXWindow::GLXWindow(log::Log &log_, core::pwThreadBase parent, core::Parameters &p)
 	:WindowBase(log_, parent, p),win(0),noAttr(0),vi(0),
@@ -134,12 +134,12 @@ bool GLXWindow::create()
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
 	boost::mutex::scoped_lock l(global_mutex);
 #else
-	boost::mutex::scoped_lock l(local_mutex);
+	yuri::lock l(local_mutex);
 #endif
 	if (!create_window()) return false;
 	setHideDecoration(hideDecoration);
 	XStoreName(display.get(),win,winname.c_str());
-	boost::mutex::scoped_lock bgl(GL::big_gpu_lock);
+	yuri::lock bgl(GL::big_gpu_lock);
 	glc = glXCreateContext(display.get(), vi, NULL, GL_TRUE);
 	glXMakeCurrent(display.get(), win, glc);
 	log[log::debug] << "Created GLX Context";
@@ -153,7 +153,8 @@ bool GLXWindow::create()
 		XColor color;
 		// Create 1x1 1bpp pixmap
 		pixmap = XCreatePixmap(display.get(), win, 1, 1, 1);
-		memset((void*) &color, 0, sizeof(XColor));
+		std::fill_n(reinterpret_cast<char*>(&color),sizeof(XColor),0);
+//		memset((void*) &color, 0, sizeof(XColor));
 		cursor = XCreatePixmapCursor(display.get(), pixmap, pixmap, &color, &color,
 				0, 0);
 		XDefineCursor(display.get(),win,cursor);
@@ -196,9 +197,9 @@ void GLXWindow::setHideDecoration(bool value)
 void GLXWindow::swap_buffers()
 {
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
-	boost::mutex::scoped_lock l(global_mutex);
+	yuri::lock l(global_mutex);
 #else
-	boost::mutex::scoped_lock l(local_mutex);
+	yuri::lock l(local_mutex);
 #endif
 	assert(display);
 	assert(win);
@@ -208,9 +209,9 @@ void GLXWindow::swap_buffers()
 void GLXWindow::show(bool /*value*/)
 {
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
-	boost::mutex::scoped_lock l(global_mutex);
+	yuri::lock l(global_mutex);
 #else
-	boost::mutex::scoped_lock l(local_mutex);
+	yuri::lock l(local_mutex);
 #endif
 	do_show();
 }
@@ -218,9 +219,9 @@ void GLXWindow::show(bool /*value*/)
 void GLXWindow::move()
 {
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
-	boost::mutex::scoped_lock l(global_mutex);
+	yuri::lock l(global_mutex);
 #else
-	boost::mutex::scoped_lock l(local_mutex);
+	yuri::lock l(local_mutex);
 #endif
 	do_move();
 }
@@ -242,9 +243,9 @@ void GLXWindow::do_move()
 bool GLXWindow::process_events()
 {
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
-	boost::mutex::scoped_lock l(global_mutex);
+	yuri::lock l(global_mutex);
 #else
-	boost::mutex::scoped_lock l(local_mutex);
+	yuri::lock l(local_mutex);
 #endif
 	assert(display);
 	assert(win);
@@ -296,9 +297,9 @@ bool GLXWindow::resize(unsigned int w, unsigned int h)
 std::string GLXWindow::get_keyname(int key)
 {
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
-	boost::mutex::scoped_lock l(global_mutex);
+	yuri::lock l(global_mutex);
 #else
-	boost::mutex::scoped_lock l(local_mutex);
+	yuri::lock l(local_mutex);
 #endif
 	return do_get_keyname(key);
 }
@@ -313,7 +314,7 @@ std::string GLXWindow::do_get_keyname(int key)
 
 bool GLXWindow::check_key(int keysym)
 {
-	boost::mutex::scoped_lock l(keys_lock);
+	yuri::lock l(keys_lock);
 	assert(display);
 	assert(win);
 	if (keys.find(keysym)==keys.end()) return false;
@@ -322,7 +323,7 @@ bool GLXWindow::check_key(int keysym)
 
 void GLXWindow::exec(core::pCallback c)
 {
-	boost::mutex::scoped_lock l(keys_lock);
+	yuri::lock l(keys_lock);
 	assert(display);
 	assert(win);
 	if (c) c->run(get_this_ptr());
@@ -335,17 +336,17 @@ bool GLXWindow::have_stereo()
 
 void GLXWindow::add_used_context(GLXContext ctx,shared_ptr<GLXWindow> win)
 {
-	boost::mutex::scoped_lock l(contexts_map_mutex);
+	yuri::lock l(contexts_map_mutex);
 	used_contexts[ctx]=win;
 }
 void GLXWindow::remove_used_context(GLXContext ctx)
 {
-	boost::mutex::scoped_lock l(contexts_map_mutex);
+	yuri::lock l(contexts_map_mutex);
 	used_contexts.erase(ctx);
 }
 bool GLXWindow::is_context_used(GLXContext ctx)
 {
-	boost::mutex::scoped_lock l(contexts_map_mutex);
+	yuri::lock l(contexts_map_mutex);
 	return (bool)(used_contexts.find(ctx) != used_contexts.end());
 }
 
