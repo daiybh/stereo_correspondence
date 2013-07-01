@@ -30,7 +30,7 @@ public:
 	shared_ptr<fbgrab::FrameBufferGrabber> fbgrab;
 	shared_ptr<fbgrab::FrameBufferGrabber> get_grabber() {
 		//return dynamic_pointer_cast<fbgrab::FrameBufferGrabber>(builder->get_node(grabber_name));
-		return boost::static_pointer_cast<fbgrab::FrameBufferGrabber>(builder->get_node(grabber_name));
+		return yuri::static_pointer_cast<fbgrab::FrameBufferGrabber>(builder->get_node(grabber_name));
 		//return builder->get_node(grabber_name);
 		//return shared_ptr<fbgrab::FrameBufferGrabber>();
 	}
