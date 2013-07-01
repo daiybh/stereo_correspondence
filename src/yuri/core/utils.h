@@ -41,6 +41,8 @@ protected:
 struct bad_lexical_cast: public std::runtime_error {
 	bad_lexical_cast(const std::string& str):runtime_error(str) {}
 };
+
+
 template<class T, class U>
 T lexical_cast(const U& val)
 {
@@ -51,6 +53,13 @@ T lexical_cast(const U& val)
 	if (str.fail()) throw bad_lexical_cast("Bad lexical cast");
 	return outval;
 }
+
+
+template<>
+inline std::string lexical_cast(const std::string& val) {
+	return val;
+}
+
 template<class Char, class traits>
 bool iequals(const std::basic_string<Char, traits>& a, const std::basic_string<Char, traits>& b)
 {
