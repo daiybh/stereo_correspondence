@@ -50,7 +50,7 @@ protected:
 	std::stringstream temp_data;
 	std::string fname, ftype, iname;
 	std::map<std::string, std::string> sections;
-	boost::mutex upload_lock;
+	yuri::mutex upload_lock;
 	long type;
 };
 

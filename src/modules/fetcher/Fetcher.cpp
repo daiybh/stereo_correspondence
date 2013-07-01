@@ -66,9 +66,9 @@ core::pBasicFrame Fetcher::fetch()
 	curl_easy_setopt(curl.get(),CURLOPT_URL,url.c_str());
 	curl_easy_setopt(curl.get(),CURLOPT_USERAGENT,"Neneko @ libyuri");
 	if (f) { // Uploading a file
-		boost::mutex::scoped_lock(upload_lock);
+		yuri::lock(upload_lock);
 		log[log::debug] << "Uploading file " << fname << " with size "
-			<< f->get_size() << std::endl;
+			<< f->get_size();
 
 		if((cerror = curl_formadd(&first,&last,
 				CURLFORM_COPYNAME,iname.c_str(),
@@ -190,7 +190,7 @@ core::pBasicFrame Fetcher::dumpData()
 
 void Fetcher::setUploadParams(std::string filename, std::string filetype, std::string inputname)
 {
-	boost::mutex::scoped_lock(upload_lock);
+	yuri::lock(upload_lock);
 	fname = filename;
 	ftype = filetype;
 	iname = inputname;
@@ -198,7 +198,7 @@ void Fetcher::setUploadParams(std::string filename, std::string filetype, std::s
 
 void Fetcher::addUploadSection(std::string name, std::string value)
 {
-	boost::mutex::scoped_lock(upload_lock);
+	yuri::lock(upload_lock);
 	sections[name]=value;
 }
 
@@ -218,13 +218,13 @@ std::string Fetcher::printCurlFormaddError(int cerror)
 }
 void Fetcher::clearUploadSections()
 {
-	boost::mutex::scoped_lock(upload_lock);
+	yuri::lock(upload_lock);
 	sections.clear();
 }
 
 void Fetcher::setUrl(std::string new_url)
 {
-	boost::mutex::scoped_lock(upload_lock);
+	yuri::lock(upload_lock);
 	url=new_url;
 }
 /*
