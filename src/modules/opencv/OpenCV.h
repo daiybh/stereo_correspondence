@@ -11,12 +11,12 @@
 #ifndef OpenCV_H_
 #define OpenCV_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/BasicIOFilter.h"
 
 namespace yuri {
 namespace opencv {
 
-class OpenCV: public yuri::core::BasicIOThread
+class OpenCV: public yuri::core::BasicIOFilter
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
@@ -24,7 +24,8 @@ public:
 	virtual ~OpenCV();
 private:
 	OpenCV(log::Log &log_, core::pwThreadBase parent,core::Parameters &parameters);
-	virtual bool step();
+//	virtual bool step();
+	core::pBasicFrame do_simple_single_step(const core::pBasicFrame& frame);
 	virtual bool set_param(const core::Parameter& param);
 	format_t format;
 };
