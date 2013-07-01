@@ -42,7 +42,7 @@ protected:
 	long buffer_size, buffer_position;
 	std::vector<yuri::ubyte_t> output_buffer;
 	bool enable_checks;
-	boost::mutex buffer_lock;
+	yuri::mutex buffer_lock;
 };
 
 }

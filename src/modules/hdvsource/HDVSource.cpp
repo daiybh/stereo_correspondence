@@ -48,8 +48,9 @@ HDVSource::HDVSource(log::Log &log_,core::pwThreadBase parent, nodeid_t node, in
 HDVSource::~HDVSource() {
 	log[log::debug] << "Received " << total_packets << " packets, " <<
 		total_missing << " packet was missing in the stream" << std::endl;
-	std::pair<int,int> pid;
-	BOOST_FOREACH(pid,counters) {
+//	std::pair<int,int> pid;
+//	BOOST_FOREACH(pid,counters) {
+	for (const auto& pid: counters) {
 		log[log::debug] << "There was pid " << pid.first << " in the received stream" << std::endl;
 	}
 }
@@ -111,7 +112,7 @@ int HDVSource::process_frame(unsigned char *data, int length, unsigned int dropp
 	//log[log::debug] << "Counter: " << (int)(data[3]&0xF) << std::endl;
 	total_packets++;
 	if (out[0]) {
-		boost::mutex::scoped_lock l(buffer_lock);
+		yuri::lock l(buffer_lock);
 		if (!output_buffer.size()) {
 			//l.unlock();
 			//out[0]->push_frame(data,length);
@@ -137,7 +138,7 @@ int HDVSource::process_frame(unsigned char *data, int length, unsigned int dropp
 
 void HDVSource::setOutputBufferSize(long size)
 {
-	boost::mutex::scoped_lock l(buffer_lock);
+	yuri::lock l(buffer_lock);
 	if (size == buffer_size) return;
 	do_sendOutputBuffer();
 	buffer_size = size;
