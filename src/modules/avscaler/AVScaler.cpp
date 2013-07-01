@@ -39,11 +39,10 @@ core::pParameters AVScaler::configure()
 	(*p)["width"]["Width of the output image. Set to negative value to disable scaling"]=640;
 	(*p)["height"]["Height of the output image. Set to negative value to disable scaling"]=480;
 	p->set_max_pipes(1,1);
-	long fmt,fmt2;
-	BOOST_FOREACH(fmt,get_supported_formats()) {
+	for(const auto& fmt: get_supported_formats()) {
 		p->add_output_format(fmt);
 		p->add_input_format(fmt);
-		BOOST_FOREACH(fmt2,get_supported_formats()) {
+		for (const auto& fmt2: get_supported_formats()) {
 			p->add_converter(fmt,fmt2,0,true);
 		}
 	}
@@ -87,7 +86,7 @@ AVScaler::~AVScaler()
 
 bool AVScaler::set_output_format(int w, int h, long fmt)
 {
-	boost::mutex::scoped_lock l(scaler_lock);
+	yuri::lock l(scaler_lock);
 	bool changed=false;
 	if (w<0 || h<0) {
 		scaling_disabled=true;
@@ -171,7 +170,7 @@ void AVScaler::run()
 
 void AVScaler::scale_frame()
 {
-	boost::mutex::scoped_lock l(scaler_lock);
+	yuri::lock l(scaler_lock);
 	if (!do_prescale_checks()) return;
 	if (!do_fetch_frame()) return;
 	do_scale_frame();
@@ -278,7 +277,7 @@ bool AVScaler::do_prescale_checks()
 
 bool AVScaler::synchronous_scale(shared_ptr<AVFrame> fr,int w, int h, PixelFormat fmt, int pts)
 {
-	boost::mutex::scoped_lock l(scaler_lock);
+	yuri::lock l(scaler_lock);
 	if (w_in!=w || h_in!=h || format_in!=fmt) {
 		w_in=w;
 		h_in=h;

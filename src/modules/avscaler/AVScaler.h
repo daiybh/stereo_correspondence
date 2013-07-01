@@ -56,7 +56,7 @@ protected:
 	yuri::format_t format_in, format_out;
 	yuri::ssize_t w_in, h_in, w_out, h_out;
 	bool scaling, transforming, valid_contexts;
-	boost::mutex scaler_lock;
+	yuri::mutex scaler_lock;
 	shared_ptr<SwsContext> scale_ctx, transform_ctx;
 	shared_ptr<AVPicture> pix_out, pix_inter;
 	core::pBasicFrame frm_out, frm_inter;
