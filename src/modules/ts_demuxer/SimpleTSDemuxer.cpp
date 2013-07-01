@@ -44,8 +44,9 @@ SimpleTSDemuxer::SimpleTSDemuxer(log::Log &log_, core::pwThreadBase parent, core
 }
 
 SimpleTSDemuxer::~SimpleTSDemuxer() {
-	std::pair<yuri::uint_t,yuri::size_t> pid;
-	BOOST_FOREACH(pid,seen_pids) {
+//	std::pair<yuri::uint_t,yuri::size_t> pid;
+//	BOOST_FOREACH(pid,seen_pids) {
+	for(const auto& pid: seen_pids) {
 		log[log::info] << "Encountered total of " << pid.second <<
 			" packets for PID " << pid.first << "\n";
 	}
@@ -76,7 +77,8 @@ bool SimpleTSDemuxer::step()
 
 				}*/
 				yuri::size_t missing=packet_size-in_buffer_position+sync_offset-balast;
-				memcpy(&in_buffer[0]+in_buffer_position,PLANE_RAW_DATA(frame,0)+sync_offset-balast,missing);
+				std::copy_n(PLANE_RAW_DATA(frame,0)+sync_offset-balast, missing, &in_buffer[0]+in_buffer_position);
+//				memcpy(&in_buffer[0]+in_buffer_position,PLANE_RAW_DATA(frame,0)+sync_offset-balast,missing);
 				process_packet(&in_buffer[0]+sync_offset);
 				index+=missing; remaining-=missing+sync_offset;
 				in_buffer_position = 0;
@@ -99,7 +101,8 @@ bool SimpleTSDemuxer::step()
 			}
 		}
 		if (remaining > 0) {
-			memcpy(&in_buffer[0],PLANE_RAW_DATA(frame,0)+index,remaining);
+			std::copy_n(PLANE_RAW_DATA(frame,0)+index, remaining, &in_buffer[0]);
+//			memcpy(&in_buffer[0],PLANE_RAW_DATA(frame,0)+index,remaining);
 			in_buffer_position = remaining;
 		}
 	}
@@ -152,7 +155,8 @@ bool SimpleTSDemuxer::process_packet(yuri::ubyte_t *dataraw)
 	}
 	if (start && buffer_position) send_buffer();
 	if (buffer_position + 188 - skip_bytes > buffer_size) send_buffer();
-	memcpy(&buffer[0]+buffer_position,data+skip_bytes,188-skip_bytes);
+	std::copy_n(data+skip_bytes, 188-skip_bytes, &buffer[0]+buffer_position);
+//	memcpy(&buffer[0]+buffer_position,data+skip_bytes,188-skip_bytes);
 	log[log::debug] << "Copying: " << 188-skip_bytes << " bytes (skipping " << skip_bytes<< ", bp: "<< buffer_position<<"\n";
 	buffer_position+=188-skip_bytes;
 	return true;
@@ -292,7 +296,8 @@ core::pBasicFrame SimpleTSDemuxer::stripped_pes()
 		if (null_size) {
 			null_size = false;
 			data_length = position-last_start;
-			memcpy(&out_buf[0]+out_pos, buf+last_start,data_length);
+			std::copy_n(buf+last_start, data_length, &out_buf[0]+out_pos);
+//			memcpy(&out_buf[0]+out_pos, buf+last_start,data_length);
 			copied+=data_length;
 			out_pos+=data_length;
 		}
@@ -302,7 +307,8 @@ core::pBasicFrame SimpleTSDemuxer::stripped_pes()
 			if (position+header_length+data_length > buffer_position) {
 				log[log::error] << "PES contains data beyond packet!\n";
 			} else {
-				memcpy(&out_buf[0]+out_pos, buf+position+header_length,data_length);
+				std::copy_n(buf+position+header_length, data_length, &out_buf[0]+out_pos);
+//				memcpy(&out_buf[0]+out_pos, buf+position+header_length,data_length);
 				out_pos+=data_length;
 				copied+=data_length;
 			}
@@ -320,7 +326,8 @@ core::pBasicFrame SimpleTSDemuxer::stripped_pes()
 	if (null_size) {
 		null_size = false;
 		data_length = position-last_start;
-		memcpy(&out_buf[0]+out_pos, buf+last_start,data_length);
+		std::copy_n(buf+last_start, data_length, &out_buf[0]+out_pos);
+//		memcpy(&out_buf[0]+out_pos, buf+last_start,data_length);
 		copied+=data_length;
 		out_pos+=data_length;
 	}
