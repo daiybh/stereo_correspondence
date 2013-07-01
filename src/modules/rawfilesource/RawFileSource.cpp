@@ -11,7 +11,7 @@
 #include "RawFileSource.h"
 #include "yuri/core/Module.h"
 #include <fstream>
-#include <boost/assign.hpp>
+//#include <boost/assign.hpp>
 #include <boost/regex.hpp>
 #include <iomanip>
 namespace yuri {
@@ -49,7 +49,7 @@ core::pParameters RawFileSource::configure()
 RawFileSource::RawFileSource(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters):
 			core::BasicIOThread(_log,parent,1,2,"RawFileSource"), position(0),
 			chunk_size(0), width(0), height(0),output_format(YURI_FMT_NONE),
-			fps(25.0),last_send(not_a_date_time),keep_alive(true),loop(true),
+			fps(25.0),last_send(time_value::min()),keep_alive(true),loop(true),
 			failed_read(false),sequence(false),block(0),loop_number(0),sequence_pos(0)
 {
 	IO_THREAD_INIT("Raw file source")
@@ -68,15 +68,15 @@ void RawFileSource::run()
 		if (failed_read) break;
 		if (!frame) continue;
 		if (block && out[0] && out[0]->get_count() >= block) continue;
-		if (last_send != not_a_date_time) {
+		if (last_send != time_value::min()) {
 			time_duration delta;
 			if (fps!=0.0)
-				delta = microseconds(1e6/fps);
+				delta = nanoseconds(static_cast<nanoseconds::rep>(1e9/fps));
 			else delta = microseconds(0);
-			if ((microsec_clock::local_time()-last_send) < delta) continue;
+			if ((std::chrono::steady_clock::now()-last_send) < delta) continue;
 			last_send+=delta;
 		} else {
-			last_send=microsec_clock::local_time();
+			last_send=std::chrono::steady_clock::now();
 		}
 		if (out[0]) {
 			if (frame) push_raw_frame(0,frame);
@@ -116,7 +116,7 @@ bool RawFileSource::read_chunk()
 			first_read = true;
 		}
 		yuri::size_t length = chunk_size;
-		std::vector<yuri::size_t> planes=boost::assign::list_of(length);
+		std::vector<yuri::size_t> planes= {length};
 		FormatInfo_t fi = core::BasicPipe::get_format_info(output_format);
 		if (output_format != YURI_FMT_NONE && fi && !fi->compressed && width && height) {
 
@@ -130,13 +130,13 @@ bool RawFileSource::read_chunk()
 					planes.push_back((width*height*fi->component_depths[i]/fi->plane_x_subs[i]/fi->plane_y_subs[i])>>3);
 				}
 
-			} else planes=boost::assign::list_of(length);
+			} else planes={length};
 			log[log::debug] << "Guessed size for " << fi->long_name << " is " << length<<std::endl;
 		} else if (!chunk_size) {
 			file.seekg(0,std::ios_base::end);
 			length = static_cast<yuri::size_t>(file.tellg()) - position;
 			file.seekg(position,std::ios_base::beg);
-			planes=boost::assign::list_of(length);
+			planes={length};
 		}
 		frame.reset(new core::BasicFrame(planes.size()));
 		//(*frame)[0].set(data,length);
@@ -228,9 +228,9 @@ std::string RawFileSource::next_file()
 //	log[log::info] << "Sequence specs found! '"<<match[1]<<"' XXX '"<<match[2]<<"' XXX '"<<match[3]<<"'";
 	size_t width =0;
 	try {
-		width = boost::lexical_cast<size_t>(match[2]);
+		width = lexical_cast<size_t>(match[2]);
 	}
-	catch (boost::bad_lexical_cast& e) {
+	catch (bad_lexical_cast& e) {
 		return path;
 	}
 	std::stringstream spath;

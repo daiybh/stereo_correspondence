@@ -12,14 +12,14 @@
 #define RAWFILESOURCE_H_
 
 #include "yuri/core/BasicIOThread.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
+//#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace yuri {
 
 namespace rawfilesource {
 
 
-using namespace boost::posix_time;
+//using namespace boost::posix_time;
 
 class RawFileSource: public core::BasicIOThread
 {
@@ -39,7 +39,7 @@ protected:
 	yuri::format_t output_format;
 	double fps;
 	std::string path;
-	ptime last_send;
+	time_value last_send;
 	std::ifstream file;
 	bool keep_alive,loop, failed_read, sequence;
 	yuri::usize_t block;
