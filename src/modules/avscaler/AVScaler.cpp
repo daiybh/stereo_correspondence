@@ -63,7 +63,8 @@ bool AVScaler::configure_converter(core::Parameters& parameters,long format_in,
 
 
 AVScaler::AVScaler(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters):
-	AVCodecBase(_log,parent,"AVScaler"),f_in(PIX_FMT_NONE),f_out(PIX_FMT_NONE),
+	BasicIOFilter(_log, parent, "AVScaler"),AVCodecBase(BasicIOFilter::log),
+	f_in(PIX_FMT_NONE),f_out(PIX_FMT_NONE),
 	format_in(YURI_FMT_NONE),format_out(YURI_FMT_NONE),w_in(0),h_in(0),w_out(0),
 	h_out(0),scaling(false),transforming(false),valid_contexts(false),
 	input_pipe_connected(false),scaling_disabled(false),pts(0),duration(0)
@@ -168,17 +169,17 @@ void AVScaler::run()
 	BasicIOThread::run();
 }
 
-void AVScaler::scale_frame()
+core::pBasicFrame AVScaler::scale_frame(const core::pBasicFrame& frame)
 {
 	yuri::lock l(scaler_lock);
-	if (!do_prescale_checks()) return;
-	if (!do_fetch_frame()) return;
-	do_scale_frame();
+	if (!do_prescale_checks()) return core::pBasicFrame();
+	if (!do_fetch_frame(frame)) return core::pBasicFrame();
+	return do_scale_frame();
 }
 
-void AVScaler::do_scale_frame()
+core::pBasicFrame AVScaler::do_scale_frame()
 {
-	if (!valid_contexts) return;
+	if (!valid_contexts) return core::pBasicFrame();
 	shared_ptr<AVPicture> pic;
 	if (synch_frame) {
 		pic.reset(new AVPicture);
@@ -195,35 +196,41 @@ void AVScaler::do_scale_frame()
 		if (transforming) {
 			sws_scale(transform_ctx.get(),pix_inter->data,pix_inter->linesize,0,
 					h_out,pix_out->data,pix_out->linesize);
-			do_output_frame(frm_out);
+			return do_output_frame(frm_out);
 		} else {
-			do_output_frame(frm_inter);
+			return do_output_frame(frm_inter);
 		}
 	} else if (transforming) {
 		sws_scale(transform_ctx.get(),pic->data,pic->linesize,0,h_out,pix_out->data,pix_out->linesize);
-		do_output_frame(frm_out);
-	} else {
-		push_raw_video_frame(0,frame);
-		frame.reset();
-	}
-	return;
+		return do_output_frame(frm_out);
+	} //else {
+	core::pBasicFrame f = frame;
+	frame.reset();
+	return f;
+//
+//		push_raw_video_frame(0,frame);
+//		frame.reset();
+//	}
+//	return;
 }
 
 
-bool AVScaler::do_fetch_frame()
+bool AVScaler::do_fetch_frame(const core::pBasicFrame& frame_)
 {
-	if (!in[0]) return false;
-	if (in[0]->is_closed()) {
-		close_pipes();
-		return false;
-	}
-	if (in[0]->get_type() != YURI_TYPE_VIDEO) {
-		log[log::debug] << "Connected pipe with type other than video ("
-				<< core::BasicPipe::get_type_string(in[0]->get_type())
-				<< "), that's not gonna work" << std::endl;
-		return false;
-	}
-	if (! (frame= in[0]->pop_frame())) return false;
+//	if (!in[0]) return false;
+//	if (in[0]->is_closed()) {
+//		close_pipes();
+//		return false;
+//	}
+//	if (in[0]->get_type() != YURI_TYPE_VIDEO) {
+//		log[log::debug] << "Connected pipe with type other than video ("
+//				<< core::BasicPipe::get_type_string(in[0]->get_type())
+//				<< "), that's not gonna work" << std::endl;
+//		return false;
+//	}
+//	if (! (frame= in[0]->pop_frame())) return false;
+	frame = frame_;
+	if (!frame) return false;
 	pts=frame->get_pts();
 	duration = frame->get_duration();
 	if (do_check_input_frame()) do_recheck_conversions();
@@ -261,11 +268,14 @@ void AVScaler::do_delete_contexts()
 */
 }
 
-void AVScaler::do_output_frame(core::pBasicFrame frame)
+core::pBasicFrame AVScaler::do_output_frame(core::pBasicFrame frame)
 {
 
 	core::pBasicFrame f = frame->get_copy();
-	push_video_frame(0,f,format_out,w_out, h_out, pts, duration, frame->get_dts());
+	//push_video_frame(0,f,format_out,w_out, h_out, pts, duration, frame->get_dts());
+	f->set_parameters(format_out,w_out, h_out);
+	f->set_time(pts, duration, frame->get_dts());
+	return f;
 	//log[log::debug] << "pushed frame " << w_out << "x" << h_out << ", with " <<  f->get_planes_count() << " planes. size: " << f->get_size() << std::endl;
 }
 
@@ -291,12 +301,12 @@ bool AVScaler::synchronous_scale(shared_ptr<AVFrame> fr,int w, int h, PixelForma
 	synch_frame.reset();
 	return true;
 }
-
-bool AVScaler::step()
+core::pBasicFrame AVScaler::do_simple_single_step(const core::pBasicFrame& frame)
+//bool AVScaler::step()
 {
 	log[log::verbose_debug] << "Step!" << std::endl;
-	scale_frame();
-	return true;
+	return scale_frame(frame);
+//	return true;
 }
 
 void AVScaler::av_ctx_deleter(SwsContext *ctx)

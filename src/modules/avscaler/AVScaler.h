@@ -14,13 +14,14 @@
 extern "C" {
 	#include <libswscale/swscale.h>
 }
+#include "yuri/core/BasicIOFilter.h"
 
 namespace yuri
 {
 namespace video
 {
 
-class AVScaler:public AVCodecBase
+class AVScaler:public core::BasicIOFilter, public AVCodecBase
 {
 public:
 	AVScaler(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters);
@@ -43,14 +44,15 @@ protected:
 
 	bool do_recheck_conversions();
 	void do_create_contexts();
-	void scale_frame();
-	void do_scale_frame();
-	bool do_fetch_frame();
+	core::pBasicFrame scale_frame(const core::pBasicFrame& frame);
+	core::pBasicFrame do_scale_frame();
+	bool do_fetch_frame(const core::pBasicFrame& frame);
 	bool do_check_input_frame();
 	void do_delete_contexts();
-	void do_output_frame(core::pBasicFrame frame);
+	core::pBasicFrame do_output_frame(core::pBasicFrame frame);
 	bool do_prescale_checks();
-	virtual bool step();
+	virtual core::pBasicFrame do_simple_single_step(const core::pBasicFrame& frame);
+//	virtual bool step();
 protected:
 	PixelFormat f_in, f_out;
 	yuri::format_t format_in, format_out;
