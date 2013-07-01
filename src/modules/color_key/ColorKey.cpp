@@ -210,7 +210,7 @@ bool ColorKey::step()
 }
 bool ColorKey::set_param(const core::Parameter& param)
 {
-	using boost::iequals;
+//	using boost::iequals;
 	if (iequals(param.name,"r")) {
 		r_ = param.get<ushort_t>();
 	} else if (iequals(param.name,"g")) {
