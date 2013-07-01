@@ -155,7 +155,7 @@ void OpenNIKinect::run()
 {
 	IO_THREAD_PRE_RUN
 	std::vector<openni::VideoStream*> stream_pointers;
-	BOOST_FOREACH(pVideoStream str, video_streams) {
+	for(pVideoStream str: video_streams) {
 		if (str->start()!=openni::STATUS_OK) {
 			log[log::warning] << "Failed to start stream\n";
 		} else {
@@ -227,18 +227,18 @@ void OpenNIKinect::run()
 		}
 	}
 
-	BOOST_FOREACH(pVideoStream str, video_streams) {
+	for(pVideoStream str: video_streams) {
 		str->stop();
 		str->destroy();
 	}
-	BOOST_FOREACH(pDevice dev, devices) {
+	for(pDevice dev: devices) {
 		dev->close();
 	}
 	IO_THREAD_POST_RUN
 }
 bool OpenNIKinect::set_param(const core::Parameter& param)
 {
-	log[log::info] << "Got param " << param.name <<": " << param.get<int>() <<"\n";
+	log[log::info] << "Got param " << param.name <<": " << param.get<std::string>() <<"\n";
 	if (param.name == "enable_depth") {
 		enable_depth = param.get<bool>();
 	} else if (param.name == "enable_ir") {
