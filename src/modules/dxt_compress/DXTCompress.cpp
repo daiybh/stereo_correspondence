@@ -19,7 +19,7 @@ REGISTER("dxt_compress",DXTCompress)
 IO_THREAD_GENERATOR(DXTCompress)
 
 
-using boost::iequals;
+//using boost::iequals;
 core::pParameters DXTCompress::configure()
 {
 	core::pParameters p = BasicIOThread::configure();
