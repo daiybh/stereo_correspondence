@@ -62,7 +62,7 @@ bool JPEGEncoder::step()
 
 
 	//int bpp = colorspace==YURI_COLORSPACE_RGB?3:4;
-	boost::posix_time::ptime t1(boost::posix_time::microsec_clock::universal_time());
+//	boost::posix_time::ptime t1(boost::posix_time::microsec_clock::universal_time());
 	struct jpeg_compress_struct cinfo;
 	struct jpeg_error_mgr       jerr;
 
@@ -113,10 +113,10 @@ bool JPEGEncoder::step()
 		jpeg_write_scanlines(&cinfo, &row_pointer, 1);
 	}
 	jpeg_finish_compress(&cinfo);
-	boost::posix_time::ptime t2(boost::posix_time::microsec_clock::universal_time());
-		boost::posix_time::time_period tp(t1,t2);
-		log[log::debug] << "JPEG compression took: " << tp.length().total_microseconds()
-			<< " us" << std::endl;
+//	boost::posix_time::ptime t2(boost::posix_time::microsec_clock::universal_time());
+//		boost::posix_time::time_period tp(t1,t2);
+//		log[log::debug] << "JPEG compression took: " << tp.length().total_microseconds()
+//			<< " us" << std::endl;
 	dumpData();
     jpeg_destroy_compress(&cinfo);
 	return true;
