@@ -19,7 +19,6 @@ REGISTER("vncclient",VNCClient)
 
 IO_THREAD_GENERATOR(VNCClient)
 
-using boost::iequals;
 core::pParameters VNCClient::configure()
 {
 	core::pParameters p = BasicIOThread::configure();
