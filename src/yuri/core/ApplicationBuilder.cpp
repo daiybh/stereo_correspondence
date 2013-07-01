@@ -12,7 +12,7 @@
 #include "yuri/core/RegisteredClass.h"
 #include "yuri/core/BasicPipe.h"
 #include <cassert>
-#ifndef YURI_USE_CXX11
+#ifndef YURI_ANDROID
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
 #endif
@@ -143,8 +143,8 @@ void ApplicationBuilder::run()
 bool ApplicationBuilder::find_modules()
 {
 //	log[log::info] << "Looking for modules ("<<module_dirs.size() <<")!\n";
-#ifndef YURI_USE_CXX11
-	BOOST_FOREACH(std::string p, module_dirs) {
+#ifndef YURI_ANDROID
+	for (const auto& p: module_dirs) {
 		boost::filesystem::path p_(p);
 		if (boost::filesystem::exists(p_) &&
 				boost::filesystem::is_directory(p_)) {
@@ -165,11 +165,7 @@ bool ApplicationBuilder::find_modules()
 }
 bool ApplicationBuilder::load_modules()
 {
-#ifndef YURI_USE_CXX11
-	BOOST_FOREACH(std::string s, modules) {
-#else
 	for(auto& s: modules) {
-#endif
 		try{
 			bool loaded = RegisteredClass::load_module(s);
 			//log[log::debug] << "Loading " << s<< ": "<<(loaded?"OK":"Failed") << "\n";
@@ -295,12 +291,7 @@ std::string name,cl;
 		//delete n;
 		return false;
 	}
-#ifndef YURI_USE_CXX11
-	std::pair<std::string,shared_ptr<Parameter> > parameter;
-	BOOST_FOREACH(parameter,n->params.params) {
-#else
 	for (auto& parameter: n->params.params) {
-#endif
 		std::string value = parameter.second->get<std::string>();
 		if (value[0] == '@') {
 		std::string argname = value.substr(1);
@@ -358,13 +349,8 @@ bool ApplicationBuilder::process_link(TiXmlElement &node)
 		//delete l;
 		return false;
 	}
-#ifndef YURI_USE_CXX11
-	std::pair<std::string,shared_ptr<Parameter> > parameter;
-	BOOST_FOREACH(parameter,l->params.params) {
-#else
 	for (auto& parameter: l->params.params) {
-#endif
-	std::string value = parameter.second->get<std::string>();
+		std::string value = parameter.second->get<std::string>();
 		if (value[0] == '@') {
 		std::string name = value.substr(1);
 			l->variables[parameter.first]=name;
@@ -449,12 +435,7 @@ void ApplicationBuilder::clear_tree()
 bool ApplicationBuilder::prepare_threads()
 {
 	if (threads_prepared) return true;
-#ifndef YURI_USE_CXX11
-	std::pair<std::string,shared_ptr<NodeRecord> > node;
-	BOOST_FOREACH(node,nodes) {
-#else
 	for (auto& node: nodes) {
-#endif
 		log[log::debug] << "Preparing node " << node.first <<"\n";
 		assert(node.second.get());
 		assert(RegisteredClass::is_registered(node.second->type));
@@ -484,13 +465,7 @@ bool ApplicationBuilder::prepare_threads()
 
 void ApplicationBuilder::show_params(Parameters& _params, std::string prefix)
 {
-#ifndef YURI_USE_CXX11
-	std::pair<std::string,shared_ptr<Parameter> > par;
-	BOOST_FOREACH(par,(_params.params)) {
-#else
 	for(auto& par: _params.params) {
-#endif
-
 		if (par.second->type==GroupType) {
 			for (int i=0;;++i) {
 				try {
@@ -510,13 +485,7 @@ void ApplicationBuilder::show_params(Parameters& _params, std::string prefix)
 
 bool ApplicationBuilder::prepare_links()
 {
-#ifndef YURI_USE_CXX11
-	std::pair<std::string,shared_ptr<LinkRecord> > link;
-	BOOST_FOREACH(link,links) {
-#else
 	for (auto& link: links) {
-#endif
-
 		log[log::debug] << "Preparing link " << link.first <<"\n";
 		assert(link.second.get());
 		pParameters params (new Parameters(*default_pipe_param));
@@ -548,12 +517,7 @@ bool ApplicationBuilder::prepare_links()
 }
 bool ApplicationBuilder::spawn_threads()
 {
-#ifndef YURI_USE_CXX11
-	std::pair<std::string,pBasicIOThread > thread;
-	BOOST_FOREACH(thread,threads) {
-#else
 	for (auto& thread: threads) {
-#endif
 		spawn_thread(thread.second);
 		//log[log::info] << "Thread for object " << thread.first << " spawned as " << lexical_caststd::string>(children[thread.second]->thread_ptr->native_handle()) << ", boost id: "<< children[thread.second]->thread_ptr->get_id()<<"\n";
 		tids[thread.first]=0;
@@ -593,12 +557,7 @@ bool ApplicationBuilder::step()
 pBasicIOThread ApplicationBuilder::get_node(std::string id)
 {
 	if (threads.find(id)==threads.end()) {
-#ifndef YURI_USE_CXX11
-		std::pair<std::string,pBasicIOThread > p;
-		BOOST_FOREACH(p,threads) {
-#else
 		for (auto& p: threads) {
-#endif
 			log[log::debug] << "I have " << p.first <<"\n";
 		}
 		throw Exception(std::string(id)+" does not exist");
@@ -632,12 +591,7 @@ void ApplicationBuilder::fetch_tids()
 {
 #if defined(YURI_LINUX) && !defined(YURI_ANDROID)
 	bool changed = false;
-#ifndef YURI_USE_CXX11
-	std::pair<std::string,pid_t> tid_record;
-	BOOST_FOREACH(tid_record,tids) {
-#else
 	for (auto& tid_record: tids) {
-#endif
 		if (!tid_record.second) {
 			tids[tid_record.first] = threads[tid_record.first]->get_tid();
 			log[log::debug] << "Thread " << tid_record.first << " has tid " << tids[tid_record.first] <<"\n";
@@ -650,11 +604,7 @@ void ApplicationBuilder::fetch_tids()
 		if (!boost::filesystem::exists(p)) {
 			boost::filesystem::create_directory(p);
 		}
-#ifndef YURI_USE_CXX11
-		BOOST_FOREACH(tid_record,tids) {
-#else
 		for (auto& tid_record: tids) {
-#endif
 			if (tid_record.second) {
 				boost::filesystem::path p2 = p / lexical_cast<std::string>(tid_record.second); //(destdir+lexical_cast<std::string>(tid_record.second));
 				if (!boost::filesystem::exists(p2)) {
@@ -670,12 +620,7 @@ void ApplicationBuilder::fetch_tids()
 pParameters ApplicationBuilder::assign_variables(std::map<std::string, std::string> vars)
 {
 	pParameters var_params(new Parameters());
-#ifndef YURI_USE_CXX11
-	std::pair<std::string, std::string> var;
-	BOOST_FOREACH(var,vars) {
-#else
 	for (auto& var: vars) {
-#endif
 		if (variables.find(var.second) != variables.end()) {
 			(*var_params)[var.first] = variables[var.second]->value;
 		}
@@ -686,12 +631,7 @@ pParameters ApplicationBuilder::assign_variables(std::map<std::string, std::stri
 void ApplicationBuilder::parse_argv(std::vector<std::string> argv)
 {
 	log[log::debug] << "" << argv.size() << " arguments to parse" <<"\n";
-#ifndef YURI_USE_CXX11
-	std::string arg;
-	BOOST_FOREACH(arg,argv) {
-#else
 	for (auto& arg: argv) {
-#endif
 		size_t delim = arg.find('=');
 		if (delim==std::string::npos) {
 			log[log::warning] << "Failed to parse argument '" <<arg<<"'" <<"\n";
