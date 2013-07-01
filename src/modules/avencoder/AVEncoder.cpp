@@ -27,7 +27,7 @@ IO_THREAD_GENERATOR(AVEncoder)
 
 core::pParameters AVEncoder::configure()
 {
-	core::pParameters p(new core::Parameters());
+	core::pParameters p = BasicIOFilter::configure();
 	(*p)["codec"]="";
 	(*p)["width"]=640;
 	(*p)["height"]=480;
@@ -52,7 +52,8 @@ core::pParameters AVEncoder::configure()
 }
 
 AVEncoder::AVEncoder(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
-		AVCodecBase(_log,parent,"Encoder"),buffer_size(1048576)
+		core::BasicIOFilter(_log,parent,"Encoder"),AVCodecBase(BasicIOFilter::log),
+		buffer_size(1048576)
 {
 	IO_THREAD_INIT("AVEncoder")
 	if (codec_id == CODEC_ID_NONE) throw exception::InitializationFailed(std::string("Unknown/unsupported codec"));
@@ -114,15 +115,16 @@ void AVEncoder::run()
 	//close_pipes();
 }
 
-void AVEncoder::encode_frame()
+core::pBasicFrame  AVEncoder::encode_frame(const core::pBasicFrame& frame_in)
 {
-	if (!c || !cc || !in[0].get() || !out[0].get()) return;
-	core::pBasicFrame f = in[0]->pop_frame();
-	if (!f) return;
+//	if (!c || !cc || !in[0].get() || !out[0].get()) return;
+//	core::pBasicFrame f = in[0]->pop_frame();
+	core::pBasicFrame f = frame_in;
+	if (!f) return core::pBasicFrame();
 	assert(buffer.size());
 	if (!supported_formats_for_current_codec.count(f->get_format())) {
 		log[log::warning] << "Frame format " << core::BasicPipe::get_format_string(f->get_format()) << " not supported in actual codec" << "\n";
-		return;
+		return core::pBasicFrame();
 	}
 	if (current_format != f->get_format()) {
 		log[log::warning] << "Input format changed, trying to reinitialize codec for this format" << "\n";
@@ -133,7 +135,7 @@ void AVEncoder::encode_frame()
 			else if (newf == PIX_FMT_YUV420P) newf = PIX_FMT_YUVJ420P;
 		}
 		cc->pix_fmt= newf;
-		if (!init_codec(AVMEDIA_TYPE_VIDEO, width, height, bps, fps, 1)) return;
+		if (!init_codec(AVMEDIA_TYPE_VIDEO, width, height, bps, fps, 1)) return core::pBasicFrame();
 	}
 	frame = convert_to_avframe(f);
 	frame->pts = f->get_pts() * cc->time_base.den / cc->time_base.num;
@@ -142,7 +144,7 @@ void AVEncoder::encode_frame()
 	int used=avcodec_encode_video(cc,&buffer[0],buffer.size(),frame.get());
 	if (used < 0 || (yuri::size_t)used>buffer.size()) {
 		log[log::warning] << "Encoding probably failed, used " << used << "Bytes\n";
-		return;
+		return core::pBasicFrame();
 	}
 	yuri::size_t pts, dts, duration;
 
@@ -154,13 +156,18 @@ void AVEncoder::encode_frame()
 				cc->coded_frame->coded_picture_number << "with ratio: " <<
 				cc->time_base.num << "/" << cc->time_base.den << "\n";
 	core::pBasicFrame out_frame = allocate_frame_from_memory(&buffer[0],used);
-	push_video_frame(0,out_frame,yuri_format_from_avcodec(this->codec_id),width,height,pts,duration,dts);
+
+	//push_video_frame(0,out_frame,yuri_format_from_avcodec(this->codec_id),width,height,pts,duration,dts);
+	out_frame->set_parameters(yuri_format_from_avcodec(this->codec_id),width,height);
+	out_frame->set_time(pts,duration,dts);
+	return out_frame;
 }
 
-bool AVEncoder::step()
+core::pBasicFrame AVEncoder::do_simple_single_step(const core::pBasicFrame& frame)
+//bool AVEncoder::step()
 {
-	encode_frame();
-	return true;
+	return encode_frame(frame);
+//	return true;
 }
 
 std::set<yuri::format_t> AVEncoder::get_supported_input_formats()

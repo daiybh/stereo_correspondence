@@ -11,14 +11,14 @@
 #ifndef ENCODER_H_
 #define ENCODER_H_
 #include "yuri/libav/AVCodecBase.h"
-
+#include "yuri/core/BasicIOFilter.h"
 namespace yuri
 {
 
 namespace video
 {
 
-class AVEncoder: public AVCodecBase
+class AVEncoder: public core::BasicIOFilter, public AVCodecBase
 {
 public:
 	virtual ~AVEncoder();
@@ -30,8 +30,9 @@ public:
 	virtual bool set_param(const core::Parameter &param);
 protected:
 	AVEncoder(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters) IO_THREAD_CONSTRUCTOR;
-	void encode_frame();
-	virtual bool step();
+	core::pBasicFrame  encode_frame(const core::pBasicFrame& frame_in);
+//	virtual bool step();
+	core::pBasicFrame do_simple_single_step(const core::pBasicFrame& frame);
 	shared_ptr<AVFrame> frame;
 	std::vector<yuri::ubyte_t> buffer;
 	yuri::size_t buffer_size;
