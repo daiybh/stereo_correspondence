@@ -1,7 +1,7 @@
 #################################################################
 # Core library depends only on Boost 
 #################################################################
-find_package( Boost 1.46 COMPONENTS thread system filesystem REQUIRED)
+find_package( Boost 1.46 COMPONENTS filesystem REQUIRED)
 
 #################################################################
 # Checking for optional dependencies for helper libraries
