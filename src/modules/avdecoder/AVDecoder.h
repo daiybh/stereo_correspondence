@@ -49,7 +49,7 @@ protected:
 	core::pBasicFrame output_frame;
 	bool use_timestamps;
 	yuri::size_t first_out_pts;
-	boost::posix_time::ptime first_time;
+	time_value first_time;
 };
 
 }

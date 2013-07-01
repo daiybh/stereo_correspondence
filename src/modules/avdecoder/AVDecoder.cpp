@@ -35,7 +35,7 @@ core::pParameters AVDecoder::configure()
 AVDecoder::AVDecoder(log::Log &_log, core::pwThreadBase parent, core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
 		AVCodecBase(_log,parent,"Decoder"),last_pts(0),first_pts(-1),
 		decoding_format(YURI_FMT_NONE),use_timestamps(false),first_out_pts(0),
-		first_time(boost::posix_time::not_a_date_time)
+		first_time(time_value::min())
 {
 	IO_THREAD_INIT("avdecoder")
 	frame.reset(avcodec_alloc_frame());
@@ -189,15 +189,15 @@ void AVDecoder::do_output_frame()
 
 	if (!use_timestamps) {
 		do_out = true;
-	} else if (first_time==boost::posix_time::not_a_date_time) {
-		first_time=boost::posix_time::microsec_clock::local_time();
+	} else if (first_time==time_value::min()) {
+		first_time=std::chrono::steady_clock::now();
 		first_out_pts = pts;
 		do_out = true;
 	} else {
-		boost::posix_time::ptime t = boost::posix_time::microsec_clock::local_time();
+		time_value t = std::chrono::steady_clock::now();
 		yuri::size_t pts_diff = pts - first_out_pts;
-		boost::posix_time::time_duration delta = t - first_time;
-		if (static_cast<yuri::usize_t>(delta.total_microseconds()) > pts_diff) {
+		time_duration delta = t - first_time;
+		if (static_cast<yuri::usize_t>(delta.count()) > pts_diff) {
 //			log[log::info] << "TMS: " << delta.total_microseconds() << ", ptd: " << pts_diff << std::endl;
 			do_out=true;
 		}
