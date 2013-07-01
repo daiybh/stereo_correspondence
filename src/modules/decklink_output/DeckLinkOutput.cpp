@@ -88,7 +88,6 @@ void DeckLinkOutput::run()
 
 bool DeckLinkOutput::set_param(const core::Parameter &p)
 {
-	using boost::iequals;
 	if (iequals(p.name, "format_detection")) {
 		detect_format=p.get<bool>();
 	} else if (iequals(p.name, "prebuffer")) {
@@ -107,7 +106,7 @@ bool DeckLinkOutput::set_param(const core::Parameter &p)
 bool DeckLinkOutput::verify_display_mode()
 {
 	assert(output);
-	mutex::scoped_lock l(schedule_mutex);
+	yuri::lock l(schedule_mutex);
 	IDeckLinkDisplayMode *dm;
 	BMDDisplayModeSupport support;
 	stereo_usable= false;
@@ -163,7 +162,7 @@ bool DeckLinkOutput::verify_display_mode()
 
 void DeckLinkOutput::schedule(bool force)
 {
-	mutex::scoped_lock l(schedule_mutex);
+	yuri::lock l(schedule_mutex);
 	//if (!act_oframe) {
 	if (!out_frames.size()) {
 		log[log::error] << "No frame to schedule!!\n";
@@ -365,7 +364,7 @@ bool DeckLinkOutput::step()
 }
 shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::get_active_buffer()
 {
-	mutex::scoped_lock l(schedule_mutex);
+	yuri::lock l(schedule_mutex);
 	return do_get_active_buffer();
 }
 shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::do_get_active_buffer()
@@ -376,7 +375,7 @@ shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::do_get_active_buffer()
 }
 shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::get_next_buffer()
 {
-	mutex::scoped_lock l(schedule_mutex);
+	yuri::lock l(schedule_mutex);
 	return do_get_next_buffer();
 }
 shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::do_get_next_buffer()
@@ -386,7 +385,7 @@ shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::do_get_next_buffer()
 }
 void DeckLinkOutput::rotate_buffers()
 {
-	mutex::scoped_lock l(schedule_mutex);
+	yuri::lock l(schedule_mutex);
 	do_rotate_buffers();
 }
 void DeckLinkOutput::do_rotate_buffers()
@@ -432,7 +431,8 @@ bool DeckLinkOutput::fill_frame(core::pBasicFrame source, shared_ptr<DeckLink3DV
 	output->GetBytes(reinterpret_cast<void**>(&data2));
 	assert(data2);
 	for (int h=0;h<copy_lines;++h) {
-		memcpy(data2,data,copy_width);
+		//memcpy(data2,data,copy_width);
+		std::copy_n(data,copy_width,data2);
 		data+=line_width;
 		data2+=target_width;
 	}

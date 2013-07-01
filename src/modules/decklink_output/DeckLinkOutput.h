@@ -65,7 +65,7 @@ protected:
 	bool sync;
 	bool stereo_mode, stereo_usable;
 	bool detect_format;
-	boost::posix_time::ptime last_time;
+	time_value last_time;
 };
 
 }
