@@ -4,6 +4,8 @@ SET(YURI_SRC ${YURI_SRC}
 	core/BasicIOMacros.h
 	core/BasicIOThread.cpp
 	core/BasicIOThread.h
+	core/BasicIOFilter.cpp
+	core/BasicIOFilter.h
 	core/BasicPipe.cpp
 	core/BasicPipe.h
 	core/FixedMemoryAllocator.cpp
