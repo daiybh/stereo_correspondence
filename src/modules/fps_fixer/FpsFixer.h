@@ -10,12 +10,12 @@
 
 #include "yuri/core/BasicIOThread.h"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
+//#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace yuri {
 
 namespace fps {
-using namespace boost::posix_time;
+//using namespace boost::posix_time;
 
 class FpsFixer: public yuri::core::BasicIOThread {
 public:
@@ -28,7 +28,7 @@ public:
 	void run();
 protected:
 	yuri::size_t fps, fps_nom;
-	ptime start_time, act_time;
+	time_value start_time, act_time;
 	yuri::size_t frames;
 };
 

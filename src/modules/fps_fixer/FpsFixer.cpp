@@ -27,47 +27,47 @@ core::pParameters FpsFixer::configure()
 
 
 FpsFixer::FpsFixer(log::Log &log_, core::pwThreadBase parent, core::Parameters& parameters):
-		BasicIOThread(log_,parent,1,1,"FpsFixer"),fps(fps)
+		BasicIOThread(log_,parent,1,1,"FpsFixer"),fps(25)
 {
 	IO_THREAD_INIT("FpsFixer")
 }
 
 FpsFixer::~FpsFixer()
 {
-	log[log::info] << "Outputed " << frames << " in " << to_simple_string(act_time - start_time) <<
-				". That makes " << (double)frames*1.0e6/((act_time - start_time).total_microseconds()) <<
-				"frames/s\n";
+//	log[log::info] << "Outputed " << frames << " in " << to_simple_string(act_time - start_time) <<
+//				". That makes " << (double)frames*1.0e6/((act_time - start_time).total_microseconds()) <<
+//				"frames/s\n";
 }
 
 void FpsFixer::run()
 {
 	BasicIOThread::print_id();
 	core::pBasicFrame frame;
-	time_duration time_delta = microseconds(fps_nom*1e6/fps);
+	time_duration time_delta = nanoseconds(static_cast<size_t>(fps_nom*1e6/fps));
 	//yuri::size_t act_index = 0;
-	ptime next_time = microsec_clock::local_time();
+	time_value next_time = std::chrono::steady_clock::now();
 	start_time = next_time;
-	time_duration offset = next_time.time_of_day();
-	offset = microseconds(offset.total_microseconds() % time_delta.total_microseconds());
+	time_duration offset = next_time.time_since_epoch();
+	offset = nanoseconds(offset.count() % time_delta.count());
 	next_time = next_time - offset + time_delta;
 	frames = 0;
 	while(still_running()) {
 		if (in[0] && !in[0]->is_empty()) {
 			while (!in[0]->is_empty()) frame=in[0]->pop_frame();
 		}
-		act_time=microsec_clock::local_time();
+		act_time=std::chrono::steady_clock::now();
 		if (act_time > next_time) {
 			if (frame) {
 				if (out[0]) push_raw_video_frame(0,frame);//->get_copy());
-				log[log::debug] << "Pushed frame in " << to_simple_string(act_time.time_of_day()) <<
-						", time_delta is " << to_simple_string(time_delta) << ", next_time was: " <<
-						to_simple_string(next_time.time_of_day()) << "\n";
+//				log[log::debug] << "Pushed frame in " << to_simple_string(act_time.time_of_day()) <<
+//						", time_delta is " << to_simple_string(time_delta) << ", next_time was: " <<
+//						to_simple_string(next_time.time_of_day()) << "\n";
 
 			}
 			next_time+=time_delta;
 			frames++;
 		} else {
-			ThreadBase::sleep((next_time - act_time).total_microseconds()/2);
+			ThreadBase::sleep((next_time - act_time).count()/2);
 		}
 	}
 
