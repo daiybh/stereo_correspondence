@@ -16,19 +16,22 @@
 extern "C" {
 	#include <libavformat/avformat.h>
 }
+#include "yuri/core/BasicIOFilter.h"
 
 namespace yuri {
 
 namespace video {
 
-class TSMuxer:public AVCodecBase {
+class TSMuxer:public core::BasicIOFilter, public AVCodecBase
+{
 public:
 	TSMuxer(log::Log &_log, core::pwThreadBase parent);
 	virtual ~TSMuxer();
 	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
 	static core::pParameters configure();
 
-	bool step();
+	core::pBasicFrame do_simple_single_step(const core::pBasicFrame& frame);
+//	bool step();
 protected:
 	AVOutputFormat *output_format;
 	shared_ptr<AVFormatContext> format_context;

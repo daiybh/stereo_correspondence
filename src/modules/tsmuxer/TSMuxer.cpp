@@ -26,7 +26,7 @@ core::pBasicIOThread TSMuxer::generate(log::Log &_log,core::pwThreadBase parent,
 }
 core::pParameters TSMuxer::configure()
 {
-	core::pParameters p (new core::Parameters());
+	core::pParameters p = core::BasicIOFilter::configure();
 	p->set_description("MPEG2 TS Muxer based on libavformat");
 	//(*p)["format"]["Color format for the output"]="RGB";
 	p->set_max_pipes(1,1);
@@ -38,8 +38,9 @@ core::pParameters TSMuxer::configure()
 }
 
 
-TSMuxer::TSMuxer(log::Log &_log, core::pwThreadBase parent):AVCodecBase(_log,parent,"TSMux"),
-		output_format(0),buffer_size(188*70),buffer_position(0)
+TSMuxer::TSMuxer(log::Log &_log, core::pwThreadBase parent):BasicIOFilter(_log,parent,"TSMux"),
+		AVCodecBase(BasicIOFilter::log),output_format(0),buffer_size(188*70),
+		buffer_position(0)
 {
 	av_register_all();
 	latency=10000;
@@ -48,28 +49,29 @@ TSMuxer::TSMuxer(log::Log &_log, core::pwThreadBase parent):AVCodecBase(_log,par
 TSMuxer::~TSMuxer() {
 
 }
-
-bool TSMuxer::step()
+core::pBasicFrame TSMuxer::do_simple_single_step(const core::pBasicFrame& frame)
+//bool TSMuxer::step()
 {
-	if (!in[0] || in[0]->is_empty()) return true;
-	if (in[0]->get_type() != YURI_TYPE_VIDEO) {
-		log[log::warning] << "Input pipe is not video, bailing out" << std::endl;
-		return true;
-	}
+//	if (!in[0] || in[0]->is_empty()) return true;
+//	if (in[0]->get_type() != YURI_TYPE_VIDEO) {
+//		log[log::warning] << "Input pipe is not video, bailing out" << std::endl;
+//		return true;
+//	}
 	yuri::size_t pkts = 0;
-	boost::posix_time::ptime t1 = boost::posix_time::microsec_clock::local_time();
-	core::pBasicFrame frame;
-	while ((frame=in[0]->pop_frame())) {
-		if (reconfigure(frame)) {
-			if (!put_frame(frame)) return false;
-		}
-		pkts++;
+//	boost::posix_time::ptime t1 = boost::posix_time::microsec_clock::local_time();
+//	core::pBasicFrame frame;
+//	while ((frame=in[0]->pop_frame())) {
+	if (reconfigure(frame)) {
+		if (!put_frame(frame)) return false;
 	}
-	boost::posix_time::ptime t2 = boost::posix_time::microsec_clock::local_time();
-	log[log::debug] << "Processed " << pkts << " input frames in " <<
-			boost::posix_time::to_simple_string(t2-t1) << "s (" << boost::posix_time::to_simple_string(t1.time_of_day())
-			<< " - " << boost::posix_time::to_simple_string(t2.time_of_day()) << std::endl;
-	return true;
+	pkts++;
+	return core::pBasicFrame();
+//	}
+//	boost::posix_time::ptime t2 = boost::posix_time::microsec_clock::local_time();
+//	log[log::debug] << "Processed " << pkts << " input frames in " <<
+//			boost::posix_time::to_simple_string(t2-t1) << "s (" << boost::posix_time::to_simple_string(t1.time_of_day())
+//			<< " - " << boost::posix_time::to_simple_string(t2.time_of_day()) << std::endl;
+//	return true;
 }
 
 bool TSMuxer::reconfigure(core::pBasicFrame frame)
