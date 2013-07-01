@@ -62,9 +62,11 @@ bool Split::step()
 	yuri::ubyte_t *out_ptr2=PLANE_RAW_DATA(frame_out2,0);
 	yuri::ubyte_t *ptr = PLANE_RAW_DATA(frame,0);
 	for (yuri::size_t i=0;i<height;++i) {
-		memcpy(out_ptr1,ptr,Bpp*left);
+		//memcpy(out_ptr1,ptr,Bpp*left);
+		std::copy_n(ptr, Bpp*left, out_ptr1);
 		ptr+=Bpp*left; out_ptr1+=Bpp*left;
-		memcpy(out_ptr2,ptr,Bpp*right);
+		//memcpy(out_ptr2,ptr,Bpp*right);
+		std::copy_n(ptr, Bpp*right, out_ptr2);
 		ptr+=Bpp*right; out_ptr2+=Bpp*right;
 	}
 	push_video_frame(0,frame_out1,frame->get_format(),left, height);
