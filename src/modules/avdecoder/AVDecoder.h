@@ -11,13 +11,13 @@
 #ifndef DECODER_H_
 #define DECODER_H_
 #include "yuri/libav/AVCodecBase.h"
-
+#include "yuri/core/BasicIOFilter.h"
 namespace yuri
 {
 namespace video
 {
 
-class AVDecoder: public AVCodecBase
+class AVDecoder: public core::BasicIOFilter, public AVCodecBase
 {
 public:
 
@@ -36,9 +36,10 @@ public:
 	virtual bool set_param(const core::Parameter &param);
 protected:
 	AVDecoder(log::Log &_log, core::pwThreadBase parent, core::Parameters &parameters) IO_THREAD_CONSTRUCTOR;
-	bool decode_frame();
-	void do_output_frame();
-	virtual bool step();
+	core::pBasicFrame decode_frame(const core::pBasicFrame& frame);
+	core::pBasicFrame do_output_frame();
+	core::pBasicFrame do_simple_single_step(const core::pBasicFrame& frame);
+//	virtual bool step();
 protected:
 	shared_ptr<AVFrame> frame;
 	float time_step;

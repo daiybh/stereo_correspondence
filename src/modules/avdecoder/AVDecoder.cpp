@@ -25,15 +25,13 @@ core::pBasicIOThread AVDecoder::generate(log::Log &_log, core::pwThreadBase pare
 }
 core::pParameters AVDecoder::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
-	//(*p)["codec"]["Explicitly specified codec"]="";
-	/*(*p)["width"]=640;*/
+	core::pParameters p = BasicIOFilter::configure();
 	(*p)["use_timestamps"]["Use timestamps"]=false;
 	return p;
 }
 
 AVDecoder::AVDecoder(log::Log &_log, core::pwThreadBase parent, core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
-		AVCodecBase(_log,parent,"Decoder"),last_pts(0),first_pts(-1),
+		BasicIOFilter(_log,parent,"Decoder"),AVCodecBase(BasicIOFilter::log),last_pts(0),first_pts(-1),
 		decoding_format(YURI_FMT_NONE),use_timestamps(false),first_out_pts(0),
 		first_time(time_value::min())
 {
@@ -91,15 +89,17 @@ bool AVDecoder::init_decoder(AVCodecContext *cc)
 	return true;
 }
 
-bool AVDecoder::decode_frame()
+core::pBasicFrame AVDecoder::decode_frame(const core::pBasicFrame& frame_)
 {
-	if (!in[0] && !input_frame) return true;
-	if (!input_frame) input_frame=in[0]->pop_frame();
-	if (!input_frame) return true;
+//	if (!in[0] && !input_frame) return true;
+//	if (!input_frame) input_frame=in[0]->pop_frame();
+//	if (!input_frame) return true;
+	assert(frame_);
+	input_frame = frame_;
 	int got_px=0;
 	if (!output_frame) {
 		if (!regenerate_contexts(input_frame->get_format(),input_frame->get_width(),input_frame->get_height()))
-			return true; // Shouldn't this be fatal?
+			return core::pBasicFrame(); // Shouldn't this be fatal?
 
 		assert (c && cc && input_frame);
 
@@ -136,12 +136,12 @@ bool AVDecoder::decode_frame()
 			}
 		}
 	}
-	if (got_px || output_frame) do_output_frame();
-	return true;
+	if (got_px || output_frame) return do_output_frame();
+	return core::pBasicFrame();
 
 }
 
-void AVDecoder::do_output_frame()
+core::pBasicFrame AVDecoder::do_output_frame()
 {
 	if (!output_frame) {
 		output_frame.reset(new core::BasicFrame());
@@ -149,18 +149,18 @@ void AVDecoder::do_output_frame()
 		yuri::format_t yf = yuri_pixelformat_from_av(cc->pix_fmt);
 		if (yf == YURI_FMT_NONE) {
 			log[log::warning] << "Unknown output format " << cc->pix_fmt << std::endl;
-			return;
+			return core::pBasicFrame();
 		}
 		FormatInfo_t fmt = core::BasicPipe::get_format_info(yf);
 		if (!fmt) {
 			log[log::warning] << "Unknown format! " << yuri_pixelformat_from_av(cc->pix_fmt) << ", converted from " << cc->pix_fmt << std::endl;
-			return;
+			return core::pBasicFrame();
 		} else {
 			log[log::verbose_debug] << "Outputting " << fmt->long_name << std::endl;
 		}
 		if (fmt->planes < 1) {
 			log[log::error] << "Wrong info for format " << fmt->long_name << std::endl;
-			return;
+			return core::pBasicFrame();
 		}
 		for (int i = 0; i < 4; ++i) {
 			if (frame->linesize[i] < 1) break;
@@ -204,9 +204,14 @@ void AVDecoder::do_output_frame()
 	}
 	if (do_out) {
 //		log[log::info] << "PTS: " << pts << std::endl;
-		push_video_frame(0,output_frame,yuri_pixelformat_from_av(cc->pix_fmt),width,height,pts,dts,duration);
+		//push_video_frame(0,output_frame,yuri_pixelformat_from_av(cc->pix_fmt),width,height,pts,dts,duration);
+		output_frame->set_parameters(yuri_pixelformat_from_av(cc->pix_fmt),width,height);
+		output_frame->set_time(pts,dts,duration);
+		auto f = output_frame;
 		output_frame.reset();
+		return f;
 	}
+	return core::pBasicFrame();
 }
 
 float AVDecoder::get_fps()
@@ -221,10 +226,12 @@ float AVDecoder::get_fps()
 //	add_child(scaler);
 //}
 
-bool AVDecoder::step()
+core::pBasicFrame AVDecoder::do_simple_single_step(const core::pBasicFrame& frame)
+//bool AVDecoder::step()
 {
-	if (!decode_frame()) return false;
-	return true;
+	return decode_frame(frame);
+//	) return false;
+//	return true;
 }
 
 
