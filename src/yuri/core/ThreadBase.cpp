@@ -15,6 +15,7 @@
 #include <pthread.h>
 #include <sys/syscall.h>
 #include <sys/prctl.h>
+#include <unistd.h>
 #endif
 namespace yuri
 {
@@ -349,7 +350,7 @@ bool ThreadBase::bind_to_cpu(yuri::uint_t cpu)
 	}
 	std::string cpu_s = "";
 	for (int i = 0; i< CPU_SETSIZE; ++i) {
-		if (CPU_ISSET(i,&cpus)) cpu_s += boost::lexical_cast<std::string>(i)+std::string(" ");
+		if (CPU_ISSET(i,&cpus)) cpu_s += lexical_cast<std::string>(i)+std::string(" ");
 	}
 	log[info] << "CPU affinity set for CPUS: " << cpu_s << "\n";
 #else

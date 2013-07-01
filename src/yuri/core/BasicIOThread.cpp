@@ -18,7 +18,8 @@
 #ifndef YURI_USE_CXX11
 #include "boost/date_time/posix_time/posix_time.hpp"
 #endif
-#ifdef YURI_ANDROID
+#ifdef YURI_LINUX
+#include <cstring>
 #include <unistd.h>
 #endif
 using namespace yuri::log;

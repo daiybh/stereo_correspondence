@@ -13,10 +13,10 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #endif
-#ifdef YURI_ANDROID
+#ifdef YURI_LINUX
 #include <unistd.h>
-
 #endif
+
 namespace yuri {
 
 FormatInfo_t FormatInfo::raw_format( std::string name, std::vector<std::string> shortnames,
