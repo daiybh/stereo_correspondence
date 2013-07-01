@@ -23,10 +23,10 @@ namespace yuri
 {
 namespace video
 {
-class AVCodecBase: public core::BasicIOThread
+class AVCodecBase//: public core::BasicIOThread
 {
 public:
-	AVCodecBase(log::Log &_log, core::pwThreadBase parent, std::string id="libAV", yuri::sint_t inp = 1, yuri::sint_t outp = 1) IO_THREAD_CONSTRUCTOR;
+	AVCodecBase(log::Log& log_);
 	virtual ~AVCodecBase();
 protected:
 	bool init_codec(AVMediaType codec_type, int width, int height, int bps, int fps, int fps_base);
@@ -57,13 +57,18 @@ protected:
 	// Used to convert between 'identical' format. TODO: needs better solution
 	static std::map<PixelFormat, PixelFormat> av_identity;
 
-	AVCodecContext* cc;
-	AVCodec *c;
-	CodecID codec_id;
-	yuri::format_t current_format;
-	int width, height, bps, fps, fps_base;
-	AVMediaType codec_type;
-	bool opened;
+	log::Log 				&log_;
+	AVCodecContext			*cc;
+	AVCodec 				*c;
+	CodecID 				codec_id;
+	yuri::format_t 			current_format;
+	int 					width,
+							height,
+							bps,
+							fps,
+							fps_base;
+	AVMediaType 			codec_type;
+	bool 					opened;
 
 
 };

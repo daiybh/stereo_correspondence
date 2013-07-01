@@ -46,9 +46,8 @@ std::map<yuri::format_t, PixelFormat> AVCodecBase::yuri_pixel_map=yuri::map_list
 std::map<PixelFormat, PixelFormat> AVCodecBase::av_identity=yuri::map_list_of<PixelFormat, PixelFormat>
 		(PIX_FMT_YUVJ420P,			PIX_FMT_YUV420P)
 		(PIX_FMT_YUVJ422P,			PIX_FMT_YUV422P);
-AVCodecBase::AVCodecBase(log::Log &_log, core::pwThreadBase parent, std::string id, yuri::sint_t inp, yuri::sint_t outp)
-	IO_THREAD_CONSTRUCTOR:
-	BasicIOThread(_log,parent,inp,outp,id),cc(0),c(0),codec_id(CODEC_ID_NONE),
+AVCodecBase::AVCodecBase(log::Log& log_)
+:log_(log_),cc(0),c(0),codec_id(CODEC_ID_NONE),
 	current_format(YURI_FMT_NONE),opened(false)
 {
 	initialize_avcodec();
@@ -85,7 +84,7 @@ bool AVCodecBase::init_codec(AVMediaType codec_type, int width, int height,
 	if (!cc) {  // Allocate codec context if none is provided
 		cc=avcodec_alloc_context3(c);
 		if (!cc) {
-			log[log::error] << "Failed to allocate codec context" << std::endl;
+			log_[log::error] << "Failed to allocate codec context" << std::endl;
 			return false;
 		}
 		cc->codec_id=(CodecID)codec_id;
@@ -120,7 +119,7 @@ bool AVCodecBase::init_codec(AVMediaType codec_type, int width, int height,
 	current_format=yuri_pixelformat_from_av(cc->pix_fmt);
 	if (opened) avcodec_close(cc);
 	if (avcodec_open2(cc,c,0)<0) {
-		log[log::error] << "Opening codec failed! (" << c << ", " << cc << ")" << std::endl;
+		log_[log::error] << "Opening codec failed! (" << c << ", " << cc << ")" << std::endl;
 		return false;
 	}
 	opened=true;
