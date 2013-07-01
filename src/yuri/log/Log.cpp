@@ -10,7 +10,7 @@
 
 #include "Log.h"
 #include <map>
-#ifndef YURI_ANDROID
+#if !defined YURI_ANDROID
 #include <boost/date_time/posix_time/posix_time.hpp>
 #endif
 namespace yuri
@@ -115,7 +115,7 @@ std::string Log::print_time()
 	std::stringstream ss;
 #ifndef YURI_ANDROID
 	if (output_flags & show_thread_id) {
-		 ss << boost::this_thread::get_id();
+		 ss << yuri::get_id();
 		 s += std::string(" ") + ss.str();
 	}
 	if (output_flags & show_time) s += std::string(" ") + boost::posix_time::to_simple_string(boost::posix_time::microsec_clock::local_time().time_of_day());
