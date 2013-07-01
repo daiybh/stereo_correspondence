@@ -12,6 +12,7 @@
 
 #include <sys/poll.h>
 #include <libavc1394/rom1394.h>
+#include <cstring>
 
 namespace yuri {
 
