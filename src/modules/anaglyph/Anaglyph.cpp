@@ -126,7 +126,8 @@ template<typename T> core::pBasicFrame Anaglyph::makeAnaglyph(const core::pBasic
 				datao->g = datar->g;
 			}
 			for (yuri::size_t j = w_cor; j < w_rounded; ++j, ++datao) {
-				memset(datao,0,sizeof(T));
+//				memset(datao,0,sizeof(T));
+				std::fill_n(reinterpret_cast<char*>(datao),sizeof(T),0);
 			}
 		}
 	} else { // Ok, we have to process  negative correction
@@ -149,7 +150,8 @@ template<typename T> core::pBasicFrame Anaglyph::makeAnaglyph(const core::pBasic
 				datao->g = datar->g;
 			}
 			for (yuri::size_t j = w_cor; j < w_rounded; ++j, ++datao) {
-				memset(datao,0,sizeof(T));
+				std::fill_n(reinterpret_cast<char*>(datao),sizeof(T),0);
+//				memset(datao,0,sizeof(T));
 			}
 		}
 	}
