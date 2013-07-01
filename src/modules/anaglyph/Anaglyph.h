@@ -8,7 +8,7 @@
  *
  */
 
-#include <yuri/core/BasicIOThread.h>
+#include <yuri/core/BasicIOFilter.h>
 
 #ifndef ANAGLYPH_H_
 #define ANAGLYPH_H_
@@ -17,7 +17,7 @@ namespace yuri {
 
 namespace anaglyph {
 
-class Anaglyph: public core::BasicIOThread {
+class Anaglyph: public core::BasicMultiIOFilter {
 public:
 	PACK_START
 	struct _rgb {
@@ -30,18 +30,22 @@ public:
 	/// @param _log  logger
 	/// @param parent  parent thread
 	/// @param correction Correction in pixels meaning how many pixels to the right should be right image shifted
-	Anaglyph(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters);
-	virtual ~Anaglyph();
-	//static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
+									Anaglyph(log::Log &_log,
+					core::pwThreadBase parent, core::Parameters& parameters);
+	virtual 						~Anaglyph();
 	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
+	static core::pParameters 		configure();
 protected:
-	virtual bool step();
-	template<typename T> core::pBasicFrame makeAnaglyph(const core::pBasicFrame& left, const core::pBasicFrame& right);
-	bool set_param(const core::Parameter& param);
+	//virtual bool step();
+	std::vector<core::pBasicFrame>	do_single_step(const std::vector<core::pBasicFrame>& frames);
+	template<typename T> core::pBasicFrame
+									makeAnaglyph(const core::pBasicFrame& left,
+					const core::pBasicFrame& right);
+
+	bool 							set_param(const core::Parameter& param);
 protected:
 	int correction;
-	bool fast;
+//	bool fast;
 };
 
 

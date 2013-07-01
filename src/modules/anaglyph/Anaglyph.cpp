@@ -21,9 +21,9 @@ REGISTER("anaglyph",Anaglyph)
 IO_THREAD_GENERATOR(Anaglyph)
 core::pParameters Anaglyph::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
+	core::pParameters p = core::BasicMultiIOFilter::configure();
 	(*p)["correction"]["Number of pixels the images get shifted (width of the final image gets shorter by the same amount)"]=0;
-	(*p)["fast"]["Skips old frames in the pipe. Setting this to false forces processing of all frames"]=true;
+	//(*p)["fast"]["Skips old frames in the pipe. Setting this to false forces processing of all frames"]=true;
 	p->set_max_pipes(2,1);
 	p->add_input_format(YURI_FMT_RGB);
 	p->add_input_format(YURI_FMT_RGBA);
@@ -34,7 +34,7 @@ core::pParameters Anaglyph::configure()
 
 
 Anaglyph::Anaglyph(log::Log &_log, core::pwThreadBase parent, core::Parameters &parameters)
-	:core::BasicIOThread(_log,parent,2,1,"Anaglyph"),correction(0),fast(true)
+	:core::BasicMultiIOFilter(_log,parent,2,1,"Anaglyph"),correction(0)//,fast(true)
 {
 	IO_THREAD_INIT("Anaglyph")
 }
@@ -43,32 +43,26 @@ Anaglyph::~Anaglyph() {
 
 }
 
-bool Anaglyph::step()
+std::vector<core::pBasicFrame> Anaglyph::do_single_step(const std::vector<core::pBasicFrame>& frames)
 {
-	if (!in[0] || !in[1] || in[0]->is_empty() || in[1]->is_empty())
-		return true;
-	core::pBasicFrame left, right, out_frame;
-	if (fast) {
-		left = in[0]->pop_latest();
-		right = in[1]->pop_latest();
-	} else {
-		left = in[0]->pop_frame();
-		right = in[1]->pop_frame();
-	}
+	assert(frames.size()==2);
+	auto& left = frames[0];
+	auto& right = frames[1];
 	assert(left && right);
+	core::pBasicFrame out_frame;
 
 	if (left->get_format() != right->get_format()) {
 		log[log::error] << "The eyes have different colorspaces, this is not supported now\n";
-		return true;
+		return {};
 	}
 	if (left->get_format() != YURI_FMT_RGB && left->get_format() != YURI_FMT_RGBA) {
 		log[log::error] << "Unsupported color space " << core::BasicPipe::get_format_string(left->get_format()) << "\n";
-		return true;
+		return {};
 	}
 	if (left->get_width() != right->get_width() ||
 			left->get_height() != right->get_height()) {
 		log[log::error] << "Images have different resolutions. No support for this now.\n";
-		return true;
+		return {};
 	}
 	switch (left->get_format()) {
 		case YURI_FMT_RGB: {
@@ -85,10 +79,12 @@ bool Anaglyph::step()
 			//return false;// Something very fishy is going on!
 	}
 
-	if (!out_frame || !out[0]) return true;
+	if (!out_frame || !out[0]) return {};
 	out_frame->set_time(left->get_pts(),left->get_dts(),left->get_duration());
-	push_raw_video_frame(0,out_frame);
-	return true;
+	return {out_frame};
+//	push_raw_video_frame(0,out_frame);
+//	return true;
+
 }
 
 template<typename T> core::pBasicFrame Anaglyph::makeAnaglyph(const core::pBasicFrame& left, const core::pBasicFrame& right)
@@ -162,9 +158,7 @@ bool Anaglyph::set_param(const core::Parameter& param)
 {
 	if (param.name == "correction") {
 		correction = param.get<int>();
-	} else if (param.name == "fast") {
-		fast = param.get<bool>();
-	} else return BasicIOThread::set_param(param);
+	} else return BasicMultiIOFilter::set_param(param);
 	return true;
 }
 
