@@ -39,7 +39,7 @@ bool PNGDecoder::step()
 	png_infop infoPtr = 0;
 	if (!in[0] || !(f = in[0]->pop_frame())) return true;
 	log[log::debug] << "Reading packet " << f->get_size() << " bytes long" << "\n";
-	boost::posix_time::ptime t1(boost::posix_time::microsec_clock::universal_time());
+//	boost::posix_time::ptime t1(boost::posix_time::microsec_clock::universal_time());
 	if (!validatePng(f)) {
 		f.reset();
 		return true;
@@ -89,10 +89,10 @@ bool PNGDecoder::step()
 		push_raw_video_frame(0,outframe);
 	}
 	png_destroy_read_struct(&pngPtr, &infoPtr,(png_infopp)0);
-	boost::posix_time::ptime t2(boost::posix_time::microsec_clock::universal_time());
-	boost::posix_time::time_period tp(t1,t2);
-	log[log::debug] << "Decompression took: " << tp.length().total_microseconds()
-			<< " us\n";
+//	boost::posix_time::ptime t2(boost::posix_time::microsec_clock::universal_time());
+//	boost::posix_time::time_period tp(t1,t2);
+//	log[log::debug] << "Decompression took: " << tp.length().total_microseconds()
+//			<< " us\n";
 	f.reset();
 
 	return true;
