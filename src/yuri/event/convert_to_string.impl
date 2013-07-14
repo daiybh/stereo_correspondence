@@ -1,0 +1,63 @@
+
+
+template<class T>
+struct convert_to_string {
+	std::string operator()(const T& val) const {
+	return lexical_cast<std::string>(val);
+}
+};
+
+template<>
+struct convert_to_string<bang_t> {
+	std::string operator()(const bang_t&) {
+	return  "BANG";
+}
+};
+
+
+template<>
+struct convert_to_string<bool>{
+	std::string operator()(const bool& val) {
+	return  val?"True":"False";
+}
+};
+
+template<>
+struct convert_to_string<typename event_traits<EventVector>::stored_type>{
+	std::string  operator()(const typename event_traits<EventVector>::stored_type& vec) {
+	std::string vstr = "[";
+	bool first = true;
+	for (const auto& val: vec) {
+		if (!first) {
+			vstr+= ", ";
+		} else {
+			first = false;
+		}
+		vstr += get_value<EventString>(functions::str({val}));
+	}
+	return  vstr+"]";
+}
+};
+template<>
+struct convert_to_string<typename event_traits<EventDict>::stored_type>{
+	std::string  operator()(const typename event_traits<EventDict>::stored_type& dict) {
+	std::string vstr = "{";
+	bool first = true;
+	for (const auto& val: dict) {
+		if (!first) {
+			vstr+= ", ";
+		} else {
+			first = false;
+		}
+		vstr += val.first + ": " + get_value<EventString>(functions::str({val.second}));
+	}
+	return  vstr+"}";
+}
+};
+
+template<>
+struct convert_to_string<time_value>{
+	std::string  operator()(const time_value& val) {
+	return  lexical_cast<std::string>(val.time_since_epoch().count()/1000);
+}
+};
