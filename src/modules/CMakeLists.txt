@@ -30,6 +30,8 @@ add_subdirectory(repack_audio)
 add_subdirectory(color_key)
 add_subdirectory(overlay)
 
+add_subdirectory(event_info)
+add_subdirectory(fade)
 #################################################################
 # Let's check for libraries required 
 # for optional modules, respecting YURI_DISABLE_*
@@ -64,6 +66,8 @@ find_package( X11 )
 
 find_path(VIDEOMASTER_INCLUDE_DIR VideoMasterHD_Sdi.h
           HINTS /usr/local/include/videomaster )
+          
+find_package(ALSA)
           
 #################################################################
 # Add optional modules based on results of the detection
@@ -124,6 +128,7 @@ IF(${CORE_ASIO})
 	add_subdirectory(vncclient)
 	add_subdirectory(tsrtp_receiver)
 	add_subdirectory(tsrtp_streamer)
+	add_subdirectory(osc_receiver)
 ENDIF()
 
 IF(${ImageMagick_Magick++_FOUND})
@@ -154,4 +159,11 @@ ENDIF()
 
 IF(VIDEOMASTER_INCLUDE_DIR)
 	add_subdirectory(delta)
+ENDIF()
+
+IF(UNIX)
+	add_subdirectory(event_device)
+	IF(ALSA_FOUND)
+		add_subdirectory(midi_device)
+	ENDIF()
 ENDIF()
