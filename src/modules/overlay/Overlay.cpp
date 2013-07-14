@@ -9,7 +9,7 @@
 
 #include "Overlay.h"
 #include "yuri/core/Module.h"
-
+#include "yuri/event/EventHelpers.h"
 namespace yuri {
 namespace overlay {
 
@@ -29,7 +29,8 @@ core::pParameters Overlay::configure()
 
 
 Overlay::Overlay(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicMultiIOFilter(log_,parent,2,1,std::string("overlay"))
+core::BasicMultiIOFilter(log_,parent,2,1,std::string("overlay")),
+event::BasicEventConsumer()
 {
 	IO_THREAD_INIT("overlay")
 }
@@ -319,6 +320,7 @@ core::pBasicFrame Overlay::combine(const core::pBasicFrame& frame_0, const core:
 }
 std::vector<core::pBasicFrame> Overlay::do_single_step(const std::vector<core::pBasicFrame>& frames)
 {
+	process_events();
 	assert(frames.size() == 2);
 	core::pBasicFrame outframe = dispatch(*this, frames[0], frames[1]);
 	if (outframe) return {outframe};
@@ -335,6 +337,23 @@ bool Overlay::set_param(const core::Parameter& param)
 	return true;
 }
 
+bool Overlay::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
+{
+	log[log::info] << "Received event " << event_name;
+	try {
+		using event::get_value;
+	if (event_name == "x") {
+		x_ = get_value<event::EventInt>(event);
+	} else if (event_name == "y") {
+		y_ = get_value<event::EventInt>(event);
+	} else return false;
+	}
+	catch (std::bad_cast&) {
+		log[log::info] << "bad cast in " << event_name;
+		return false;
+	}
+	return true;
+}
 } /* namespace overlay */
 } /* namespace yuri */
 

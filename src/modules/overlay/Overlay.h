@@ -11,11 +11,11 @@
 #define OVERLAY_H_
 
 #include "yuri/core/BasicIOFilter.h"
-
+#include "yuri/event/BasicEventConsumer.h"
 namespace yuri {
 namespace overlay {
 
-class Overlay: public core::BasicMultiIOFilter
+class Overlay: public core::BasicMultiIOFilter, public event::BasicEventConsumer
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
@@ -28,6 +28,7 @@ private:
 	//virtual bool step();
 	virtual std::vector<core::pBasicFrame> do_single_step(const std::vector<core::pBasicFrame>&);
 	virtual bool set_param(const core::Parameter& param);
+	bool do_process_event(const std::string& event_name, const event::pBasicEvent& event);
 //	core::pBasicFrame frame_0;
 //	core::pBasicFrame frame_1;
 	ssize_t x_;
