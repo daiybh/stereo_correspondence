@@ -68,6 +68,7 @@ ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::
 	if (!skip_verification) {
 		check_variables();
 	}
+	latency=1000;
 }
 
 ApplicationBuilder::~ApplicationBuilder()
@@ -108,6 +109,8 @@ void ApplicationBuilder::run()
 	try {
 		if (!prepare_threads()) throw (exception::InitializationFailed("Failed to prepare threads!"));
 		log[log::debug] << "Threads prepared" <<"\n";
+		if (!initialize_events()) throw (exception::InitializationFailed("Failed to initialzie events!"));
+		log[log::debug] << "Events initialized" <<"\n";
 		if (!prepare_links()) throw (exception::InitializationFailed("Failed to prepare links!"));
 		log[log::debug] << "Links prepared" <<"\n";
 		if (!spawn_threads()) throw (exception::InitializationFailed("Failed to spawn threads!"));
@@ -228,6 +231,11 @@ bool ApplicationBuilder::load_file(std::string path)
 	node = 0;
 	while ((node = dynamic_cast<TiXmlElement*>(root->IterateChildren("link",node)))) {
 		if (!process_link(*node)) continue;
+	}
+
+	node = 0;
+	while ((node = dynamic_cast<TiXmlElement*>(root->IterateChildren("event",node)))) {
+		if (!process_event(*node)) continue;
 	}
 	node=0;
 	node = root->FirstChildElement("description");
@@ -373,6 +381,17 @@ bool ApplicationBuilder::process_link(TiXmlElement &node)
 		}
 	}
 	return true;
+}
+
+bool ApplicationBuilder::process_event(TiXmlElement &node)
+{
+	std::string text = node.GetText();
+	if (!text.empty()) {
+		event_routes.push_back(text);
+		return true;
+	}
+	return false;
+
 }
 
 bool ApplicationBuilder::process_variable(TiXmlElement &node)
@@ -552,6 +571,8 @@ bool ApplicationBuilder::step()
 	}
 #endif
 	fetch_tids();
+	process_events();
+	run_routers();
 	return true;
 }
 pBasicIOThread ApplicationBuilder::get_node(std::string id)
@@ -725,6 +746,64 @@ void ApplicationBuilder::connect_out(yuri::sint_t index, pBasicPipe pipe)
 	catch (Exception& ) {
 		return;
 	}
+}
+
+bool ApplicationBuilder::initialize_events()
+{
+	for (const std::string& text: event_routes) {
+		log[log::info] << "Processing route: " << text;
+		if (!parse_routes(text)) log[log::warning] << "Failed to parse routes";
+	}
+	return true;
+}
+
+event::pBasicEventProducer ApplicationBuilder::find_producer(const std::string& name)
+{
+	pBasicIOThread node = get_node(name);
+	if (!node) return event::pBasicEventProducer();
+	auto producer = dynamic_pointer_cast<event::BasicEventProducer>(node);
+	if (!producer) {
+		log[log::info] << "Node " << name << " is not a producer!";
+	} else {
+		log[log::info] << "Converted node " << name << " to producer!";
+	}
+	return producer;
+}
+event::pBasicEventConsumer ApplicationBuilder::find_consumer(const std::string& name)
+{
+	try {
+		pBasicIOThread node = get_node(name);
+		if (!node) return event::pBasicEventConsumer();
+		auto consumer = dynamic_pointer_cast<event::BasicEventConsumer>(node);
+		if (!consumer) {
+			log[log::info] << "Node " << name << " is not a consumer!";
+		} else {
+			log[log::info] << "Converted node " << name << " to consumer!";
+		}
+		return consumer;
+	}
+	catch (exception::Exception&) {}
+	if (name == appname) {
+		pThreadBase ptr(get_this_ptr());
+		auto consumer = dynamic_pointer_cast<event::BasicEventConsumer>(ptr);
+		if (consumer) {
+			log[log::info] << "Created consumer from appbuilder";
+			return consumer;
+		}
+	}
+	return event::pBasicEventConsumer{};
+}
+bool ApplicationBuilder::do_process_event(const std::string& event_name, const event::pBasicEvent& /*event*/)
+{
+	if (event_name == "stop") {
+		log[log::info] << "Received stop event. Quitting builder.";
+		request_end();
+	}
+	return true;
+}
+void ApplicationBuilder::do_report_consumer_error(const std::string& msg)
+{
+	log[log::info] << msg;
 }
 }
 

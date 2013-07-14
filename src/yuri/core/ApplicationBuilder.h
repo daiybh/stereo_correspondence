@@ -13,6 +13,7 @@
 
 #include "yuri/core/BasicIOThread.h"
 //#include "yuri/config/Parameters.h"
+#include "yuri/event/BasicEventParser.h"
 #define TIXML_USE_STL
 #include "tinyxml/tinyxml.h"
 #include <map>
@@ -56,72 +57,91 @@ struct VariableRecord {
 	std::vector<shared_ptr<VariableLinkDependency> > linkdependencies;
 };
 
-class EXPORT ApplicationBuilder: public BasicIOThread {
+class EXPORT ApplicationBuilder: public BasicIOThread, public event::BasicEventParser {
 public:
 	ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::string filename="", std::vector<std::string> argv=std::vector<std::string>(), bool skip=false);
 	ApplicationBuilder(log::Log &_log, pwThreadBase parent, Parameters &params);
-	virtual ~ApplicationBuilder();
+	virtual 							~ApplicationBuilder();
 	IO_THREAD_GENERATOR_DECLARATION
-	static pParameters configure();
+	static pParameters 					configure();
 
-	bool load_file(std::string path);
-	void run();
-	pBasicIOThread get_node (std::string id);
-	bool prepare_threads();
-	bool find_modules();
-	bool load_modules();
+	bool 								load_file(std::string path);
+	void 								run();
+	pBasicIOThread 						get_node (std::string id);
+	bool 								prepare_threads();
+	bool 								find_modules();
+	bool 								load_modules();
 
-	std::string get_appname();
-	std::string get_description();
-	const std::map<std::string,shared_ptr<VariableRecord> >& get_variables();
-	virtual void 				connect_in(yuri::sint_t index, pBasicPipe pipe);
-	virtual void 				connect_out(yuri::sint_t index, pBasicPipe pipe);
+	std::string 						get_appname();
+	std::string 						get_description();
+	const std::map<std::string,shared_ptr<VariableRecord> >&
+										get_variables();
+	virtual void 						connect_in(yuri::sint_t index, pBasicPipe pipe);
+	virtual void 						connect_out(yuri::sint_t index, pBasicPipe pipe);
 private:
-	bool process_module_dir(TiXmlElement &element);
-	bool process_module(TiXmlElement &element);
-	bool process_node(TiXmlElement &element);
-	bool process_link(TiXmlElement &element);
-	bool process_variable(TiXmlElement &element);
-	bool parse_parameters(TiXmlElement &element,Parameters &params);
-	void clear_tree();
-	bool check_variables();
+	bool 								process_module_dir(TiXmlElement &element);
+	bool 								process_module(TiXmlElement &element);
+	bool 								process_node(TiXmlElement &element);
+	bool 								process_link(TiXmlElement &element);
+	bool 								process_event(TiXmlElement &element);
+	bool 								process_variable(TiXmlElement &element);
+	bool 								parse_parameters(TiXmlElement &element,Parameters &params);
+	void 								clear_tree();
+	bool 								check_variables();
 	//bool check_links();
 
 
-	bool prepare_links();
-	bool spawn_threads();
-	bool stop_threads();
-	bool delete_threads();
-	bool delete_pipes();
-	bool step();
+	bool 								prepare_links();
+	bool 								spawn_threads();
+	bool 								stop_threads();
+	bool								delete_threads();
+	bool 								delete_pipes();
+	bool 								initialize_events();
+	bool 								step();
 
-	void init();
-	void init_local_params();
-	void show_params(Parameters& _params,std::string prefix="\t\t");
-	void fetch_tids();
-	pParameters assign_variables(std::map<std::string, std::string> vars);
-	void parse_argv(std::vector<std::string> argv);
-	bool set_param(const core::Parameter& parameter);
+	void 								init();
+	void 								init_local_params();
+	void 								show_params(Parameters& _params,std::string prefix="\t\t");
+	void 								fetch_tids();
+	pParameters 						assign_variables(std::map<std::string, std::string> vars);
+	void 								parse_argv(std::vector<std::string> argv);
+	bool 								set_param(const core::Parameter& parameter);
+
+	// Event Parser API
+	virtual event::pBasicEventProducer	find_producer(const std::string& name);
+	virtual event::pBasicEventConsumer	find_consumer(const std::string& name);
+	bool do_process_event(const std::string& event_name, const event::pBasicEvent& event);
+	virtual void						do_report_consumer_error(const std::string&);
 private:
-	std::string filename;
-	std::string description;
-	std::string appname;
-	TiXmlDocument doc;
+	std::string 						filename;
+	std::string 						description;
+	std::string 						appname;
+	TiXmlDocument 						doc;
 
-	bool document_loaded, threads_prepared, skip_verification;
-	time_duration run_limit;
-	time_value start_time;
-	pParameters default_pipe_param;
-	std::map<std::string,shared_ptr<NodeRecord> > nodes;
-	std::map<std::string,shared_ptr<LinkRecord> > links;
-	std::map<std::string,pBasicIOThread > threads;
-	std::map<std::string,shared_ptr<BasicPipe> > pipes;
-	std::map<std::string,shared_ptr<VariableRecord> > variables;
-	std::vector<std::string> modules;
-	std::vector<std::string> module_dirs;
-	std::map<std::string,pid_t > tids;
-	std::map<size_t, std::pair<shared_ptr<LinkRecord>, pBasicPipe > > input_pipes;
-	std::map<size_t, std::pair<shared_ptr<LinkRecord>, pBasicPipe > > output_pipes;
+	bool 								document_loaded,
+										threads_prepared,
+										skip_verification;
+	time_duration 						run_limit;
+	time_value 							start_time;
+	pParameters 						default_pipe_param;
+	std::map<std::string,shared_ptr<NodeRecord> >
+										nodes;
+	std::map<std::string,shared_ptr<LinkRecord> >
+										links;
+	std::map<std::string,pBasicIOThread >
+										threads;
+	std::map<std::string,shared_ptr<BasicPipe> >
+										pipes;
+	std::map<std::string,shared_ptr<VariableRecord> >
+										variables;
+	std::vector<std::string> 			modules;
+	std::vector<std::string> 			module_dirs;
+	std::map<std::string,pid_t > 		tids;
+	std::map<size_t, std::pair<shared_ptr<LinkRecord>, pBasicPipe > >
+										input_pipes;
+	std::map<size_t, std::pair<shared_ptr<LinkRecord>, pBasicPipe > >
+										output_pipes;
+	std::vector<std::string>			event_routes;
 
 };
 
