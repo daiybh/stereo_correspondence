@@ -20,8 +20,6 @@
 #include <signal.h>
 #ifndef YURI_USE_CXX11
 #error "C++11 support required!"
-#include <boost/foreach.hpp>
-#include <boost/algorithm/string.hpp>
 #endif
 #include "yuri/core/Parameters.h"
 #include "yuri/core/RegisteredClass.h"
@@ -296,6 +294,7 @@ int main(int argc, char**argv)
 #endif
 	try {
 		(*b)();
+		l[info] << "Application successfully destroyed";
 	}
 	catch (yuri::exception::Exception &e) {
 		l[fatal] << "Application failed to start: " << e.what() << std::endl;
