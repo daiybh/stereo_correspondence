@@ -10,19 +10,11 @@
 
 #ifndef TYPES_H_
 #define TYPES_H_
+#ifndef YURI_USE_CXX11
+#error C++11 mode is required now.
+#endif
 #include "yuri/core/platform.h"
 #include "yuri/core/uvector.h"
-#ifndef YURI_USE_CXX11
-#include <boost/cstdint.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/smart_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/thread/thread.hpp>
-#include <boost/assign.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include "boost/lexical_cast.hpp"
-#include <boost/posix_time.hpp>
-#else
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -30,12 +22,9 @@
 #include <chrono>
 #include <cassert>
 #include "utils.h"
-#endif
+
 //! All yuri related stuff belongs here
 namespace yuri {
-#ifndef YURI_USE_CXX11
-#error C++11 mode is reuired now.
-#else
 typedef uint64_t usize_t;
 typedef int64_t ssize_t;
 typedef uint32_t uint_t;
@@ -71,7 +60,7 @@ template<class Rep, class Period>
 void sleep(const std::chrono::duration<Rep, Period>& dur) { std::this_thread::sleep_for(dur);}
 }
 using std::this_thread::get_id;
-#endif
+
 typedef usize_t size_t;
 typedef ssize_t format_t;
 typedef size_t threadId_t;

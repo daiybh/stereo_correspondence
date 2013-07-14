@@ -16,6 +16,7 @@ SET(YURI_SRC ${YURI_SRC}
 	core/SocketBase.cpp
 	core/SocketBase.h
 	core/types.h
+	core/utils.h
 	
 	core/ApplicationBuilder.cpp
 	core/ApplicationBuilder.h
@@ -51,3 +52,4 @@ SET(YURI_SRC ${YURI_SRC}
 	
 	#core/Config.cpp
 	#core/Config.h
+	

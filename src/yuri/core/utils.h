@@ -11,6 +11,7 @@
 #include <vector>
 #include <sstream>
 #include <cctype>
+#include <mutex>
 namespace yuri {
 
 /*!
@@ -77,6 +78,19 @@ bool iequals(const std::basic_string<Char, traits>& a, const Char *b)
 	return iequals(a, std::basic_string<Char, traits>(b));
 }
 
+
+template<class T>
+class SingletonBase: public T {
+public:
+	static T& get_instance() {
+		static T instance;
+		return instance;
+	}
+
+private:
+	SingletonBase() {};
+	virtual ~SingletonBase() {}
+};
 }
 
 
