@@ -76,6 +76,8 @@ public:
 			yuri::sint_t, pBasicIOThread, yuri::sint_t, log::Log &log,
 			std::string name, pParameters params = pParameters());
 
+
+	std::string					get_node_name();
 protected:
 	virtual void 				run();
 	virtual bool 				step();

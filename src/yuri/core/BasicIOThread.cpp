@@ -484,10 +484,14 @@ bool BasicIOThread::connect_threads(shared_ptr<BasicIOThread> src, yuri::sint_t 
 }
 void BasicIOThread::set_log_id()
 {
+	log.set_label(get_node_name());
+}
+std::string BasicIOThread::get_node_name()
+{
 	if (node_name_.empty()) {
-		log.set_label(std::string("[")+node_id_+"] ");
+		return std::string("[")+node_id_+"] ";
 	} else {
-		log.set_label(std::string("[")+node_id_+"/"+node_name_+"] ");
+		return std::string("[")+node_id_+"/"+node_name_+"] ";
 	}
 }
 
