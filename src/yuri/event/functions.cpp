@@ -165,6 +165,11 @@ pBasicEvent select(const std::vector<pBasicEvent>& events)
 		auto vec = dynamic_pointer_cast<EventVector>(events[1]);
 		if (index < 0 || index >= static_cast<int64_t>(vec->size())) throw bad_event_cast("Index out of range in select()");
 		return vec->at(index);
+	} else if ((events[0]->get_type() == event_type_t::boolean_event) && (events[1]->get_type() == event_type_t::vector_event)) {
+		size_t index = get_value<EventBool>(events[0])?0:1;
+		auto vec = dynamic_pointer_cast<EventVector>(events[1]);
+		if (index >= vec->size()) throw bad_event_cast("Index out of range in select()");
+		return vec->at(index);
 	} else if ((events[0]->get_type() == event_type_t::string_event) && (events[1]->get_type() == event_type_t::dictionary_event)) {
 		std::string index = get_value<EventString>(events[0]);
 		const auto& dict = get_value<EventDict>(events[1]);
