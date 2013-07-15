@@ -27,6 +27,7 @@ enum class event_type_t {
 								vector_event,
 								dictionary_event,
 };
+struct bang_t {};
 class BasicEvent;
 typedef std::shared_ptr<BasicEvent> pBasicEvent;
 class BasicEvent: 	public std::enable_shared_from_this<BasicEvent> {
@@ -115,15 +116,16 @@ private:
 
 // Specialization for Bang
 template<>
-class EventBase<event_type_t::bang_event, void>: public BasicEvent
+class EventBase<event_type_t::bang_event, bang_t>: public BasicEvent
 {
 public:
-	typedef void 				stored_type;
+	typedef bang_t 				stored_type;
 								EventBase()
 									:BasicEvent(event_type_t::bang_event) {}
+	bang_t						get_value() const { return bang_t(); }
 private:
 	virtual pBasicEvent 		do_get_copy() const
-									{ return std::make_shared<EventBase<event_type_t::bang_event, void>>(); }
+									{ return std::make_shared<EventBase<event_type_t::bang_event, bang_t>>(); }
 
 };
 
@@ -270,7 +272,7 @@ virtual pBasicEvent				do_get_copy() const {
 								}
 };
 
-struct bang_t {};
+
 typedef EventBase<event_type_t::bang_event, bang_t>
 								EventBang;
 typedef EventBase<event_type_t::boolean_event, bool>
