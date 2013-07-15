@@ -25,7 +25,9 @@ enum class 	token_type_t {
 	string_const,
 	bool_const,
 	vector_const,
-	dict_const
+	dict_const,
+	null_const,
+	bang_const
 };
 
 enum class func_mode_t {
@@ -92,6 +94,14 @@ struct dict_const_token: public token {
 								members;
 };
 
+struct null_const_token: public token {
+								null_const_token()
+									:token(token_type_t::null_const) {}
+};
+struct bang_const_token: public token {
+								bang_const_token()
+									:token(token_type_t::bang_const) {}
+};
 
 bool 							is_simple_route(const p_token& ast);
 std::pair<std::vector<p_token>, std::string>

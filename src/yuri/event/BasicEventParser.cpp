@@ -94,6 +94,10 @@ namespace {
 	template<class Iterator>
 	p_token parse_dict(Iterator& first, const Iterator& last);
 	template<class Iterator>
+	p_token parse_null(Iterator& first, const Iterator& last);
+	template<class Iterator>
+	p_token parse_bang(Iterator& first, const Iterator& last);
+	template<class Iterator>
 	p_token parse_const(Iterator& first, const Iterator& last);
 
 
@@ -219,6 +223,38 @@ namespace {
 		return dict;
 	}
 	template<class Iterator>
+	p_token parse_null(Iterator& first, const Iterator& last)
+	{
+		trim_string(first,last);
+		Iterator f1;
+		if ((f1 = find_substr(first, last, std::string("null")))!=last) {
+			first=f1;return make_shared<null_const_token>();
+		}
+		if ((f1 = find_substr(first, last, std::string("NULL")))!=last) {
+			first=f1;return make_shared<null_const_token>();
+		}
+		if ((f1 = find_substr(first, last, std::string("Null")))!=last) {
+			first=f1;return make_shared<null_const_token>();
+		}
+		return p_token();
+	}
+	template<class Iterator>
+	p_token parse_bang(Iterator& first, const Iterator& last)
+	{
+		trim_string(first,last);
+		Iterator f1;
+		if ((f1 = find_substr(first, last, std::string("bang")))!=last) {
+			first=f1;return make_shared<bang_const_token>();
+		}
+		if ((f1 = find_substr(first, last, std::string("BANG")))!=last) {
+			first=f1;return make_shared<bang_const_token>();
+		}
+		if ((f1 = find_substr(first, last, std::string("Bang")))!=last) {
+			first=f1;return make_shared<bang_const_token>();
+		}
+		return p_token();
+	}
+	template<class Iterator>
 	p_token parse_vector(Iterator& first, const Iterator& last)
 	{
 		trim_string(first,last);
@@ -263,6 +299,16 @@ namespace {
 		}
 		f1 = first;
 		if (auto p = parse_dict(f1,last)) {
+			first = f1;
+			return p;
+		}
+		f1 = first;
+		if (auto p = parse_null(f1,last)) {
+			first = f1;
+			return p;
+		}
+		f1 = first;
+		if (auto p = parse_bang(f1,last)) {
 			first = f1;
 			return p;
 		}
@@ -409,6 +455,20 @@ namespace {
 		virtual pBasicEvent get_value(const EventRouter& router) const = 0;
 		virtual ~value_provider() {}
 	};
+	struct null_value: public value_provider {
+		null_value():value_provider(){}
+		pBasicEvent get_value(const EventRouter& /*router*/) const {
+			return pBasicEvent();
+		}
+	};
+	struct bang_value: public value_provider {
+		bang_value():value_provider(),value(new EventBang()){}
+		pBasicEvent get_value(const EventRouter& /*router*/) const {
+			return value;
+		}
+		pBasicEvent value;
+
+	};
 	struct const_value: public value_provider {
 		const_value(const pBasicEvent& value):value_provider(),value(value) {}
 		pBasicEvent value;
@@ -422,6 +482,7 @@ namespace {
 		pBasicEvent get_value(const EventRouter& router) const {
 			auto vec = make_shared<EventVector>();
 			for (const auto& in: inputs) {
+				assert(in);
 				vec->push_back(in->get_value(router));
 			}
 			return vec;
@@ -456,6 +517,7 @@ namespace {
 			std::vector<pBasicEvent> in;
 //			std::cout << "func_call::get_value()  (" << inputs.size()<< "\n";
 			for (const auto& input: inputs) {
+				assert(input);
 				in.push_back(input->get_value(router));
 			}
 			return call(fname,in);
@@ -497,6 +559,7 @@ namespace {
 				case parser::token_type_t::double_const: return process_const<parser::double_const_token, EventDouble>(ast);
 				case parser::token_type_t::bool_const: return process_const<parser::bool_const_token, EventBool>(ast);
 				case parser::token_type_t::string_const: return process_const<parser::string_const_token, EventString>(ast);
+				case parser::token_type_t::bang_const: return std::move(std::unique_ptr<bang_value>(new bang_value()));
 				// TODO: Implement other constants
 				case parser::token_type_t::spec: {
 //					std::cout << "Processing spec\n";
@@ -529,6 +592,11 @@ namespace {
 						dict->inputs[arg.first] = std::move(process_tree(arg.second));
 					}
 					return std::move(dict);
+				}
+				case parser::token_type_t::null_const: {
+					std::unique_ptr<null_value> n (new null_value{});
+					assert(n);
+					return std::move(n);
 				}
 				default: break;
 			}
