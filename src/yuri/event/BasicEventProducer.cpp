@@ -64,6 +64,7 @@ bool BasicEventProducer::do_unregister_listener(const std::string& event_name, p
 }
 bool BasicEventProducer::emit_event(const std::string& event_name, pBasicEvent event)
 {
+	if (!event) return false;
 	yuri::lock _(consumers_mutex_);
 	if (consumers_.count("*")) {
 		auto range = consumers_.equal_range("*");
