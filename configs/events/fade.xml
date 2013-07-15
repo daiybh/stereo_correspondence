@@ -1,0 +1,59 @@
+<app name="fade_test">
+	<variable name="connection" default="">Name of midi device to connect to</variable>
+	<variable name="device0" default="/dev/video0">Path to device for first camera</variable>
+	<variable name="device1" default="/dev/video1">Path to device for second camera</variable>
+	<variable name="width" default="800">Width of the image</variable>
+	<variable name="height" default="600">Height of the image</variable>
+	<variable name="display" default=":0">X display to show window at</variable>
+	<variable name="fps" default="100">Requested framerate</variable>
+
+	<description>
+		Fades between two cameras.
+	</description>
+
+	<node class="v4l2source" name="cam0">
+		<parameter name="path">@device0</parameter>
+		<parameter name="width">@width</parameter>
+		<parameter name="height">@height</parameter>
+		<parameter name="fps">@fps</parameter>
+	</node>
+
+	<node class="v4l2source" name="cam1">
+		<parameter name="path">@device1</parameter>
+		<parameter name="width">@width</parameter>
+		<parameter name="height">@height</parameter>
+		<parameter name="fps">@fps</parameter>
+	</node>
+
+	<node class="fade" name="fade"/>
+
+	<node class="simple_renderer" name="renderer">
+		<parameter name="display">@display</parameter>
+		<parameter name="width">@width</parameter>
+		<parameter name="height">@height</parameter>
+	</node>
+
+	<node class="midi_device" name="midi">
+		<parameter name="connection">@connection</parameter>
+	</node>
+
+	<node class="event_info" name="info"/>
+
+	<event>
+		route(midi:*)->info:*;
+		route(
+			select(
+				gt(
+					double(midi:control_0_5, 0.0, 1.0),
+					0.5),
+				[BANG, Null])
+		)->info:stop,fade_test:stop;
+		route(select(gt(midi:control_0_46,100),[BANG,NULL]))->fade_test:stop,info:stop;
+
+		route(double(midi:control_0_2, 0.0, 1.0))->fade:state;		
+	</event>
+
+	<link name="raw0" source="cam0:0" target="fade:0"/>
+	<link name="raw1" source="cam1:0" target="fade:1"/>
+	<link name="fade" source="fade:0" target="renderer:0"/>
+</app>
