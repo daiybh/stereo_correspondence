@@ -26,19 +26,24 @@ pBasicEvent to_range_impl(const pBasicEvent& event, const pBasicEvent& rmin, con
 	typedef typename Orig::stored_type otype;
 	auto ev_ptr = dynamic_pointer_cast<Dest>(event);
 	if (!ev_ptr) throw bad_event_cast("Type mismatch in to_range_impl()");
-	if (!ev_ptr->range_specified()) throw bad_event_cast("Input has no range specified!()");
+	bool do_crop_only = false;
+	if (!ev_ptr->range_specified()) do_crop_only = true;//throw bad_event_cast("Input has no range specified!()");
 	if (rmin->get_type() != orig_type)
 		 throw bad_event_cast("Type mismatch min value in to_range_impl()");
 	if (rmax->get_type() != orig_type)
 		 throw bad_event_cast("Type mismatch max value in to_range_impl()");
 	otype rrmin = get_value<Orig>(rmin);
 	otype rrmax = get_value<Orig>(rmax);
-	otype new_range = rrmax-rrmin;
-	if (new_range <= 0) throw ("Wrong new range in to_range_impl()");
-	type orig_value = ev_ptr->get_value() - ev_ptr->get_min_value();
-	type orig_range = ev_ptr->get_max_value() - ev_ptr->get_min_value();
-	otype new_value = static_cast<otype>(orig_value*new_range/orig_range)+rrmin;
-	return make_shared<Orig>(new_value, rrmin, rrmax);
+	if (!do_crop_only) {
+		otype new_range = rrmax-rrmin;
+		if (new_range <= 0) throw ("Wrong new range in to_range_impl()");
+		type orig_value = ev_ptr->get_value() - ev_ptr->get_min_value();
+		type orig_range = ev_ptr->get_max_value() - ev_ptr->get_min_value();
+		otype new_value = static_cast<otype>(orig_value*new_range/orig_range)+rrmin;
+		return make_shared<Orig>(new_value, rrmin, rrmax);
+	} else  {
+		return make_shared<Orig>(std::min(std::max(static_cast<otype>(ev_ptr->get_value()),rrmin),rrmax), rrmin, rrmax);
+	}
 }
 
 
