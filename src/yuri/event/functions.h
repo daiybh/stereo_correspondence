@@ -19,6 +19,7 @@ pBasicEvent 					todouble(const std::vector<pBasicEvent>& events);
 pBasicEvent 					todouble_range(const std::vector<pBasicEvent>& events);
 pBasicEvent 					toint(const std::vector<pBasicEvent>& events);
 pBasicEvent 					toint_range(const std::vector<pBasicEvent>& events);
+pBasicEvent 					tobool(const std::vector<pBasicEvent>& events);
 pBasicEvent 					pass(const std::vector<pBasicEvent>& events);
 pBasicEvent 					select(const std::vector<pBasicEvent>& events);
 

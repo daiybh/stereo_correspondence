@@ -95,9 +95,9 @@ pBasicEvent implicit_conversion(pBasicEvent event, event_type_t target_type)
 {
 	// Implicit conversions are hard-coded!
 	auto conv = std::make_pair(event->get_type(), target_type);
-	if (cmp_event_pair(conv, {event_type_t::double_event, event_type_t::integer_event})) {
+	/*if (cmp_event_pair(conv, {event_type_t::double_event, event_type_t::integer_event})) {
 		return s_cast<EventDouble, EventInt>(event);
-	} else if (cmp_event_pair(conv, {event_type_t::integer_event, event_type_t::double_event})) {
+	} else */if (cmp_event_pair(conv, {event_type_t::integer_event, event_type_t::double_event})) {
 		return s_cast<EventInt, EventDouble>(event);
 	} else if (cmp_event_pair(conv, {event_type_t::integer_event, event_type_t::boolean_event})) {
 		return s_cast<EventDouble, EventBool>(event);
@@ -136,6 +136,8 @@ FuncInitHelper fhelper_ {
 		 {"int", std::vector<event_type_t>({event_type_t::integer_event, event_type_t::integer_event, event_type_t::integer_event}),event_type_t::integer_event, functions::toint_range},
 		 {"int", std::vector<event_type_t>({event_type_t::double_event, event_type_t::integer_event, event_type_t::integer_event}),event_type_t::integer_event, functions::toint_range},
 
+		 {"bool", std::vector<event_type_t>({event_type_t::boolean_event}),event_type_t::boolean_event, functions::tobool},
+		 {"bool", std::vector<event_type_t>({event_type_t::integer_event}),event_type_t::boolean_event, functions::tobool},
 
 		 {"pass", std::vector<event_type_t>({event_type_t::bang_event}),event_type_t::bang_event, functions::pass},
 		 {"pass", std::vector<event_type_t>({event_type_t::boolean_event}),event_type_t::boolean_event, functions::pass},

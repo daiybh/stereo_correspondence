@@ -120,7 +120,7 @@ pBasicEvent toint_range(const std::vector<pBasicEvent>& events) {
 }
 
 pBasicEvent todouble(const std::vector<pBasicEvent>& events) {
-	if (events.size() != 1) throw bad_event_cast("Str supports only one parameter");
+	if (events.size() != 1) throw bad_event_cast("double supports only one parameter");
 	switch (events[0]->get_type()) {
 			case event_type_t::integer_event: return s_cast<EventInt, EventDouble>(events[0]);
 			case event_type_t::double_event: return events[0];
@@ -130,6 +130,15 @@ pBasicEvent todouble(const std::vector<pBasicEvent>& events) {
 	throw bad_event_cast("Unsupported type of parameter in double()");
 }
 
+pBasicEvent tobool(const std::vector<pBasicEvent>& events) {
+	if (events.size() != 1) throw bad_event_cast("bool supports only one parameter");
+	switch (events[0]->get_type()) {
+			case event_type_t::boolean_event: return events[0];
+			case event_type_t::integer_event: return s_cast<EventInt, EventBool>(events[0]);
+			default:break;
+	}
+	throw bad_event_cast("Unsupported type of parameter in bool()");
+}
 
 pBasicEvent todouble_range(const std::vector<pBasicEvent>& events) {
 	if (events.size() != 3) throw bad_event_cast("ranged int() supports only three parameter");
