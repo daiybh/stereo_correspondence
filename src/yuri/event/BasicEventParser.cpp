@@ -557,6 +557,18 @@ namespace {
 		void process() {
 			process_events();
 		}
+		void try_emit_event() {
+			try {
+//				std::cout << "emit impl\n";
+				emit_event("out",provider->get_value(*this));
+//				std::cout << "emit done\n";
+			}
+			catch (std::runtime_error& e)
+			{
+//				std::cout << "Error " << e.what() << "\n";
+				throw;
+			}
+		}
 
 	private:
 		std::unique_ptr<value_provider> process_tree(const parser::p_token& ast)
@@ -618,13 +630,7 @@ namespace {
 		{
 			input_events[event_name] = event;
 			// TODO: This should depend on 'mode' attribute...
-			try {
-				emit_event("out",provider->get_value(*this));
-			}
-			catch (std::runtime_error& e)
-			{
-				throw;
-			}
+			try_emit_event();
 			return true;
 		}
 		std::map<std::string, pBasicEvent> input_events;
@@ -693,13 +699,16 @@ bool BasicEventParser::parse_routes(const std::string& text)
 //					std::cout << "Connected router to consumer " << spec->node << "\n";
 
 				}
-
+				// Let's try to emit event at startup. This will succeed iff the expression is constant or every variable (spec) has an initializer
+//				std::cout << "Emitting startup value\n";
+				f->try_emit_event();
+//				std::cout << "done\n";
 				routers_.push_back(f);
 
 			}
 			catch (std::runtime_error& e)
 			{
-				std::cout << "Error: " << e.what() << "\n";
+//				std::cout << "Error: " << e.what() << "\n";
 			}
 		}
 	}
