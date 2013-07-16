@@ -151,15 +151,6 @@ pBasicEvent todouble_range(const std::vector<pBasicEvent>& events) {
 	throw bad_event_cast("Unsupported type of parameter in int()");
 }
 
-pBasicEvent tobool(const std::vector<pBasicEvent>& events) {
-	if (events.size() != 1) throw bad_event_cast("bool() supports only one parameter");
-	switch (events[0]->get_type()) {
-			case event_type_t::integer_event: return s_cast<EventInt, EventBool>(events[0]);
-			case event_type_t::boolean_event: return events[0];
-			default:break;
-	}
-	throw bad_event_cast("Unsupported type of parameter in bool()");
-}
 
 pBasicEvent pass(const std::vector<pBasicEvent>& events)
 {
