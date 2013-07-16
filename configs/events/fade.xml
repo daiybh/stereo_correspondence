@@ -25,7 +25,9 @@
 		<parameter name="fps">@fps</parameter>
 	</node>
 
-	<node class="fade" name="fade"/>
+	<node class="fade" name="fade">
+		<parameter name="realtime">1</parameter>
+	</node>
 
 	<node class="simple_renderer" name="renderer">
 		<parameter name="display">@display</parameter>
@@ -48,12 +50,15 @@
 					0.5),
 				[BANG, Null])
 		)->info:stop,fade_test:stop;
-		route(select(gt(midi:control_0_46,100),[BANG,NULL]))->fade_test:stop,info:stop;
+		route(select(gt(midi:control_0_46|0,100),[BANG,NULL]))->fade_test:stop,info:stop;
 
-		route(double(midi:control_0_2, 0.0, 1.0))->fade:state;		
+		route(double(midi:control_0_2|0.0, 0.0, 1.0))->fade:state;		
 	</event>
 
 	<link name="raw0" source="cam0:0" target="fade:0"/>
 	<link name="raw1" source="cam1:0" target="fade:1"/>
 	<link name="fade" source="fade:0" target="renderer:0"/>
 </app>
+<!--
+
+-->
