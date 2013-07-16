@@ -61,7 +61,7 @@ std::vector<core::pBasicFrame> Fade::do_single_step(const std::vector<core::pBas
 }
 bool Fade::set_param(const core::Parameter& param)
 {
-	return core::BasicIOThread::set_param(param);
+	return core::BasicMultiIOFilter::set_param(param);
 }
 bool Fade::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
