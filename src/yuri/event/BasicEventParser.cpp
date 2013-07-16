@@ -701,7 +701,8 @@ bool BasicEventParser::parse_routes(const std::string& text)
 				}
 				// Let's try to emit event at startup. This will succeed iff the expression is constant or every variable (spec) has an initializer
 //				std::cout << "Emitting startup value\n";
-				f->try_emit_event();
+				if (f->input_map.empty())
+					f->try_emit_event();
 //				std::cout << "done\n";
 				routers_.push_back(f);
 
