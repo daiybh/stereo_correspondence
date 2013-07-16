@@ -54,6 +54,7 @@ struct spec_token: public token {
 									:token(token_type_t::spec),node(node),name(name) {}
 	const std::string 			node;
 	const std::string 			name;
+	p_token						init;
 };
 struct func_token: public token {
 								func_token(const std::string& fname)

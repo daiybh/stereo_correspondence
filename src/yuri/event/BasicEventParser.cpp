@@ -115,7 +115,13 @@ namespace {
 		trim_string(first,last);
 		name = find_id(first, last, true);
 		if (name.empty()) return p_token();
-		return make_shared<spec_token>(node,name);
+		auto spec = make_shared<spec_token>(node,name);
+		trim_string(first,last);
+		if (*first == '|') {
+			++first;
+			spec->init = parse_arg(first,last);
+		}
+		return spec;
 	}
 	template<class Iterator>
 	p_token parse_bool(Iterator& first, const Iterator& last)
@@ -504,6 +510,7 @@ namespace {
 		event_value(const std::string& node, const std::string& name):value_provider(),
 				name(node+":"+name) {}
 		std::string name;
+		std::unique_ptr<value_provider> init;
 		pBasicEvent get_value(const EventRouter& router) const;
 	};
 	struct func_call: public value_provider {
@@ -565,7 +572,11 @@ namespace {
 //					std::cout << "Processing spec\n";
 					const auto& token = dynamic_pointer_cast<parser::spec_token>(ast);
 					input_map[{token->node, token->name}]=token->node+":"+token->name;
-					return std::unique_ptr<event_value>(new event_value(token->node, token->name));
+					std::unique_ptr<event_value> spec (new event_value(token->node, token->name));
+					if (token->init) {
+						spec->init = process_tree(token->init);
+					}
+					return std::move(spec);
 				}
 				case parser::token_type_t::func_name: {
 //					std::cout << "Processing func\n";
@@ -624,6 +635,7 @@ namespace {
 namespace {
 	pBasicEvent event_value::get_value(const EventRouter& router) const {
 		if (auto event = router.get_value(name)) return event;
+		if (init) return init->get_value(router);
 		throw std::runtime_error("bah");
 
 	}
