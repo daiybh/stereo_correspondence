@@ -1,0 +1,319 @@
+This document is a working draft.
+Therefore, the final specification may differ.
+
+1. Introduction
+
+Whole concept consists of 3 parts:
+ - Event producers (Modules?)
+ - Event consumers (Modules)
+ - Event routing
+ 
+ Event combining - whose responsibility it should be?
+ 
+ 2. Events
+ How does an event look like?
+ Event should have a type.
+Events should not be used to transfer "data", that's task for pipes, rather it's targeted for user interactions.
+
+2.1 Event types
+- Proposed types:
+ - Bang (trigger)
+ - Boolean (switch)
+ - int range (an int value from a predefined range)
+ - float range (a float value from a predefined range)
+ - string
+ - time value
+ - vectors
+ - dictionary
+ - complex types?
+
+
+ 2.1.1 List of types
+ The code in the table below is for internal use in this document only, mostly in parts 2.2, 2.3, 2.4.
+ CODE	TYPE			DESCRIPTION		
+ @		BANG			Trigger event, without any value
+ B		BOOLEAN			True/false event (can express e.g. key_down/key_up)
+ I		INT				Integer value, optionally with a range
+ D		DOUBLE			Floating point value, optionally with a range
+ S		STRING			String value
+ T		TIME_VALUE		An number representing a time
+ V		VECTOR			Vector of events (can be heterogeneous)
+ M		DICTIONARY		Dictionary mapping string values to events (of any type)
+ 
+ Vectors and dictionaries can have heterogeneous elements
+
+ 2.2 Conversions
+ Some implicit conversions can be done, although specialized 'named' conversions should be preferred.
+ E.g. Conversion int -> double can be done implicitly, but in order to respect ranges, there should be another conversion supporting the range parameters.
+ These 'named' conversion should be implemented in terms of functions (2.3)
+  
+ 2.2.1 Implicit conversions
+ 
+ FROM			TO			Algorithm		Notes
+ ---------------------------------------------------------
+ INT 		-> 	DOUBLE 		static_cast<>	(without range support)
+ INT		->	BOOL		!=0
+ 
+ 
+ Implicit conversion can be triggered by calling event::convert(event, new_type)->event.
+ This will throw an exception (std::runtime_error), when the conversion is not supported.
+ 
+ 2.2.2
+ Conversion DOUBLE -> INT was dropped as it would create ambiguities. 
+ 
+ 2.3 Functions
+ Functions are state-less (pure functions).
+ There should (?) be a mechanism to add more functions.
+ 
+ This part describes only proposed built-in functions.
+ 
+ Functions can be overloaded based on parameter types.
+ Function names are case sensitive.
+
+ 
+ Call to function can be made through the API
+ event::call(func_name, vector<> events)->event 
+ and will throw an exception when unsupported parameters are provided.
+ 
+ A convenience wrapper should be provided, so calls in form
+ event::call(func_name, event, ... )->event
+ would also succeed. [note1]
+ 
+ The functions should be  present in the namespace event::functions as well.
+ E.g. call to 'eq' could be done (assuming parameters event1, event2)
+ (1) event::call("eq",{event1, event2});
+ or
+ (2) event::call("eq",event1, event2);
+ or
+ (3) event::function::eq({event1,event2});
+ 
+ The form (3) may introduce different function names for different overloads.
+ Aside from API use (where it's mostly useless), these methods should be callable during routing as well.
+ This should be described in part 5.
+ 
+ 2.3.1 Resolving function names
+ The appropriate function is selected as follows:
+ 
+ a. Function with exact name and exact parameter list
+ b. Function with exact name and implicitly convertible parameters (following rules in 2.2.1)
+ 		- Interpreter finds all functions with exact match for name
+ 		- Then it goes from the left and tries find overload for parameters that have different than supported type.
+ 		- If the method can be called with converted parameters, then the search stops and the method is called.
+ 		- Otherwise next possible overload is tried.
+ 		- If there isn't any usable overload, the method should throw an exception.
+ 
+ 
+ 2.3.2 Built-in functions
+ (Functions marked with * are implemented in current version)
+ 
+ 
+ NAME										RETURN	Algorithm
+ --------------------------------------------------------------
+ *bool(I x)									-> B	x!=0
+ *bool(B x)									-> B	x 
+ bool(S x)									-> B	x=="True"
+ *int(D x)									-> I	static_cast<I>(x)
+ *int(I x)									-> I	x
+ *int(S x)									-> I	lexical_cast<I>(x)
+ *int(I x, I min, I max)					-> I	convert_range
+ *int(D x, I min, I max)					-> I	convert_range
+ *double(I x)								-> D	static_cast<D>(x)
+ *double(D x)								-> D	x
+ *double(S x)								-> D	lexical_cast<D>(x)
+ *double(I x, D min, D max)					-> D	convert_range
+ *double(D x, D min, D max)					-> D	convert_range
+ *str(I x)									-> S	str(x)
+ *str(D x)									-> S	str(x)
+ *str(B x)									-> S	x?"True":"False"
+ *str(@)									-> S	"BANG"
+ *str(T x)									-> S	string representing time (YYYY.MM.DD HH:MM:SS.ssssss)
+ *str(V x)									-> S
+ *str(M x)									-> S
+ 
+ *eq(I x, I value)							-> B	x == value
+ *eq(D x, D value)							-> B	x == value
+ *eq(S x, S value)							-> B	x == value
+ *eq(B x, B value)							-> B	x == value
+ *eq(T x, T value)							-> B	x == value
+ *eq(I x, I value, I threshold)				-> B	abs(x-value)<threshold
+ *eq(D x, D value, D threshold)				-> B	abs(x-value)<threshold
+ 
+ *gt(B x, B threshold)						-> B	x > threshold
+ *gt(I x, I threshold)						-> B	x > threshold
+ *gt(D x, D threshold)						-> B	x > threshold
+ *gt(S x, S threshold)						-> B	x > threshold
+ *gt(T x, T threshold)						-> B	x > threshold
+ 
+ *ge(B x, B threshold)						-> B	x >= threshold
+ *ge(I x, I threshold)						-> B	x >= threshold
+ *ge(D x, D threshold)						-> B	x >= threshold
+ *ge(S x, S threshold)						-> B	x >= threshold
+ *ge(T x, T threshold)						-> B	x >= threshold
+ 
+ *lt(B x, B threshold)						-> B	x < threshold
+ *lt(I x, I threshold)						-> B	x < threshold
+ *lt(D x, D threshold)						-> B	x < threshold
+ *lt(S x, S threshold)						-> B	x < threshold
+ *lt(T x, T threshold)						-> B	x < threshold
+ 
+ *le(B x, B threshold)						-> B	x <= threshold
+ *le(I x, I threshold)						-> B	x <= threshold
+ *le(D x, D threshold)						-> B	x <= threshold
+ *le(S x, S threshold)						-> B	x <= threshold
+ *le(T x, T threshold)						-> B	x <= threshold
+ 
+ *pass(@)									-> @	x
+ *pass(B x)									-> B	x
+ *pass(I x)									-> B	x
+ *pass(D x)									-> B	x
+ *pass(S x)									-> B	x
+ *pass(T x)									-> B	x
+ *pass(V x)									-> B	x
+ *pass(M x)									-> B	x
+ 
+ *select(I x, V vec)						-> ?	vec[x]
+ *select(S x, M dict)						-> ?	dict[x]
+ *select(B x, V vec)						-> ?	vec[x?0:1]
+ 
+ *min(I a, I b)								-> I	min(a,b)
+ *min(D a, D b)								-> D	min(a,b)
+ *min(B a, B b)								-> B	min(a,b)
+ *min(S a, S b)								-> S	min(a,b)
+ *min(T a, T b)								-> T	min(a,b)
+ 
+ *max(I a, I b)								-> I	max(a,b)
+ *max(D a, D b)								-> D	max(a,b)
+ *max(B a, B b)								-> B	max(a,b)
+ *max(S a, S b)								-> S	max(a,b)
+ *max(T a, T b)								-> T	max(a,b)
+ 
+ 
+ *add(I a, I b)								-> I	a + b
+ *add(D a, D b)								-> D	a + b
+ *add(S a, S b)								-> S	a + b
+ 
+ *sub(I a, I b)								-> I	a - b
+ *sub(D a, D b)								-> D	a - b
+ 
+ *mul(I a, I b)								-> I	a * b
+ *mul(D a, D b)								-> D	a * b
+ mul(B a, I b)								-> I	a?0:b
+ mul(B a, D b)								-> D	a?0:b
+ mul(S a, I b)								-> S	b * a (string copied several times)
+ 
+ *div(I a, I b)								-> I	a / b
+ *div(D a, D b)								-> D	a / b
+ 
+ *mod(I a, I b)								-> I	a % b
+ *mod(D a, D b)								-> D	fmod(a, b)
+ 
+ *abs(I x)									-> I	abs(x)
+ *abs(D x)									-> D	abs(x)
+ 
+ *and(B a, B b)								-> B	a && b 
+ *or(B a, B b)								-> B	a || b
+ *not(B a)									-> B	!a
+ 
+ *and(I a, I b)								-> B	a & b 
+ *or(I a, I b)								-> B	a | b
+ *xor(I a, I b)								-> B	a ^ b
+ 
+ *exp(D x)									-> D	exp(x)
+ *ln(D x)									-> D	ln(x)
+ *pow(D x, D y)								-> D	pow(x,y)
+ 
+ ??There should be a way to convert time to double and to use sin/cos...
+ 
+ 2.4 Processors (Processing objects)
+ Processors are objects, having a state and a set of methods.
+ They have to be instantiated before use.
+ Call to a method may (but does not have to) emit an output (named) event.
+ 
+ Should it be described here?
+ 
+ Built-ins?
+
+
+ 
+ 3. Event Producers
+ What API and responsibilities have event producers?
+ Event sources identified by unique string
+ Source generates typed events
+ 
+ Should provide a list of event that it can generate. This list can vary depending on parameters, so has to be determinable at runtime and per instance.
+ Should allow consumer to register and unregister from receiving events.
+ 
+ 4. Event Consumers
+ What API and responsibilities have event consumers
+
+ 
+ 5. Event Routing
+ 5.1 Parsing
+ 
+ 5.2 Routing 
+ 
+Simple routing should be specified as a route statement:
+route(SPEC)->SPEC;
+where:
+SPEC is NODE:NAME
+NODE is name of the producer/consumer
+NAME is event name
+
+Extended syntax can use functions as follows:
+route(FUNC(FUNC(SPEC,VAL),VAL,VAL))->SPEC,SPEC,SPEC;
+where:
+FUNC is function specification [FQ]FNAME
+FNAME is function name
+VAL is either SPEC or CONST
+CONST is a constant value
+
+
+Complete syntax for routing command is: 
+ROUTE=route(EXPR)->OUT_LIST;
+OUT_LIST=OUT_SPEC|OUT_SPEC,OUT_LIST
+OUT_SPEC=NODE:NAME
+EXPR=SPEC|FUNC
+SPEC=NODE:NAME|NODE:NAME\|ARG
+FUNC=FQ FNAME(ARG,...)
+FQ=*|!
+ARG=SPEC|CONST|FUNC
+CONST=BANG|BOOL|INT|DOUBLE|STRING|VECTOR|DICT|TIME|NULL
+BANG=bang|Bang|BANG
+BOOL=True|False|true|false
+INT=[0-9]+
+DOUBLE=[0-9]*\.[0-9]+|[0-9]+.
+STRING=".*"
+VECTOR=\[ARG,...\]
+DICT=\{ID:ARG,...\}
+NULL=null|Null|NULL
+ID=[a-zA-Z][0-9a-zA-Z_/]*
+NODE=ID
+NAME=ID|\*
+
+('\' is used in this document to disambiguate between literals and characters used for like-regexp expressions)
+ 
+Constant in the expression corresponds to event types with fixed value, with following exceptions:
+NULL: Means an empty event that should NOT be emitted. Used for selective output based on some condition. 
+VECTOR: Even though it's considered a constant, it can contain expressions with SPEC and thus being actually variable. Only the length is constant
+DICT: Also considered a constant event though it can contain variable values. Indices can not be variable, only the values
+ 
+5.2.1 Function qualifiers
+Note: Function qualifiers are not currently implemented and are being considered for removal.
+When a function is called from routing mechanism with more than one input SPEC,
+it can have function qualifiers specified to tune it's behavior.
+Qualifier * instructs the runtime system to store received events for every SPEC 
+and to reevaluate the function for every change.
+Qualifier ! means that only change to the first parameter will trigger reevaluation.
+
+
+6. API
+6.1 Events
+
+
+7. Notes
+1 - The wrapper can look like:
+template<class... Args>
+int call(const std::string& func_name, pBasicEvent event, Args... args)
+{
+	return call(func_name,{event, args...});
+}
