@@ -39,8 +39,9 @@ pParameters ApplicationBuilder::configure()
 
 
 ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent, Parameters &p)
-	:BasicIOThread(_log,parent,0,0,"AppBuilder"),filename(""),
-	document_loaded(false),threads_prepared(false),skip_verification(false),
+	:BasicIOThread(_log,parent,0,0,"AppBuilder"),
+	 event::BasicEventParser(log),
+	 filename(""),document_loaded(false),threads_prepared(false),skip_verification(false),
 	run_limit(time_duration_infinity),start_time()
 
 {
@@ -53,7 +54,9 @@ ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent, Para
 }
 
 ApplicationBuilder::ApplicationBuilder(log::Log &_log, pwThreadBase parent,std::string filename,std::vector<std::string> argv, bool skip)
-	:BasicIOThread(_log,parent,0,0,"AppBuilder"),filename(filename),document_loaded(false),
+	:BasicIOThread(_log,parent,0,0,"AppBuilder"),
+	 event::BasicEventParser(log),
+	 filename(filename),document_loaded(false),
 	threads_prepared(false),skip_verification(skip),run_limit(time_duration_infinity),
 	start_time()
 

@@ -31,7 +31,7 @@ core::pParameters MidiDevice::configure()
 
 MidiDevice::MidiDevice(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
 core::BasicIOThread(log_,parent,0,0,std::string("midi_device")),
-event::BasicEventProducer(),
+event::BasicEventProducer(log),
 sequencer_(nullptr), device_("default"),connection_("")
 {
 	IO_THREAD_INIT("midi_device")

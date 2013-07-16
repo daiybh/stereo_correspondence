@@ -28,7 +28,7 @@ core::pParameters Fade::configure()
 
 Fade::Fade(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
 core::BasicMultiIOFilter(log_,parent,2,1,std::string("fade")),
-event::BasicEventConsumer(),transition_(0.0)
+event::BasicEventConsumer(log),transition_(0.0)
 {
 	IO_THREAD_INIT("fade")
 }

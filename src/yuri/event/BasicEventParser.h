@@ -114,7 +114,7 @@ std::pair<std::vector<p_token>, std::string>
 class EventRouter;
 class BasicEventParser: public BasicEventProducer, public BasicEventConsumer {
 public:
-								BasicEventParser();
+								BasicEventParser(log::Log&);
 	virtual 					~BasicEventParser() {}
 private:
 	virtual pBasicEventProducer find_producer(const std::string& name) = 0;
@@ -126,6 +126,7 @@ protected:
 private:
 	std::vector<shared_ptr<EventRouter>>
 								routers_;
+	log::Log&					log_pa_;
 
 };
 

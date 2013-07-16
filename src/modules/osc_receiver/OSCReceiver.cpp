@@ -28,7 +28,7 @@ core::pParameters OSCReceiver::configure()
 
 OSCReceiver::OSCReceiver(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
 core::BasicIOThread(log_,parent,0,0,std::string("osc_receiver")),
-event::BasicEventProducer(),port_(2000)
+event::BasicEventProducer(log),port_(2000)
 {
 	IO_THREAD_INIT("osc_receiver")
 

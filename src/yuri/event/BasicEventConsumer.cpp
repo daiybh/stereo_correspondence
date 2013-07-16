@@ -11,6 +11,11 @@
 namespace yuri {
 namespace event {
 
+BasicEventConsumer::BasicEventConsumer(log::Log& log):log_c_(log)
+{
+
+}
+
 BasicEventConsumer::~BasicEventConsumer()
 {
 
