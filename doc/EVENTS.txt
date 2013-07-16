@@ -305,6 +305,12 @@ Qualifier * instructs the runtime system to store received events for every SPEC
 and to reevaluate the function for every change.
 Qualifier ! means that only change to the first parameter will trigger reevaluation.
 
+NODE:NAME is used to identify Event producer/consumer and emitted/received event.
+Special value '*' for NAME in producer matches every event the node produces.
+Special value '*' for NAME in consumer keeps the original event name.
+Thee are mainly useful for expressions like:
+route(a:*)->b:x;  Route all events from node a to node b:x
+route(a:*)->b:*;  Route all events from node a to node b, keeping their original name 
 
 6. API
 6.1 Events
