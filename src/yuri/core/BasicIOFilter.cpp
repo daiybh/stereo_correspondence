@@ -40,8 +40,16 @@ bool BasicMultiIOFilter::step()
 	assert(in_ports>0);
 	assert(stored_frames_.size() == static_cast<size_t>(in_ports));
 	for (sint_t i=0; i< in_ports; ++i) {
-		if (realtime_) stored_frames_[i]=in[i]->pop_latest();
-		else if (!stored_frames_[i]) stored_frames_[i]=in[i]->pop_frame();
+		if (realtime_) {
+			auto f = in[i]->pop_latest();
+			if (f) stored_frames_[i] = f;
+		}
+		else {
+			if (!stored_frames_[i]) {
+				auto f = in[i]->pop_frame();
+				if (f) stored_frames_[i] = f;
+			}
+		}
 		if (!stored_frames_[i]) ready = false;
 	}
 	if (ready) {
