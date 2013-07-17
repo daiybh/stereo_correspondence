@@ -27,7 +27,8 @@ core::pParameters EventInfo::configure()
 
 
 EventInfo::EventInfo(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,0,0,std::string("event_info"))
+core::BasicIOThread(log_,parent,0,0,std::string("event_info")),
+event::BasicEventConsumer(log)
 {
 	IO_THREAD_INIT("event_info")
 	latency=1000;

@@ -11,6 +11,11 @@
 
 namespace yuri {
 namespace event {
+BasicEventProducer::BasicEventProducer(log::Log& log_):log_p_(log_)
+{
+
+}
+
 BasicEventProducer::~BasicEventProducer()
 {
 

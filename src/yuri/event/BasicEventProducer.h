@@ -25,7 +25,7 @@ typedef std::pair<std::string, event_type_t>
 
 class BasicEventProducer {
 public:
-								BasicEventProducer() = default;
+								BasicEventProducer(log::Log&);
 	virtual						~BasicEventProducer();
 	bool 						register_listener(const std::string& event_name, pwBasicEventConsumer consumer, const std::string& target_name);
 	bool 						unregister_listener(const std::string& event_name, pwBasicEventConsumer consumer, const std::string& target_name);
@@ -41,6 +41,7 @@ private:
 	std::unordered_multimap<std::string, event_target_t>
 								consumers_;
 	mutex						consumers_mutex_;
+	log::Log&					log_p_;
 
 };
 

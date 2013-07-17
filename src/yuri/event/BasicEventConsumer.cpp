@@ -11,6 +11,11 @@
 namespace yuri {
 namespace event {
 
+BasicEventConsumer::BasicEventConsumer(log::Log& log):log_c_(log)
+{
+
+}
+
 BasicEventConsumer::~BasicEventConsumer()
 {
 
@@ -48,7 +53,7 @@ bool BasicEventConsumer::do_process_events(ssize_t max_count)
 			do_process_event(rec.first, rec.second);
 		}
 		catch (std::runtime_error& e) {
-			do_report_consumer_error(e.what());
+			log_c_[log::debug] << "Error while processing incomming event '" << rec.first << e.what();
 		}
 	}
 	return true;

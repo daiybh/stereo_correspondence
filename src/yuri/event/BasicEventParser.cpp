@@ -450,7 +450,8 @@ std::pair<std::vector<p_token>, std::string> parse_string(const std::string& tex
 }
 
 
-BasicEventParser::BasicEventParser()
+BasicEventParser::BasicEventParser(log::Log& log)
+:BasicEventProducer(log),BasicEventConsumer(log),log_pa_(log)
 {
 }
 
@@ -541,7 +542,8 @@ namespace {
 	class EventRouter: public BasicEventConsumer, public BasicEventProducer
 	{
 	public:
-		EventRouter(const parser::p_token& token):BasicEventConsumer(),BasicEventProducer()
+		EventRouter(const parser::p_token& token, log::Log& log)
+			:BasicEventConsumer(log),BasicEventProducer(log),log_er_(log)
 		{
 			assert(token->type == parser::token_type_t::func_name);
 			provider = process_tree(token);
@@ -571,6 +573,7 @@ namespace {
 		}
 
 	private:
+		log::Log&	log_er_;
 		std::unique_ptr<value_provider> process_tree(const parser::p_token& ast)
 		{
 			switch (ast->type) {
@@ -649,6 +652,9 @@ namespace {
 bool BasicEventParser::parse_routes(const std::string& text)
 {
 	auto p = parser::parse_string(text);
+	if (!p.second.empty()) {
+		log_pa_[log::warning] << "Unparsed string: " << p.second;
+	}
 	const auto& routes = p.first;
 	if (routes.empty()) return false;
 	for (const auto& r: routes) {
@@ -678,7 +684,7 @@ bool BasicEventParser::parse_routes(const std::string& text)
 				auto func = dynamic_pointer_cast<parser::func_token>(route->expr);
 				if (!func) continue;
 //				std::cout << "Got func: " << func->fname << "\n";
-				auto f = make_shared<EventRouter>(dynamic_pointer_cast<parser::func_token>(func));
+				auto f = make_shared<EventRouter>(dynamic_pointer_cast<parser::func_token>(func),log_pa_);
 //				std::cout << "Number of params: " << f->input_map.size() << "\n";
 				for (const auto& input: f->input_map) {
 
@@ -701,7 +707,8 @@ bool BasicEventParser::parse_routes(const std::string& text)
 				}
 				// Let's try to emit event at startup. This will succeed iff the expression is constant or every variable (spec) has an initializer
 //				std::cout << "Emitting startup value\n";
-				f->try_emit_event();
+				if (f->input_map.empty())
+					f->try_emit_event();
 //				std::cout << "done\n";
 				routers_.push_back(f);
 

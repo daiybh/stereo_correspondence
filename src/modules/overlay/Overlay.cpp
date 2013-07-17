@@ -30,7 +30,7 @@ core::pParameters Overlay::configure()
 
 Overlay::Overlay(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
 core::BasicMultiIOFilter(log_,parent,2,1,std::string("overlay")),
-event::BasicEventConsumer()
+event::BasicEventConsumer(log)
 {
 	IO_THREAD_INIT("overlay")
 }

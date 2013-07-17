@@ -72,7 +72,7 @@ namespace {
 
 EventDevice::EventDevice(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
 core::BasicIOThread(log_,parent,1,1,std::string("event_device")),
-event::BasicEventProducer(),
+event::BasicEventProducer(log),
 handle_(-1),min_fuzz_(0)
 {
 	IO_THREAD_INIT("event_device")
