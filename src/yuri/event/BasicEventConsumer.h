@@ -35,7 +35,6 @@ private:
 	bool 						do_receive_event(const std::string& event_name, const pBasicEvent& event);
 	bool 						do_process_events(ssize_t max_count);
 	virtual bool 				do_process_event(const std::string& event_name, const pBasicEvent& event) = 0;
-	virtual void				do_report_consumer_error(const std::string&) {}
 	std::deque<event_record_t> 	incomming_events_;
 	mutable mutex				incomming_mutex_;
 	size_t						incomming_max_size_ = 1024;
