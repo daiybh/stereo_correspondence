@@ -28,7 +28,7 @@ public:
 	virtual ~ASIOTCPSocket();
 	bool connect(std::string address, yuri::ushort_t port);
 	virtual yuri::size_t read(yuri::ubyte_t * data,yuri::size_t size);
-	virtual yuri::size_t write(yuri::ubyte_t * data,yuri::size_t size);
+	virtual yuri::size_t write(const yuri::ubyte_t * data,yuri::size_t size);
 	virtual int get_fd();
 	virtual yuri::size_t available();
 protected:

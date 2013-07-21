@@ -62,7 +62,7 @@ yuri::size_t ASIOUDPSocket::read(yuri::ubyte_t * data,yuri::size_t size)
 	return recvd;
 
 }
-yuri::size_t ASIOUDPSocket::write(yuri::ubyte_t * data,yuri::size_t size)
+yuri::size_t ASIOUDPSocket::write(const yuri::ubyte_t * data,yuri::size_t size)
 {
 	return socket->send_to(boost::asio::buffer(data,size), remote_endpoint);
 }

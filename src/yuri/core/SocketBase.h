@@ -22,7 +22,7 @@ public:
 								SocketBase(log::Log &_log, pwThreadBase parent);
 	virtual 					~SocketBase();
 	virtual yuri::size_t 		read(yuri::ubyte_t * data, yuri::size_t size)=0;
-	virtual yuri::size_t 		write(yuri::ubyte_t * data,yuri::size_t size)=0;
+	virtual yuri::size_t 		write(const yuri::ubyte_t * data,yuri::size_t size)=0;
 	virtual bool 				data_available() {return false;}
 	virtual int 				get_fd() = 0;
 protected:

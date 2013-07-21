@@ -31,7 +31,7 @@ public:
 	ASIOUDPSocket(log::Log &_log, core::pwThreadBase parent,yuri::ushort_t port);
 	virtual ~ASIOUDPSocket();
 	virtual yuri::size_t read(yuri::ubyte_t * data,yuri::size_t size);
-	virtual yuri::size_t write(yuri::ubyte_t * data,yuri::size_t size);
+	virtual yuri::size_t write(const yuri::ubyte_t * data,yuri::size_t size);
 	bool bind_local(std::string addr, yuri::ushort_t port) ;
 	bool bind_local(yuri::ushort_t port);
 	void set_port(yuri::ushort_t port);
