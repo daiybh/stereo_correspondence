@@ -77,6 +77,7 @@ sequencer_(nullptr), device_("default"),connection_("")
 
 MidiDevice::~MidiDevice()
 {
+	snd_seq_drop_input(sequencer_);
 }
 
 bool MidiDevice::process_event(const snd_seq_event_t& midievent)
