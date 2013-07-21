@@ -32,6 +32,7 @@ add_subdirectory(overlay)
 
 add_subdirectory(event_info)
 add_subdirectory(fade)
+
 #################################################################
 # Let's check for libraries required 
 # for optional modules, respecting YURI_DISABLE_*
@@ -129,6 +130,7 @@ IF(${CORE_ASIO})
 	add_subdirectory(tsrtp_receiver)
 	add_subdirectory(tsrtp_streamer)
 	add_subdirectory(osc_receiver)
+	add_subdirectory(irc_client)
 ENDIF()
 
 IF(${ImageMagick_Magick++_FOUND})
