@@ -30,6 +30,14 @@ add_definitions("-Wall -pedantic -Wextra -std=c++11 -DYURI_USE_CXX11")
 ENDIF ()
 
 #################################################################
+# Set versions
+#################################################################
+SET(YURI_CORE_VERSION 2.6)
+SET(SO_VERSION 2.6.0)
+
+
+
+#################################################################
 # Setup names for the core library and helpers
 #################################################################
 SET(LIBNAME yuri_core)
