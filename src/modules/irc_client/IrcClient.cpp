@@ -9,6 +9,7 @@
 
 #include "IrcClient.h"
 #include "yuri/core/Module.h"
+#include "yuri/event/EventHelpers.h"
 #include <poll.h>
 
 namespace yuri {
@@ -186,10 +187,16 @@ void IrcClient::process_incomming_message(const std::string& msg)
 		emit_event(tgt,make_shared<event::EventString>(msg.substr(idx4)));
 	}
 }
-bool IrcClient::do_process_event(const std::string& event_name, const event::pBasicEvent& /*event*/)
+bool IrcClient::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
 	log[log::info] << "Received " << event_name;
-	if (state_ == state_t::connected && !target_.empty()) send_message("PRIVMSG " + target_ + " : "+"Received event "+event_name);
+	if (state_ == state_t::connected && !target_.empty()) {
+		if (event->get_type() == event::event_type_t::string_event) {
+			send_message("PRIVMSG " + target_ + " :"+event_name+": "+event::get_value<event::EventString>(event));
+		} else {
+			send_message("PRIVMSG " + target_ + " : "+"Received event "+event_name);
+		}
+	}
 	return true;
 }
 bool IrcClient::set_param(const core::Parameter& param)
