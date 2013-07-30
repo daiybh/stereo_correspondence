@@ -1,0 +1,67 @@
+#	1. General
+
+# 	2. Coding standard
+## 	2.1 Naming
+Variable names should contain only lower case letters, numbers and underscores.
+Underscores at the beginning of identifier should be avoided.
+Type names should end with _t
+Structs should be used to implement simple types with public attributes and named as types
+Classes names should begin with upper case letter and 
+Shared pointer to a class should have name of the class prefixed with 'p'
+Weak pointer to a class should have name of the class prefixed with 'pw'
+ 
+Classes should follow NVI principle
+Private attributes should be denoted by trailing underscore
+Getters in classes can be implemented in class definition to allow inlining
+
+#	3. Types
+time_t - 			Timestamp (with at least 100ns precision)
+time_duration_t		Time duration (with precision at least the same as time_t)
+resolution_t		Format for representinv width, height and x, y offset 
+range_t				Value range
+size_t				Unsigned large integer (uint64_t?)
+			
+raw_video_format_t
+plane_format_t
+
+enum interlace_t	Types of interlacing (progressive, segmented_frame, interlace, split)
+enum field_order_t	Field order for interlaced modes (None, TFF, BFF)
+
+#	4. Frames
+Frame is a fundamental unit of data (video, audio, text, 3D data...)
+For uncompressed types it should contain 1 logical unit of data (1 video frame,
+
+##	4.1 Generic frame (Frame)
+Should be abstract
+###	4.1.1 Attributes
+[private] 	time_t				timestamp_ 
+[private] 	time_duration_t		duration_
+[private]	string				format_name_    Name of format, if known (ie.1080p30)
+###	4.1.2 Members
+[public] 	time_t 				get_timestamp() const
+[public] 	void				set_timestamp(const time_t&) 
+[public] 	duration_t			get_duration() const
+[public] 	void				set_duration(const duration_t&) 
+[public]	pFrame				get_copy()			
+
+[private, virtual]	pFrame		get_copy() = 0 {}
+[protected, virtual] void		copy_parameters(pFrame&}	
+
+##	4.2 Video frame
+Video frame should be an abstraction for generic video frame (either compressed or uncompressed)
+###	4.2.1 Attributes
+[private]	resolution_t		resolution_
+[private]	interlace_t			interlacing_
+[private]	field_order_t		field_order_
+
+## 	4.3 Raw video frame
+### 4.3.1
+[private]	size_t				num_planes_
+[private]	raw_format_t		format_
+###	4.3.2
+
+###	4.3.3. Raw video plane
+[private]	plane_format_t		format_	
+[private]	resolution_t		resolution_
+
+ 
