@@ -72,7 +72,7 @@ template<class Iter, class value_type = typename std::iterator_traits<Iter>::val
 void fill_pattern(Iter start, const Iter& end, const std::vector<value_type> pattern)
 {
 	const size_t pattern_size = pattern.size();
-	assert(pattern_size > 0);
+//	assert(pattern_size > 0);
 	const auto pat_start = pattern.begin();
 	const auto pat_end = pattern.end();
 
@@ -114,6 +114,21 @@ void fill_black(Iter start, const Iter& end, format_t format)
 
 	}
 }
+
+/*!
+ * Copies black samples from to a destination.
+ *
+ * The function assumes @em sample is an iterator pointing to at least @em end - @em start valid sample bytes
+ * @param start
+ * @param end
+ * @param sample
+ */
+template<class Iter, class Iter2>
+void fill_from_sample(Iter start, const Iter& end, const Iter2& sample)
+{
+	std::copy(sample, sample + std::distance(start, end), start);
+}
+
 }
 
 
@@ -126,11 +141,11 @@ core::pBasicFrame Pad::do_simple_single_step(const core::pBasicFrame& frame)
 
 	if (info->bpp % 8) {
 		log[log::warning] << "Input frames has to have bit depth divisible by 8";
-		return {};
+		return core::pBasicFrame{};
 	}
 	if (info->planes != 1) {
 		log[log::warning] << "Input frames has to have only single image plane";
-		return {};
+		return core::pBasicFrame{};
 	}
 	const yuri::size_t Bpp 			= info->bpp >> 3;
 
@@ -156,15 +171,21 @@ core::pBasicFrame Pad::do_simple_single_step(const core::pBasicFrame& frame)
 	core::pBasicFrame output = allocate_empty_frame(format, width_, height_);
 
 	const auto data_in_start		= PLANE_DATA(frame,0).begin()+skip_lines_top*line_size_in+skip_cols_left*Bpp;
-	const auto data_in_end			= PLANE_DATA(frame,0).end();
+//	const auto data_in_end			= PLANE_DATA(frame,0).end();
 	const auto data_out_start		= PLANE_DATA(output,0).begin();
+
+	// One line of pre-prepared black samples to speed up the filling up process later.
+	uvector<ubyte_t> samples_black(line_size_out);
+	fill_black(samples_black.begin(), samples_black.end(), format);
+
+
 	// Fill in empty lines at the top
 	for (size_t line = 0; line < blank_lines_top; ++line) {
-		fill_black(data_out_start+line*line_size_out, data_out_start+(line+1)*line_size_out, format);
+		fill_from_sample(data_out_start+line*line_size_out, data_out_start+(line+1)*line_size_out, samples_black.begin());
 	}
 	// Fill in empty lines at the bottom
 	for (size_t line = height_ - blank_lines_bottom; line < height_; ++line) {
-		fill_black(data_out_start+line*line_size_out, data_out_start+(line+1)*line_size_out, format);
+		fill_from_sample(data_out_start+line*line_size_out, data_out_start+(line+1)*line_size_out, samples_black.begin());
 	}
 	auto data_in = data_in_start;
 	// Process all non-empty lines
@@ -172,19 +193,17 @@ core::pBasicFrame Pad::do_simple_single_step(const core::pBasicFrame& frame)
 		const auto out_line_start			= data_out_start + line_size_out * line ;
 		const auto next_line_start 			= out_line_start + line_size_out;
 		const auto out_line_active_start 	= out_line_start + blank_cols_left * Bpp;
-		const auto out_line_active_end 		= out_line_active_start + copy_width;
-		// Fill in blank pixels at left size
-		fill_black(out_line_start, out_line_active_start, format);
-		// Fill in blank pixels at left size
-		fill_black(out_line_active_end, next_line_start, format);
+		const auto out_line_active_end 		= out_line_active_start + copy_size;
+		// Fill in blank pixels at left side
+		fill_from_sample(out_line_start, out_line_active_start, samples_black.begin());
 
 		// Copy pixels from input
 		std::copy(data_in, data_in + copy_size, out_line_active_start);
 		std::advance(data_in, line_size_in);
 
-
+		// Fill in blank pixels at left side
+		fill_from_sample(out_line_active_end, next_line_start, samples_black.begin());
 	}
-
 	return output;
 }
 
