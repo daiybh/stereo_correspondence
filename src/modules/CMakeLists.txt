@@ -32,6 +32,7 @@ add_subdirectory(overlay)
 
 add_subdirectory(event_info)
 add_subdirectory(fade)
+add_subdirectory(pad)
 
 #################################################################
 # Let's check for libraries required 
