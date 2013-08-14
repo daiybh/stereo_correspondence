@@ -62,7 +62,7 @@ bool Crop::step()
 	if (h < 0) {
 		h = static_cast<yuri::ssize_t>(in_height) - y;
 	} else if (y + h > static_cast<yuri::ssize_t>(in_height)) {
-		h = in_width - y;
+		h = in_height - y;
 	}
 	log[log::verbose_debug] << "X: " << x << ", Y: " << y << ", W: " << w<< ", H: " << h;
 	if (!x && !y && w==static_cast<yuri::ssize_t>(in_width)
