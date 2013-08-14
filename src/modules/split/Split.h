@@ -12,20 +12,23 @@
 #define SPLIT_H_
 
 #include "yuri/core/BasicIOThread.h"
-
+#include "yuri/core/BasicIOFilter.h"
 namespace yuri {
 
 namespace split {
 
-class Split: public core::BasicIOThread
+class Split: public core::BasicMultiIOFilter
 {
 public:
 	Split(log::Log &_log, core::pwThreadBase parent,core::Parameters &params);
 	virtual ~Split();
 	IO_THREAD_GENERATOR_DECLARATION
 	static core::pParameters configure();
-protected:
-	virtual bool step();
+private:
+	virtual std::vector<core::pBasicFrame> do_single_step(const std::vector<core::pBasicFrame>& frames);
+	virtual bool 			set_param(const core::Parameter &parameter);
+	size_t	x_;
+	size_t	y_;
 };
 
 }
