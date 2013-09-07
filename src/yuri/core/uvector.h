@@ -13,18 +13,30 @@
 #include <cstddef>
 #include <algorithm>
 #include <stdexcept>
+#include "make_unique.h"
 
 namespace yuri {
 
 struct yuri_deleter {
-	virtual void 				operator()(void*){}
-	virtual 					~yuri_deleter() {};
+	virtual void 				operator()(void*) noexcept {}
+	virtual 					~yuri_deleter() noexcept {};
 };
 
+/*!
+ * @tparam Deleter type of deleting functor.
+ * 			It has to have operator() that DOESN'T throw and has noexcept specification
+ * 			Deleter has to be copy-assignable or move assignable
+ *
+ */
 template<typename Deleter>
 struct impl_yuri_deleter:public yuri_deleter {
-								impl_yuri_deleter(Deleter d):d(d) {}
-	void 						operator()(void*mem_) { d(mem_); }
+								impl_yuri_deleter(const Deleter& d):d(d) {
+									static_assert(noexcept(d(nullptr)),"Deleter has to have noexcept operator()!");
+								}
+								impl_yuri_deleter(Deleter&& d) noexcept:d(std::move(d)) {
+									static_assert(noexcept(d(nullptr)),"Deleter has to have noexcept operator()!");
+								}
+	void 						operator() (void* mem) noexcept { d(mem); }
 private:
 	Deleter 					d;
 };
@@ -46,52 +58,80 @@ public:
 	typedef T* 					pointer;
 	typedef T* 					iterator;
 	typedef const T* 			const_iterator;
+	typedef std::unique_ptr<T[]>upointer;
 	static const bool 			reallocating = Realloc;
 
-	uvector():data_(0),size_(0),allocated_(0),deleter_(0) {}
-	uvector(size_type count):data_(new T[count]),size_(count),allocated_(0),deleter_(0) {}
-	uvector(size_type count, const T& value):data_(new T[count]),size_(count),allocated_(count),deleter_(0) {
-		std::fill(data_,data_+size_,value);
+	uvector():size_(0),allocated_(0) {}
+	uvector(size_type count)
+		//:data_(make_unique<T[]>(count)),size_(count),allocated_(count) {}
+	:data_(make_unique_uninitialized<T[]>(count)),size_(count),allocated_(count) {}
+	uvector(size_type count, const T& value)
+		:data_(make_unique_uninitialized<T[]>(count)),size_(count),allocated_(count) {
+		std::fill(data_.get(),data_.get()+size_,value);
 	}
-	~uvector() { impl_delete(data_);}
+	~uvector() noexcept { impl_delete(data_);}
 
-	uvector(const uvector<T,Realloc>& other_):data_(0),size_(other_.size_),allocated_(other_.allocated_),deleter_(0) {
-		data_ = new T[allocated_];
-		std::copy(other_.begin(),other_.end(),begin());
+	uvector(const uvector<T,Realloc>& other_):size_(other_.size_),allocated_(other_.allocated_) {
+		if (size_) {
+			data_ = make_unique_uninitialized<T[]> (allocated_);
+			std::copy(other_.begin(),other_.end(),begin());
+		}
 	}
+
 	uvector<T,Realloc>& operator=(const uvector<T,Realloc>& rhs) {
 		resize(rhs.size());
 		std::copy(rhs.begin(),rhs.end(),begin());
 		return *this;
 	}
+
+	uvector(uvector<T, Realloc>&& rhs) noexcept:data_(std::move(rhs.data_)),size_(rhs.size_),allocated_(rhs.allocated_),deleter_(std::move(rhs.deleter_))
+	{}
+
+	uvector<T, Realloc>& operator=(uvector<T, Realloc>&& rhs) noexcept {
+		// By using swap, there's no need to deallocate data immediately
+		swap(rhs);
+		return *this;
+	}
+
+	template<class Deleter> uvector(pointer data, size_type size, Deleter deleter)
+			:size_(0),allocated_(0) { set(data, size, deleter); }
+	/*!
+	 * Method to user provided pointer as internal data
+	 * @param data		pointer to T[]
+	 * @param size		size of the data @ em data points to
+	 * @param deleter	deleter that will be used to release the memory
+	 * @return			reference to itself
+	 */
 	template<class Deleter>
 	uvector<T,Realloc>& set(pointer data, size_type size, Deleter deleter) {
 		impl_delete(data_);
-		data_ = data;
+		data_.reset(data);
 		size_ = size;
 		allocated_ = size;
-		deleter_ = new impl_yuri_deleter<Deleter>(deleter);
+		deleter_ = make_unique<impl_yuri_deleter<Deleter>>(deleter);
 		return *this;
 	}
 
 
-	size_type 					size() const { return size_;}
-	bool 						empty() const { return size_ == 0; }
-	size_type 					capacity() const { return allocated_;}
-	reference	 			operator[](size_type pos) { return data_[pos]; }
-	const_reference		 	operator[](size_type pos) const { return data_[pos]; }
+	size_type 					size() const noexcept { return size_;}
+	bool 						empty() const noexcept { return size_ == 0; }
+	size_type 					capacity() const noexcept { return allocated_;}
+	reference	 			operator[](size_type pos) noexcept  { return data_[pos]; }
+	const_reference		 	operator[](size_type pos) const noexcept { return data_[pos]; }
 	reference 				at(size_type pos) { if (pos>=size_) throw std::out_of_range(""); return data_[pos]; }
 	const_reference 		at(size_type pos) const { if (pos>=size_) throw std::out_of_range(""); return data_[pos]; }
 
-	reference 				front() { return data_[0]; }
-	const_reference 		front() const { return data_[0]; }
-	reference 				back() { return data_[size_-1]; }
-	const_reference 		back() const { return data_[size_-1]; }
+	reference 				front() noexcept { return data_[0]; }
+	const_reference 		front() const noexcept { return data_[0]; }
+	reference 				back() noexcept { return data_[size_-1]; }
+	const_reference 		back() const noexcept { return data_[size_-1]; }
 
-	iterator	 			begin() { /*assert(data_);*/ return &data_[0]; }
-	const_iterator	 		begin() const { return &data_[0]; }
-	iterator 				end() { return &data_[size_]; }
-	const_iterator 			end() const { return &data_[size_]; }
+	iterator	 			begin() noexcept { /*assert(data_);*/ return &data_[0]; }
+	const_iterator	 		begin() const noexcept { return &data_[0]; }
+	iterator 				end() noexcept { return &data_[size_]; }
+	const_iterator 			end() const noexcept { return &data_[size_]; }
+	const_iterator	 		cbegin() const noexcept { return &data_[0]; }
+	const_iterator 			cend() const noexcept { return &data_[size_]; }
 
 
 	void 					reserve(size_type size) {reserve_impl<Realloc>(size);}
@@ -100,7 +140,7 @@ public:
 	void 					resize(size_type size) {
 		reserve(size); size_ = size;
 	}
-	void 					clear() { size_=0;}
+	void 					clear() noexcept { size_=0;}
 
 	iterator 				insert( iterator pos, const T& value);
 	void 					insert( iterator pos, size_type count, const T& value );
@@ -121,25 +161,27 @@ public:
 		std::copy(first,last,&data_[0]);
 	}
 
-	void 					swap( uvector<T,Realloc>& other ){
+	void 					swap( uvector<T,Realloc>& other ) noexcept {
 		using std::swap;
 		swap(allocated_,other.allocated_);
 		swap(size_,other.size_);
 		swap(data_,other.data_);
+		swap(deleter_, other.deleter_);
 	}
 							operator uvector<T,!Realloc>&() {
 		return *(reinterpret_cast<uvector<T,!Realloc>* >(this));
 	}
 private:
-	T*						data_;
+	upointer				data_;
 	size_type 				size_;
 	size_type 				allocated_;
-	yuri_deleter* 			deleter_;
+	std::unique_ptr<yuri_deleter>
+							deleter_;
 	template<bool R>
 	void 					reserve_impl(size_type size, char(*)[R]=0) {
 		if (allocated_<size) {
-			T* tmp = new T[size];
-			if (data_) std::copy(data_,data_+size_,tmp);
+			std::unique_ptr<T[]> tmp = std::move(make_unique_uninitialized<T[]>(size));
+			if (data_) std::copy(data_.get(),data_.get()+size_,tmp.get());
 			std::swap(data_,tmp);
 			allocated_=size;
 			impl_delete(tmp);
@@ -149,16 +191,15 @@ private:
 	void 					reserve_impl(size_type size, char(*)[!R]=0) {
 		if (allocated_<size) {
 			impl_delete(data_);
-			data_ = new T[size];
+			data_ = std::move(make_unique_uninitialized<T[]>(size));
 			allocated_=size;
 		}
 	}
-	void 					impl_delete(pointer mem) {
+	void 					impl_delete(upointer& mem) {
 		if (deleter_) {
-			(*deleter_)(mem);
-			delete deleter_;
-			deleter_ = 0;
-		} else delete [] mem;
+			(*deleter_)(mem.release());
+			deleter_.reset();
+		} else mem.reset();
 	}
 };
 

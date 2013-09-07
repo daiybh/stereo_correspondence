@@ -38,6 +38,8 @@ using std::shared_ptr;
 using std::weak_ptr;
 using std::make_shared;
 using std::mutex;
+using std::unique_ptr;
+
 typedef std::unique_lock<std::mutex> lock;
 #ifndef YURI_ANDROID
 using std::timed_mutex;
