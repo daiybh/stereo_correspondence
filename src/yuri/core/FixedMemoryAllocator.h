@@ -28,8 +28,8 @@ public:
 	struct Deleter {
 		Deleter(yuri::size_t size, yuri::ubyte_t *original_pointer):
 			size(size),original_pointer(original_pointer) {}
-		Deleter(const Deleter& d):size(d.size),original_pointer(d.original_pointer) {}
-		void operator()(void *mem);
+		Deleter(const Deleter& d)noexcept:size(d.size),original_pointer(d.original_pointer) {}
+		void operator()(void *mem) const noexcept;
 		/**\brief Size of block associated with this object */
 		yuri::size_t size;
 		/**\brief Pointer to the memory block associated with this object */

@@ -181,10 +181,12 @@ bool FixedMemoryAllocator::step()
  *
  * \param mem pointer to the memory block to be deleted.
  */
-void FixedMemoryAllocator::Deleter::operator()(void *mem)
+void FixedMemoryAllocator::Deleter::operator()(void *mem) const noexcept
 {
 	assert(mem==original_pointer);
+	try { //We should NOT throw here...
 	FixedMemoryAllocator::return_memory(size,reinterpret_cast<yuri::ubyte_t*>(mem));
+	} catch(...){}
 }
 
 }
