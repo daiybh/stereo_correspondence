@@ -17,7 +17,7 @@ namespace yuri {
 /*!
  * @brief Ancillary class for initializing std::map
  *
- * Usage std::map<A, B> name_of_map = InitMap<A, B>(a0, b0)(a1, b1)(a2, b2);
+ * Usage std::map<A, B> name_of_map = map_list_of<A, B>(a0, b0)(a1, b1)(a2, b2);
  */
 template<class Key, class Value> class map_list_of {
 public:
@@ -45,7 +45,8 @@ struct bad_lexical_cast: public std::runtime_error {
 
 
 template<class T, class U>
-T lexical_cast(const U& val)
+typename std::enable_if<!std::is_convertible<U, T>::value, T>::type
+lexical_cast(const U& val)
 {
 	T outval;
 	std::stringstream str;
@@ -55,9 +56,10 @@ T lexical_cast(const U& val)
 	return outval;
 }
 
-
-template<>
-inline std::string lexical_cast(const std::string& val) {
+template<class T, class U>
+typename std::enable_if<std::is_convertible<U, T>::value, T>::type
+lexical_cast(const U& val)
+{
 	return val;
 }
 
