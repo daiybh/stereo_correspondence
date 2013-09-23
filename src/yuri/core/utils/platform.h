@@ -11,6 +11,10 @@
 #ifndef PLATFORM_H_
 #define PLATFORM_H_
 
+#ifndef YURI_USE_CXX11
+#error C++11 mode is required!
+#endif
+
 
 #if defined _WIN32
 	#define YURI_WIN 1
@@ -34,12 +38,21 @@
 	#define PACK_START
 	#define PACK_END			__attribute__((packed))
 	#define DEPRECATED			__attribute__((deprecated))
+	#ifdef __GNUG__
+		#define GCC_VERSION (__GNUC__ * 10000 \
+								   + __GNUC_MINOR__ * 100 \
+								   + __GNUC_PATCHLEVEL__)
+		#if GCC_VERSION < 40800
+			// GCC 4.7.x doesn't support std::map::emplace ...
+			#define EMPLACE_UNSUPPORTED  1
+		#endif
+	#endif
 #else
 	#error Unsupported platform
 #endif
 
 #ifdef YURI_ANDROID
-#define YURI_USE_CXX11 1
+
 //#include <exception>
 //namespace std {
 //struct bad_cast : public exception {bad_cast operator()(){}};
