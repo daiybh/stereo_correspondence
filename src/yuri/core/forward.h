@@ -8,7 +8,7 @@
 #ifndef FORWARD_H_
 #define FORWARD_H_
 
-#include "types.h"
+#include "yuri/core/utils/new_types.h"
 
 namespace yuri {
 
@@ -19,10 +19,11 @@ namespace core
  	 class ThreadBase;
  	 typedef yuri::weak_ptr<class ThreadBase> pwThreadBase;
  	 typedef yuri::shared_ptr<class ThreadBase> pThreadBase;
+ 	 typedef yuri::shared_ptr<class ThreadBase const> pcThreadBase;
 
- 	 class BasicFrame;
- 	 typedef yuri::shared_ptr<class BasicFrame> pBasicFrame;
- 	 typedef yuri::shared_ptr<const class BasicFrame> pcBasicFrame;
+ 	 class Frame;
+ 	 typedef yuri::shared_ptr<class Frame> pFrame;
+ 	 typedef yuri::shared_ptr<const class Frame> pcFrame;
 
  	 class Parameters;
  	 typedef yuri::shared_ptr<class Parameters> pParameters;
@@ -30,11 +31,11 @@ namespace core
  	 class Parameter;
 	 typedef yuri::shared_ptr<class Parameter> pParameter;
 
- 	 class BasicPipe;
- 	 typedef yuri::shared_ptr<class BasicPipe> pBasicPipe;
+ 	 class Pipe;
+ 	 typedef yuri::shared_ptr<class Pipe> pPipe;
 
- 	 class BasicIOThread;
- 	 typedef yuri::shared_ptr<class BasicIOThread> pBasicIOThread;
+ 	 class IOThread;
+ 	 typedef yuri::shared_ptr<class IOThread> pIOThread;
 
 }
 
