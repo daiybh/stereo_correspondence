@@ -14,7 +14,8 @@
 #include "GLProgram.h"
 #include <GL/gl.h>
 #include "yuri/graphics/WindowBase.h"
-#include "yuri/core/pipe_types.h"
+#include "yuri/core/frame/raw_frame_types.h"
+
 //#include "yuri/core/BasicFrame.h"
 
 
@@ -30,18 +31,18 @@ struct _texture_info {
 	bool keep_aspect;
 	shared_ptr<GLProgram> shader;
 
-	yuri::format_t format;
+	format_t format;
 	GLint texture_units[8];
-	yuri::size_t wh;
+	size_t wh;
 	_texture_info():tx(0.0f),ty(0.0f),dx(0.0), dy(0.0), flip_x(false),
-			flip_y(false),keep_aspect(true),format(YURI_FMT_RGB24),wh(0) {
+			flip_y(false),keep_aspect(true),format(core::raw_format::rgb24),wh(0) {
 		for (int i=0;i<8;++i) {
 			tid[i]=(GLuint)-1;
 			texture_units[i]=-1;
 		}
 	}
 	void load_texture_units(){
-		assert(shader);
+//		assert(shader);
 		char n[]="texX\0x00";
 		for (int i=0;i<8;++i) {
 			n[3]='0'+i;
@@ -50,7 +51,7 @@ struct _texture_info {
 		}
 	}
 	void bind_texture_units() {
-		assert(shader);
+//		assert(shader);
 		for (int i=0;i<8;++i) {
 			if (texture_units[i]<0) continue;
 			glActiveTexture(GL_TEXTURE0+i);
@@ -87,20 +88,20 @@ public:
 	GL(log::Log &log_);
 	virtual ~GL();
 	std::map<uint,_texture_info> textures;
-	void generate_texture(uint tid, core::pBasicFrame frame);
-	void generate_empty_texture(yuri::uint_t tid, yuri::format_t fmt, yuri::size_t w, yuri::size_t h);
+	void generate_texture(index_t tid, const core::pFrame& frame);
+	void generate_empty_texture(index_t tid, format_t fmt, resolution_t resolution);
 	void setup_ortho(GLdouble left=0.0, GLdouble right=1.0f,
 			GLdouble bottom=0.0, GLdouble top=1.0,
 			GLdouble near=-100.0, GLdouble far=100.0);
-	void draw_texture(uint tid, pWindowBase win, GLdouble width=1.0,
+	void draw_texture(index_t tid, pWindowBase win, GLdouble width=1.0,
 			GLdouble height=1.0, GLdouble x=0.0, GLdouble y=0.0);
 	static void enable_smoothing();
 	static void save_state();
 	static void restore_state();
 	void enable_depth();
-	void set_lq422(yuri::uint_t q);
-	bool prepare_texture(yuri::uint_t tid, yuri::uint_t texid, yuri::ubyte_t *data,
-			yuri::size_t w, yuri::size_t h, GLenum tex_mode, GLenum data_mode, bool update,
+	void set_lq422(int q);
+	bool prepare_texture(index_t tid, unsigned texid, uint8_t *data,
+			resolution_t resolution, GLenum tex_mode, GLenum data_mode, bool update,
 			GLenum data_type = GL_UNSIGNED_BYTE);
 	bool finish_frame();
 	log::Log log;
@@ -112,7 +113,7 @@ protected:
 		fragment_shader_uyvy444,
 		fragment_shader_uyvy422_lq, fragment_shader_uyvy422_very_lq,
 		fragment_shader_yuv_planar;
-	yuri::uint_t lq_422;
+	int lq_422;
 };
 
 }
