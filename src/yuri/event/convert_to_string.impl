@@ -56,8 +56,10 @@ struct convert_to_string<typename event_traits<EventDict>::stored_type>{
 };
 
 template<>
-struct convert_to_string<time_value>{
-	std::string  operator()(const time_value& val) {
-	return  lexical_cast<std::string>(val.time_since_epoch().count()/1000);
+struct convert_to_string<timestamp_t>{
+	std::string  operator()(const timestamp_t& val) {
+	//return  lexical_cast<std::string>(val.time_since_epoch().count()/1000);
+		return  lexical_cast<std::string>(val);
+		
 }
 };

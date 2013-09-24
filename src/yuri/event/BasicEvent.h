@@ -9,8 +9,11 @@
 
 #ifndef BASICEVENT_H_
 #define BASICEVENT_H_
-#include "yuri/core/types.h"
+#include "yuri/core/utils/new_types.h"
+#include "yuri/core/utils/time_types.h"
 #include <initializer_list>
+#include <vector>
+#include <map>
 namespace yuri{
 
 namespace event {
@@ -29,12 +32,12 @@ enum class event_type_t {
 };
 struct bang_t {};
 class BasicEvent;
-typedef std::shared_ptr<BasicEvent> pBasicEvent;
-class BasicEvent: 	public std::enable_shared_from_this<BasicEvent> {
+typedef shared_ptr<BasicEvent> pBasicEvent;
+class BasicEvent: 	public enable_shared_from_this<BasicEvent> {
 public:
 								BasicEvent() = delete;
 								BasicEvent(event_type_t type):type_(type),
-											timestamp_(std::chrono::steady_clock::now()) {}
+											timestamp_() {}
 								BasicEvent(const BasicEvent&) = delete;
 								BasicEvent(BasicEvent&&) = delete;
 	void 						operator=(const BasicEvent&) = delete;
@@ -44,7 +47,7 @@ public:
 
 	event_type_t 				get_type() const
 									{ return type_; }
-	time_value 					get_timestamp() const
+	timestamp_t					get_timestamp() const
 									{ return timestamp_; }
 	pBasicEvent					get_copy() const
 									{ return do_get_copy(); }
@@ -52,7 +55,7 @@ public:
 private:
 	virtual pBasicEvent			do_get_copy() const = 0;
 	event_type_t				type_;
-	const time_value			timestamp_;
+	const timestamp_t			timestamp_;
 };
 
 
@@ -283,7 +286,7 @@ typedef EventBaseRanged<event_type_t::double_event, long double>
 								EventDouble;
 typedef EventBase<event_type_t::string_event, std::string>
 								EventString;
-typedef EventBase<event_type_t::time_event, time_value>
+typedef EventBase<event_type_t::time_event, timestamp_t>
 								EventTime;
 
 
@@ -319,7 +322,7 @@ struct event_traits<EventString> {
 };
 template<>
 struct event_traits<EventTime> {
-	typedef time_value stored_type;
+	typedef timestamp_t stored_type;
 	static event_type_t event_type() { return event_type_t::time_event; }
 };
 template<>
