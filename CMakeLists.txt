@@ -26,14 +26,14 @@ git_describe(YURI_GIT_VERSION)
 # Add strict warning if building under linux
 #################################################################
 IF (UNIX)
-add_definitions("-Wall -pedantic -Wextra -std=c++11 -DYURI_USE_CXX11") 
+add_definitions("-Wall -pedantic -Wextra -std=c++0x -DYURI_USE_CXX11") 
 ENDIF ()
 
 #################################################################
 # Set versions
 #################################################################
-SET(YURI_CORE_VERSION 2.6)
-SET(SO_VERSION 2.6.0)
+SET(YURI_CORE_VERSION 2.8)
+SET(SO_VERSION 2.8.0)
 
 
 
@@ -51,7 +51,7 @@ SET(LIBNAME_HELPER_DECKLINK yuri_helper_decklink)
 #################################################################
 # Set prefix for modules
 #################################################################
-SET (CMAKE_SHARED_MODULE_PREFIX "yuri2_module_")
+SET (CMAKE_SHARED_MODULE_PREFIX "yuri2.8_module_")
 
 #################################################################
 # Setup paths
@@ -74,14 +74,14 @@ SET(CORE_ASIO FALSE)
 # Add some options to control build
 #################################################################
 OPTION (BUILD_SHARED_LIBS "Build shared libraries." ON)
-OPTION (YURI_DISABLE_CUDA "Disable building of CUDA helpers" OFF)
-OPTION (YURI_DISABLE_LIBAV "Disable building of libav helpers and support" OFF)
-OPTION (YURI_DISABLE_SAGE "Disable building of libsage related modules" OFF)
-OPTION (YURI_DISABLE_X11 "Explicitly disable building of X11 helpers and related modules" OFF)
-OPTION (YURI_DISABLE_IEEE1394 "Disable building of IEEE1394 helpers" OFF)
-OPTION (YURI_DISABLE_ASIO "Disable building of boost::asio helpers" OFF)
-OPTION (YURI_DISABLE_DECKLINK "Disable building of decklink API helpers" OFF)
-OPTION (YURI_DISABLE_PNG "Disable building of CUDA helpers" OFF)
+OPTION (YURI_DISABLE_CUDA "Disable building of CUDA helpers" ON)
+OPTION (YURI_DISABLE_LIBAV "Disable building of libav helpers and support" ON)
+OPTION (YURI_DISABLE_SAGE "Disable building of libsage related modules" ON)
+OPTION (YURI_DISABLE_X11 "Explicitly disable building of X11 helpers and related modules" ON)
+OPTION (YURI_DISABLE_IEEE1394 "Disable building of IEEE1394 helpers" ON)
+OPTION (YURI_DISABLE_ASIO "Disable building of boost::asio helpers" ON)
+OPTION (YURI_DISABLE_DECKLINK "Disable building of decklink API helpers" ON)
+OPTION (YURI_DISABLE_PNG "Disable building of CUDA helpers" ON)
 
 #################################################################
 # And finally submerge into source directories
