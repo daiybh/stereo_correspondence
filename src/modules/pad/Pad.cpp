@@ -9,36 +9,41 @@
 
 #include "Pad.h"
 #include "yuri/core/Module.h"
-
+#include "yuri/core/frame/raw_frame_params.h"
+#include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 namespace yuri {
 namespace pad {
 
-REGISTER("pad",Pad)
 
-IO_THREAD_GENERATOR(Pad)
+IOTHREAD_GENERATOR(Pad)
+MODULE_REGISTRATION_BEGIN("pad")
+		REGISTER_IOTHREAD("pad",Pad)
+MODULE_REGISTRATION_END()
 
-core::pParameters Pad::configure()
+core::Parameters Pad::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
-	p->set_description("Adds letterbox around the image to fill specified dimensions. Image width should be multiply of 4");
-	p->set_max_pipes(1,1);
-	(*p)["width"]["Width of the destination image"] = 800;
-	(*p)["height"]["Height of the destination image"] = 600;
-	(*p)["halign"]["Horizontal alignment of the image inside the canvas. (center, left, right)"]=std::string("center");
-	(*p)["valign"]["Vertical alignment of the image inside the canvas. (center, top, bottom)"]=std::string("center");
+	core::Parameters p = core::IOThread::configure();
+	p.set_description("Adds letterbox around the image to fill specified dimensions. Image width should be multiply of 4");
+//	p->set_max_pipes(1,1);
+//	p["width"]["Width of the destination image"] = 800;
+//	p["height"]["Height of the destination image"] = 600;
+	p["resolution"]["Resolution of the destination image"]=resolution_t{800,600};
+	p["halign"]["Horizontal alignment of the image inside the canvas. (center, left, right)"]=std::string("center");
+	p["valign"]["Vertical alignment of the image inside the canvas. (center, top, bottom)"]=std::string("center");
 	return p;
 }
 
 
-Pad::Pad(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOFilter(log_,parent,std::string("pad")),
-width_(800),height_(600),halign_(horizontal_alignment_t::center),
+Pad::Pad(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
+core::IOFilter(log_,parent,std::string("pad")),
+resolution_{800, 600},halign_(horizontal_alignment_t::center),
 valign_(vertical_alignment_t::center)
 {
-	IO_THREAD_INIT("pad")
+	IOTHREAD_INIT(parameters)
 }
 
-Pad::~Pad()
+Pad::~Pad() noexcept
 {
 }
 
@@ -94,22 +99,23 @@ void fill_pattern(Iter start, const Iter& end, const std::vector<value_type> pat
 template<class Iter>
 void fill_black(Iter start, const Iter& end, format_t format)
 {
+	using namespace core;
 	switch (format) {
-		case YURI_FMT_YUV444:
+		case raw_format::yuv444:
 			fill_pattern(start, end, {0,128,128});
 			break;
-		case YURI_FMT_YUV422:
-		case YURI_FMT_YVYU422:
+		case raw_format::yuyv422:
+		case raw_format::yvyu422:
 			fill_pattern(start, end, {0,128});
 			break;
-		case YURI_FMT_UYVY422:
-		case YURI_FMT_VYUY422:
+		case raw_format::uyvy422:
+		case raw_format::vyuy422:
 			fill_pattern(start, end, {128, 0});
 			break;
-		case YURI_FMT_RGB:
-		case YURI_FMT_RGBA:
-		case YURI_FMT_BGR:
-		case YURI_FMT_BGRA:
+		case raw_format::rgb24:
+		case raw_format::rgba32:
+		case raw_format::bgr24:
+		case raw_format::abgr32:
 		default:std::fill(start,end,0);break;
 
 	}
@@ -132,50 +138,57 @@ void fill_from_sample(Iter start, const Iter& end, const Iter2& sample)
 }
 
 
-core::pBasicFrame Pad::do_simple_single_step(const core::pBasicFrame& frame)
+core::pFrame Pad::do_simple_single_step(const core::pFrame& frame_in)
 {
-	const yuri::size_t height		= frame->get_height();
-	const yuri::size_t width 		= frame->get_width();
+	const core::pRawVideoFrame frame= 	dynamic_pointer_cast<core::RawVideoFrame>(frame_in);
+	const resolution_t resolution	= frame->get_resolution();
+	const yuri::size_t height_in	= resolution.height;
+	const yuri::size_t width_in		= resolution.width;
 	const format_t format 			= frame->get_format();
-	const FormatInfo_t info 		= core::BasicPipe::get_format_info(format);
+	//const FormatInfo_t info 		= core::BasicPipe::get_format_info(format);
+	const auto& info				= core::raw_format::get_format_info(format);
+	const yuri::size_t height_out	= resolution_.height;
+	const yuri::size_t width_out	= resolution_.width;
 
-	if (info->bpp % 8) {
-		log[log::warning] << "Input frames has to have bit depth divisible by 8";
-		return core::pBasicFrame{};
-	}
-	if (info->planes != 1) {
+	if (info.planes.size() != 1) {
 		log[log::warning] << "Input frames has to have only single image plane";
-		return core::pBasicFrame{};
+		return core::pFrame{};
 	}
-	const yuri::size_t Bpp 			= info->bpp >> 3;
+	if (info.planes[0].bit_depth.first % (8 * info.planes[0].bit_depth.second)) {
+		log[log::warning] << "Input frames has to have bit depth divisible by 8";
+		return core::pFrame{};
+	}
 
-	const size_t line_size_in		= width  * Bpp;
-	const size_t line_size_out		= width_ * Bpp;
+	const yuri::size_t Bpp 			= info.planes[0].bit_depth.first / (8 * info.planes[0].bit_depth.second);
 
-	const size_t blank_lines_top 	= count_empty_lines_top(height, height_, valign_);
-	const size_t skip_lines_top 	= count_empty_lines_top(height_, height, valign_);
-	const size_t blank_lines_bottom = count_empty_lines_bottom(height, height_, blank_lines_top, valign_);
+	const size_t line_size_in		= width_in  * Bpp;
+	const size_t line_size_out		= width_out * Bpp;
+
+	const size_t blank_lines_top 	= count_empty_lines_top(height_in, height_out, valign_);
+	const size_t skip_lines_top 	= count_empty_lines_top(height_out, height_in, valign_);
+	const size_t blank_lines_bottom = count_empty_lines_bottom(height_in, height_out, blank_lines_top, valign_);
 	//const size_t skip_lines_bottom 	= count_empty_lines_bottom(height_, height, skip_lines_top, valign_);
 
-	const size_t blank_cols_left 	= count_empty_cols_left(width, width_, halign_);
-	const size_t skip_cols_left 	= count_empty_cols_left(width_, width, halign_);
-	const size_t blank_cols_right 	= count_empty_cols_right(width, width_, blank_cols_left, halign_);
+	const size_t blank_cols_left 	= count_empty_cols_left(width_in, width_out, halign_);
+	const size_t skip_cols_left 	= count_empty_cols_left(width_out, width_in, halign_);
+	const size_t blank_cols_right 	= count_empty_cols_right(width_in, width_out, blank_cols_left, halign_);
 	//const size_t skip_cols_right 	= count_empty_cols_right(width_, width, skip_cols_left, halign_);
 
-	const size_t copy_width			= width_ - blank_cols_left - blank_cols_right;
+	const size_t copy_width			= width_out - blank_cols_left - blank_cols_right;
 	const size_t copy_size			= copy_width * Bpp;
 
 	log[log::verbose_debug] << "Padding with " << blank_cols_left << " pixels left, " << blank_cols_right << "pixels right, "
 				<< blank_lines_top << " pixels on the top and " << blank_lines_bottom << " pixels on the bottom";
 
-	core::pBasicFrame output = allocate_empty_frame(format, width_, height_);
+	//core::pBasicFrame output = allocate_empty_frame(format, width_, height_);
+	core::pRawVideoFrame output		= core::RawVideoFrame::create_empty(format, resolution_);
 
 	const auto data_in_start		= PLANE_DATA(frame,0).begin()+skip_lines_top*line_size_in+skip_cols_left*Bpp;
 //	const auto data_in_end			= PLANE_DATA(frame,0).end();
 	const auto data_out_start		= PLANE_DATA(output,0).begin();
 
 	// One line of pre-prepared black samples to speed up the filling up process later.
-	uvector<ubyte_t> samples_black(line_size_out);
+	uvector<uint8_t> samples_black(line_size_out);
 	fill_black(samples_black.begin(), samples_black.end(), format);
 
 
@@ -184,12 +197,12 @@ core::pBasicFrame Pad::do_simple_single_step(const core::pBasicFrame& frame)
 		fill_from_sample(data_out_start+line*line_size_out, data_out_start+(line+1)*line_size_out, samples_black.begin());
 	}
 	// Fill in empty lines at the bottom
-	for (size_t line = height_ - blank_lines_bottom; line < height_; ++line) {
+	for (size_t line = height_out - blank_lines_bottom; line < height_out; ++line) {
 		fill_from_sample(data_out_start+line*line_size_out, data_out_start+(line+1)*line_size_out, samples_black.begin());
 	}
 	auto data_in = data_in_start;
 	// Process all non-empty lines
-	for (size_t line = blank_lines_top; line < height_ - blank_lines_bottom; ++line) {
+	for (size_t line = blank_lines_top; line < height_out - blank_lines_bottom; ++line) {
 		const auto out_line_start			= data_out_start + line_size_out * line ;
 		const auto next_line_start 			= out_line_start + line_size_out;
 		const auto out_line_active_start 	= out_line_start + blank_cols_left * Bpp;
@@ -222,19 +235,19 @@ std::map<std::string, vertical_alignment_t> valign_strings {
 }
 bool Pad::set_param(const core::Parameter& param)
 {
-	if (iequals(param.name, "width")) {
-		width_ = param.get<size_t>();
-	} else if (iequals(param.name, "height")) {
+	if (iequals(param.get_name(), "resolution")) {
+		resolution_ = param.get<resolution_t>();
+	} /*else if (iequals(param.get_name(), "height")) {
 		height_ = param.get<size_t>();
-	} else if (iequals(param.name, "halign")) {
+	}*/ else if (iequals(param.get_name(), "halign")) {
 		auto it = halign_strings.find(param.get<std::string>());
 		if (it == halign_strings.end()) halign_ = horizontal_alignment_t::center;
 		else halign_=it->second;
-	} else if (iequals(param.name, "valign")) {
+	} else if (iequals(param.get_name(), "valign")) {
 		auto it = valign_strings.find(param.get<std::string>());
 		if (it == valign_strings.end()) valign_ = vertical_alignment_t::center;
 		else valign_=it->second;
-	} else return core::BasicIOThread::set_param(param);
+	} else return core::IOThread::set_param(param);
 	return true;
 }
 

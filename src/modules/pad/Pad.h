@@ -10,7 +10,7 @@
 #ifndef PAD_H_
 #define PAD_H_
 
-#include "yuri/core/BasicIOFilter.h"
+#include "yuri/core/thread/IOFilter.h"
 
 namespace yuri {
 namespace pad {
@@ -25,19 +25,21 @@ enum class vertical_alignment_t{
 	center,
 	bottom
 };
-class Pad: public core::BasicIOFilter
+class Pad: public core::IOFilter
 {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
-	virtual ~Pad();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+	Pad(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~Pad() noexcept;
 private:
-	Pad(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
-	virtual core::pBasicFrame		do_simple_single_step(const core::pBasicFrame& frame);
+
+	virtual core::pFrame		do_simple_single_step(const core::pFrame& frame);
 	virtual bool set_param(const core::Parameter& param);
 
-	size_t 						width_;
-	size_t 						height_;
+	resolution_t				resolution_;
+//	size_t 						width_;
+//	size_t 						height_;
 	horizontal_alignment_t		halign_;
 	vertical_alignment_t		valign_;
 };
