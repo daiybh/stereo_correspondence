@@ -2,18 +2,32 @@ find_package( Boost 1.46 COMPONENTS regex)
 include_directories( ${Boost_INCLUDE_DIRS})
 link_directories (${Boost_LIBRARY_DIRS})
 
+
+
+add_subdirectory(diff)
+add_subdirectory(dup)
+add_subdirectory(null)
+add_subdirectory(pad)
+
+
+CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
+
+IF(HAVE_VIDEODEV2_H)
+	add_subdirectory(v4l2)
+ENDIF()
+
+IF(FALSE)
 #################################################################
 # Add modules that are compile unconditionally
 #################################################################
 add_subdirectory(anaglyph)
 add_subdirectory(blank)
 add_subdirectory(crop)
-add_subdirectory(diff)
+
 add_subdirectory(dummy)
-add_subdirectory(dup)
+
 add_subdirectory(filedump)
 add_subdirectory(flip)
-add_subdirectory(null)
 
 add_subdirectory(split)
 add_subdirectory(dxt_compress)
@@ -32,7 +46,7 @@ add_subdirectory(overlay)
 
 add_subdirectory(event_info)
 add_subdirectory(fade)
-add_subdirectory(pad)
+
 
 #################################################################
 # Let's check for libraries required 
@@ -48,7 +62,7 @@ ENDIF()
 IF(NOT YURI_DISABLE_CUDA)
 	find_package(CUDA)
 ENDIF()
-CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
+
 IF(NOT YURI_DISABLE_LIBAV)
 	pkg_check_modules(libavformat libavformat) 
 	pkg_check_modules(libavutil libavutil)
@@ -79,9 +93,6 @@ IF(JPEG_FOUND)
 	add_subdirectory(jpegencoder)
 ENDIF()
 
-IF(HAVE_VIDEODEV2_H)
-	add_subdirectory(v4l2)
-ENDIF()
 
 IF(PNG_FOUND)
 	add_subdirectory(pngencoder)
@@ -169,4 +180,7 @@ IF(UNIX)
 	IF(ALSA_FOUND)
 		add_subdirectory(midi_device)
 	ENDIF()
+ENDIF()
+
+
 ENDIF()
