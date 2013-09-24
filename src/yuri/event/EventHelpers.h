@@ -10,6 +10,7 @@
 #ifndef EVENTHELPERS_H_
 #define EVENTHELPERS_H_
 #include "BasicEvent.h"
+#include "yuri/core/utils.h"
 namespace yuri {
 namespace event {
 class bad_event_cast: public std::runtime_error
@@ -46,7 +47,18 @@ inline bool 		cmp_event_pair(const event_pair& a, const event_pair& b)
 					{
 						return a == b;
 					}
-
+template<typename T>
+T 					lex_cast_value(const pBasicEvent& src) {
+						const event_type_t type = src->get_type();
+						switch (type) {
+							case event_type_t::bang_event: throw bad_event_cast("No conversion for BANG values");
+							case event_type_t::boolean_event: return lexical_cast<T>(get_value<EventBool>(src));
+							case event_type_t::integer_event: return lexical_cast<T>(get_value<EventInt>(src));
+							case event_type_t::double_event: return lexical_cast<T>(get_value<EventDouble>(src));
+							case event_type_t::string_event: return lexical_cast<T>(get_value<EventString>(src));
+							default: throw bad_event_cast("Unsupported event type");
+						}
+					}
 
 
 }
