@@ -13,7 +13,7 @@
 
 #include <exception>
 #include <string>
-#include "yuri/core/types.h"
+#include "yuri/core/utils/new_types.h"
 namespace yuri
 {
 namespace exception {
