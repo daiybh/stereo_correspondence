@@ -11,7 +11,7 @@
 #ifndef NULL_H_
 #define NULL_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/thread/IOFilter.h"
 
 namespace yuri
 {
@@ -19,15 +19,15 @@ namespace yuri
 namespace null
 {
 
-class Null: public core::BasicIOThread
+class Null: public core::IOFilter
 {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
-	virtual ~Null();
-protected:
-	Null(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters) IO_THREAD_CONSTRUCTOR;
-	virtual bool step();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+	virtual ~Null() noexcept;
+	Null(log::Log &_log,core::pwThreadBase parent, const core::Parameters& parameters);
+private:
+	virtual core::pFrame do_simple_single_step(const core::pFrame& frame) override;
 };
 
 }

@@ -16,34 +16,34 @@ namespace yuri
 namespace null
 {
 
-REGISTER("null",Null)
-IO_THREAD_GENERATOR(Null)
+IOTHREAD_GENERATOR(Null)
 
-core::pParameters Null::configure()
+MODULE_REGISTRATION_BEGIN("null")
+		REGISTER_IOTHREAD("null",Null)
+MODULE_REGISTRATION_END()
+
+core::Parameters Null::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
+	core::Parameters p = IOFilter::configure();
 	return p;
 }
 
-Null::Null(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters) IO_THREAD_CONSTRUCTOR
-		:core::BasicIOThread(_log,parent,1,0,"Null")
+Null::Null(log::Log &log_, core::pwThreadBase parent, const core::Parameters& parameters)
+		:core::IOFilter(log_,parent,"Null")
 {
-	IO_THREAD_INIT("Null")
-	latency=100000;
+	IOTHREAD_INIT(parameters)
+	set_latency(100_ms);
+	resize(1,0);
 }
 
-Null::~Null()
+Null::~Null() noexcept
 {
 }
 
-bool Null::step()
+core::pFrame Null::do_simple_single_step(const core::pFrame&)
 {
-	int i=0;
-	if (in[0]) while (in[0]->pop_frame()) ++i;
-	if (i) log[log::verbose_debug] << "Deleted " << i << " frames" << std::endl;
-	return true;
+	return {};
 }
-
 
 }
 
