@@ -12,8 +12,8 @@
 #define WINDOWBASE_H_
 
 #include "yuri/log/Log.h"
-#include "yuri/core/ThreadBase.h"
-#include "yuri/core/Parameters.h"
+#include "yuri/core/thread/ThreadBase.h"
+#include "yuri/core/parameter/Parameters.h"
 
 namespace yuri
 {
@@ -35,7 +35,7 @@ public:
 	virtual bool create()=0;
 	virtual void swap_buffers() {}
 	virtual bool check_key(int /*keysym*/) { return false; }
-	virtual void exec(core::pCallback) { }
+//	virtual void exec(core::pCallback) { }
 	virtual bool have_stereo() { return false; }
 	virtual inline std::string getName() { return name; }
 	virtual bool process_events() { return false; }
@@ -45,7 +45,7 @@ protected:
 	std::map<int,bool> keys;
 	yuri::mutex keys_lock;
 	std::string name;
-	core::pCallback keyCallback;
+//	core::pCallback keyCallback;
 	core::Parameters params;
 };
 
