@@ -15,6 +15,8 @@ namespace core {
 class RawVideoFrame;
 typedef shared_ptr<RawVideoFrame> pRawVideoFrame;
 #define PLANE_DATA(pframe, idx) (*pframe)[idx]
+#define PLANE_RAW_DATA(pframe, idx) (*pframe)[idx].data()
+#define PLANE_SIZE(pframe, idx) (*pframe)[idx].size()
 
 class RawVideoFrame: public VideoFrame
 {
