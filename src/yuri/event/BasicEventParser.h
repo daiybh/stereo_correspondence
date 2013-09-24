@@ -116,12 +116,15 @@ class BasicEventParser: public BasicEventProducer, public BasicEventConsumer {
 public:
 								BasicEventParser(log::Log&);
 	virtual 					~BasicEventParser() {}
+	static pBasicEvent 			parse_expr(log::Log&, const std::string& text, const std::map<std::string, pBasicEvent>& inputs);
 private:
 	virtual pBasicEventProducer find_producer(const std::string& name) = 0;
 	virtual pBasicEventConsumer find_consumer(const std::string& name) = 0;
 	virtual bool 				do_process_event(const std::string& event_name, const event::pBasicEvent& event);
 protected:
 	bool 						parse_routes(const std::string& text);
+	pBasicEvent 				parse_const(const std::string& text);
+
 	bool 						run_routers();
 private:
 	std::vector<shared_ptr<EventRouter>>

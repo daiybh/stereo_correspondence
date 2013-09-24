@@ -10,6 +10,8 @@
 #include "BasicEventParser.h"
 #include "BasicEventConversions.h"
 #include <iostream>
+#include <algorithm>
+#include <cassert>
 
 namespace yuri {
 namespace event {
@@ -107,11 +109,17 @@ namespace {
 	p_token parse_spec(Iterator& first, const Iterator& last)
 	{
 		std::string node{}, name{};
-		node = find_id(first,last);
-		if (node.empty()) return p_token();
 		trim_string(first,last);
-		if (*first != ':') return p_token();
-		++first;
+		if (*first == '@') {
+			node = "@";
+			++first;
+		} else {
+			node = find_id(first,last);
+			if (node.empty()) return p_token();
+			trim_string(first,last);
+			if (*first != ':') return p_token();
+			++first;
+		}
 		trim_string(first,last);
 		name = find_id(first, last, true);
 		if (name.empty()) return p_token();
@@ -445,7 +453,19 @@ std::pair<std::vector<p_token>, std::string> parse_string(const std::string& tex
 	trim_string(first,last);
 	return {routes, std::string(first,last)};
 }
-
+p_token parse_expr_string(const std::string& text)
+{
+	auto first =text.begin();
+	const auto last = text.end();
+	if (p_token p = parser::parse_const(first,last)) {
+		if (first == last) return p;
+	}
+	first =text.begin();
+	if (p_token tok = parser::parse_expr(first, last)) {
+		if (first == last) return tok;
+	}
+	return p_token();
+}
 
 }
 
@@ -545,31 +565,43 @@ namespace {
 		EventRouter(const parser::p_token& token, log::Log& log)
 			:BasicEventConsumer(log),BasicEventProducer(log),log_er_(log)
 		{
-			assert(token->type == parser::token_type_t::func_name);
+//			assert(token->type == parser::token_type_t::func_name);
 			provider = process_tree(token);
 
 		}
 		pBasicEvent get_value(const std::string& name) const
 		{
+//			log_er_[log::info] << "Looking up value " << name;
 			auto it = input_events.find(name);
 			if (it==input_events.end()) return pBasicEvent();
+//			log_er_[log::info] << "found " << name;
 			return it->second;
 //			throw std::runtime_error("No value");
 		}
 		void process() {
 			process_events();
 		}
-		void try_emit_event() {
+		pBasicEvent get_event()
+		{
 			try {
-//				std::cout << "emit impl\n";
-				emit_event("out",provider->get_value(*this));
-//				std::cout << "emit done\n";
+				return provider->get_value(*this);
 			}
 			catch (std::runtime_error& e)
 			{
-//				std::cout << "Error " << e.what() << "\n";
 				throw;
 			}
+		}
+		void try_emit_event() {
+//			try {
+//				std::cout << "emit impl\n";
+				emit_event("out",get_event());
+//				std::cout << "emit done\n";
+//			}
+//			catch (std::runtime_error& e)
+//			{
+//				std::cout << "Error " << e.what() << "\n";
+//				throw;
+//			}
 		}
 
 	private:
@@ -649,6 +681,43 @@ namespace {
 
 	}
 }
+pBasicEvent BasicEventParser::parse_const(const std::string& text)
+{
+//	log_pa_[log::info] << "Parsing " << text;
+	if (parser::p_token token = parser::parse_expr_string(text)) {
+		EventRouter r(token, log_pa_);
+		try {
+			return r.get_event();
+		}
+		catch (std::runtime_error&) {
+			return {};
+		}
+	}
+//	log_pa_[log::info] << "No event";
+	return {};
+}
+pBasicEvent BasicEventParser::parse_expr(log::Log& l, const std::string& text, const std::map<std::string, pBasicEvent>& inputs)
+{
+//	l[log::info] << "Parsing " << text;
+	if (parser::p_token token = parser::parse_expr_string(text)) {
+		EventRouter r(token, l);
+		for (const auto& inp: inputs) {
+//			l[log::info] << "Pushing event " << inp.first;
+			r.receive_event("@:"+inp.first, inp.second);
+		}
+		r.process();
+		try {
+			return r.get_event();
+		}
+		catch (std::runtime_error&) {
+			return {};
+		}
+	}
+//	l[log::info] << "No event";
+	return {};
+}
+
+
 bool BasicEventParser::parse_routes(const std::string& text)
 {
 	auto p = parser::parse_string(text);
