@@ -11,8 +11,8 @@
 #ifndef V4L2SOURCE_H_
 #define V4L2SOURCE_H_
 
-#include "yuri/core/BasicIOThread.h"
-
+#include "yuri/core/thread/IOThread.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 #include <iostream>
 #include <linux/videodev2.h>
 #include <sys/types.h>
@@ -32,7 +32,7 @@ namespace io {
 #define V4L2_CID_ILLUMINATORS_1			(V4L2_CID_BASE+37)
 #endif
 
-class V4l2Source: public core::BasicIOThread {
+class V4l2Source: public core::IOThread {
 public:
 	/** Structure to hold buffer informations */
 	struct buffer_t {
@@ -50,30 +50,14 @@ public:
 			/** Use direct read from the device file */
 			METHOD_READ
 		};
-
+	V4l2Source(log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~V4l2Source();
 	virtual void run();
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
-/*
-	int getWidth() { return width; }
-	int getHeight() { return height; }
-	int getImageSize() { return imagesize; }
-	int getPixelFormat() { log[info] << pixelformat << std::endl;return pixelformat; }*/
-	/** Converts yuri::format_t to v4l2 format
-	 * \param fmt V4l2 pixel format
-	 * \return yuri::format_t for the specified format.
-	 */
-	static yuri::uint_t yuri_format_to_v4l2(yuri::format_t fmt);
-	/** Converts v4l2 format to yuri::format_t
-	 * \param fmt Pixel format as yuri::format_t
-	 * \return v4l2 pixel format for the specified format.
-	 */
-	static yuri::format_t v4l2_format_to_yuri(yuri::uint_t fmt);
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+
 	virtual bool set_param(const core::Parameter &param);
 protected:
-	V4l2Source(log::Log &log_,core::pwThreadBase parent, core::Parameters &parameters)
-			IO_THREAD_CONSTRUCTOR;
 	bool init_mmap();
 	bool init_user();
 	bool init_read();
@@ -81,8 +65,8 @@ protected:
 	bool stop_capture();
 	bool read_frame();
 	static int xioctl(int fd, unsigned long int request, void *arg);
-	bool prepare_frame(yuri::ubyte_t *data, yuri::size_t size);
-
+	bool prepare_frame(uint8_t *data, yuri::size_t size);
+	virtual bool step() override;
 	bool open_file();
 	bool query_capabilities();
 	bool enum_inputs();
@@ -99,22 +83,22 @@ protected:
 	int fd;
 	v4l2_capability cap;
 	v4l2_format fmt;
-	yuri::size_t width,height,imagesize;
+	dimension_t /*width,height,*/imagesize;
+	resolution_t resolution;
 	uint pixelformat;
 	methods method;
 	bool illumination;
 	buffer_t *buffers;
-	yuri::ushort_t no_buffers;
-	yuri::ushort_t input_number;
-	yuri::size_t buffer_free;
-	core::pBasicFrame output_frame;
+	size_t no_buffers;
+	size_t input_number;
+	size_t buffer_free;
+	core::pRawVideoFrame output_frame;
 	bool combine_frames;
-	std::vector<yuri::uint_t> supported_formats;
-	yuri::size_t number_of_inputs;
-//	static std::map<yuri::format_t,yuri::uint_t> formats_map;
-//	static std::map<std::string, yuri::uint_t> special_formats;
-	yuri::size_t fps;
-	yuri::size_t frame_duration;
+	std::vector<int> supported_formats;
+	size_t number_of_inputs;
+
+	size_t fps;
+	size_t frame_duration;
 };
 
 }

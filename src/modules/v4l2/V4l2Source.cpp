@@ -16,73 +16,99 @@
 
 #include <unistd.h>
 #include <cstring>
+#include "yuri/core/frame/raw_frame_params.h"
+#include "yuri/core/frame/raw_frame_types.h"
 
 namespace yuri {
 
 namespace io {
 
 
-REGISTER("v4l2source",V4l2Source)
 
-IO_THREAD_GENERATOR(V4l2Source)
+IOTHREAD_GENERATOR(V4l2Source)
+MODULE_REGISTRATION_BEGIN("v4l2source")
+	REGISTER_IOTHREAD("v4l2source",V4l2Source)
+MODULE_REGISTRATION_END()
 
 namespace {
-	std::map<yuri::format_t, yuri::uint_t> formats_map=
-			yuri::map_list_of<yuri::format_t,yuri::uint_t>
-			(YURI_FMT_RGB,V4L2_PIX_FMT_RGB24)
-			(YURI_FMT_RGBA, V4L2_PIX_FMT_RGB32)
-			(YURI_FMT_BGR, V4L2_PIX_FMT_BGR24)
-			(YURI_FMT_BGRA, V4L2_PIX_FMT_BGR32)
-			(YURI_FMT_YUV422, V4L2_PIX_FMT_YUYV)
-			(YURI_FMT_YUV420_PLANAR, V4L2_PIX_FMT_YUV420)
-			(YURI_VIDEO_DV, V4L2_PIX_FMT_DV)
-			(YURI_VIDEO_MJPEG, V4L2_PIX_FMT_MJPEG)
-			(YURI_IMAGE_JPEG, V4L2_PIX_FMT_JPEG)
-			(YURI_FMT_BAYER_BGGR, V4L2_PIX_FMT_SBGGR8)
-			(YURI_FMT_BAYER_RGGB, V4L2_PIX_FMT_SRGGB8)
-			(YURI_FMT_BAYER_GRBG, V4L2_PIX_FMT_SGRBG8)
-			(YURI_FMT_BAYER_GBRG, V4L2_PIX_FMT_SGBRG8);
+	using namespace yuri::core::raw_format;
+	std::map<yuri::format_t, uint32_t> formats_map=
+			yuri::map_list_of<yuri::format_t, uint32_t>
+			(rgb24,		V4L2_PIX_FMT_RGB24)
+			(rgba32, 	V4L2_PIX_FMT_RGB32)
+			(bgr24, 	V4L2_PIX_FMT_BGR24)
+			(abgr32, 	V4L2_PIX_FMT_BGR32)
+			(yuyv422, 	V4L2_PIX_FMT_YUYV)
+			//(yuv420p, V4L2_PIX_FMT_YUV420)
+//			(YURI_VIDEO_DV, V4L2_PIX_FMT_DV)
+//			(YURI_VIDEO_MJPEG, V4L2_PIX_FMT_MJPEG)
+//			(YURI_IMAGE_JPEG, V4L2_PIX_FMT_JPEG)
+			(bayer_bggr,V4L2_PIX_FMT_SBGGR8)
+			(bayer_rggb,V4L2_PIX_FMT_SRGGB8)
+			(bayer_grbg,V4L2_PIX_FMT_SGRBG8)
+			(bayer_gbrg,V4L2_PIX_FMT_SGBRG8);
 
 
-	std::map<std::string, yuri::uint_t> special_formats=yuri::map_list_of<std::string,yuri::uint_t>
+	std::map<std::string, uint32_t> special_formats=yuri::map_list_of<std::string, uint32_t>
 		("S920", V4L2_PIX_FMT_SN9C20X_I420)
 		("BA81", V4L2_PIX_FMT_SBGGR8);
 
+	/** Converts yuri::format_t to v4l2 format
+	 * \param fmt V4l2 pixel format
+	 * \return yuri::format_t for the specified format.
+	 */
+	static uint32_t yuri_format_to_v4l2(yuri::format_t fmt)
+	{
+		if (formats_map.count(fmt)) return formats_map[fmt];
+		throw exception::Exception("Unknown format");
+	}
+	/** Converts v4l2 format to yuri::format_t
+	 * \param fmt Pixel format as yuri::format_t
+	 * \return v4l2 pixel format for the specified format.
+	 */
+	static yuri::format_t v4l2_format_to_yuri(uint32_t fmt)
+	{
+		for (const auto& f: formats_map) {
+			if (f.second==fmt) return f.first;
+		}
+		//	case V4L2_PIX_FMT_SN9C20X_I420:	return YURI_FMT_YUV420_PLANAR;
+		throw exception::Exception("Unknown format");
+	}
 }
 
-core::pParameters V4l2Source::configure()
+core::Parameters V4l2Source::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
-	(*p)["width"]["Width of the input image. Note that actual resolution from camera may differ."]=640;
-	(*p)["height"]["Height of the input image. Note that actual resolution from camera may differ."]=480;
-	(*p)["path"]["Path to the camera device. usually /dev/video0 or similar."]=std::string();
-	(*p)["method"]["Method used to get images from camera. Possible values are: none, mmap, user, read. For experts only"]="none";
+	core::Parameters p = IOThread::configure();
+//	p["width"]["Width of the input image. Note that actual resolution from camera may differ."]=640;
+//	p["height"]["Height of the input image. Note that actual resolution from camera may differ."]=480;
+	p["resolution"]["Resolution of the image. Note that actual resolution may differ"]=resolution_t{640,480};
+	p["path"]["Path to the camera device. usually /dev/video0 or similar."]=std::string();
+	p["method"]["Method used to get images from camera. Possible values are: none, mmap, user, read. For experts only"]="none";
 	std::string fmts;
-	for (const auto& f: formats_map) {
-//	std::pair<yuri::format_t,yuri::uint_t> f;
-//	BOOST_FOREACH(f,formats_map) {
-		FormatInfo_t pf = core::BasicPipe::get_format_info(f.first);
-		if (!pf) continue;
-		if (!fmts.empty()) fmts+=std::string(", ");
-		fmts+=pf->short_names[0];
-	}
+//	for (const auto& f: formats_map) {
+////	std::pair<yuri::format_t,yuri::uint_t> f;
+////	BOOST_FOREACH(f,formats_map) {
+//		FormatInfo_t pf = core::BasicPipe::get_format_info(f.first);
+//		if (!pf) continue;
+//		if (!fmts.empty()) fmts+=std::string(", ");
+//		fmts+=pf->short_names[0];
+//	}
 
-	(*p)["format"][std::string("Format to capture in. Possible values are (")+fmts+")"]="YUV422";
-	(*p)["input"]["Input number to tune"]=0;
-	(*p)["illumination"]["Enable illumination (if present)"]=true;
-	(*p)["combine"]["Combine frames (if camera sends them in chunks)."]=false;
-	(*p)["fps"]["Number of frames per secod requested. The closes LOWER supported value will be selected."]=0;
+	p["format"][std::string("Format to capture in. Possible values are (")+fmts+")"]="YUV422";
+	p["input"]["Input number to tune"]=0;
+	p["illumination"]["Enable illumination (if present)"]=true;
+	p["combine"]["Combine frames (if camera sends them in chunks)."]=false;
+	p["fps"]["Number of frames per secod requested. The closes LOWER supported value will be selected."]=0;
 	return p;
 }
 
 
-V4l2Source::V4l2Source(log::Log &log_,core::pwThreadBase parent, core::Parameters &parameters)
-	IO_THREAD_CONSTRUCTOR
-	:core::BasicIOThread(log_,parent,0,1,std::string("v4l2")),
+V4l2Source::V4l2Source(log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters)
+	:core::IOThread(log_,parent,0,1,std::string("v4l2")),resolution({640,480}),
 	 method(METHOD_NONE),buffers(0),no_buffers(0),buffer_free(0),
 	 combine_frames(false),number_of_inputs(0),frame_duration(0)
 {
-	IO_THREAD_INIT("V4l2Source")
+	IOTHREAD_INIT(parameters)
 	try {
 		open_file();
 		// Query capabilities for video capture
@@ -127,12 +153,12 @@ V4l2Source::~V4l2Source() {
 
 void V4l2Source::run()
 {
-	IO_THREAD_PRE_RUN
+//	IO_THREAD_PRE_RUN
 	fd_set set;
 	struct timeval tv;
 	int res=0;
 	while (!start_capture()) {
-		ThreadBase::sleep(latency);
+		sleep(get_latency());
 		if (!still_running()) break;
 	}
 //	int frames=0;
@@ -140,24 +166,30 @@ void V4l2Source::run()
 		FD_ZERO(&set);
 		FD_SET(fd,&set);
 		tv.tv_sec=0;
-		tv.tv_usec=latency;
+		tv.tv_usec=get_latency().value;///1000;
 		res=select(fd+1,&set,0,0,&tv);
 		if (res<0) {
 			if (errno == EAGAIN || errno == EINTR) continue;
 			log[log::error] << "Read error in select (" << strerror(errno)
-							<< ")" << std::endl;
+							<< ")";
 			break;
 		}
 		if (!res) continue;
+		/// @BUG: This is crucial, otherwise there's some race cond... ;/
+		log[log::verbose_debug] << "Reading!";
 		if (!read_frame()) break;
 
-		log[log::verbose_debug] << "Frame!" << std::endl;
+		log[log::verbose_debug] << "Frame!";
 	}
+	log[log::info] << "Stopping capture";
 	stop_capture();
-	IO_THREAD_POST_RUN
+//	IO_THREAD_POST_RUN
 }
 
-
+bool V4l2Source::step()
+{
+	return false;
+}
 bool V4l2Source::init_mmap()
 {
 	struct v4l2_requestbuffers req;
@@ -168,11 +200,10 @@ bool V4l2Source::init_mmap()
 
 	if (xioctl (fd, VIDIOC_REQBUFS, &req)<0) {
 		if (errno == EINVAL) {
-			log[log::warning] << "Device does not support memory mapping"
-				<< std::endl;
+			log[log::warning] << "Device does not support memory mapping";
 	            return false;
 		} else {
-			log[log::warning] << "VIDIOC_REQBUFS failed" << std::endl;
+			log[log::warning] << "VIDIOC_REQBUFS failed";
 			return false;
 		}
 	}
@@ -320,18 +351,17 @@ bool V4l2Source::read_frame()
 {
 	int res=0;
 	struct v4l2_buffer buf;
-	core::pBasicFrame frame;
+//	core::pRawVideoFrame frame;
 	switch (method) {
 		case METHOD_READ:
 					res=read(fd,buffers[0].start,imagesize);
 					if (res<0) {
 						if (errno==EAGAIN || errno==EINTR) return true;
-						log[log::error] << "Read error (" << errno << ") - " << strerror(errno)
-							<< std::endl;
+						log[log::error] << "Read error (" << errno << ") - " << strerror(errno);
 						return false;
 					}
 					if (!res) return true; // Should never happen
-					prepare_frame(reinterpret_cast<yuri::ubyte_t*>(buffers[0].start),
+					prepare_frame(reinterpret_cast<uint8_t*>(buffers[0].start),
 							imagesize);
 					break;
 		case METHOD_MMAP:
@@ -345,20 +375,20 @@ bool V4l2Source::read_frame()
 							case EIO:
 							default:
 									log[log::error] << "VIDIOC_DQBUF failed (" <<
-										strerror(errno) << ")" << std::endl;
+										strerror(errno) << ")";
 									//start_capture();
-									for (yuri::ushort_t i=0;i<no_buffers;++i) {
+									for (size_t i = 0; i < no_buffers; ++i) {
 										memset(&buf,0,sizeof(buf));
 										buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 										buf.memory = V4L2_MEMORY_MMAP;
 										buf.index = i;
 										if ( xioctl(fd,VIDIOC_QUERYBUF,&buf) < 0) {
-											log[log::error] << "Failed to query buffer " << i << "(" << strerror(errno) << std::endl;
+											log[log::error] << "Failed to query buffer " << i << "(" << strerror(errno);
 											continue;
 										}
 										if ((buf.flags & (V4L2_BUF_FLAG_QUEUED | V4L2_BUF_FLAG_MAPPED | V4L2_BUF_FLAG_DONE)) == V4L2_BUF_FLAG_MAPPED) {
 											if (xioctl(fd,VIDIOC_QBUF,&buf)<0) {
-												log[log::error] << "Failed to queue buffer " << i << "(" << strerror(errno) << std::endl;
+												log[log::error] << "Failed to queue buffer " << i << "(" << strerror(errno);
 												return false;
 											}
 										}
@@ -368,15 +398,15 @@ bool V4l2Source::read_frame()
 						}
 					}
 					if (buf.index >= no_buffers) {
-						log[log::error] << "buf.index >= n_buffers!!!!" << std::endl;
+						log[log::error] << "buf.index >= n_buffers!!!!";
 						return false;
 					}
 					//if (!out[0].get()) return true;
 					log[log::verbose_debug] << "Pushing frame with " << buf.bytesused
-							<< "bytes" << std::endl;
-					prepare_frame(reinterpret_cast<yuri::ubyte_t*>(buffers[buf.index].start),buf.bytesused);
+							<< "bytes";
+					prepare_frame(reinterpret_cast<uint8_t*>(buffers[buf.index].start),buf.bytesused);
 					if (xioctl (fd, VIDIOC_QBUF, &buf)==-1) {
-							log[log::error] << "VIDIOC_QBUF failed" << std::endl;
+							log[log::error] << "VIDIOC_QBUF failed";
 							return false;
 					}
 					break;
@@ -391,13 +421,13 @@ bool V4l2Source::read_frame()
 									return true;
 							case EIO:
 							default:
-									log[log::error] << "VIDIOC_DQBUF failed" << std::endl;
+									log[log::error] << "VIDIOC_DQBUF failed";
 									return false;
 							}
 					}
-					prepare_frame(reinterpret_cast<yuri::ubyte_t*>(buf.m.userptr), buf.length);
+					prepare_frame(reinterpret_cast<uint8_t*>(buf.m.userptr), buf.length);
 					if (xioctl (fd, VIDIOC_QBUF, &buf)==-1) {
-							log[log::error] << "VIDIOC_QBUF failed" << std::endl;
+							log[log::error] << "VIDIOC_QBUF failed";
 							return false;
 					}
 					break;
@@ -405,8 +435,9 @@ bool V4l2Source::read_frame()
 		default: return false;
 	}
 	if (output_frame && !buffer_free) {
-		output_frame->set_time(0,0,frame_duration);
-		if (out[0]) push_raw_video_frame(0,timestamp_frame(output_frame));
+//		output_frame->set_time(0,0,frame_duration);
+//		if (out[0]) push_raw_video_frame(0,timestamp_frame(output_frame));
+		push_frame(0, output_frame);
 		output_frame.reset();
 	}
 	return true;
@@ -421,7 +452,7 @@ bool V4l2Source::stop_capture()
 		case METHOD_USER:
 			type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 			if (xioctl (fd, VIDIOC_STREAMOFF, &type)==-1) {
-				log[log::error] << "VIDIOC_STREAMOFF failed" << std::endl;
+				log[log::error] << "VIDIOC_STREAMOFF failed";
 				return false;
 			}
 			return true;
@@ -440,92 +471,85 @@ int V4l2Source::xioctl(int fd, unsigned long int request, void *arg)
 	return r;
 }
 
-yuri::uint_t V4l2Source::yuri_format_to_v4l2(yuri::format_t fmt)
-{
-	if (formats_map.count(fmt)) return formats_map[fmt];
-	throw exception::Exception("Unknown format");
-}
-
-yuri::format_t V4l2Source::v4l2_format_to_yuri(yuri::uint_t fmt)
-{
-//	std::pair<yuri::format_t, yuri::uint_t> f;
-//	BOOST_FOREACH(f,formats_map) {
-	for (const auto& f: formats_map) {
-		if (f.second==fmt) return f.first;
-	}
-	//	case V4L2_PIX_FMT_SN9C20X_I420:	return YURI_FMT_YUV420_PLANAR;
-	throw exception::Exception("Unknown format");
-}
 
 bool V4l2Source::set_param(const core::Parameter &param)
 {
-	if (param.name == "path") {
+	log[log::info] << "Processing param " << param.get_name() << " = " << param.get<std::string>();
+	if (param.get_name() == "path") {
 		filename = param.get<std::string>();
-	} else if (param.name == "format") {
-	std::string format = param.get<std::string>();
-		yuri::format_t fmt = core::BasicPipe::get_format_from_string(format,YURI_TYPE_VIDEO);
+	} else if (param.get_name() == "format") {
+		std::string format = param.get<std::string>();
+		format_t fmt = core::raw_format::parse_format(format);
 		if (fmt && formats_map.count(fmt)) {
 			pixelformat = formats_map[fmt];
 		} else {
 			// Process special formats....
 //			else if (boost::iequals(format,"S920")) pixelformat = V4L2_PIX_FMT_SN9C20X_I420;
 //			else if (boost::iequals(format,"BA81")) pixelformat = V4L2_PIX_FMT_SBGGR8;
-			log[log::warning] << "Unsupported format specified. Trying YUV422"<<std::endl;
+			log[log::warning] << "Unsupported format specified. Trying YUV422";
 			pixelformat = V4L2_PIX_FMT_YUYV;
 		}
 
-	} else if (param.name == "width") {
-		width = param.get<yuri::size_t>();
-	} else if (param.name == "height") {
-		height = param.get<yuri::size_t>();
-	} else if (param.name == "method") {
-	std::string method_s;
+//	} else if (param.get_name() == "width") {
+//		width = param.get<yuri::size_t>();
+//	} else if (param.get_name() == "height") {
+//		height = param.get<yuri::size_t>();
+	} else if (param.get_name() == "resolution") {
+		resolution = param.get<resolution_t>();
+	} else if (param.get_name() == "method") {
+		std::string method_s;
 		method_s = param.get<std::string>();
 		if (iequals(method_s,"user")) method = METHOD_USER;
 		else if (iequals(method_s,"mmap")) method = METHOD_MMAP;
 		else if (iequals(method_s,"read")) method = METHOD_READ;
 		else method=METHOD_NONE;
-	} else if (param.name == "input") {
-		input_number = param.get<yuri::ushort_t>();
-	} else if (param.name == "illumination") {
+	} else if (param.get_name() == "input") {
+		input_number = param.get<size_t>();
+	} else if (param.get_name() == "illumination") {
 			illumination = param.get<bool>();
-	} else if (param.name == "combining") {
+	} else if (param.get_name() == "combining") {
 		combine_frames = param.get<bool>();
-	} else if (param.name == "fps") {
+	} else if (param.get_name() == "fps") {
 		fps= param.get<yuri::size_t>();
-	} else return BasicIOThread::set_param(param);
+	} else return IOThread::set_param(param);
 	return true;
 
 }
-bool V4l2Source::prepare_frame(yuri::ubyte_t *data, yuri::size_t size)
+bool V4l2Source::prepare_frame(uint8_t *data, yuri::size_t size)
 {
 	//pBasicFrame  frame;
 	yuri::format_t fmt = v4l2_format_to_yuri(pixelformat);
 	if (!fmt) return false;
-	FormatInfo_t fi = core::BasicPipe::get_format_info(fmt);
-	if (!fi) return false;
-	yuri::size_t frame_size = (width*height*fi->bpp)>>3;
-	if (!fi->compressed) {
+//	FormatInfo_t fi = core::BasicPipe::get_format_info(fmt);
+//	if (!fi) return false;
+//	yuri::size_t frame_size = (width*height*fi->bpp)>>3;
+
+	const raw_format_t& fi = core::raw_format::get_format_info(fmt);
+	size_t frame_size = resolution.width*resolution.height*fi.planes[0].bit_depth.first/fi.planes[0].bit_depth.second/8;
+
+//	if (!fi->compressed) {
 		if (!output_frame) {
-			output_frame = allocate_empty_frame(fmt,width,height,true);
+//			output_frame = allocate_empty_frame(fmt,width,height,true);
+			output_frame = core::RawVideoFrame::create_empty(fmt, resolution, true);
 			buffer_free = frame_size;
 		}
 		yuri::size_t frame_position = frame_size - buffer_free;
-		log[log::verbose_debug] << "Allocating " << fi->planes << " (got " << output_frame->get_planes_count() << ")" << std::endl;
-		log[log::verbose_debug] << "Frame " << width << ", " << height << ", size: " << size<< std::endl;
-		if (fi->planes==1) {
+//		log[log::verbose_debug] << "Allocating " << fi.planes.count() << " (got " << output_frame->get_planes_count() << ")" << std::endl;
+		log[log::verbose_debug] << "Frame " << resolution.width << ", " << resolution.height << ", size: " << size;
+		if (fi.planes.size()==1) {
 //			assert((*frame)[0].get_size()>=size);
 			//yuri::size_t cp = size;
 			if (size>buffer_free) size = buffer_free;
-			memcpy(PLANE_RAW_DATA(output_frame,0)+frame_position,data,size);
+			//memcpy(PLANE_RAW_DATA(output_frame,0)+frame_position,data,size);
+			std::copy(data, data + size, PLANE_DATA(output_frame, 0).begin());
 			buffer_free -= size;
 		} else {
 			yuri::size_t offset = 0;
-			for (yuri::size_t i = 0; i < fi->planes; ++i) {
+			for (yuri::size_t i = 0; i < fi.planes.size(); ++i) {
 				if (!size) break;
-				yuri::size_t cols = width / fi->plane_x_subs[i];
-				yuri::size_t rows = height / fi->plane_y_subs[i];
-				yuri::size_t plane_size = (cols*rows*fi->component_depths[i])>>3;
+				yuri::size_t cols = resolution.width / fi.planes[i].sub_x;
+				yuri::size_t rows = resolution.height / fi.planes[i].sub_y;
+				yuri::size_t plane_size = (cols*rows*fi.planes[i].bit_depth.first/fi.planes[i].bit_depth.second)>>3;
 				//if(size<offset+plane_size) return pBasicFrame();
 				if (plane_size > frame_position) {
 					plane_size -= frame_position;
@@ -541,20 +565,22 @@ bool V4l2Source::prepare_frame(yuri::ubyte_t *data, yuri::size_t size)
 					plane_size = buffer_free;
 				}
 				log[log::info] << "Copying " << plane_size << " bytes, have " << size-offset <<", free buffer: " << buffer_free<< std::endl;
-				memcpy(PLANE_RAW_DATA(output_frame,i),data+offset,plane_size);
+				std::copy(data+offset, data+offset+plane_size, PLANE_DATA(output_frame, i).begin());
+				//memcpy(PLANE_RAW_DATA(output_frame,i),data+offset,plane_size);
 				offset+=plane_size;
 				buffer_free-=plane_size;
 			}
 		}
-	} else {
-		output_frame = allocate_frame_from_memory(data,size);
-		output_frame->set_parameters(fmt,width,height);
-		buffer_free = 0;
-	}
+//	} else {
+//		output_frame = allocate_frame_from_memory(data,size);
+//		output_frame->set_parameters(fmt,width,height);
+//		buffer_free = 0;
+//	}
 	// If we're no combining frames, we have to discard incomplete ones
 	if (buffer_free && !combine_frames) {
+
+		log[log::warning] << "Discarding incomplete frame (missing " << buffer_free << " bytes)";
 		buffer_free = 0;
-		log[log::warning] << "Discarding incomplete frame (missing " << buffer_free << " bytes)" << std::endl;
 		output_frame.reset();
 	}
 	return true;
@@ -668,17 +694,17 @@ bool V4l2Source::set_format()
 		throw exception::Exception("Failed to get default format info!");
 	}
 	fmt.fmt.pix.pixelformat=pixelformat;
-	fmt.fmt.pix.width=width;
-	fmt.fmt.pix.height=height;
+	fmt.fmt.pix.width=resolution.width;
+	fmt.fmt.pix.height=resolution.height;
 	if (xioctl(fd,VIDIOC_S_FMT,&fmt)<0) {
-		log[log::error] << "VIDIOC_S_FMT ioctl failed!" << std::endl;
+		log[log::error] << "VIDIOC_S_FMT ioctl failed!";
 		throw exception::Exception ("Failed to set input format!");
 	}
 	if (xioctl(fd,VIDIOC_G_FMT,&fmt)<0) {
-		log[log::warning] << "Failed to verify if input format was set correctly !" << std::endl;
+		log[log::warning] << "Failed to verify if input format was set correctly !";
 	}
 	if (fmt.fmt.pix.pixelformat != pixelformat) {
-		log[log::error] << "Failed to set requested input format!" << std::endl;
+		log[log::error] << "Failed to set requested input format!";
 		throw exception::Exception("Failed to set input format");
 	}
 	log[log::info] << "Video dimensions: " << fmt.fmt.pix.width << "x" << fmt.fmt.pix.height << std::endl;
@@ -688,10 +714,10 @@ bool V4l2Source::set_format()
 		(char)(fmt.fmt.pix.pixelformat>>16 & 0xFF) <<
 		(char)(fmt.fmt.pix.pixelformat>>24 & 0xFF)
 		<< std::endl;
-	log[log::info] << "Colorspace " << fmt.fmt.pix.colorspace << std::endl;
+	log[log::info] << "Colorspace " << fmt.fmt.pix.colorspace;
 	imagesize=fmt.fmt.pix.sizeimage;
-	width=fmt.fmt.pix.width;
-	height=fmt.fmt.pix.height;
+	resolution.width=fmt.fmt.pix.width;
+	resolution.height=fmt.fmt.pix.height;
 	pixelformat=fmt.fmt.pix.pixelformat;
 
 	log[log::info] << "Image size: " << imagesize << std::endl;
@@ -701,8 +727,8 @@ bool V4l2Source::enum_frame_intervals()
 {
 	v4l2_frmivalenum frmvalen;
 	frmvalen.pixel_format = pixelformat;
-	frmvalen.width = width;
-	frmvalen.height = height;
+	frmvalen.width = resolution.width;
+	frmvalen.height = resolution.height;
 	frmvalen.index = 0;
 	while (!xioctl(fd,VIDIOC_ENUM_FRAMEINTERVALS,&frmvalen)) {
 		switch (frmvalen.type) {
