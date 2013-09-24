@@ -1,8 +1,10 @@
 #################################################################
-# Core library depends only on Boost 
+# Core library can use boost filessytem 
 #################################################################
-find_package( Boost 1.46 COMPONENTS filesystem REQUIRED)
-
+find_package( Boost 1.49 COMPONENTS filesystem )
+IF(Boost_FILESYSTEM_FOUND)
+add_definitions(-DHAVE_BOOST_FILESYSTEM)
+ENDIF()
 #################################################################
 # Checking for optional dependencies for helper libraries
 #################################################################
