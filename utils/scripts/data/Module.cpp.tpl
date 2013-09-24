@@ -13,23 +13,25 @@
 namespace yuri {
 namespace ${namespace} {
 
-REGISTER("${module}",${class_name})
 
-IO_THREAD_GENERATOR(${class_name})
+IOTHREAD_GENERATOR(${class_name})
 
-core::pParameters ${class_name}::configure()
+MODULE_REGISTRATION_BEGIN("${module}")
+		REGISTER_IOTHREAD("${module}",${class_name})
+MODULE_REGISTRATION_END()
+
+core::Parameters ${class_name}::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
-	p->set_description("${class_name}");
-	p->set_max_pipes(1,1);
+	core::Parameters p = core::IOThread::configure();
+	p.set_description("${class_name}");
 	return p;
 }
 
 
-${class_name}::${class_name}(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,1,1,std::string("${module}"))
+${class_name}::${class_name}(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
+core::IOThread(log_,parent,1,1,std::string("${module}"))
 {
-	IO_THREAD_INIT("${module}")
+	IOTHREAD_INIT(parameters)
 }
 
 ${class_name}::~${class_name}()
@@ -38,15 +40,15 @@ ${class_name}::~${class_name}()
 
 bool ${class_name}::step()
 {
-	core::pBasicFrame frame = in[0]->pop_frame();
+	core::pFrame frame = pop_frame(0);
 	if (frame) {
-		push_raw_video_frame(0, frame);
+		push_frame(0, frame);
 	}
 	return true;
 }
 bool ${class_name}::set_param(const core::Parameter& param)
 {
-	return core::BasicIOThread::set_param(param);
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace ${namespace} */
