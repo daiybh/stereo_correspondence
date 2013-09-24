@@ -11,23 +11,23 @@
 #ifndef DUP_H_
 #define DUP_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/thread/MultiIOFilter.h"
 namespace yuri {
 
 namespace io {
 
-class Dup: public core::BasicIOThread {
+class Dup: public core::MultiIOFilter {
 public:
-	virtual ~Dup();
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
-
-	virtual void connect_out(int index,core::pBasicPipe pipe);
-	virtual bool step();
+	Dup(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~Dup() noexcept;
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
 	virtual bool set_param(const core::Parameter &parameter);
-protected:
-	Dup(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters) IO_THREAD_CONSTRUCTOR;
-	bool hard_dup;
+
+private:
+	virtual std::vector<core::pFrame> do_single_step(const std::vector<core::pFrame>& frames) override;
+	virtual void do_connect_out(position_t index, core::pPipe pipe) override;
+	bool hard_dup_;
 };
 
 }
