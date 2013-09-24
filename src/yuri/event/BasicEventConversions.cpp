@@ -10,12 +10,13 @@
 #include "BasicEventConversions.h"
 #include "functions.h"
 #include <iostream>
+#include <cassert>
 namespace yuri {
 namespace event {
 
 void EventFunctions::add_function(const event_function_record_t& frec)
 {
-	lock _(map_mutex_);
+	lock_t _(map_mutex_);
 	functions_.insert({frec.fname,frec});
 }
 void EventFunctions::add_functions(const std::vector<event_function_record_t>& records)

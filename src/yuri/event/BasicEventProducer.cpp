@@ -13,7 +13,7 @@ namespace yuri {
 namespace event {
 BasicEventProducer::BasicEventProducer(log::Log& log_):log_p_(log_)
 {
-
+	(void)log_p_;// Getting rid of compiler warning in CLANG
 }
 
 BasicEventProducer::~BasicEventProducer()
@@ -30,7 +30,7 @@ constexpr bool targets_equal(const event_target_t& lhs, const event_target_t& rh
 }
 bool BasicEventProducer::register_listener(const std::string& event_name, pwBasicEventConsumer consumer, const std::string& target_name)
 {
-	yuri::lock _(consumers_mutex_);
+	yuri::lock_t _(consumers_mutex_);
 	return do_register_listener(event_name, consumer, target_name);
 }
 
@@ -50,7 +50,7 @@ bool BasicEventProducer::do_register_listener(const std::string& event_name, pwB
 }
 bool BasicEventProducer::unregister_listener(const std::string& event_name, pwBasicEventConsumer consumer, const std::string& target_name)
 {
-	yuri::lock _(consumers_mutex_);
+	yuri::lock_t _(consumers_mutex_);
 	return do_unregister_listener(event_name, consumer, target_name);
 }
 bool BasicEventProducer::do_unregister_listener(const std::string& event_name, pwBasicEventConsumer consumer, const std::string& target_name)
@@ -70,7 +70,7 @@ bool BasicEventProducer::do_unregister_listener(const std::string& event_name, p
 bool BasicEventProducer::emit_event(const std::string& event_name, pBasicEvent event)
 {
 	if (!event) return false;
-	yuri::lock _(consumers_mutex_);
+	yuri::lock_t _(consumers_mutex_);
 	if (consumers_.count("*")) {
 		auto range = consumers_.equal_range("*");
 		for (auto it = range.first; it != range.second; ++it) {

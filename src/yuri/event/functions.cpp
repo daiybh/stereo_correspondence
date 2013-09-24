@@ -9,7 +9,7 @@
 
 #include "functions.h"
 #include "EventHelpers.h"
-
+#include <cmath>
 namespace yuri {
 namespace event {
 
