@@ -1,0 +1,144 @@
+Design of XmlBuilder
+
+Example XML: 
+EXAMPLE
+
+<?xml version="1.0" ?>
+<app name="APPNAME">
+
+	<description>DESCRIPTION</description>
+
+	<variable name="VAR_NAME" description="VAR_DESCRIPTION" required="1">VAR_VALUE</variable>
+	<variable name="VAR_NAME" description="VAR_DESCRIPTION">VAR_VALUE</variable>
+	<variable name="VAR_NAME">VAR_VALUE</variable>
+	
+	<general>
+		<parameter name="PARAM_NAME">PARAM_VALUE</parameter>
+		<parameter name="PARAM_NAME">PARAM_VALUE</parameter>
+	</general>
+	
+	<module_dir path="MODULE_DIR_PATH"/>
+	<module_dir path="MODULE_DIR_PATH"/>
+	
+	<module path="MODULE_PATH"/>
+	<module path="MODULE_PATH"/>
+	
+	<node class="NODE_CLASS" name="NODE_NAME">
+		<parameter name="PARAM_NAME">PARAM_VALUE</parameter>
+	</node>
+	<node class="NODE_CLASS" name="NODE_NAME">
+		<parameter name="PARAM_NAME">PARAM_VALUE</parameter>
+	</node>
+	
+	<link class="LINK_CLASS" name="LINK_NAME" source="LINK_SOURCE" target="LINK_TARGET">
+		<parameter name="PARAM_NAME">PARAM_VALUE</parameter>
+	</node>
+	<link class="LINK_CLASS" name="LINK_NAME" source="LINK_SOURCE" target="LINK_TARGET">
+		<parameter name="PARAM_NAME">PARAM_VALUE</parameter>
+	</node>
+
+	<event>
+		EVENT_ROUTING
+	</event>
+</app>
+
+END OF EXAMPLE
+
+Explanation of example
+=== <app> ===
+ - Root tag encapsulating whole config.
+ - Required parameter
+ - Sets config name to APPNAME
+ - currently should be present exactly once
+ 
+=== <description> ===
+ - Optional tag containing description of the application
+
+=== <variable> ===
+ - Defines a variable that can be set from command line
+ - The variable will have name VAR_NAME and default value VAR_VALUE.
+ - Optionally, there can be description of the variable VAR_DESCRIPTION.
+ - Should be present exactly once for every variable.
+ - If more <variable> tags have the same VAR_NAME, then it's not specified which VAR_VALUE will be used 
+ 
+
+=== <general> ===
+ - Configures the XmlBuilder
+ - Contains parameters that should be directly passed to XmlBuilder
+ - Should be specified at most once.
+ - If it's specified more than once, the first one will be used.
+ 
+=== <parameter> ===
+ - Defines a single parameter
+ - Currently it should be supported in <general>, <node> and <link> tags.
+ - Single tag defines a parameter with name PARAM_NAME with value PARAM_VALUE
+ - PARAM_VALUE can be specified as a function of input variables. 
+ - If more than single <parameter> has same PARAM_NAME inside an enclosing tag, it's unspecified which one will be used.
+ - Same PARAM_NAMEs inside different enclosing tags should behave as expected.
+ 
+=== <module_dir> ===
+ - Specifies user provided directory (MODULE_DIR_PATH) that should be searched for modules
+ 
+=== <module> ===
+ - Specifies user provided module (MODULE_PATH) that should be loaded
+ 
+=== <node> ===
+ - Defines a node in the processing graph
+ - NODE_CLASS is a type of the node
+ - NODE_NAME is name of the module, must be unique in the configuration, 
+ 	multiple <node> tags with same NODE_NAME should be considered as fatal error
+ 	
+=== <link> ===
+ - Defines an oriented edge in the processing graph
+ - LINK_CLASS is a type of the edge
+ - LINK_NAME is name of the link, should be unique in the configuration.
+ - LINK_SOURCE specifies source node for the edge. It is specified as NAME:INDEX,
+ 	where NAME should be equal to some NODE_NAME and INDEX is index of output in the node
+ - LINK_TARGET specified target node, the form is the same LINK_SOURCE
+ 
+=== <event> ===
+ - Optional tag containing one or multiple routing descriptions (EVENT_ROUTING)
+
+
+== Variables/value processing ==
+Variables can be specified the same way as events (see EVENTS.txt), with some minor differences:
+ - Arguments for command line substitution may contain only constant values.
+ - Command line arguments that can not be calculated as constants are replaced by a string representation of the argument.
+ - Default values for variables may contain references to other variables, previously defined. (Order of the tags matters)
+ - Values for parameters may contain references to any variables.
+ 
+
+XmlBuilder value/module evaluation order:
+ - module tags are parsed and respective modules loaded (if possible). 
+ 	Possible failures in module loading are not considered fatal. 
+ - module_dir tags are parsed and module directories are searched and all modules in them are loaded.
+ - Command line arguments are parsed and their values are set.
+ - Values for variables not specified on command line are calculated.
+ - Parameters from <general> tag are processed and XmlBuilder configured.
+ - built in module directories are searched and modules from them are loaded. 
+ 
+ - All <node> tags are processed, corresponding nodes are configured.
+  	Non existent NODE_CLASS is considered fatal
+ - Link sources and targets are verified
+ 	Links to non-existent nodes are considered fatal  
+ 
+ - All nodes are created using calculated parameters.
+ 	Failure in creation is fatal
+ - All links are configured and created
+ 	Failure is fatal (non-existent LINK_CLASS)
+
+ 
+Rationale
+ - <module> tags are parsed early so if they introduce new functions, these can be used ASAP.
+ - <module_dir> tags are parsed after <module> tags, to prioritize modules from <module> tags.
+ - command line parameters should not contain any functions not built-in into yuri_core.
+ - parameters for <general> tag should not contain any functions not built-in into yuri_core.
+ 	The reason for this restriction is the ability to configure the XmlBuilder before built-in modules are loaded (so it can be disabled by a parameter)  
+  
+ 
+ 
+
+
+
+
+
