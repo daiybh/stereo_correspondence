@@ -9,26 +9,31 @@
  */
 
 #include "FixedMemoryAllocator.h"
-#include "yuri/core/uvector.h"
-#include "yuri/core/RegisteredClass.h"
-#include "yuri/core/Parameters.h"
+#include "yuri/core/utils/uvector.h"
 #include "yuri/exception/InitializationFailed.h"
+#include "yuri/core/thread/IOThreadGenerator.h"
+//#include <iostream>
+#include <cassert>
 namespace yuri {
 
 namespace core {
-REGISTER("fixed_memory_allocator",FixedMemoryAllocator)
-IO_THREAD_GENERATOR(FixedMemoryAllocator)
+MODULE_REGISTRATION_BEGIN("fixed_memory_allocator")
+		REGISTER_IOTHREAD("fixed_memory_allocator",FixedMemoryAllocator)
+MODULE_REGISTRATION_END()
+
+IOTHREAD_GENERATOR(FixedMemoryAllocator)
 
 yuri::mutex FixedMemoryAllocator::mem_lock;
-std::map<yuri::size_t, std::vector<yuri::ubyte_t* > > FixedMemoryAllocator::memory_pool;
+std::map<yuri::size_t, std::vector<uint8_t* > > FixedMemoryAllocator::memory_pool;
 
-pParameters FixedMemoryAllocator::configure()
+Parameters FixedMemoryAllocator::configure()
 {
-	pParameters p = BasicIOThread::configure();
-	(*p)["size"]["Block size to allocate"]=0;
-	(*p)["count"]["Number of blocks to allocate"]=0;
+	Parameters p = IOThread::configure();
+	p.set_description("Object that preallocates memory blocks.");
+	p["size"]["Block size to allocate"]=0;
+	p["count"]["Number of blocks to allocate"]=0;
 
-	p->set_max_pipes(0,0);
+	//p->set_max_pipes(0,0);
 	return p;
 }
 /** \brief allocate memory blocks and adds them to the pool
@@ -41,23 +46,23 @@ pParameters FixedMemoryAllocator::configure()
 
 bool FixedMemoryAllocator::allocate_blocks(yuri::size_t size, yuri::size_t count)
 {
-	lock l(mem_lock);
+	lock_t l(mem_lock);
 	return do_allocate_blocks(size,count);
 }
 /** \brief allocate memory blocks and adds them to the pool
  *
- *  Private version, does NOT lock the pool
+ *  Private version, does NOT lock_t the pool
  *  \param size Size of the blocks to allocate (in bytes)
  *  \param count number of the blocks to allocate
  *  \return True if all blocks were allocated correctly, false otherwise
  */
 bool FixedMemoryAllocator::do_allocate_blocks(yuri::size_t size, yuri::size_t count)
 {
-	yuri::ubyte_t *tmp;
-	if (!memory_pool.count(size)) memory_pool[size]=std::vector<yuri::ubyte_t*>();
+	uint8_t *tmp;
+	if (!memory_pool.count(size)) memory_pool[size]=std::vector<uint8_t*>();
 	for (yuri::size_t i=0;i<count;++i) {
-		//std::cerr << "Allocating " << size << "\n";
-		tmp = new yuri::ubyte_t[size];
+//		std::cerr << "Allocating " << size << "\n";
+		tmp = new uint8_t[size];
 		if (!tmp) return false;
 		memory_pool[size].push_back(tmp);
 		tmp = 0;
@@ -76,7 +81,7 @@ bool FixedMemoryAllocator::do_allocate_blocks(yuri::size_t size, yuri::size_t co
  */
 FixedMemoryAllocator::memory_block_t FixedMemoryAllocator::get_block(yuri::size_t size)
 {
-	lock l(mem_lock);
+	lock_t l(mem_lock);
 	if (memory_pool.count(size)<1 || memory_pool[size].size()<1) {
 		if (!do_allocate_blocks(size,1)) {
 			throw std::bad_alloc();
@@ -84,10 +89,10 @@ FixedMemoryAllocator::memory_block_t FixedMemoryAllocator::get_block(yuri::size_
 	}
 
 
-	yuri::ubyte_t * tmp = memory_pool[size].back();
+	uint8_t * tmp = memory_pool[size].back();
 	memory_block_t block = std::make_pair(tmp,Deleter(size,tmp));
 	memory_pool[size].pop_back();
-	//std::cout << "Serving page of " << size << ". have " << memory[size].size() << " in cache" << "\n";
+//	std::cout << "Serving page of " << size << ". have " << memory_pool[size].size() << " in cache" << "\n";
 	return block;
 }
 /** \brief Returns block to the pool.
@@ -99,12 +104,12 @@ FixedMemoryAllocator::memory_block_t FixedMemoryAllocator::get_block(yuri::size_
  * \param mem pointer to the memory block (Note, it is RAW pointer)
  * \return true is returned to the pool successfully.
  */
-bool FixedMemoryAllocator::return_memory(yuri::size_t size, yuri::ubyte_t * mem)
+bool FixedMemoryAllocator::return_memory(yuri::size_t size, uint8_t * mem)
 {
-	lock l(mem_lock);
-	if (!memory_pool.count(size)) memory_pool[size]=std::vector<yuri::ubyte_t*>();
+	lock_t l(mem_lock);
+	if (!memory_pool.count(size)) memory_pool[size]=std::vector<uint8_t*>();
 	memory_pool[size].push_back(mem);
-	//std::cout << "Returning page of " << size << ". have " << memory[size].size() << " in cache" << "\n";
+//	std::cout << "Returning page of " << size << ". have " << memory_pool[size].size() << " in cache" << "\n";
 	return true;
 }
 /**\brief Removes blocks from the memory pool
@@ -118,7 +123,7 @@ bool FixedMemoryAllocator::return_memory(yuri::size_t size, yuri::ubyte_t * mem)
  */
 bool FixedMemoryAllocator::remove_blocks(yuri::size_t size, yuri::size_t count)
 {
-	lock l(mem_lock);
+	lock_t l(mem_lock);
 	if (!memory_pool.count(size)) return true;
 	if (!count) count = memory_pool[size].size();
 	while (count-- > 0) {
@@ -127,18 +132,24 @@ bool FixedMemoryAllocator::remove_blocks(yuri::size_t size, yuri::size_t count)
 	}
 	return true;
 }
+size_t FixedMemoryAllocator::preallocated_blocks(size_t size)
+{
+	lock_t l(mem_lock);
+	if (!memory_pool.count(size)) return 0;
+	return memory_pool[size].size();
+}
 /** \brief Constructor initializes the object and calls
  * FixedMemoryAllocator::allocate_blocks to allocate requested memory blocks.
  *
  */
-FixedMemoryAllocator::FixedMemoryAllocator(log::Log &_log, pwThreadBase parent, Parameters &parameters) IO_THREAD_CONSTRUCTOR
-		:BasicIOThread(_log,parent,0,0,"FixedMemoryAllocator")
+FixedMemoryAllocator::FixedMemoryAllocator(log::Log &_log, pwThreadBase parent, const Parameters &parameters)
+		:IOThread(_log,parent,0,0,"FixedMemoryAllocator")
 {
-	IO_THREAD_INIT("FixedMemoryAllocator")
-	latency=1e5;//100ms
+	IOTHREAD_INIT(parameters);
+	set_latency(100_ms);
 	if (!count || !block_size) {
 		log[log::error] << "Wrong parameters specified. "
-				"Please provide count and size parameters." << "\n";
+				"Please provide count and size parameters.";
 		throw exception::InitializationFailed("Wrong arguments");
 	} else {
 		if (!allocate_blocks(block_size,count)) {
@@ -154,24 +165,24 @@ FixedMemoryAllocator::FixedMemoryAllocator(log::Log &_log, pwThreadBase parent, 
  * Also note that when memory block is returned AFTER the destructor is called,
  * the pool will be populated with them again.
  */
-FixedMemoryAllocator::~FixedMemoryAllocator()
+FixedMemoryAllocator::~FixedMemoryAllocator() noexcept
 {
 	remove_blocks(block_size);
 }
-/** \brief Implementation of BasicIOThread::set_param
+/** \brief Implementation of IOThread::set_param
  */
 bool FixedMemoryAllocator::set_param(const Parameter &parameter)
 {
-	if (parameter.name == "count") {
+	if (parameter.get_name() == "count") {
 		count=parameter.get<yuri::size_t>();
-	} else if (parameter.name == "size") {
+	} else if (parameter.get_name() == "size") {
 		block_size=parameter.get<yuri::size_t>();
-	} else return BasicIOThread::set_param(parameter);
+	} else return IOThread::set_param(parameter);
 	return true;
 }
-/** \brief Dummy implementation of BasicIOThread::step()
+/** \brief Dummy implementation of IOThread::step()
  *
- * Method just sleeps and waits for the end
+ * Method just waits for the end
  */
 bool FixedMemoryAllocator::step()
 {
@@ -185,7 +196,7 @@ void FixedMemoryAllocator::Deleter::operator()(void *mem) const noexcept
 {
 	assert(mem==original_pointer);
 	try { //We should NOT throw here...
-	FixedMemoryAllocator::return_memory(size,reinterpret_cast<yuri::ubyte_t*>(mem));
+		FixedMemoryAllocator::return_memory(size,reinterpret_cast<uint8_t*>(mem));
 	} catch(...){}
 }
 
