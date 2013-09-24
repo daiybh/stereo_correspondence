@@ -10,7 +10,7 @@
 
 #ifndef LOG_H_
 #define LOG_H_
-#include "yuri/core/types.h"
+#include "yuri/core/utils/new_types.h"
 #include "LogProxy.h"
 
 #include <iostream>

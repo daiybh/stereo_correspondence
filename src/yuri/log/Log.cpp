@@ -10,6 +10,7 @@
 
 #include "Log.h"
 #include <map>
+#include "yuri/core/utils.h"
 #if !defined YURI_ANDROID
 #include <boost/date_time/posix_time/posix_time.hpp>
 #endif
@@ -99,6 +100,8 @@ LogProxy<char> Log::operator[](debug_flags f)
 	LogProxy<char> lp(*out,flags > (output_flags & flag_mask));
 	if (!quiet) {
 		lp << ((output_flags&show_level)?print_level():"") << id << ":" << uid << ": "  << ids << print_time();
+	} else {
+		lp << " ";
 	}
 	return lp;
 }
@@ -115,7 +118,7 @@ std::string Log::print_time()
 	std::stringstream ss;
 #ifndef YURI_ANDROID
 	if (output_flags & show_thread_id) {
-		 ss << yuri::get_id();
+//		 ss << yuri::get_id();
 		 s += std::string(" ") + ss.str();
 	}
 	if (output_flags & show_time) s += std::string(" ") + boost::posix_time::to_simple_string(boost::posix_time::microsec_clock::local_time().time_of_day());

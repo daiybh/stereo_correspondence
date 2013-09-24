@@ -10,7 +10,7 @@
 
 #ifndef LOGPROXY_H_
 #define LOGPROXY_H_
-#include "yuri/core/types.h"
+#include "yuri/core/utils/new_types.h"
 #include <ostream>
 #include <sstream>
 
@@ -32,13 +32,13 @@ struct guarded_stream {
 	 * @param msg	String to write
 	 */
 	void write(const string_t msg) {
-		yuri::lock l(mutex_);
+		yuri::lock_t l(mutex_);
 		str_ << msg;
 	}
 
 	template<class T>
 	guarded_stream& operator<<(const T& val) {
-		yuri::lock l(mutex_);
+		yuri::lock_t l(mutex_);
 		str_ << val;
 		return *this;
 	}
