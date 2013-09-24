@@ -16,6 +16,11 @@ IF(HAVE_VIDEODEV2_H)
 	add_subdirectory(v4l2)
 ENDIF()
 
+find_package(SDL)
+IF(SDL_FOUND)
+	add_subdirectory(sdl_window)
+ENDIF()
+
 IF(FALSE)
 #################################################################
 # Add modules that are compile unconditionally
