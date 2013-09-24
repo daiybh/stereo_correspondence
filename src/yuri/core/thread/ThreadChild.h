@@ -19,10 +19,14 @@ namespace core
 class EXPORT ThreadChild
 {
 public:
-								ThreadChild(yuri::shared_ptr<yuri::thread> thread,
+								ThreadChild();
+								ThreadChild(yuri::thread&& thread,
 			pThreadBase child, bool spawned=false);
-	virtual 					~ThreadChild();
-	yuri::shared_ptr<yuri::thread> 	thread_ptr;
+								~ThreadChild() noexcept;
+								ThreadChild(const ThreadChild&)=delete;
+								ThreadChild(ThreadChild&& rhs);
+	ThreadChild&				operator=(ThreadChild&& rhs);
+	yuri::thread 				thread_ptr;
 	pThreadBase 				thread;
 	bool 						finished;
 	bool 						spawned;
