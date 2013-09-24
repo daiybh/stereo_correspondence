@@ -12,18 +12,18 @@
 #ifndef THREADSPAWN_H_
 #define THREADSPAWN_H_
 #include "yuri/core/forward.h"
+
 namespace yuri
 {
 
 namespace core
 {
 
-
 class EXPORT ThreadSpawn
 {
 public:
 							ThreadSpawn(pThreadBase thread);
-	virtual 				~ThreadSpawn();
+							~ThreadSpawn() noexcept;
 	void 					operator() ();
 protected:
 	pThreadBase			 	thread_;
