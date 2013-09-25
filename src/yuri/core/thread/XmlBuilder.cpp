@@ -473,6 +473,7 @@ bool XmlBuilder::builder_pimpl_t::do_process_event(const std::string& /*event_na
 Parameters XmlBuilder::configure()
 {
 	Parameters p = IOThread::configure();
+	p["filename"]["Path to  XML file."]="";
 	return p;
 }
 
@@ -545,7 +546,7 @@ bool XmlBuilder::step()
 
 bool XmlBuilder::set_param(const Parameter& parameter)
 {
-	if (parameter.get_name() == "file") {
+	if (parameter.get_name() == "filename") {
 		filename_ = parameter.get<std::string>();
 	} else return IOThread::set_param(parameter);
 	return true;
