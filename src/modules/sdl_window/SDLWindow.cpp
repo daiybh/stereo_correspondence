@@ -58,7 +58,7 @@ resolution_({800,600}),fullscreen_(false)
 		throw exception::InitializationFailed("Failed to initialize SDL");
 	}
 	if (!(surface_ = SDL_SetVideoMode(resolution_.width, resolution_.height, 24,
-		      SDL_HWSURFACE |  SDL_DOUBLEBUF |
+		      SDL_HWSURFACE |  SDL_DOUBLEBUF | SDL_RESIZABLE |
 		      (fullscreen_?SDL_FULLSCREEN:0) ))) {
 		throw exception::InitializationFailed("Failed to set video mode");
 	}
@@ -100,7 +100,7 @@ bool SDLWindow::step()
 			it += src_linesize;
 		}
 		SDL_UnlockYUVOverlay(overlay_.get());
-		SDL_Rect rec={0,0,static_cast<Uint16>(res.width), static_cast<Uint16>(res.height)};
+		SDL_Rect rec={0,0,static_cast<Uint16>(resolution_.width), static_cast<Uint16>(resolution_.height)};
 		SDL_DisplayYUVOverlay(overlay_.get(), &rec);
 	} else {
 		const auto& fi = core::raw_format::get_format_info(format);
@@ -125,9 +125,15 @@ void SDLWindow::process_sdl_events()
 		switch (event.type) {
 			case SDL_QUIT: request_end(core::yuri_exit_interrupted);
 				break;
+			case SDL_VIDEORESIZE:
+				resolution_ = {static_cast<dimension_t>(event.resize.w), static_cast<dimension_t>(event.resize.h)};
+				overlay_.reset();
+				surface_ = SDL_SetVideoMode(resolution_.width, resolution_.height, 24, surface_->flags);
+				break;
 			case SDL_KEYDOWN:
 				if (event.key.keysym.sym == SDLK_ESCAPE) request_end(core::yuri_exit_interrupted);
 				break;
+
 			default:break;
 		}
 	}
