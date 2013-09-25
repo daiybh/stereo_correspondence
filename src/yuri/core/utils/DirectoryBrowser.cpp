@@ -22,7 +22,6 @@ namespace core {
 namespace filesystem {
 
 #ifdef HAVE_BOOST_FILESYSTEM
-#error FAIL
 std::vector<std::string> browse_files(const std::string& path, const std::string& prefix)
 {
 	std::vector<std::string> paths;
