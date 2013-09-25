@@ -151,13 +151,17 @@ void IOThread::do_connect_out(position_t index, pPipe pipe)
 bool IOThread::push_frame(position_t index, pFrame frame)
 {
 	TRACE_METHOD
-	return out_[index]->push_frame(frame);
+	if (index >= 0 && index < get_no_out_ports() && out_[index])
+		return out_[index]->push_frame(frame);
+	return false;
 }
 
 pFrame	IOThread::pop_frame(position_t index)
 {
 	TRACE_METHOD
-	return in_[index]->pop_frame();
+	if (index >= 0 && index < get_no_in_ports() && in_[index])
+		return in_[index]->pop_frame();
+	return pFrame();
 }
 
 void IOThread::resize(position_t inp, position_t outp)
