@@ -31,7 +31,18 @@
 	// Disable bad macros from windows.h
 	#define WIN32_MEAN_AND_LEAN
 	#define NOMINMAX
-#elif defined __linux__
+#elif defined __CYGWIN__
+	#define YURI_CYGWIN 1
+	#define YURI_POSIX 1
+	#define EXPORT
+	#define IMPORT
+	#define PACK_START
+	#define PACK_END			__attribute__((packed))
+	#define DEPRECATED			__attribute__((deprecated))
+	#if defined __CYGWIN__
+		#define YURI_CYGWIN 1
+	#endif
+#elif defined __linux__ 
 	#define YURI_LINUX 1
 	#define YURI_POSIX 1
 	#define EXPORT
@@ -39,15 +50,6 @@
 	#define PACK_START
 	#define PACK_END			__attribute__((packed))
 	#define DEPRECATED			__attribute__((deprecated))
-	#ifdef __GNUG__
-		#define GCC_VERSION (__GNUC__ * 10000 \
-								   + __GNUC_MINOR__ * 100 \
-								   + __GNUC_PATCHLEVEL__)
-		#if GCC_VERSION < 40800
-			// GCC 4.7.x doesn't support std::map::emplace ...
-			#define EMPLACE_UNSUPPORTED  1
-		#endif
-	#endif
 #elif defined __APPLE__
 	#define YURI_APPLE 1
 	#define YURI_POSIX 1
@@ -59,6 +61,16 @@
 #else
 
 	#error Unsupported platform
+#endif
+
+#ifdef __GNUG__
+	#define GCC_VERSION (__GNUC__ * 10000 \
+							   + __GNUC_MINOR__ * 100 \
+							   + __GNUC_PATCHLEVEL__)
+	#if GCC_VERSION < 40800
+		// GCC 4.7.x doesn't support std::map::emplace ...
+		#define EMPLACE_UNSUPPORTED  1
+	#endif
 #endif
 
 #ifdef YURI_ANDROID
