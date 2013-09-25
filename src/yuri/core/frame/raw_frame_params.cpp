@@ -48,6 +48,8 @@ namespace {
 			{abgr16,{abgr16, "ABGR 16 bit (5551)",{"ABGR16"}, "",		{{"ABGR",{16, 1}, {5,5,5,1}}} }},
 			{abgr32,{abgr32, "ABGR 32 bit",		{"ABGR32"}, "",			{{"ABGR",{32, 1}, {8,8,8,8}}} }},
 			{abgr64,{abgr64, "ABGR 64 bit",		{"ABGR64"}, "",			{{"ABGR",{64, 1}, {16,16,16,16}}} }},
+			{argb32,{argb32, "ARGB 32 bit",		{"ARGB32"}, "",			{{"ARGB",{32, 1}, {8,8,8,8}}} }},
+			{bgra32,{bgra32, "BGRA 32 bit",		{"BGRA32"}, "",			{{"BGRA",{32, 1}, {8,8,8,8}}} }},
 
 			{rgb_r10k,{rgb_r10k,"RGB R10k 32 bit",{"R10K"}, "",			{{"RGB", {32, 1}, {10,10,10}}} }},
 			{bgr_r10k,{bgr_r10k,"BGR R10k 32 bit",{"BGR10K"}, "",		{{"BGR", {32, 1}, {10,10,10}}} }},

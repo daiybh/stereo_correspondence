@@ -56,9 +56,11 @@ const format_t rgba64		= 0x10c;	// RGBA 16:16:16:16
 const format_t abgr16		= 0x10d;	// ABGR 5:5:5:1
 const format_t abgr32		= 0x10e;	// ABGR 8:8:8:8
 const format_t abgr64		= 0x10f;	// ABGR 16:16:16:16
+const format_t argb32		= 0x110;	// ARGB 8:8:8:8
+const format_t bgra32		= 0x111;	// BGRA 8:8:8:8
 
-const format_t rgb_r10k		= 0x110;	// RGBx 10:10:10:2
-const format_t bgr_r10k		= 0x111;	// BGRx 10:10:10:2
+const format_t rgb_r10k		= 0x120;	// RGBx 10:10:10:2
+const format_t bgr_r10k		= 0x121;	// BGRx 10:10:10:2
 
 
 const format_t yuv411		= 0x200;	// YYUYYV	4pixels, 8bit
