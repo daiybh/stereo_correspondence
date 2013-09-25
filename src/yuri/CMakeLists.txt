@@ -1,9 +1,11 @@
 #################################################################
 # Core library can use boost filessytem 
 #################################################################
-find_package( Boost 1.49 COMPONENTS filesystem )
-IF(Boost_FILESYSTEM_FOUND)
-add_definitions(-DHAVE_BOOST_FILESYSTEM)
+IF(NOT YURI_DISABLE_BOOST)
+	find_package( Boost 1.49 COMPONENTS filesystem system)
+	IF(Boost_FILESYSTEM_FOUND)
+		add_definitions(-DHAVE_BOOST_FILESYSTEM)
+	ENDIF()
 ENDIF()
 #################################################################
 # Checking for optional dependencies for helper libraries
@@ -237,9 +239,12 @@ IF(${CORE_DECKLINK})
 	
 ENDIF()
 IF(UNIX)
-	SET( YURI_LIBS ${YURI_LIBS} rt dl)
+	IF(APPLE)
+		SET( YURI_LIBS ${YURI_LIBS} dl)
+	ELSE()
+		SET( YURI_LIBS ${YURI_LIBS} rt dl)
+	ENDIF()
 ENDIF()
-
 #################################################################
 # Set linking for libyuri_core
 #################################################################
