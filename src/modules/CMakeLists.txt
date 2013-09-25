@@ -8,7 +8,7 @@ add_subdirectory(diff)
 add_subdirectory(dup)
 add_subdirectory(null)
 add_subdirectory(pad)
-
+add_subdirectory(testcard)
 
 CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
 
