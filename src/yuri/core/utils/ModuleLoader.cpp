@@ -12,7 +12,8 @@
 #include <stdexcept>
 #include <iostream>
 
-#if defined YURI_LINUX
+
+#if defined YURI_POSIX
 #include <dlfcn.h>
 #elif defined YURI_WINDOWS
 #include <windows.h>
@@ -34,18 +35,18 @@ struct dynamic_loader {
 	void reset() { handle = 0;}
 	template<typename T>
 	T load_symbol(const std::string& symbol);
-#if defined YURI_LINUX
+#if defined YURI_POSIX
 	void* handle;
 #elif defined YURI_WINDOWS
 	HINSTANCE handle;
 #endif
 };
 
-#if defined YURI_LINUX
+#if defined YURI_POSIX
 dynamic_loader::dynamic_loader(const std::string& path)
 {
 	handle = dlopen(path.c_str(),RTLD_LAZY);
-	if (!handle) throw std::runtime_error("Failed to open handle");
+	if (!handle) throw std::runtime_error("Failed to open handle "+path);
 }
 dynamic_loader::~dynamic_loader()
 {
