@@ -11,6 +11,7 @@
 #define SDLWINDOW_H_
 
 #include "yuri/core/thread/IOThread.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 #include "SDL.h"
 namespace yuri {
 namespace sdl_window {
@@ -24,16 +25,21 @@ public:
 	virtual ~SDLWindow();
 private:
 	
-	virtual bool step();
+	virtual void run() override;
+	virtual bool step() override;
 	virtual bool set_param(const core::Parameter& param);
 	void process_sdl_events();
 	void sdl_resize(resolution_t);
+	bool prepare_rgb_overlay(const core::pRawVideoFrame& frame);
 	resolution_t	resolution_;
 	bool			fullscreen_;
 	bool			default_keys_;
 	bool			use_gl_;
-	shared_ptr<SDL_Overlay>	overlay_;
 	SDL_Surface*	surface_;
+	shared_ptr<SDL_Overlay>	overlay_;
+	shared_ptr<SDL_Surface>	rgb_surface_;
+	shared_ptr<SDL_Surface>	rgb_surface2_;
+	int				sdl_bpp_;
 };
 
 } /* namespace sdl_window */
