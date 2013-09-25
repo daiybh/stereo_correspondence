@@ -35,9 +35,11 @@ namespace {
 	std::map<yuri::format_t, uint32_t> formats_map=
 			yuri::map_list_of<yuri::format_t, uint32_t>
 			(rgb24,		V4L2_PIX_FMT_RGB24)
-			(rgba32, 	V4L2_PIX_FMT_RGB32)
+			(argb32, 	V4L2_PIX_FMT_RGB32)
 			(bgr24, 	V4L2_PIX_FMT_BGR24)
-			(abgr32, 	V4L2_PIX_FMT_BGR32)
+			(bgra32, 	V4L2_PIX_FMT_BGR32)
+			(rgb15,		V4L2_PIX_FMT_RGB555)
+			(rgb16,		V4L2_PIX_FMT_RGB565)
 			(yuyv422, 	V4L2_PIX_FMT_YUYV)
 			(yvyu422, 	V4L2_PIX_FMT_YVYU)
 			(uyvy422, 	V4L2_PIX_FMT_UYVY)
@@ -63,7 +65,8 @@ namespace {
 	static uint32_t yuri_format_to_v4l2(yuri::format_t fmt)
 	{
 		if (formats_map.count(fmt)) return formats_map[fmt];
-		throw exception::Exception("Unknown format");
+		return 0;
+//		throw exception::Exception("Unknown format");
 	}
 	/** Converts v4l2 format to yuri::format_t
 	 * \param fmt Pixel format as yuri::format_t
@@ -74,8 +77,9 @@ namespace {
 		for (const auto& f: formats_map) {
 			if (f.second==fmt) return f.first;
 		}
+		return core::raw_format::unknown;
 		//	case V4L2_PIX_FMT_SN9C20X_I420:	return YURI_FMT_YUV420_PLANAR;
-		throw exception::Exception("Unknown format");
+//		throw exception::Exception("Unknown format");
 	}
 }
 
@@ -483,9 +487,8 @@ bool V4l2Source::set_param(const core::Parameter &param)
 	} else if (param.get_name() == "format") {
 		std::string format = param.get<std::string>();
 		format_t fmt = core::raw_format::parse_format(format);
-		if (fmt && formats_map.count(fmt)) {
-			pixelformat = formats_map[fmt];
-		} else {
+		pixelformat = yuri_format_to_v4l2(fmt);
+		if (!pixelformat) {
 			// Process special formats....
 //			else if (boost::iequals(format,"S920")) pixelformat = V4L2_PIX_FMT_SN9C20X_I420;
 //			else if (boost::iequals(format,"BA81")) pixelformat = V4L2_PIX_FMT_SBGGR8;
@@ -520,12 +523,8 @@ bool V4l2Source::set_param(const core::Parameter &param)
 }
 bool V4l2Source::prepare_frame(uint8_t *data, yuri::size_t size)
 {
-	//pBasicFrame  frame;
 	yuri::format_t fmt = v4l2_format_to_yuri(pixelformat);
 	if (!fmt) return false;
-//	FormatInfo_t fi = core::BasicPipe::get_format_info(fmt);
-//	if (!fi) return false;
-//	yuri::size_t frame_size = (width*height*fi->bpp)>>3;
 
 	const raw_format_t& fi = core::raw_format::get_format_info(fmt);
 	size_t frame_size = resolution.width*resolution.height*fi.planes[0].bit_depth.first/fi.planes[0].bit_depth.second/8;
@@ -681,7 +680,14 @@ bool V4l2Source::enum_formats()
 	fmts.index=0;
 	fmts.type=V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	while (!xioctl(fd,VIDIOC_ENUM_FMT,&fmts)) {
-		log[log::info] << "Supported format " << fmts.index << ": " << fmts.description << std::endl;
+		auto l = log[log::info];
+		l << "Supported format " << fmts.index << ": " << fmts.description;
+		try {
+			format_t fmt = v4l2_format_to_yuri(fmts.pixelformat);
+			const auto& fi = core::raw_format::get_format_info(fmt);
+			if (fi.short_names.size() > 0)
+			l << " [yuri fmt: " << fi.short_names[0] << "]";
+		} catch (std::exception&) {}
 		fmts.index++;
 		supported_formats.push_back(fmts.pixelformat);
 	}
