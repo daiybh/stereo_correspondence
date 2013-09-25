@@ -74,7 +74,7 @@ struct link_record_t {
 // For some reason, there's no std::stoll under cygwin...
 	long long stoll(const std::string& str) { return std::atol(str.c_str()); }
 #else
-	using stoll = std::stoll;
+	using std::stoll;
 #endif
 
 }
