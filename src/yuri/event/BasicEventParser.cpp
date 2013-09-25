@@ -37,15 +37,24 @@ namespace {
 								{return c==val;}
 					);});
 	}
+	/*!
+	 * Looks up a substring at the beginning of interval <first1, last1)
+	 *
+	 * @param first1 Begining of the string to search
+	 * @param last1 End of the string to search
+	 * @param second string to find
+	 * @return Returns iterator to first cahracter after the found substring (may be equal to last1).
+	 * 		If the string was not found, it return first1
+	 */
 	template<class Iterator1, class Str>
 	Iterator1 find_substr(Iterator1 first1, const Iterator1& last1, const Str& second)
 	{
-
-		if (static_cast<size_t>(std::distance(first1,last1)) < second.size()) return last1;
+		if (static_cast<size_t>(std::distance(first1,last1)) < second.size()) return first1;
+		auto orig_first1=first1;
 		auto first2 = second.begin();
 		const auto& last2 = second.end();
 		while (first2!=last2) {
-			if (*first2 != *first1) return last1;
+			if (*first2 != *first1) return orig_first1;
 			++first2;
 			++first1;
 		}
@@ -136,22 +145,22 @@ namespace {
 	{
 		trim_string(first,last);
 		Iterator f1;
-		if ((f1 = find_substr(first, last, std::string("true")))!=last) {
+		if ((f1 = find_substr(first, last, std::string("true")))!=first) {
 			first=f1;return make_shared<bool_const_token>(true);
 		}
-		if ((f1 = find_substr(first, last, std::string("True")))!=last) {
+		if ((f1 = find_substr(first, last, std::string("True")))!=first) {
 			first=f1;return make_shared<bool_const_token>(true);
 		}
-		if ((f1 = find_substr(first, last, std::string("TRUE")))!=last) {
+		if ((f1 = find_substr(first, last, std::string("TRUE")))!=first) {
 			first=f1;return make_shared<bool_const_token>(true);
 		}
-		if ((f1 = find_substr(first, last, std::string("false")))!=last) {
+		if ((f1 = find_substr(first, last, std::string("false")))!=first) {
 			first=f1;return make_shared<bool_const_token>(false);
 		}
-		if ((f1 = find_substr(first, last, std::string("False")))!=last) {
+		if ((f1 = find_substr(first, last, std::string("False")))!=first) {
 			first=f1;return make_shared<bool_const_token>(false);
 		}
-		if ((f1 = find_substr(first, last, std::string("FALSE")))!=last) {
+		if ((f1 = find_substr(first, last, std::string("FALSE")))!=first) {
 			first=f1;return make_shared<bool_const_token>(false);
 		}
 		return p_token();
@@ -241,13 +250,13 @@ namespace {
 	{
 		trim_string(first,last);
 		Iterator f1;
-		if ((f1 = find_substr(first, last, std::string("null")))!=last) {
+		if ((f1 = find_substr(first, last, std::string("null")))!=first) {
 			first=f1;return make_shared<null_const_token>();
 		}
-		if ((f1 = find_substr(first, last, std::string("NULL")))!=last) {
+		if ((f1 = find_substr(first, last, std::string("NULL")))!=first) {
 			first=f1;return make_shared<null_const_token>();
 		}
-		if ((f1 = find_substr(first, last, std::string("Null")))!=last) {
+		if ((f1 = find_substr(first, last, std::string("Null")))!=first) {
 			first=f1;return make_shared<null_const_token>();
 		}
 		return p_token();
@@ -257,13 +266,13 @@ namespace {
 	{
 		trim_string(first,last);
 		Iterator f1;
-		if ((f1 = find_substr(first, last, std::string("bang")))!=last) {
+		if ((f1 = find_substr(first, last, std::string("bang")))!=first) {
 			first=f1;return make_shared<bang_const_token>();
 		}
-		if ((f1 = find_substr(first, last, std::string("BANG")))!=last) {
+		if ((f1 = find_substr(first, last, std::string("BANG")))!=first) {
 			first=f1;return make_shared<bang_const_token>();
 		}
-		if ((f1 = find_substr(first, last, std::string("Bang")))!=last) {
+		if ((f1 = find_substr(first, last, std::string("Bang")))!=first) {
 			first=f1;return make_shared<bang_const_token>();
 		}
 		return p_token();
@@ -399,7 +408,7 @@ namespace {
 	{
 		trim_string(first, last);
 		Iterator f2;
-		if ((f2 = find_substr(first, last, route_lex))!=last) {
+		if ((f2 = find_substr(first, last, route_lex))!=first) {
 			first = f2;
 			trim_string(first,last);
 			if (*first != '(') return p_token();
@@ -412,7 +421,7 @@ namespace {
 			++first;
 			trim_string(first,last);
 			Iterator f3 = find_substr(first,last,std::string("->"));
-			if (f3==last) return p_token();
+			if (f3==first) return p_token();
 			first = f3;
 			while(first!=last) {
 				auto spec = parse_spec(first,last);
@@ -565,6 +574,7 @@ namespace {
 		EventRouter(const parser::p_token& token, log::Log& log)
 			:BasicEventConsumer(log),BasicEventProducer(log),log_er_(log)
 		{
+			(void)log_er_;
 //			assert(token->type == parser::token_type_t::func_name);
 			provider = process_tree(token);
 
