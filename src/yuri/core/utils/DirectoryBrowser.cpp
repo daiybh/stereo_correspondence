@@ -6,15 +6,23 @@
  */
 
 #include "DirectoryBrowser.h"
+#include "yuri/core/utils/platform.h"
 #ifdef HAVE_BOOST_FILESYSTEM
 #include <boost/filesystem.hpp>
+#elif defined YURI_POSIX
+#include <stdio.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <iostream>
 #endif
+
 
 namespace yuri {
 namespace core {
 namespace filesystem {
 
 #ifdef HAVE_BOOST_FILESYSTEM
+#error FAIL
 std::vector<std::string> browse_files(const std::string& path, const std::string& prefix)
 {
 	std::vector<std::string> paths;
@@ -30,6 +38,25 @@ std::vector<std::string> browse_files(const std::string& path, const std::string
 			const auto& filename = file.filename().string();
 			if (filename.substr(0,prefix.size())==prefix) paths.push_back(file.string());
 		}
+	}
+	return paths;
+}
+#elif defined YURI_POSIX
+std::vector<std::string> browse_files(const std::string& path, const std::string& prefix)
+{
+	std::vector<std::string> paths;
+	dirent *dp;
+	DIR *dfd = opendir(path.c_str());
+	if(dfd) {
+		while((dp = readdir(dfd)) ) {
+			std::string fname = dp->d_name;
+			if (prefix.empty()) {
+				paths.push_back(path+"/"+fname);
+			} else {
+				if (fname.substr(0,prefix.size())==prefix) paths.push_back(path+"/"+fname);
+			}
+		}
+		closedir(dfd);
 	}
 	return paths;
 }
