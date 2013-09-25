@@ -55,7 +55,7 @@ namespace {
 			{yuv411,{yuv411,"YUV 4:1:1 packed",	{"YUV411"}, "",			{{"YYUYYV",{48, 4}, {8,8,8,8,8,8}}} }},
 			{yvu411,{yvu411,"YVU 4:1:1 packed",	{"YVU411"}, "",			{{"YYVYYU",{48, 4}, {8,8,8,8,8,8}}} }},
 
-			{yuyv422,{yuyv422,"YUV 4:2:2 packed (YUYV)",{"YUV","YUVY","YUV422"}, "",{{"YUYV",{32, 2}, {8,8,8,8}}} }},
+			{yuyv422,{yuyv422,"YUV 4:2:2 packed (YUYV)",{"YUV","YUYV","YUV422"}, "",{{"YUYV",{32, 2}, {8,8,8,8}}} }},
 			{yvyu422,{yvyu422,"YUV 4:2:2 packed (YVYU)",{"YVYU"}, "",	{{"YVYU",{32, 2}, {8,8,8,8}}} }},
 			{uyvy422,{uyvy422,"YUV 4:2:2 packed (UYVY)",{"UYVY"}, "",	{{"UYVY",{32, 2}, {8,8,8,8}}} }},
 			{vyuy422,{vyuy422,"YUV 4:2:2 packed (VYUY)",{"VYUY"}, "",	{{"VYUY",{32, 2}, {8,8,8,8}}} }},
