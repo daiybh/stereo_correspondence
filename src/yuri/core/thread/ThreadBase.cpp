@@ -17,10 +17,10 @@
 #include <sys/syscall.h>
 #include <sys/prctl.h>
 #include <unistd.h>
-#include <cassert>
+#endif
 #include "yuri/core/utils/Timer.h"
 #include "yuri/core/utils.h"
-#endif
+#include <cassert>
 namespace yuri
 {
 namespace core
