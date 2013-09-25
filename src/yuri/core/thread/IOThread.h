@@ -88,7 +88,7 @@ public:
  **************************************************************************** */
 protected:
 	virtual void 				run() override;
-	virtual bool 				step() = 0;
+	virtual bool 				step();
 
 	bool		 				push_frame(position_t index, pFrame frame);
 	pFrame						pop_frame(position_t index);

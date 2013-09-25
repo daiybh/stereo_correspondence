@@ -99,6 +99,11 @@ void IOThread::run()
 	close_pipes();
 //	IO_THREAD_POST_RUN
 }
+// Dummy IOThread::step(), so inherited classes don't have to override it if not needed.
+bool IOThread::step()
+{
+	throw std::runtime_error("This method should be never called!");
+}
 position_t IOThread::get_no_in_ports()
 {
 	lock_t _(port_lock_);
