@@ -33,6 +33,7 @@
 	#define NOMINMAX
 #elif defined __linux__
 	#define YURI_LINUX 1
+	#define YURI_POSIX 1
 	#define EXPORT
 	#define IMPORT
 	#define PACK_START
@@ -47,7 +48,16 @@
 			#define EMPLACE_UNSUPPORTED  1
 		#endif
 	#endif
+#elif defined __APPLE__
+	#define YURI_APPLE 1
+	#define YURI_POSIX 1
+	#define EXPORT
+	#define IMPORT	
+	#define PACK_START
+	#define PACK_END			__attribute__((packed))
+	#define DEPRECATED			__attribute__((deprecated))
 #else
+
 	#error Unsupported platform
 #endif
 
