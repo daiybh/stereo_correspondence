@@ -70,6 +70,9 @@ distribution.
 		//#pragma message( "Using _sn* functions." )
 		#define TIXML_SNPRINTF _snprintf
 		#define TIXML_SSCANF   sscanf
+	#elif defined __CYGWIN__
+		//#define TIXML_SNPRINTF snprintf
+		#define TIXML_SSCANF   sscanf
 	#elif defined(__GNUC__) && (__GNUC__ >= 3 )
 		// GCC version 3 and higher.s
 		//#warning( "Using sn* functions." )
