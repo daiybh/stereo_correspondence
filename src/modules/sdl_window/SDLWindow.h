@@ -26,9 +26,10 @@ private:
 	
 	virtual bool step();
 	virtual bool set_param(const core::Parameter& param);
+	void process_sdl_events();
 	resolution_t	resolution_;
 	bool			fullscreen_;
-	unique_ptr<SDL_Overlay>	overlay_;
+	shared_ptr<SDL_Overlay>	overlay_;
 	SDL_Surface*	surface_;
 };
 

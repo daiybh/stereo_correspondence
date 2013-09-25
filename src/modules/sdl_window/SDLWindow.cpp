@@ -10,9 +10,25 @@
 #include "SDLWindow.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include <unordered_map>
 namespace yuri {
 namespace sdl_window {
+
+namespace {
+std::unordered_map<format_t, Uint32> yuri_to_sdl_yuv =
+	{{core::raw_format::yuyv422, SDL_YUY2_OVERLAY},
+	 {core::raw_format::yvyu422, SDL_YVYU_OVERLAY},
+	 {core::raw_format::uyvy422, SDL_UYVY_OVERLAY}};
+// TODO: SUpport for planar SDL_YV12_OVERLAY and SDL_IYUV_OVERLAY
+
+Uint32 map_yuv_yuri_to_sdl(format_t fmt) {
+	auto it = yuri_to_sdl_yuv.find(fmt);
+	if (it == yuri_to_sdl_yuv.end()) return 0;
+	return it->second;
+}
+}
 
 
 IOTHREAD_GENERATOR(SDLWindow)
@@ -51,26 +67,44 @@ resolution_({800,600}),fullscreen_(false)
 
 SDLWindow::~SDLWindow()
 {
+	SDL_Quit();
 }
 
 bool SDLWindow::step()
 {
+	process_sdl_events();
 	core::pFrame gframe = pop_frame(0);
 	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(gframe);
 	if (!frame) return true;
 	const resolution_t res = frame->get_resolution();
-	if (frame->get_format() == core::raw_format::yuyv422) {
-		shared_ptr<SDL_Overlay> overlay(SDL_CreateYUVOverlay(res.width, res.height, 0x59565955, surface_),[](SDL_Overlay*o){SDL_FreeYUVOverlay(o);});
-//		if (!overlay_) {
-//			overlay_ = unique_ptr<SDL_Overlay>(SDL_CreateYUVOverlay(res.width, res.height, 0x59565955, surface_),[](SDL_Overlay*o){SDL_FreeYUVOverlay(o);});
-//		}
-		if (!overlay) {
+	format_t format = frame->get_format();
+	Uint32 sdl_fmt = map_yuv_yuri_to_sdl(format);
+	if (sdl_fmt) {
+		if (!overlay_ ||
+				overlay_->w != static_cast<int>(res.width) ||
+				overlay_->h != static_cast<int>(res.height) ||
+				overlay_->format != sdl_fmt) {
+			overlay_.reset(SDL_CreateYUVOverlay(res.width, res.height, sdl_fmt, surface_),[](SDL_Overlay*o){SDL_FreeYUVOverlay(o);});
+		}
+		if (!overlay_) {
 			log[log::error] << "Failed to allocate overlay";
 			return false;
 		}
-
-
-
+		dimension_t src_linesize  = PLANE_DATA(frame,0).get_line_size();
+		dimension_t target_linesize  = static_cast<dimension_t>(overlay_->pitches[0]);
+		dimension_t copy_linesize = std::min(src_linesize, target_linesize);
+		auto it = PLANE_DATA(frame,0).begin();
+		SDL_LockYUVOverlay(overlay_.get());
+		for (dimension_t line = 0; line < res.height; ++line) {
+			std::copy(it, it + copy_linesize, overlay_->pixels[0] + target_linesize * line);
+			it += src_linesize;
+		}
+		SDL_UnlockYUVOverlay(overlay_.get());
+		SDL_Rect rec={0,0,static_cast<Uint16>(res.width), static_cast<Uint16>(res.height)};
+		SDL_DisplayYUVOverlay(overlay_.get(), &rec);
+	} else {
+		const auto& fi = core::raw_format::get_format_info(format);
+		log[log::warning] << "Unsupported format '" << fi.name << "'";
 	}
 
 	return true;
@@ -84,6 +118,19 @@ bool SDLWindow::set_param(const core::Parameter& param)
 	} else return core::IOThread::set_param(param);
 	return true;
 }
-
+void SDLWindow::process_sdl_events()
+{
+	SDL_Event event;
+	while(SDL_PollEvent(&event)) {
+		switch (event.type) {
+			case SDL_QUIT: request_end(core::yuri_exit_interrupted);
+				break;
+			case SDL_KEYDOWN:
+				if (event.key.keysym.sym == SDLK_ESCAPE) request_end(core::yuri_exit_interrupted);
+				break;
+			default:break;
+		}
+	}
+}
 } /* namespace sdl_window */
 } /* namespace yuri */
