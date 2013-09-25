@@ -11,8 +11,9 @@
 #include "yuri/core/utils/ModuleLoader.h"
 #define TIXML_USE_STL
 #include "yuri/core/tinyxml/tinyxml.h"
-
-
+#ifdef YURI_CYGWIN
+#include <cstdlib>
+#endif
 namespace yuri {
 namespace core {
 
@@ -68,6 +69,14 @@ struct link_record_t {
 	position_t	target_index;
 	pPipe		pipe;
 };
+
+#ifdef YURI_CYGWIN
+// For some reason, there's no std::stoll under cygwin...
+	long long stoll(const std::string& str) { return std::atol(str.c_str()); }
+#else
+	using stoll = std::stoll;
+#endif
+
 }
 struct XmlBuilder::builder_pimpl_t:  public event::BasicEventParser {
 	builder_pimpl_t(log::Log& log_, XmlBuilder& builder):BasicEventParser(log_),log(log_),builder(builder){}
@@ -300,11 +309,11 @@ void XmlBuilder::builder_pimpl_t::process_links()
 		auto idx = source.find(':');
 		VALID(idx!=std::string::npos,"Malformed source specification in source for link " + record.name)
 		record.source_node = source.substr(0,idx);
-		record.source_index = std::stoll(source.substr(idx+1));
+		record.source_index = stoll(source.substr(idx+1));
 		idx = target.find(':');
 		VALID(idx!=std::string::npos,"Malformed target specification in source for link " + record.name)
 		record.target_node = target.substr(0,idx);
-		record.target_index = std::stoll(target.substr(idx+1));
+		record.target_index = stoll(target.substr(idx+1));
 		record.parameters = parse_parameters(node);
 		verify_link_class(record.class_name);
 //		log[log::info] << "Storing node " << record.name;
