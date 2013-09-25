@@ -27,8 +27,11 @@ private:
 	virtual bool step();
 	virtual bool set_param(const core::Parameter& param);
 	void process_sdl_events();
+	void sdl_resize(resolution_t);
 	resolution_t	resolution_;
 	bool			fullscreen_;
+	bool			default_keys_;
+	bool			use_gl_;
 	shared_ptr<SDL_Overlay>	overlay_;
 	SDL_Surface*	surface_;
 };

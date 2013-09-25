@@ -43,13 +43,15 @@ core::Parameters SDLWindow::configure()
 	p.set_description("SDLWindow");
 	p["resolution"]["Resolution of output window"]=resolution_t{800,600};
 	p["fullscreen"]["Start in fullscreen"]=false;
+	p["opengl"]["Use OpenGL for rendering"]=false;
+	p["default_keys"]["Enable default key events. This includes ESC for quit and f for fullscreen toggle."]=true;
 	return p;
 }
 
 
 SDLWindow::SDLWindow(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOThread(log_,parent,1,0,std::string("sdl_window")),
-resolution_({800,600}),fullscreen_(false)
+resolution_({800,600}),fullscreen_(false),default_keys_(true),use_gl_(false)
 {
 	IOTHREAD_INIT(parameters)
 	set_latency(10_ms);
@@ -59,7 +61,8 @@ resolution_({800,600}),fullscreen_(false)
 	}
 	if (!(surface_ = SDL_SetVideoMode(resolution_.width, resolution_.height, 24,
 		      SDL_HWSURFACE |  SDL_DOUBLEBUF | SDL_RESIZABLE |
-		      (fullscreen_?SDL_FULLSCREEN:0) ))) {
+		      (fullscreen_?SDL_FULLSCREEN:0) |
+		      (use_gl_?SDL_OPENGL:0)))) {
 		throw exception::InitializationFailed("Failed to set video mode");
 	}
 
@@ -115,6 +118,10 @@ bool SDLWindow::set_param(const core::Parameter& param)
 		resolution_ = param.get<resolution_t>();
 	} else if (iequals(param.get_name(), "fullscreen")) {
 		fullscreen_ = param.get<bool>();
+	} else if (iequals(param.get_name(), "default_keys")) {
+		default_keys_ = param.get<bool>();
+	} else if (iequals(param.get_name(), "opengl")) {
+		use_gl_ = param.get<bool>();
 	} else return core::IOThread::set_param(param);
 	return true;
 }
@@ -126,16 +133,26 @@ void SDLWindow::process_sdl_events()
 			case SDL_QUIT: request_end(core::yuri_exit_interrupted);
 				break;
 			case SDL_VIDEORESIZE:
-				resolution_ = {static_cast<dimension_t>(event.resize.w), static_cast<dimension_t>(event.resize.h)};
-				overlay_.reset();
-				surface_ = SDL_SetVideoMode(resolution_.width, resolution_.height, 24, surface_->flags);
+				sdl_resize({static_cast<dimension_t>(event.resize.w), static_cast<dimension_t>(event.resize.h)});
 				break;
 			case SDL_KEYDOWN:
-				if (event.key.keysym.sym == SDLK_ESCAPE) request_end(core::yuri_exit_interrupted);
+				if (default_keys_) {
+					if (event.key.keysym.sym == SDLK_ESCAPE) request_end(core::yuri_exit_interrupted);
+					if (event.key.keysym.sym == SDLK_f) { fullscreen_=!fullscreen_; sdl_resize(resolution_);}
+				}
 				break;
 
 			default:break;
 		}
+	}
+}
+void SDLWindow::sdl_resize(resolution_t new_res)
+{
+	resolution_ = new_res;
+	if (!use_gl_) {
+		overlay_.reset();
+		Uint32 flags = (surface_->flags & ~SDL_FULLSCREEN) | (fullscreen_?SDL_FULLSCREEN:0);
+		if (surface_) surface_ = SDL_SetVideoMode(resolution_.width, resolution_.height, 24, flags);
 	}
 }
 } /* namespace sdl_window */
