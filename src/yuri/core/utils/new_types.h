@@ -20,8 +20,11 @@
 namespace yuri {
 
 typedef ::size_t 		size_t;
+#if defined YURI_APPLE
+typedef int64_t			ssize_t;
+#else
 typedef ::ssize_t 		ssize_t;
-
+#endif
 using	std::shared_ptr;
 using	std::make_shared;
 using 	std::enable_shared_from_this;
