@@ -21,7 +21,7 @@ public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
 	TestCard(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
-	virtual ~TestCard();
+	virtual ~TestCard() noexcept;
 private:
 	
 	virtual void run() override;

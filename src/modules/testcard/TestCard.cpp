@@ -47,7 +47,7 @@ fps_(25.0),format_(core::raw_format::yuyv422)
 	IOTHREAD_INIT(parameters)
 }
 
-TestCard::~TestCard()
+TestCard::~TestCard() noexcept
 {
 }
 
