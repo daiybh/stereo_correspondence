@@ -30,7 +30,7 @@
 namespace po = boost::program_options;
 
 yuri::shared_ptr<yuri::core::XmlBuilder> builder;
-int verbosity;
+int verbosity = 0;
 yuri::log::Log l(std::clog);
 
 
@@ -67,30 +67,34 @@ void usage(const po::options_description& options)
 void list_registered(yuri::log::Log& l_)
 {
 	using namespace yuri;
-	l_[log::info]<<"List of registered objects:" ;
+	if (verbosity>=0) l_[log::info]<<"List of registered objects:" ;
 	auto& generator = yuri::IOThreadGenerator::get_instance();
 	for (const auto& name: generator.list_keys()) {
-		l_[log::info] /*<< "Module: "*/ << "..:: " << name << " ::..";
-		const auto& params = generator.configure(name);
-		const std::string& desc = params.get_description();
-		if (!desc.empty()) {
-			l_[log::info] << "\t" << desc;
-		}
-		for (const auto& p: params) {
-			const auto& param = p.second;
-			const std::string& pname = param.get_name();
-			if (pname[0] != '_') {
-				l_[log::info] << "\t\t"
-					<< std::setfill(' ') << std::left << std::setw(20)
-					<< (pname + ": ")
-					<< std::right << std::setw(10) << param.get<std::string>();
-				const std::string& d = param.get_description();
-				if (!d.empty()) {
-					l_[log::info] << "\t\t\t" << d;
+		if (verbosity < 0) {
+			l_[log::info] << name;
+		} else {
+			l_[log::info] /*<< "Module: "*/ << "..:: " << name << " ::..";
+			const auto& params = generator.configure(name);
+			const std::string& desc = params.get_description();
+			if (!desc.empty()) {
+				l_[log::info] << "\t" << desc;
+			}
+			for (const auto& p: params) {
+				const auto& param = p.second;
+				const std::string& pname = param.get_name();
+				if (pname[0] != '_') {
+					l_[log::info] << "\t\t"
+						<< std::setfill(' ') << std::left << std::setw(20)
+						<< (pname + ": ")
+						<< std::right << std::setw(10) << param.get<std::string>();
+					const std::string& d = param.get_description();
+					if (!d.empty()) {
+						l_[log::info] << "\t\t\t" << d;
+					}
 				}
 			}
+			l_[log::info];
 		}
-		l_[log::info];
 	}
 
 }
@@ -210,10 +214,6 @@ int main(int argc, char**argv)
 		l.set_flags(log::fatal);
 		l.set_quiet(true);
 	}
-	/*if (iequals(argv[1],"--converters")) {
-
-		exit(0);
-	}*/
 
 	if (filename.empty()) {
 		l[log::fatal] << "No input file specified";
@@ -267,7 +267,7 @@ int main(int argc, char**argv)
 #endif
 	try {
 		(*builder)();
-		l[log::info] << "Application successfully destroyed";
+		l[log::info] << "Application successfully finished";
 	}
 	catch (yuri::exception::Exception &e) {
 		l[log::fatal] << "Application failed to start: " << e.what();
@@ -275,6 +275,9 @@ int main(int argc, char**argv)
 	catch(std::exception &e) {
 		l[log::fatal] << "An error occurred during execution: " << e.what();
 	}
+	// Explicit release of resources is needed here, so the destruction can take place before main ends
+	// Otherwise it would be destroyed among global variables and this could lead to segfaults.
 	builder.reset();
+	l[log::info] << "Application successfully destroyed";
 	return 0;
 }
