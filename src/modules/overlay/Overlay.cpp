@@ -10,29 +10,34 @@
 #include "Overlay.h"
 #include "yuri/core/Module.h"
 #include "yuri/event/EventHelpers.h"
+//#include "yuri/core/frame/raw_frame_params.h"
+#include "yuri/core/frame/raw_frame_types.h"
+#include <cassert>
 namespace yuri {
 namespace overlay {
+using plane_t = core::RawVideoFrame::value_type;
+IOTHREAD_GENERATOR(Overlay)
 
-REGISTER("overlay",Overlay)
+MODULE_REGISTRATION_BEGIN("overlay")
+		REGISTER_IOTHREAD("overlay",Overlay)
+MODULE_REGISTRATION_END()
 
-IO_THREAD_GENERATOR(Overlay)
-
-core::pParameters Overlay::configure()
+core::Parameters Overlay::configure()
 {
-	core::pParameters p = core::BasicMultiIOFilter::configure();
-	p->set_description("Overlay");
-	p->set_max_pipes(1,1);
-	(*p)["x"]["X offset"]=0;
-	(*p)["y"]["Y offset"]=0;
+	core::Parameters p = core::MultiIOFilter::configure();
+	p.set_description("Overlay");
+//	p->set_max_pipes(1,1);
+	p["x"]["X offset"]=0;
+	p["y"]["Y offset"]=0;
 	return p;
 }
 
 
-Overlay::Overlay(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicMultiIOFilter(log_,parent,2,1,std::string("overlay")),
+Overlay::Overlay(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
+core::MultiIOFilter(log_,parent,2,1,std::string("overlay")),
 event::BasicEventConsumer(log)
 {
-	IO_THREAD_INIT("overlay")
+	IOTHREAD_INIT(parameters)
 }
 
 Overlay::~Overlay()
@@ -40,6 +45,7 @@ Overlay::~Overlay()
 }
 
 namespace {
+using namespace core::raw_format;
 template<size_t s, size_t o, size_t d, format_t fmt>
 struct combine_base {
 	enum { src_bpp 	= s };
@@ -64,95 +70,95 @@ void operator()(plane_t::const_iterator& src_pix, plane_t::const_iterator& ovr_p
 };
 
 template<>
-struct combine_kernel<YURI_FMT_RGBA, YURI_FMT_RGBA>:
-public combine_base<4, 4, 4, YURI_FMT_RGBA> {
+struct combine_kernel<rgba32, rgba32>:
+public combine_base<4, 4, 4, rgba32> {
 	static void compute
 (plane_t::const_iterator& src_pix, plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 {
 	const double alpha = static_cast<double>(*(ovr_pix+3))/255.0;
 	const double minus_alpha = 1.0 - alpha;
-	*dest_pix++ =static_cast<ubyte_t>(*src_pix++*minus_alpha + *ovr_pix++ * alpha);
-	*dest_pix++ =static_cast<ubyte_t>(*src_pix++*minus_alpha + *ovr_pix++ * alpha);
-	*dest_pix++ =static_cast<ubyte_t>(*src_pix++*minus_alpha + *ovr_pix++ * alpha);
-	*dest_pix++ =static_cast<ubyte_t>(*src_pix++*minus_alpha + 255 * alpha);
+	*dest_pix++ =static_cast<uint8_t>(*src_pix++*minus_alpha + *ovr_pix++ * alpha);
+	*dest_pix++ =static_cast<uint8_t>(*src_pix++*minus_alpha + *ovr_pix++ * alpha);
+	*dest_pix++ =static_cast<uint8_t>(*src_pix++*minus_alpha + *ovr_pix++ * alpha);
+	*dest_pix++ =static_cast<uint8_t>(*src_pix++*minus_alpha + 255 * alpha);
 	ovr_pix++;
 }
 
 };
 template<>
-struct combine_kernel<YURI_FMT_RGB, YURI_FMT_RGBA>:
-public combine_base<3, 4, 4, YURI_FMT_RGBA>
+struct combine_kernel<rgb24, rgba32>:
+public combine_base<3, 4, 4, rgba32>
 {
 	static void compute
 	(plane_t::const_iterator& src_pix, plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 	{
 		const double alpha = static_cast<double>(*(ovr_pix+3))/255.0;
 		const double minus_alpha = 1.0 - alpha;
-		*dest_pix++ =static_cast<ubyte_t>(*src_pix++*minus_alpha + *ovr_pix++ * alpha);
-		*dest_pix++ =static_cast<ubyte_t>(*src_pix++*minus_alpha + *ovr_pix++ * alpha);
-		*dest_pix++ =static_cast<ubyte_t>(*src_pix++*minus_alpha + *ovr_pix++ * alpha);
-		*dest_pix++ =static_cast<ubyte_t>(255*minus_alpha + 255 * alpha);
+		*dest_pix++ =static_cast<uint8_t>(*src_pix++*minus_alpha + *ovr_pix++ * alpha);
+		*dest_pix++ =static_cast<uint8_t>(*src_pix++*minus_alpha + *ovr_pix++ * alpha);
+		*dest_pix++ =static_cast<uint8_t>(*src_pix++*minus_alpha + *ovr_pix++ * alpha);
+		*dest_pix++ =static_cast<uint8_t>(255*minus_alpha + 255 * alpha);
 		ovr_pix++;
 	}
 };
 
 template<>
-struct combine_kernel<YURI_FMT_BGR, YURI_FMT_RGBA>:
-public combine_base<3, 4, 4, YURI_FMT_BGRA> {
+struct combine_kernel<bgr24, rgba32>:
+public combine_base<3, 4, 4, abgr32> {
 	static void compute
 (plane_t::const_iterator& src_pix, plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 {
 	const double alpha = static_cast<double>(*(ovr_pix+3))/255.0;
 	const double minus_alpha = 1.0 - alpha;
-	*dest_pix++ =static_cast<ubyte_t>(*src_pix++*minus_alpha + *(ovr_pix+2) * alpha);
-	*dest_pix++ =static_cast<ubyte_t>(*src_pix++*minus_alpha + *(ovr_pix+1) * alpha);
-	*dest_pix++ =static_cast<ubyte_t>(*src_pix++*minus_alpha + *(ovr_pix+0) * alpha);
-	*dest_pix++ =static_cast<ubyte_t>(255*minus_alpha + 255 * alpha);
+	*dest_pix++ =static_cast<uint8_t>(*src_pix++*minus_alpha + *(ovr_pix+2) * alpha);
+	*dest_pix++ =static_cast<uint8_t>(*src_pix++*minus_alpha + *(ovr_pix+1) * alpha);
+	*dest_pix++ =static_cast<uint8_t>(*src_pix++*minus_alpha + *(ovr_pix+0) * alpha);
+	*dest_pix++ =static_cast<uint8_t>(255*minus_alpha + 255 * alpha);
 	ovr_pix+=4;
 }
 };
 template<>
-struct combine_kernel<YURI_FMT_BGRA, YURI_FMT_RGBA>:
-public combine_base<4, 4, 4, YURI_FMT_BGRA> {
+struct combine_kernel<abgr32, rgba32>:
+public combine_base<4, 4, 4, abgr32> {
 	static void compute
 (plane_t::const_iterator& src_pix, plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 {
 	const double alpha = static_cast<double>(*(ovr_pix+3))/255.0;
 	const double minus_alpha = 1.0 - alpha;
-	*dest_pix++ =static_cast<ubyte_t>(*src_pix++*minus_alpha + *(ovr_pix+2) * alpha);
-	*dest_pix++ =static_cast<ubyte_t>(*src_pix++*minus_alpha + *(ovr_pix+1) * alpha);
-	*dest_pix++ =static_cast<ubyte_t>(*src_pix++*minus_alpha + *(ovr_pix+0) * alpha);
-	*dest_pix++ =static_cast<ubyte_t>(*src_pix++*minus_alpha + 255 * alpha);
+	*dest_pix++ =static_cast<uint8_t>(*src_pix++*minus_alpha + *(ovr_pix+2) * alpha);
+	*dest_pix++ =static_cast<uint8_t>(*src_pix++*minus_alpha + *(ovr_pix+1) * alpha);
+	*dest_pix++ =static_cast<uint8_t>(*src_pix++*minus_alpha + *(ovr_pix+0) * alpha);
+	*dest_pix++ =static_cast<uint8_t>(*src_pix++*minus_alpha + 255 * alpha);
 	ovr_pix+=4;
 }
 };
 
 template<>
-struct combine_kernel<YURI_FMT_BGR, YURI_FMT_BGRA>:
-public combine_kernel<YURI_FMT_RGB, YURI_FMT_RGBA>{
-	static format_t output_format() { return YURI_FMT_BGRA; }
+struct combine_kernel<bgr24, abgr32>:
+public combine_kernel<rgb24, rgba32>{
+	static format_t output_format() { return abgr32; }
 };
 
 template<>
-struct combine_kernel<YURI_FMT_BGRA, YURI_FMT_BGRA>:
-public combine_kernel<YURI_FMT_RGBA, YURI_FMT_RGBA>{
-	static format_t output_format() { return YURI_FMT_BGRA; }
+struct combine_kernel<abgr32, abgr32>:
+public combine_kernel<rgba32, rgba32>{
+	static format_t output_format() { return abgr32; }
 };
 template<>
-struct combine_kernel<YURI_FMT_RGB, YURI_FMT_BGRA>:
-public combine_kernel<YURI_FMT_BGR, YURI_FMT_RGBA>{
-	static format_t output_format() { return YURI_FMT_RGBA; }
+struct combine_kernel<rgb24, abgr32>:
+public combine_kernel<bgr24, rgba32>{
+	static format_t output_format() { return rgba32; }
 };
 template<>
-struct combine_kernel<YURI_FMT_RGBA, YURI_FMT_BGRA>:
-public combine_kernel<YURI_FMT_BGRA, YURI_FMT_RGBA>{
-	static format_t output_format() { return YURI_FMT_RGBA; }
+struct combine_kernel<rgba32, abgr32>:
+public combine_kernel<abgr32, rgba32>{
+	static format_t output_format() { return rgba32; }
 };
 
 
 template<>
-struct combine_kernel<YURI_FMT_RGBA, YURI_FMT_RGB>:
-public combine_base<4, 3, 4, YURI_FMT_RGBA> {
+struct combine_kernel<rgba32, rgb24>:
+public combine_base<4, 3, 4, rgba32> {
 	static void compute
 (plane_t::const_iterator& , plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 {
@@ -164,8 +170,8 @@ public combine_base<4, 3, 4, YURI_FMT_RGBA> {
 
 };
 template<>
-struct combine_kernel<YURI_FMT_RGB, YURI_FMT_RGB>:
-public combine_base<3, 3, 3, YURI_FMT_RGB>
+struct combine_kernel<rgb24, rgb24>:
+public combine_base<3, 3, 3, rgb24>
 {
 	static void compute
 	(plane_t::const_iterator& , plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
@@ -177,8 +183,8 @@ public combine_base<3, 3, 3, YURI_FMT_RGB>
 };
 
 template<>
-struct combine_kernel<YURI_FMT_BGR, YURI_FMT_RGB>:
-public combine_base<3, 3, 3, YURI_FMT_BGR> {
+struct combine_kernel<bgr24, rgb24>:
+public combine_base<3, 3, 3, bgr24> {
 	static void compute
 (plane_t::const_iterator& , plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 {
@@ -189,8 +195,8 @@ public combine_base<3, 3, 3, YURI_FMT_BGR> {
 }
 };
 template<>
-struct combine_kernel<YURI_FMT_BGRA, YURI_FMT_RGB>:
-public combine_base<4, 3, 4, YURI_FMT_BGRA> {
+struct combine_kernel<abgr32, rgb24>:
+public combine_base<4, 3, 4, abgr32> {
 	static void compute
 (plane_t::const_iterator& , plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 {
@@ -203,59 +209,59 @@ public combine_base<4, 3, 4, YURI_FMT_BGRA> {
 };
 
 template<>
-struct combine_kernel<YURI_FMT_BGR, YURI_FMT_BGR>:
-public combine_kernel<YURI_FMT_RGB, YURI_FMT_RGB>{
-	static format_t output_format() { return YURI_FMT_BGR; }
+struct combine_kernel<bgr24, bgr24>:
+public combine_kernel<rgb24, rgb24>{
+	static format_t output_format() { return bgr24; }
 };
 
 template<>
-struct combine_kernel<YURI_FMT_BGRA, YURI_FMT_BGR>:
-public combine_kernel<YURI_FMT_RGBA, YURI_FMT_RGB>{
-	static format_t output_format() { return YURI_FMT_BGRA; }
+struct combine_kernel<abgr32, bgr24>:
+public combine_kernel<rgba32, rgb24>{
+	static format_t output_format() { return abgr32; }
 };
 template<>
-struct combine_kernel<YURI_FMT_RGB, YURI_FMT_BGR>:
-public combine_kernel<YURI_FMT_BGR, YURI_FMT_RGB>{
-	static format_t output_format() { return YURI_FMT_RGB; }
+struct combine_kernel<rgb24, bgr24>:
+public combine_kernel<bgr24, rgb24>{
+	static format_t output_format() { return rgb24; }
 };
 template<>
-struct combine_kernel<YURI_FMT_RGBA, YURI_FMT_BGR>:
-public combine_kernel<YURI_FMT_BGRA, YURI_FMT_RGB>{
-	static format_t output_format() { return YURI_FMT_RGBA; }
+struct combine_kernel<rgba32, bgr24>:
+public combine_kernel<abgr32, rgb24>{
+	static format_t output_format() { return rgba32; }
 };
 template<format_t f>
-core::pBasicFrame dispatch2(Overlay& overlay, const core::pBasicFrame& frame_0, const core::pBasicFrame& frame_1)
+core::pRawVideoFrame dispatch2(Overlay& overlay, const core::pRawVideoFrame& frame_0, const core::pRawVideoFrame& frame_1)
 {
 	format_t fmt = frame_1->get_format();
 	switch (fmt) {
-		case YURI_FMT_RGBA:
-			return overlay.combine<combine_kernel<f, YURI_FMT_RGBA> >(frame_0, frame_1);
-		case YURI_FMT_BGRA:
-			return overlay.combine<combine_kernel<f, YURI_FMT_BGRA> >(frame_0, frame_1);
-		case YURI_FMT_RGB:
-			return overlay.combine<combine_kernel<f, YURI_FMT_RGB> >(frame_0, frame_1);
-		case YURI_FMT_BGR:
-			return overlay.combine<combine_kernel<f, YURI_FMT_BGR> >(frame_0, frame_1);
+		case rgba32:
+			return overlay.combine<combine_kernel<f, rgba32> >(frame_0, frame_1);
+		case abgr32:
+			return overlay.combine<combine_kernel<f, abgr32> >(frame_0, frame_1);
+		case rgb24:
+			return overlay.combine<combine_kernel<f, rgb24> >(frame_0, frame_1);
+		case bgr24:
+			return overlay.combine<combine_kernel<f, bgr24> >(frame_0, frame_1);
 		default:
 			break;
 	}
-	return core::pBasicFrame();
+	return core::pRawVideoFrame();
 }
 
-core::pBasicFrame dispatch(Overlay& overlay, const core::pBasicFrame& frame_0, const core::pBasicFrame& frame_1)
+core::pRawVideoFrame dispatch(Overlay& overlay, const core::pRawVideoFrame& frame_0, const core::pRawVideoFrame& frame_1)
 {
 	format_t fmt = frame_0->get_format();
 	switch (fmt) {
-		case YURI_FMT_RGB:
-			return dispatch2<YURI_FMT_RGB>(overlay, frame_0, frame_1);
-		case YURI_FMT_RGBA:
-			return dispatch2<YURI_FMT_RGBA>(overlay, frame_0, frame_1);
-		case YURI_FMT_BGR:
-			return dispatch2<YURI_FMT_BGR>(overlay, frame_0, frame_1);
-		case YURI_FMT_BGRA:
-			return dispatch2<YURI_FMT_BGRA>(overlay, frame_0, frame_1);
+		case rgb24:
+			return dispatch2<rgb24>(overlay, frame_0, frame_1);
+		case rgba32:
+			return dispatch2<rgba32>(overlay, frame_0, frame_1);
+		case bgr24:
+			return dispatch2<bgr24>(overlay, frame_0, frame_1);
+		case abgr32:
+			return dispatch2<abgr32>(overlay, frame_0, frame_1);
 		default:
-			return core::pBasicFrame();
+			return core::pRawVideoFrame();
 	}
 
 }
@@ -280,17 +286,19 @@ inline void fill_multiple_lines(ssize_t& line, const ssize_t& max_line,
 }
 }
 template<class kernel>
-core::pBasicFrame Overlay::combine(const core::pBasicFrame& frame_0, const core::pBasicFrame& frame_1)
+core::pRawVideoFrame Overlay::combine(const core::pRawVideoFrame& frame_0, const core::pRawVideoFrame& frame_1)
 {
-	const ssize_t 			width 		= frame_0->get_width();
-	const ssize_t 			height 		= frame_0->get_height();
-	const ssize_t 			w 			= frame_1->get_width();
-	const ssize_t 			h 			= frame_1->get_height();
+	const resolution_t		res_0		= frame_0->get_resolution();
+	const resolution_t		res_1		= frame_1->get_resolution();
+	const ssize_t 			width 		= res_0.width;
+	const ssize_t 			height 		= res_0.height;
+	const ssize_t 			w 			= res_1.width;
+	const ssize_t 			h 			= res_0.height;
 	const size_t 			linesize_0 	= width * kernel::src_bpp;
 	const size_t 			linesize_1	= w     * kernel::ovr_bpp;
 	const size_t 			linesize_out= width * kernel::dest_bpp;;
 	log[log::verbose_debug] << "Base " << width << "x" << height << " (" << linesize_0 << ") + " << w << "x" <<h << " (" << linesize_1 << ") -> ("<<linesize_out<<")";
-	core::pBasicFrame 		outframe 	= core::BasicIOThread::allocate_empty_frame(kernel::output_format(), width, height);
+	core::pRawVideoFrame 		outframe 	= core::RawVideoFrame::create_empty(kernel::output_format(), res_0);
 	const plane_t::const_iterator src 		= PLANE_DATA(frame_0,0).begin();
 	const plane_t::const_iterator overlay 	= PLANE_DATA(frame_1,0).begin();
 	const plane_t::iterator 	  dest 		= PLANE_DATA(outframe,0).begin();
@@ -318,22 +326,25 @@ core::pBasicFrame Overlay::combine(const core::pBasicFrame& frame_0, const core:
 	}
 	return outframe;
 }
-std::vector<core::pBasicFrame> Overlay::do_single_step(const std::vector<core::pBasicFrame>& frames)
+std::vector<core::pFrame> Overlay::do_single_step(const std::vector<core::pFrame>& frames)
 {
 	process_events();
 	assert(frames.size() == 2);
-	core::pBasicFrame outframe = dispatch(*this, frames[0], frames[1]);
+	core::pRawVideoFrame f0 = dynamic_pointer_cast<core::RawVideoFrame>(frames[0]);
+	core::pRawVideoFrame f1 = dynamic_pointer_cast<core::RawVideoFrame>(frames[1]);
+	if (!f0 || !f1) return {};
+	core::pRawVideoFrame outframe = dispatch(*this, f0, f1);
 	if (outframe) return {outframe};
 	return {};
 }
 bool Overlay::set_param(const core::Parameter& param)
 {
 //	using boost::iequals;
-	if (iequals(param.name,"x")) {
+	if (iequals(param.get_name(),"x")) {
 		x_ = param.get<ssize_t>();
-	} else if (iequals(param.name,"y")) {
+	} else if (iequals(param.get_name(),"y")) {
 		y_ = param.get<ssize_t>();
-	} else return core::BasicMultiIOFilter::set_param(param);
+	} else return core::MultiIOFilter::set_param(param);
 	return true;
 }
 

@@ -10,23 +10,25 @@
 #ifndef OVERLAY_H_
 #define OVERLAY_H_
 
-#include "yuri/core/BasicIOFilter.h"
+#include "yuri/core/thread/MultiIOFilter.h"
 #include "yuri/event/BasicEventConsumer.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 namespace yuri {
 namespace overlay {
 
-class Overlay: public core::BasicMultiIOFilter, public event::BasicEventConsumer
+class Overlay: public core::MultiIOFilter, public event::BasicEventConsumer
 {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+	Overlay(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~Overlay();
 	template<class kernel>
-	core::pBasicFrame combine(const core::pBasicFrame& frame_0, const core::pBasicFrame& frame_1);
+	core::pRawVideoFrame combine(const core::pRawVideoFrame& frame_0, const core::pRawVideoFrame& frame_1);
 private:
-	Overlay(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
+
 	//virtual bool step();
-	virtual std::vector<core::pBasicFrame> do_single_step(const std::vector<core::pBasicFrame>&);
+	virtual std::vector<core::pFrame> do_single_step(const std::vector<core::pFrame>&);
 	virtual bool set_param(const core::Parameter& param);
 	bool do_process_event(const std::string& event_name, const event::pBasicEvent& event);
 //	core::pBasicFrame frame_0;

@@ -8,6 +8,7 @@ add_subdirectory(color_key)
 add_subdirectory(diff)
 add_subdirectory(dup)
 add_subdirectory(null)
+add_subdirectory(overlay)
 add_subdirectory(pad)
 add_subdirectory(testcard)
 
@@ -47,7 +48,6 @@ add_subdirectory(merge_frames)
 add_subdirectory(rotate)
 add_subdirectory(repack_audio)
 
-add_subdirectory(overlay)
 
 add_subdirectory(event_info)
 add_subdirectory(fade)
