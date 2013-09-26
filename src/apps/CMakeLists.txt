@@ -1,4 +1,9 @@
-find_package( Boost 1.46 COMPONENTS program_options REQUIRED)
+IF(NOT YURI_DISABLE_BOOST)
+	find_package( Boost 1.46 COMPONENTS program_options)
+	IF(Boost_PROGRAM_OPTIONS_FOUND)
+		add_definitions(-DHAVE_BOOST_PROGRAM_OPTIONS)
+	ENDIF()
+ENDIF()
 
 include_directories ( ${Boost_INCLUDE_DIRS})
 link_directories (${Boost_LIBRARY_DIRS})

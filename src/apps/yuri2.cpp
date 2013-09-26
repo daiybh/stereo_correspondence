@@ -26,26 +26,30 @@
 //using namespace yuri::log;
 //using yuri::iequals;
 //using yuri::shared_ptr;
+#ifdef HAVE_BOOST_PROGRAM_OPTIONS
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
-
+#endif
 yuri::shared_ptr<yuri::core::XmlBuilder> builder;
 int verbosity = 0;
 yuri::log::Log l(std::clog);
 
 
-#ifdef YURI_LINUX
+#if defined YURI_LINUX || defined YURI_APPLE
 #include <signal.h>
+#include <string.h>
 static void sigHandler(int sig, siginfo_t *siginfo, void *context);
 static struct sigaction act;
 
 
 void sigHandler(int sig, siginfo_t */*siginfo*/, void */*context*/)
 {
+#if !defined YURI_APPLE
 	if (sig==SIGRTMIN) {
 		l[yuri::log::warning] << "Realtime signal 0! Ignoring...";
 		return;
 	}
+#endif
 	if (builder)
 		builder->request_end(yuri::core::yuri_exit_interrupted);
 	act.sa_handler = SIG_DFL;
@@ -55,7 +59,7 @@ void sigHandler(int sig, siginfo_t */*siginfo*/, void */*context*/)
 #endif
 
 
-
+#ifdef HAVE_BOOST_PROGRAM_OPTIONS
 void usage(const po::options_description& options)
 {
 	//l.set_quiet(true);
@@ -63,6 +67,7 @@ void usage(const po::options_description& options)
 			<< "Usage:	yuri [options] [-i] <file> [[-p] params...]\n\n"
 			<< options;
 }
+#endif
 //
 void list_registered(yuri::log::Log& l_)
 {
@@ -143,7 +148,6 @@ void version()
 int main(int argc, char**argv)
 {
 	using namespace yuri;
-	po::options_description options("General options");
 	std::vector<std::string> params;
 	//yuri::uint_t verbosity;
 	std::string filename;
@@ -151,6 +155,8 @@ int main(int argc, char**argv)
 	l.set_label("[YURI2] ");
 	l.set_flags(log::info|log::show_level|log::use_colors);
 	bool show_info = false;
+#ifdef HAVE_BOOST_PROGRAM_OPTIONS
+	po::options_description options("General options");
 	options.add_options()
 		("help,h","print help")
 		("version,V","Show version of yuri and libyuri")
@@ -214,10 +220,34 @@ int main(int argc, char**argv)
 		l.set_flags(log::fatal);
 		l.set_quiet(true);
 	}
+#else
+	for (int i=1;i<argc;++i) {
+		if (argv[i][0]=='-') {
+			if (iequals(std::string(argv[i]+1),"l")) {
+				std::string list_what("classes");
+				if (i<argc-1) {
+					list_what=argv[++i];
+				}
+				builder.reset(new core::XmlBuilder(l, core::pwThreadBase(), filename, arguments, true ));
+				log::Log l_(std::cout);
+				l_.set_flags(log::info);
+				l_.set_quiet(true);
+				if (iequals(list_what,"formats")) list_formats(l_);
+				else list_registered(l_);
+			}
+		} else {
+			if (filename.empty()) filename = argv[i];
+			else arguments.push_back(argv[i]);
+		}
+	}
+
+#endif
 
 	if (filename.empty()) {
 		l[log::fatal] << "No input file specified";
+#ifdef HAVE_BOOST_PROGRAM_OPTIONS
 		usage(options);
+#endif
 		return -1;
 	}
 
@@ -258,12 +288,14 @@ int main(int argc, char**argv)
 		return 0;
 	}
 
-#ifdef YURI_LINUX
+#if defined YURI_LINUX || defined YURI_APPLE
 	memset (&act, '\0', sizeof(act));
 	act.sa_sigaction = &sigHandler;
 	act.sa_flags = SA_SIGINFO;
 	sigaction(SIGINT,&act,0);
+#if !defined YURI_APPLE
 	sigaction(SIGRTMIN,&act,0);
+#endif
 #endif
 	try {
 		(*builder)();
