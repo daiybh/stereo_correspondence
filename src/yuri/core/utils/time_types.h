@@ -32,24 +32,24 @@ struct timestamp_t {
 	detail::time_point			value;
 };
 
-inline bool operator==(const timestamp_t& a, const timestamp_t& b) {
+inline constexpr bool operator==(const timestamp_t& a, const timestamp_t& b) {
 	return a.value == b.value;
 }
 
-inline bool operator!=(const timestamp_t& a, const timestamp_t& b) {
+inline constexpr bool operator!=(const timestamp_t& a, const timestamp_t& b) {
 	return a.value != b.value;
 }
-inline bool operator>(const timestamp_t& a, const timestamp_t& b) {
+inline constexpr bool operator>(const timestamp_t& a, const timestamp_t& b) {
 	return a.value > b.value;
 }
-inline bool operator>=(const timestamp_t& a, const timestamp_t& b) {
+inline constexpr bool operator>=(const timestamp_t& a, const timestamp_t& b) {
 	return a.value >= b.value;
 }
-inline bool operator<(const timestamp_t& a, const timestamp_t& b) {
+inline constexpr bool operator<(const timestamp_t& a, const timestamp_t& b) {
 	return a.value < b.value;
 }
 
-inline bool operator<=(const timestamp_t& a, const timestamp_t& b) {
+inline constexpr bool operator<=(const timestamp_t& a, const timestamp_t& b) {
 	return a.value <= b.value;
 }
 
@@ -83,36 +83,46 @@ inline constexpr duration_t operator"" _minutes(long double val) { return durati
 inline constexpr duration_t operator"" _hours(long double val) { return duration_t{static_cast<detail::duration_rep>(val*3600e6)}; }
 inline constexpr duration_t operator"" _days(long double val) { return duration_t{static_cast<detail::duration_rep>(val*24*3600e6)}; }
 
-inline duration_t operator-(const duration_t& a)
+inline duration_t operator-(const timestamp_t& t1, const timestamp_t& t2)
+{
+	return duration_t(t1.value - t2.value);
+}
+inline constexpr duration_t operator-(const duration_t& a)
 {
 	return duration_t(-a.value);
 }
-inline bool operator==(const duration_t& a, const duration_t& b)
+inline constexpr bool operator==(const duration_t& a, const duration_t& b)
 {
 	return a.value == b.value;
 }
-inline bool operator!=(const duration_t& a, const duration_t& b)
+inline constexpr bool operator!=(const duration_t& a, const duration_t& b)
 {
 	return !(a.value == b.value);
 }
-inline bool operator>(const duration_t& a, const duration_t& b)
+inline constexpr bool operator>(const duration_t& a, const duration_t& b)
 {
 	return a.value > b.value;
 }
-inline bool operator>=(const duration_t& a, const duration_t& b)
+inline constexpr bool operator>=(const duration_t& a, const duration_t& b)
 {
 	return !(a.value < b.value);
 }
-inline bool operator<(const duration_t& a, const duration_t& b)
+inline constexpr bool operator<(const duration_t& a, const duration_t& b)
 {
 	return a.value < b.value;
 }
-inline bool operator<=(const duration_t& a, const duration_t& b)
+inline constexpr bool operator<=(const duration_t& a, const duration_t& b)
 {
 	return !(a.value > b.value);
 }
-
-
+inline constexpr duration_t operator-(const duration_t& a, const duration_t& b)
+{
+	return duration_t(a.value-b.value);
+}
+inline constexpr duration_t operator+(const duration_t& a, const duration_t& b)
+{
+	return duration_t(a.value+b.value);
+}
 template<class Stream>
 Stream& operator<<(Stream& os, const duration_t& duration)
 {
