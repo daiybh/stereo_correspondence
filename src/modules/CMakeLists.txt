@@ -9,6 +9,7 @@ add_subdirectory(diff)
 add_subdirectory(dup)
 add_subdirectory(event_info)
 add_subdirectory(flip)
+add_subdirectory(merge_frames)
 add_subdirectory(null)
 add_subdirectory(overlay)
 add_subdirectory(pad)
@@ -52,8 +53,6 @@ add_subdirectory(read_pcap)
 add_subdirectory(fps_fixer)
 add_subdirectory(ts_demuxer)
 add_subdirectory(combine)
-
-add_subdirectory(merge_frames)
 
 add_subdirectory(repack_audio)
 

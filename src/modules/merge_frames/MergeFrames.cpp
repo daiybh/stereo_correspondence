@@ -12,45 +12,46 @@
 namespace yuri {
 namespace split {
 
-REGISTER("merge_frames",MergeFrames)
-IO_THREAD_GENERATOR(MergeFrames)
+IOTHREAD_GENERATOR(MergeFrames)
 
-core::pParameters MergeFrames::configure()
+MODULE_REGISTRATION_BEGIN("merge_frames")
+		REGISTER_IOTHREAD("merge_frames",MergeFrames)
+MODULE_REGISTRATION_END()
+
+core::Parameters MergeFrames::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
-	p->set_description("Merge frames from input pipes to single output pipe.");
-	(*p)["inputs"]["Number of inputs"]=2;
-	p->set_max_pipes(-1,1);
+	core::Parameters p = core::IOThread::configure();
+	p.set_description("Merge frames from input pipes to single output pipe.");
+	p["inputs"]["Number of inputs"]=2;
+//	p->set_max_pipes(-1,1);
 	return p;
 }
 
 
-MergeFrames::MergeFrames(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,1,1,std::string("merge_frames")),inputs_(2),current_input_(0)
+MergeFrames::MergeFrames(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
+core::IOThread(log_,parent,1,1,std::string("merge_frames")),inputs_(2),current_input_(0)
 {
-	IO_THREAD_INIT("MergeFrames")
+	IOTHREAD_INIT(parameters)
 	resize(inputs_,1);
 }
 
-MergeFrames::~MergeFrames()
+MergeFrames::~MergeFrames() noexcept
 {
 }
 
 bool MergeFrames::step()
 {
-	if (!in[current_input_]) return true;
-	core::pBasicFrame frame = in[current_input_]->pop_frame();
+	core::pFrame frame = pop_frame(current_input_);
 	if (!frame) return true;
-
-	push_raw_frame(0,frame);
+	push_frame(0,frame);
 	current_input_=(current_input_+1)%inputs_;
 	return true;
 }
 bool MergeFrames::set_param(const core::Parameter &param)
 {
-	if (param.name == "inputs") {
+	if (param.get_name() == "inputs") {
 		inputs_ = param.get<size_t>();
-	} else return core::BasicIOThread::set_param(param);
+	} else return core::IOThread::set_param(param);
 	return true;
 }
 
