@@ -78,11 +78,16 @@ private:
 template<bool blocking>
 class SizeLimitedPolicy {
 public:
-	static Parameters configure() {return Parameters{};}
+	static Parameters configure() {
+			Parameters p;
+			p["size"]=1048576;
+			return p;
+		}
 protected:
-	SizeLimitedPolicy(const Parameters&):actual_size_(0),max_size_(0)
+	SizeLimitedPolicy(const Parameters& parameters):actual_size_(0),max_size_(0)
 	{
 		/*! @TODO: Process parameters */
+		max_size_= parameters["size"].get<size_t>();
 	}
 	virtual ~SizeLimitedPolicy() noexcept {}
 	void set_size_limit(yuri::size_t max_size)
@@ -114,11 +119,15 @@ private:
 template<bool blocking>
 class CountLimitedPolicy {
 public:
-	static Parameters configure() {return Parameters{};}
+	static Parameters configure() {
+		Parameters p;
+		p["count"]=10;
+		return p;
+	}
 protected:
-	CountLimitedPolicy(const Parameters&):max_count_(0)
+	CountLimitedPolicy(const Parameters& parameters):max_count_(0)
 	{
-		/*! @TODO: Process parameters */
+		max_count_=parameters["count"].get<size_t>();
 	}
 	virtual ~CountLimitedPolicy() noexcept {}
 	void set_count_limit(yuri::size_t max_count)
