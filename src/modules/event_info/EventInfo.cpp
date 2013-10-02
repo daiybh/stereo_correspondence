@@ -9,47 +9,49 @@
 
 #include "EventInfo.h"
 #include "yuri/core/Module.h"
-
+#include <cassert>
 namespace yuri {
 namespace event_info {
 
-REGISTER("event_info",EventInfo)
+IOTHREAD_GENERATOR(EventInfo)
 
-IO_THREAD_GENERATOR(EventInfo)
+MODULE_REGISTRATION_BEGIN("event_info")
+		REGISTER_IOTHREAD("event_info",EventInfo)
+MODULE_REGISTRATION_END()
 
-core::pParameters EventInfo::configure()
+core::Parameters EventInfo::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
-	p->set_description("EventInfo");
-	p->set_max_pipes(1,1);
+	core::Parameters p = core::IOThread::configure();
+	p.set_description("EventInfo");
+//	p->set_max_pipes(1,1);
 	return p;
 }
 
 
-EventInfo::EventInfo(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,0,0,std::string("event_info")),
+EventInfo::EventInfo(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
+core::IOThread(log_,parent,0,0,std::string("event_info")),
 event::BasicEventConsumer(log)
 {
-	IO_THREAD_INIT("event_info")
-	latency=1000;
+	IOTHREAD_INIT(parameters);
+	set_latency(1_ms);
 }
 
-EventInfo::~EventInfo()
+EventInfo::~EventInfo() noexcept
 {
 }
 
 void EventInfo::run()
 {
-	IO_THREAD_PRE_RUN
+//	IO_THREAD_PRE_RUN
 	while (still_running()) {
 		process_events();
-		sleep(latency);
+		sleep(get_latency());
 	}
-	IO_THREAD_POST_RUN
+//	IO_THREAD_POST_RUN
 }
 bool EventInfo::set_param(const core::Parameter& param)
 {
-	return core::BasicIOThread::set_param(param);
+	return core::IOThread::set_param(param);
 }
 
 namespace {

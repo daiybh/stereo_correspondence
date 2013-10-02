@@ -7,6 +7,7 @@ link_directories (${Boost_LIBRARY_DIRS})
 add_subdirectory(color_key)
 add_subdirectory(diff)
 add_subdirectory(dup)
+add_subdirectory(event_info)
 add_subdirectory(null)
 add_subdirectory(overlay)
 add_subdirectory(pad)
@@ -54,7 +55,7 @@ add_subdirectory(rotate)
 add_subdirectory(repack_audio)
 
 
-add_subdirectory(event_info)
+
 add_subdirectory(fade)
 
 

@@ -10,19 +10,20 @@
 #ifndef EVENTINFO_H_
 #define EVENTINFO_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/thread/IOThread.h"
 #include "yuri/event/BasicEventConsumer.h"
 namespace yuri {
 namespace event_info {
 
-class EventInfo: public core::BasicIOThread, public event::BasicEventConsumer
+class EventInfo: public core::IOThread, public event::BasicEventConsumer
 {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters 	configure();
-	virtual 					~EventInfo();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters 	configure();
+								EventInfo(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual 					~EventInfo() noexcept;
 private:
-								EventInfo(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
+
 	//virtual bool 				step();
 	virtual void				run();
 	virtual bool 				set_param(const core::Parameter& param);
