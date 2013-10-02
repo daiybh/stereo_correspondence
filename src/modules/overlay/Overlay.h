@@ -23,7 +23,7 @@ public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
 	Overlay(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
-	virtual ~Overlay();
+	virtual ~Overlay() noexcept;
 	template<class kernel>
 	core::pRawVideoFrame combine(const core::pRawVideoFrame& frame_0, const core::pRawVideoFrame& frame_1);
 private:

@@ -40,17 +40,25 @@ event::BasicEventConsumer(log)
 	IOTHREAD_INIT(parameters)
 }
 
-Overlay::~Overlay()
+Overlay::~Overlay() noexcept
 {
 }
 
 namespace {
 using namespace core::raw_format;
-template<size_t s, size_t o, size_t d, format_t fmt>
+/*!
+ * @tparam	s	- bytes per input (background image) pixel
+ * @tparam	o	- bytes overlay image pixel
+ * @tparam	d	- bytes per destination pixel
+ * @tparam	fmt	- format of destination image
+ * @tparam	step- number of pixel the kernel copies at once
+ */
+template<size_t s, size_t o, size_t d, format_t fmt, size_t step = 1>
 struct combine_base {
 	enum { src_bpp 	= s };
 	enum { ovr_bpp 	= o };
 	enum { dest_bpp	= d };
+	enum { pix_step	= step };
 	static format_t output_format() { return fmt; }
 
 	static void fill(plane_t::const_iterator& src_pix, plane_t::iterator& dest_pix) {
@@ -232,12 +240,29 @@ public combine_kernel<abgr32, rgb24>{
 
 template<>
 struct combine_kernel<yuyv422, yuyv422>:
-public combine_base<2, 2, 2, yuyv422> {
+public combine_base<2, 2, 2, yuyv422, 2> {
 	static void compute
 (plane_t::const_iterator& , plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 {
 	*dest_pix++ =*ovr_pix++;
 	*dest_pix++ =*ovr_pix++;
+	*dest_pix++ =*ovr_pix++;
+	*dest_pix++ =*ovr_pix++;
+}
+};
+template<>
+struct combine_kernel<yuyv422, yuv444>:
+public combine_base<2, 3, 3, yuv444, 2> {
+	static void compute
+(plane_t::const_iterator& , plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
+{
+	*dest_pix++ =*(ovr_pix+0);
+	*dest_pix++ =*(ovr_pix+1);
+	*dest_pix++ =*(ovr_pix+3);
+	*dest_pix++ =*(ovr_pix+2);
+	*dest_pix++ =*(ovr_pix+1);
+	*dest_pix++ =*(ovr_pix+3);
+	ovr_pix+=4;
 }
 };
 template<format_t f>
@@ -265,6 +290,8 @@ core::pRawVideoFrame dispatch2_yuv(Overlay& overlay, const core::pRawVideoFrame&
 	switch (fmt) {
 		case yuyv422:
 			return overlay.combine<combine_kernel<f, yuyv422> >(frame_0, frame_1);
+		case yuv444:
+			return overlay.combine<combine_kernel<f, yuv444> >(frame_0, frame_1);
 		default:
 			break;
 	}
@@ -318,10 +345,13 @@ core::pRawVideoFrame Overlay::combine(const core::pRawVideoFrame& frame_0, const
 	const ssize_t 			width 		= res_0.width;
 	const ssize_t 			height 		= res_0.height;
 	const ssize_t 			w 			= res_1.width;
-	const ssize_t 			h 			= res_0.height;
+	const ssize_t 			h 			= res_1.height;
 	const size_t 			linesize_0 	= width * kernel::src_bpp;
 	const size_t 			linesize_1	= w     * kernel::ovr_bpp;
-	const size_t 			linesize_out= width * kernel::dest_bpp;;
+	const size_t 			linesize_out= width * kernel::dest_bpp;
+	const size_t			step		= kernel::pix_step;
+	const ssize_t			x			= x_ - (x_ % step);
+
 	log[log::verbose_debug] << "Base " << width << "x" << height << " (" << linesize_0 << ") + " << w << "x" <<h << " (" << linesize_1 << ") -> ("<<linesize_out<<")";
 	core::pRawVideoFrame 		outframe 	= core::RawVideoFrame::create_empty(kernel::output_format(), res_0);
 	const plane_t::const_iterator src 		= PLANE_DATA(frame_0,0).begin();
@@ -336,10 +366,10 @@ core::pRawVideoFrame Overlay::combine(const core::pRawVideoFrame& frame_0, const
 		plane_t::const_iterator ovr_pix 	= overlay+(line-y_)*linesize_1;
 		plane_t::iterator 		dest_pix	= dest+line*linesize_out;
 		ssize_t pixel = 0;
-		if (x_ > 0) {
-			fill_line<kernel>(pixel, std::min(width,x_), src_pix, dest_pix);
+		if (x > 0) {
+			fill_line<kernel>(pixel, std::min(width,x), src_pix, dest_pix);
 		}
-		for (; pixel < std::min(width,w+x_); ++pixel) {
+		for (; pixel < std::min(width,w+x); pixel+=step) {
 			kernel::compute(src_pix, ovr_pix, dest_pix);
 		}
 		if (pixel < width-1) {
