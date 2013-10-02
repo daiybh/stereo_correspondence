@@ -8,22 +8,22 @@
 #ifndef ROTATE_H_
 #define ROTATE_H_
 
-#include "yuri/core/BasicIOThread.h"
-
+#include "yuri/core/thread/SpecializedIOFilter.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 namespace yuri {
 namespace rotate {
 
-class Rotate: public core::BasicIOThread
+class Rotate: public core::SpecializedIOFilter<core::RawVideoFrame>
 {
-private:
-	Rotate(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
-	virtual bool step();
-	virtual bool set_param(const core::Parameter &param);
-	size_t 		angle_;
 public:
+	Rotate(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~Rotate();
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+private:
+	virtual bool set_param(const core::Parameter &param);
+	virtual core::pFrame			do_special_single_step(const core::pRawVideoFrame& frame) override;
+	size_t 		angle_;
 };
 
 } /* namespace rotate */

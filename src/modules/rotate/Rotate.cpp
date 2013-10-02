@@ -8,27 +8,30 @@
 
 #include "Rotate.h"
 #include "yuri/core/Module.h"
-
+#include "yuri/core/frame/raw_frame_types.h"
 namespace yuri {
 namespace rotate {
 
-REGISTER("rotate",Rotate)
-IO_THREAD_GENERATOR(Rotate)
+IOTHREAD_GENERATOR(Rotate)
 
-core::pParameters Rotate::configure()
+MODULE_REGISTRATION_BEGIN("rotate")
+		REGISTER_IOTHREAD("rotate",Rotate)
+MODULE_REGISTRATION_END()
+
+core::Parameters Rotate::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
-	p->set_description("Rotate module.");
-	(*p)["angle"]["Angle in degrees CW to rotate (supported values are 0, 90, 180, 270)"]=90;
-	p->set_max_pipes(1,1);
+	core::Parameters p = core::IOThread::configure();
+	p.set_description("Rotate module.");
+	p["angle"]["Angle in degrees CW to rotate (supported values are 0, 90, 180, 270)"]=90;
+//	p->set_max_pipes(1,1);
 	return p;
 }
 
 
-Rotate::Rotate(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,1,1,std::string("rotate")),angle_(90)
+Rotate::Rotate(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
+core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent, std::string("rotate")),angle_(90)
 {
-	IO_THREAD_INIT("Rotate")
+	IOTHREAD_INIT(parameters)
 }
 
 Rotate::~Rotate()
@@ -36,16 +39,18 @@ Rotate::~Rotate()
 }
 
 namespace {
-core::pBasicFrame rotate(const core::pBasicFrame& frame, size_t angle) {
-	if (!frame) return core::pBasicFrame();
-	const size_t width = frame->get_width();
-	const size_t height = frame->get_height();
-	core::pBasicFrame output;
-	if (angle == 90 || angle==270) output = core::BasicIOThread::allocate_empty_frame(YURI_FMT_RGB, height, width, true);
-	else if (angle == 180) output = core::BasicIOThread::allocate_empty_frame(YURI_FMT_RGB, width, height, true);
-	else return core::pBasicFrame();
-	const ubyte_t * src = PLANE_RAW_DATA(frame,0);
-	ubyte_t * dest = PLANE_RAW_DATA(output,0);
+core::pRawVideoFrame rotate(const core::pRawVideoFrame& frame, size_t angle) {
+	core::pRawVideoFrame output;
+	if (!frame) return output;
+	const resolution_t res = frame->get_resolution();
+	const size_t width = res.width;
+	const size_t height = res.height;
+
+	if (angle == 90 || angle==270) output = core::RawVideoFrame::create_empty(frame->get_format(), {height, width}, true);
+	else if (angle == 180) output = core::RawVideoFrame::create_empty(frame->get_format(), res, true);
+	else return output;
+	const uint8_t * src = PLANE_RAW_DATA(frame,0);
+	uint8_t * dest = PLANE_RAW_DATA(output,0);
 	if (angle == 90) {
 		for (size_t y = 0; y < height; ++y) {
 			for (size_t x = 0; x < width; ++x) {
@@ -85,29 +90,31 @@ core::pBasicFrame rotate(const core::pBasicFrame& frame, size_t angle) {
 }
 }
 
-bool Rotate::step()
+core::pFrame Rotate::do_special_single_step(const core::pRawVideoFrame& frame)
+//bool Rotate::step()
 {
-	if (!in[0]) return true;
-	core::pBasicFrame frame = in[0]->pop_frame();
-	if (!frame) return true;
+//	if (!in[0]) return true;
+//	core::pBasicFrame frame = in[0]->pop_frame();
+//	if (!frame) return true;
 
-	if(!angle_) push_raw_frame(0,frame);
+	if(!angle_) return frame;
 	else {
-		if (frame->get_format() != YURI_FMT_RGB) {
+		if (frame->get_format() != core::raw_format::rgb24) {
 			log[log::warning] << "Currently only 24bit RGB is supported.";
 		} else {
-			core::pBasicFrame output = rotate(frame, angle_);
-			if (output) push_raw_video_frame(0, output);
+//			core::pRawVideoFrame output = rotate(frame, angle_);
+//			if (output) push_frame(0, output);
+			return rotate(frame, angle_);
 		}
 	}
-	return true;
+	return {};
 }
 bool Rotate::set_param(const core::Parameter &param)
 {
-	if (param.name == "angle") {
+	if (param.get_name() == "angle") {
 		angle_ = param.get<size_t>();
 		if (angle_ != 90 && angle_!=180 && angle_!=270) angle_ = 0;
-	} else return core::BasicIOThread::set_param(param);
+	} else return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
 	return true;
 }
 
