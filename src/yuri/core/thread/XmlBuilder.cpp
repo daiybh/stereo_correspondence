@@ -101,6 +101,8 @@ struct XmlBuilder::builder_pimpl_t:  public event::BasicEventParser {
 	bool prepare_routing();
 	bool start_nodes();
 
+	void step();
+
 	virtual event::pBasicEventProducer find_producer(const std::string& name) override;
 	virtual event::pBasicEventConsumer find_consumer(const std::string& name) override;
 	virtual bool 				do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
@@ -446,11 +448,13 @@ pIOThread XmlBuilder::builder_pimpl_t::get_node(const std::string& name)
 	auto it = nodes.find(name);
 	if (it != nodes.end()) {
 		p = it->second.instance;
+		if (p) log[log::info] << "Found " << name;
 	}
 	if (!p) {
 		if (name == this->name || name == "@") {
 			p = dynamic_pointer_cast<IOThread>(builder.get_this_ptr());
 		}
+		if (p) log[log::info] << "Resolved " << name << " as this";
 	}
 	return p;
 }
@@ -473,8 +477,14 @@ event::pBasicEventConsumer XmlBuilder::builder_pimpl_t::find_consumer(const std:
 }
 bool XmlBuilder::builder_pimpl_t::do_process_event(const std::string& /*event_name*/, const event::pBasicEvent& /*event*/)
 {
-	assert(false);
-	return false;
+//	assert(false);
+//	return false;
+	return true;
+}
+void XmlBuilder::builder_pimpl_t::step()
+{
+	process_events();
+	run_routers();
 }
 #undef VALID
 #undef VALID_XML
@@ -550,6 +560,8 @@ void XmlBuilder::run()
 bool XmlBuilder::step()
 {
 	process_events();
+	run_routers();
+	pimpl_->step();
 	return true;
 }
 
@@ -569,12 +581,13 @@ event::pBasicEventConsumer XmlBuilder::find_consumer(const std::string& name)
 {
 	return pimpl_->find_consumer(name);
 }
-bool XmlBuilder::do_process_event(const std::string& event_name, const event::pBasicEvent& /*event*/)
+bool XmlBuilder::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
 	if (event_name == "stop") {
 		log[log::info] << "Received stop event. Quitting builder.";
 		request_end();
 	}
+	pimpl_->receive_event(event_name, event);
 	return true;
 //	return pimpl_->do_process_event(event_name, event);
 }
