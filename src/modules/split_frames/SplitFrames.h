@@ -8,23 +8,23 @@
 #ifndef SPLITFRAMES_H_
 #define SPLITFRAMES_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/thread/MultiIOFilter.h"
 
 namespace yuri {
 namespace split {
 
-class SplitFrames: public core::BasicIOThread
+class SplitFrames: public core::MultiIOFilter
 {
-private:
-	SplitFrames(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
-	virtual bool step();
-	virtual bool set_param(const core::Parameter &param);
 public:
-	virtual ~SplitFrames();
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
+	SplitFrames(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~SplitFrames() noexcept;
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
 	size_t outputs_;
 	size_t current_output_;
+private:
+	virtual std::vector<core::pFrame> do_single_step(const std::vector<core::pFrame>& frames) override;
+	virtual bool set_param(const core::Parameter &param);
 };
 
 } /* namespace pass */

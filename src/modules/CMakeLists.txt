@@ -13,6 +13,7 @@ add_subdirectory(null)
 add_subdirectory(overlay)
 add_subdirectory(pad)
 add_subdirectory(rotate)
+add_subdirectory(split_frames)
 add_subdirectory(testcard)
 
 CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
@@ -51,7 +52,7 @@ add_subdirectory(read_pcap)
 add_subdirectory(fps_fixer)
 add_subdirectory(ts_demuxer)
 add_subdirectory(combine)
-add_subdirectory(split_frames)
+
 add_subdirectory(merge_frames)
 
 add_subdirectory(repack_audio)
