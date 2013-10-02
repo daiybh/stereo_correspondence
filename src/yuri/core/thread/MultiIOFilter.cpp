@@ -14,8 +14,8 @@ namespace core {
 Parameters MultiIOFilter::configure()
 {
 	Parameters p = IOThread::configure();
-	p["realtime"]["Read always latest available, frame reducing latency, but dropping frames"]=false;
-	p["main_input"]["Index of input that should trigger the processing. If specified, the precessing will be invoked on each change of thid input. Set to -1 to disable"]=-1;
+//	p["realtime"]["Read always latest available, frame reducing latency, but dropping frames"]=false;
+	p["main_input"]["Index of input that should trigger the processing. If specified, the precessing will be invoked on each change of this input. Set to -1 to disable"]=-1;
 	return p;
 }
 
@@ -24,6 +24,7 @@ MultiIOFilter::MultiIOFilter(const log::Log &log_, pwThreadBase parent,
 :IOThread(log_, parent, inp, outp, id),stored_frames_(inp),//realtime_(false),
  main_input_(-1)
 {
+	set_latency(10_ms);
 }
 
 MultiIOFilter::~MultiIOFilter() noexcept
@@ -46,7 +47,7 @@ bool MultiIOFilter::step()
 //			if (f) stored_frames_[i] = f;
 //		}
 //		else {
-			if (!stored_frames_[i]) {
+			if (!stored_frames_[i] || (main_input_>=0 && i!=main_input_)) {
 				auto f = pop_frame(i);//]->pop_frame();
 				if (f) stored_frames_[i] = f;
 			}
@@ -74,7 +75,7 @@ bool MultiIOFilter::set_param(const Parameter &parameter)
 		realtime_ = parameter.get<bool>();
 	} else */if (iequals(parameter.get_name(), "main_input")) {
 		main_input_ = parameter.get<position_t>();
-	} //else return IOThread::set_param(parameter);
+	} else return IOThread::set_param(parameter);
 	return true;
 }
 
