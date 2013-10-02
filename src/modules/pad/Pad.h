@@ -10,7 +10,8 @@
 #ifndef PAD_H_
 #define PAD_H_
 
-#include "yuri/core/thread/IOFilter.h"
+#include "yuri/core/thread/SpecializedIOFilter.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 
 namespace yuri {
 namespace pad {
@@ -25,7 +26,7 @@ enum class vertical_alignment_t{
 	center,
 	bottom
 };
-class Pad: public core::IOFilter
+class Pad: public core::SpecializedIOFilter<core::RawVideoFrame>
 {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
@@ -34,7 +35,7 @@ public:
 	virtual ~Pad() noexcept;
 private:
 
-	virtual core::pFrame		do_simple_single_step(const core::pFrame& frame);
+	virtual core::pFrame		do_special_single_step(const core::pRawVideoFrame& frame) override;
 	virtual bool set_param(const core::Parameter& param);
 
 	resolution_t				resolution_;

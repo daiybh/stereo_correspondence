@@ -11,7 +11,6 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/raw_frame_types.h"
-#include "yuri/core/frame/RawVideoFrame.h"
 namespace yuri {
 namespace pad {
 
@@ -36,7 +35,7 @@ core::Parameters Pad::configure()
 
 
 Pad::Pad(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOFilter(log_,parent,std::string("pad")),
+core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("pad")),
 resolution_{800, 600},halign_(horizontal_alignment_t::center),
 valign_(vertical_alignment_t::center)
 {
@@ -138,9 +137,9 @@ void fill_from_sample(Iter start, const Iter& end, const Iter2& sample)
 }
 
 
-core::pFrame Pad::do_simple_single_step(const core::pFrame& frame_in)
+core::pFrame Pad::do_special_single_step(const core::pRawVideoFrame& frame)
 {
-	const core::pRawVideoFrame frame= 	dynamic_pointer_cast<core::RawVideoFrame>(frame_in);
+//	const core::pRawVideoFrame frame= 	dynamic_pointer_cast<core::RawVideoFrame>(frame_in);
 	const resolution_t resolution	= frame->get_resolution();
 	const yuri::size_t height_in	= resolution.height;
 	const yuri::size_t width_in		= resolution.width;
