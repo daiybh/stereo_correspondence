@@ -34,7 +34,7 @@ core::Parameters Overlay::configure()
 
 
 Overlay::Overlay(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::MultiIOFilter(log_,parent,2,1,std::string("overlay")),
+		SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_,parent,1,std::string("overlay")),
 event::BasicEventConsumer(log)
 {
 	IOTHREAD_INIT(parameters)
@@ -229,6 +229,17 @@ struct combine_kernel<rgba32, bgr24>:
 public combine_kernel<abgr32, rgb24>{
 	static format_t output_format() { return rgba32; }
 };
+
+template<>
+struct combine_kernel<yuyv422, yuyv422>:
+public combine_base<2, 2, 2, yuyv422> {
+	static void compute
+(plane_t::const_iterator& , plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
+{
+	*dest_pix++ =*ovr_pix++;
+	*dest_pix++ =*ovr_pix++;
+}
+};
 template<format_t f>
 core::pRawVideoFrame dispatch2(Overlay& overlay, const core::pRawVideoFrame& frame_0, const core::pRawVideoFrame& frame_1)
 {
@@ -247,6 +258,18 @@ core::pRawVideoFrame dispatch2(Overlay& overlay, const core::pRawVideoFrame& fra
 	}
 	return core::pRawVideoFrame();
 }
+template<format_t f>
+core::pRawVideoFrame dispatch2_yuv(Overlay& overlay, const core::pRawVideoFrame& frame_0, const core::pRawVideoFrame& frame_1)
+{
+	format_t fmt = frame_1->get_format();
+	switch (fmt) {
+		case yuyv422:
+			return overlay.combine<combine_kernel<f, yuyv422> >(frame_0, frame_1);
+		default:
+			break;
+	}
+	return core::pRawVideoFrame();
+}
 
 core::pRawVideoFrame dispatch(Overlay& overlay, const core::pRawVideoFrame& frame_0, const core::pRawVideoFrame& frame_1)
 {
@@ -260,6 +283,8 @@ core::pRawVideoFrame dispatch(Overlay& overlay, const core::pRawVideoFrame& fram
 			return dispatch2<bgr24>(overlay, frame_0, frame_1);
 		case abgr32:
 			return dispatch2<abgr32>(overlay, frame_0, frame_1);
+		case yuyv422:
+			return dispatch2_yuv<yuyv422>(overlay, frame_0, frame_1);
 		default:
 			return core::pRawVideoFrame();
 	}
@@ -326,12 +351,15 @@ core::pRawVideoFrame Overlay::combine(const core::pRawVideoFrame& frame_0, const
 	}
 	return outframe;
 }
-std::vector<core::pFrame> Overlay::do_single_step(const std::vector<core::pFrame>& frames)
+//std::vector<core::pFrame> Overlay::do_single_step(const std::vector<core::pFrame>& frames)
+std::vector<core::pFrame> Overlay::do_special_step(const param_type& frames)
 {
 	process_events();
-	assert(frames.size() == 2);
-	core::pRawVideoFrame f0 = dynamic_pointer_cast<core::RawVideoFrame>(frames[0]);
-	core::pRawVideoFrame f1 = dynamic_pointer_cast<core::RawVideoFrame>(frames[1]);
+//	assert(frames.size() == 2);
+//	core::pRawVideoFrame f0 = dynamic_pointer_cast<core::RawVideoFrame>(frames[0]);
+//	core::pRawVideoFrame f1 = dynamic_pointer_cast<core::RawVideoFrame>(frames[1]);
+	core::pRawVideoFrame f0 = std::get<0>(frames);
+	core::pRawVideoFrame f1 = std::get<1>(frames);
 	if (!f0 || !f1) return {};
 	core::pRawVideoFrame outframe = dispatch(*this, f0, f1);
 	if (outframe) return {outframe};
