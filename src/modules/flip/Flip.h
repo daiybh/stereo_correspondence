@@ -11,24 +11,22 @@
 #ifndef FLIP_H_
 #define FLIP_H_
 
-#include "yuri/core/BasicIOThread.h"
-
+#include "yuri/core/thread/SpecializedIOFilter.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 namespace yuri {
 
 namespace io {
 
-class Flip: public yuri::core::BasicIOThread {
+class Flip: public core::SpecializedIOFilter<core::RawVideoFrame> {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
 	virtual bool set_param(const core::Parameter &parameter);
-
-	virtual ~Flip();
-protected:
-	Flip(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters) IO_THREAD_CONSTRUCTOR;
-	virtual bool step();
-
-	bool flip_x, flip_y;
+	Flip(log::Log &_log, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~Flip() noexcept;
+private:
+	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
+	bool flip_x_, flip_y_;
 };
 
 }

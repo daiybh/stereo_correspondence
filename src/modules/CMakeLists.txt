@@ -8,6 +8,7 @@ add_subdirectory(color_key)
 add_subdirectory(diff)
 add_subdirectory(dup)
 add_subdirectory(event_info)
+add_subdirectory(flip)
 add_subdirectory(null)
 add_subdirectory(overlay)
 add_subdirectory(pad)
@@ -41,7 +42,7 @@ add_subdirectory(crop)
 add_subdirectory(dummy)
 
 add_subdirectory(filedump)
-add_subdirectory(flip)
+
 
 add_subdirectory(split)
 add_subdirectory(dxt_compress)
