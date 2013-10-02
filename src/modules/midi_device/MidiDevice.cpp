@@ -14,28 +14,30 @@
 namespace yuri {
 namespace midi_device {
 
-REGISTER("midi_device",MidiDevice)
+IOTHREAD_GENERATOR(MidiDevice)
 
-IO_THREAD_GENERATOR(MidiDevice)
+MODULE_REGISTRATION_BEGIN("midi_device")
+		REGISTER_IOTHREAD("midi_device",MidiDevice)
+MODULE_REGISTRATION_END()
 
-core::pParameters MidiDevice::configure()
+core::Parameters MidiDevice::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
-	p->set_description("MidiDevice");
-	(*p)["device"]["Device name. Keep the default value, unless you know what you're doing."]=std::string("default");
-	(*p)["connection"]["Output port to connect to. It could be either in form client:port, or a name of the port."]=std::string("");
-	p->set_max_pipes(0,0);
+	core::Parameters p = core::IOThread::configure();
+	p.set_description("MidiDevice");
+	p["device"]["Device name. Keep the default value, unless you know what you're doing."]=std::string("default");
+	p["connection"]["Output port to connect to. It could be either in form client:port, or a name of the port."]=std::string("");
+//	p->set_max_pipes(0,0);
 	return p;
 }
 
 
-MidiDevice::MidiDevice(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,0,0,std::string("midi_device")),
+MidiDevice::MidiDevice(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
+core::IOThread(log_,parent,0,0,std::string("midi_device")),
 event::BasicEventProducer(log),
 sequencer_(nullptr), device_("default"),connection_("")
 {
-	IO_THREAD_INIT("midi_device")
-	latency = 1000;
+	IOTHREAD_INIT(parameters)
+	set_latency(1_ms);
 	int error;
 
 	if ((error = snd_seq_open(&sequencer_, device_.c_str(), SND_SEQ_OPEN_INPUT, SND_SEQ_NONBLOCK)) < 0) {
@@ -75,7 +77,7 @@ sequencer_(nullptr), device_("default"),connection_("")
 	snd_seq_drop_input_buffer(sequencer_);
 }
 
-MidiDevice::~MidiDevice()
+MidiDevice::~MidiDevice() noexcept
 {
 	snd_seq_drop_input(sequencer_);
 }
@@ -117,16 +119,15 @@ bool MidiDevice::process_event(const snd_seq_event_t& midievent)
 }
 void MidiDevice::run()
 {
-	IO_THREAD_PRE_RUN
+//	IO_THREAD_PRE_RUN
 	int npfd;
-
 	npfd = snd_seq_poll_descriptors_count(sequencer_, POLLIN);
 	std::vector<pollfd> pfd(npfd);
 	snd_seq_poll_descriptors(sequencer_, &pfd[0], npfd, POLLIN);
 	snd_seq_event_t *midievent;
 	while(still_running())
 	{
-		if (poll(&pfd[0], npfd, latency/1000) > 0) {
+		if (poll(&pfd[0], npfd, get_latency().value/1000) > 0) {
 			do {
 				snd_seq_event_input(sequencer_, &midievent);
 				if (midievent) {
@@ -135,15 +136,15 @@ void MidiDevice::run()
 			} while (snd_seq_event_input_pending(sequencer_, 0) > 0);
 		}
 	}
-	IO_THREAD_POST_RUN
+//	IO_THREAD_POST_RUN
 }
 bool MidiDevice::set_param(const core::Parameter& param)
 {
-	if (iequals(param.name, "device")) {
+	if (iequals(param.get_name(), "device")) {
 		device_ = param.get<std::string>();
-	} else if (iequals(param.name, "connection")) {
+	} else if (iequals(param.get_name(), "connection")) {
 		connection_ = param.get<std::string>();
-	} else return core::BasicIOThread::set_param(param);
+	} else return core::IOThread::set_param(param);
 	return true;
 }
 

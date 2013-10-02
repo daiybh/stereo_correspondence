@@ -23,6 +23,11 @@ IF(SDL_FOUND)
 	add_subdirectory(sdl_window)
 ENDIF()
 
+find_package(ALSA)
+IF(ALSA_FOUND)
+	add_subdirectory(midi_device)
+ENDIF()
+
 IF(FALSE)
 #################################################################
 # Add modules that are compile unconditionally
@@ -88,7 +93,7 @@ find_package( X11 )
 find_path(VIDEOMASTER_INCLUDE_DIR VideoMasterHD_Sdi.h
           HINTS /usr/local/include/videomaster )
           
-find_package(ALSA)
+
           
 #################################################################
 # Add optional modules based on results of the detection
@@ -182,9 +187,7 @@ ENDIF()
 
 IF(UNIX)
 	add_subdirectory(event_device)
-	IF(ALSA_FOUND)
-		add_subdirectory(midi_device)
-	ENDIF()
+	
 ENDIF()
 
 
