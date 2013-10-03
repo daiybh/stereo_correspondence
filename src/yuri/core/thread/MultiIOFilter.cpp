@@ -36,6 +36,11 @@ std::vector<pFrame> MultiIOFilter::single_step(const std::vector<pFrame>& frames
 {
 	return do_single_step(frames);
 }
+void MultiIOFilter::resize(position_t inp, position_t outp)
+{
+	stored_frames_.resize(inp);
+	IOThread::resize(inp, outp);
+}
 bool MultiIOFilter::step()
 {
 	bool ready = true;

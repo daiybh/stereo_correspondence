@@ -25,6 +25,8 @@ public:
 	virtual bool 			step();
 
 	virtual bool 			set_param(const Parameter &parameter) override;
+protected:
+	virtual void 				resize(position_t inp, position_t outp) override;
 private:
 	virtual std::vector<pFrame> do_single_step(const std::vector<pFrame>& frames) = 0;
 	std::vector<pFrame> 	stored_frames_;
