@@ -33,6 +33,16 @@ public:
 	 */
 	void			set_resolution(resolution_t resolution);
 	/*!
+	 * Returns width of the frame
+	 * @return frame width
+	 */
+	dimension_t		get_width() const { return resolution_.width;}
+	/*!
+	 * Returns height of the frame
+	 * @return frame height
+	 */
+	dimension_t		get_height() const { return resolution_.height;}
+	/*!
 	 * Returns interlacing type for the frame
 	 * @return Interlacing type
 	 */
