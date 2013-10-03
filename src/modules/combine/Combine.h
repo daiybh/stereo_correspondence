@@ -10,23 +10,23 @@
 #ifndef COMBINE_H_
 #define COMBINE_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/thread/MultiIOFilter.h"
 #include <vector>
 namespace yuri {
 namespace combine {
 
-class Combine: public core::BasicIOThread
+class Combine: public core::MultiIOFilter
 {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
-	virtual ~Combine();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+	Combine(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~Combine() noexcept;
 private:
-	Combine(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
-	virtual bool step();
+	virtual std::vector<core::pFrame> do_single_step(const std::vector<core::pFrame>& frames) override;
 	virtual bool set_param(const core::Parameter& param);
-	size_t x,y;
-	std::vector<core::pBasicFrame> frames;
+	size_t x_,y_;
+
 };
 
 } /* namespace combine */
