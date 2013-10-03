@@ -21,7 +21,7 @@ const raw_format_t &get_format_info(format_t format);
 bool add_format(const raw_format_t &);
 format_t new_user_format();
 format_t parse_format(const std::string& name);
-
+const std::string& get_format_name(format_t format);
 using format_info_map_t = std::map<format_t, raw_format_t>;
 
 struct formats {
@@ -78,6 +78,9 @@ struct raw_format_t {
   std::vector<plane_info_t> planes;
 
 };
+
+
+inline const std::string& get_format_name(format_t format) { return get_format_info(format).name; }
 
 }
 }
