@@ -11,16 +11,18 @@
 
 #include "YuriConvert.h"
 #include "yuri/core/Module.h"
-#include <boost/assign.hpp>
-#include <boost/function.hpp>
-
-
+#include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/raw_frame_params.h"
+#include <cassert>
 namespace yuri {
 
 namespace video {
 
-REGISTER("yuri_convert",YuriConvertor)
-IO_THREAD_GENERATOR(YuriConvertor)
+IOTHREAD_GENERATOR(YuriConvertor)
+
+MODULE_REGISTRATION_BEGIN("yuri_convert")
+		REGISTER_IOTHREAD("yuri_convert",YuriConvertor)
+MODULE_REGISTRATION_END()
 
 
 /* ***************************************************************************
@@ -44,117 +46,118 @@ namespace {
 	const size_t Wb_2020 	=  593;
 
 
-	typedef boost::function<core::pBasicFrame (const core::pBasicFrame&, const YuriConvertor&)> converter_t;
+	typedef function<core::pRawVideoFrame(const core::pRawVideoFrame&, const YuriConvertor&)> converter_t;
 	typedef std::pair<yuri::format_t, yuri::format_t> format_pair_t;
 
 //	inline unsigned int convY(unsigned int Y) { return (Y*219+4128) >> 6; }
 //	inline unsigned int convC(unsigned int C) {	return (C*7+129) >> 1; }
 
 	template<format_t fmt>
-		core::pBasicFrame allocate_frame(size_t width, size_t height);
+		core::pRawVideoFrame allocate_frame(size_t width, size_t height);
 	template<format_t fmt>
 		size_t get_linesize(size_t width);
 	template<format_t fmt_in, format_t fmt_out>
-		void convert_line(plane_t::const_iterator src, plane_t::iterator dest, size_t width, const YuriConvertor&);
+		void convert_line(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width, const YuriConvertor&);
 	template<format_t fmt_in, format_t fmt_out>
-		void convert_line(plane_t::const_iterator src, plane_t::iterator dest, size_t width);
+		void convert_line(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width);
 	template<format_t fmt_in, format_t fmt_out>
-		core::pBasicFrame convert_formats( const core::pBasicFrame& frame, const YuriConvertor&);
+		core::pRawVideoFrame convert_formats( const core::pRawVideoFrame& frame, const YuriConvertor&);
 
 	#include "YuriConvert.impl"
 
-#define ADD_CONVERSION(fmt1, fmt2) (std::make_pair(fmt1, fmt2), &convert_formats<fmt1, fmt2>)
+#define ADD_CONVERSION(fmt1, fmt2) {std::make_pair(fmt1, fmt2), &convert_formats<fmt1, fmt2>},
 
-	std::map<format_pair_t, converter_t> converters =
-		boost::assign::map_list_of<format_pair_t, converter_t>
-		ADD_CONVERSION(YURI_FMT_RGB24, 		YURI_FMT_RGBA)
-		ADD_CONVERSION(YURI_FMT_BGR, 		YURI_FMT_BGRA)
-		ADD_CONVERSION(YURI_FMT_RGBA, 		YURI_FMT_RGB24)
-		ADD_CONVERSION(YURI_FMT_BGRA, 		YURI_FMT_BGR)
+	std::map<format_pair_t, converter_t> converters = {
 
-		ADD_CONVERSION(YURI_FMT_BGRA, 		YURI_FMT_RGBA)
-		ADD_CONVERSION(YURI_FMT_RGBA, 		YURI_FMT_BGRA)
-		ADD_CONVERSION(YURI_FMT_BGR, 		YURI_FMT_RGB)
-		ADD_CONVERSION(YURI_FMT_RGB24, 		YURI_FMT_BGR)
+		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::rgba32)
+		ADD_CONVERSION(core::raw_format::bgr24, 		core::raw_format::abgr32)
+		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::rgb24)
+		ADD_CONVERSION(core::raw_format::abgr32, 		core::raw_format::bgr24)
 
-		ADD_CONVERSION(YURI_FMT_BGRA, 		YURI_FMT_RGB)
-		ADD_CONVERSION(YURI_FMT_RGBA, 		YURI_FMT_BGR)
-		ADD_CONVERSION(YURI_FMT_BGR, 		YURI_FMT_RGBA)
-		ADD_CONVERSION(YURI_FMT_RGB24, 		YURI_FMT_BGRA)
+		ADD_CONVERSION(core::raw_format::abgr32, 		core::raw_format::rgba32)
+		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::abgr32)
+		ADD_CONVERSION(core::raw_format::bgr24, 		core::raw_format::rgb24)
+		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::bgr24)
+
+		ADD_CONVERSION(core::raw_format::abgr32, 		core::raw_format::rgb24)
+		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::bgr24)
+		ADD_CONVERSION(core::raw_format::bgr24, 		core::raw_format::rgba32)
+		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::abgr32)
 
 
-		ADD_CONVERSION(YURI_FMT_YUV422, 	YURI_FMT_UYVY422)
-		ADD_CONVERSION(YURI_FMT_UYVY422, 	YURI_FMT_YUV422)
-		ADD_CONVERSION(YURI_FMT_YVYU422,	YURI_FMT_VYUY422)
-		ADD_CONVERSION(YURI_FMT_VYUY422,	YURI_FMT_YVYU422)
-		ADD_CONVERSION(YURI_FMT_UYVY422,	YURI_FMT_VYUY422)
-		ADD_CONVERSION(YURI_FMT_VYUY422, 	YURI_FMT_UYVY422)
-		ADD_CONVERSION(YURI_FMT_YUV422, 	YURI_FMT_YVYU422)
-		ADD_CONVERSION(YURI_FMT_YVYU422,	YURI_FMT_YUV422)
-		ADD_CONVERSION(YURI_FMT_UYVY422,	YURI_FMT_YVYU422)
-		ADD_CONVERSION(YURI_FMT_VYUY422, 	YURI_FMT_YUV422)
-		ADD_CONVERSION(YURI_FMT_YUV422,		YURI_FMT_VYUY422)
-		ADD_CONVERSION(YURI_FMT_YVYU422,	YURI_FMT_UYVY422)
+		ADD_CONVERSION(core::raw_format::yuyv422, 	core::raw_format::uyvy422)
+		ADD_CONVERSION(core::raw_format::uyvy422, 	core::raw_format::yuyv422)
+		ADD_CONVERSION(core::raw_format::yvyu422,	core::raw_format::vyuy422)
+		ADD_CONVERSION(core::raw_format::vyuy422,	core::raw_format::yvyu422)
+		ADD_CONVERSION(core::raw_format::uyvy422,	core::raw_format::vyuy422)
+		ADD_CONVERSION(core::raw_format::vyuy422, 	core::raw_format::uyvy422)
+		ADD_CONVERSION(core::raw_format::yuyv422, 	core::raw_format::yvyu422)
+		ADD_CONVERSION(core::raw_format::yvyu422,	core::raw_format::yuyv422)
+		ADD_CONVERSION(core::raw_format::uyvy422,	core::raw_format::yvyu422)
+		ADD_CONVERSION(core::raw_format::vyuy422, 	core::raw_format::yuyv422)
+		ADD_CONVERSION(core::raw_format::yuyv422,		core::raw_format::vyuy422)
+		ADD_CONVERSION(core::raw_format::yvyu422,	core::raw_format::uyvy422)
 
-		ADD_CONVERSION(YURI_FMT_YUV422, 	YURI_FMT_YUV444)
-		ADD_CONVERSION(YURI_FMT_YUV444, 	YURI_FMT_YUV422)
-		ADD_CONVERSION(YURI_FMT_UYVY422, 	YURI_FMT_YUV444)
-		ADD_CONVERSION(YURI_FMT_YUV444, 	YURI_FMT_UYVY422)
+		ADD_CONVERSION(core::raw_format::yuyv422, 	core::raw_format::yuv444)
+		ADD_CONVERSION(core::raw_format::yuv444, 	core::raw_format::yuyv422)
+		ADD_CONVERSION(core::raw_format::uyvy422, 	core::raw_format::yuv444)
+		ADD_CONVERSION(core::raw_format::yuv444, 	core::raw_format::uyvy422)
 
-		ADD_CONVERSION(YURI_FMT_RGB24, 		YURI_FMT_YUV444)
-		ADD_CONVERSION(YURI_FMT_RGBA, 		YURI_FMT_YUV444)
-		ADD_CONVERSION(YURI_FMT_BGR, 		YURI_FMT_YUV444)
-		ADD_CONVERSION(YURI_FMT_BGRA, 		YURI_FMT_YUV444)
+		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::yuv444)
+		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::yuv444)
+		ADD_CONVERSION(core::raw_format::bgr24, 		core::raw_format::yuv444)
+		ADD_CONVERSION(core::raw_format::abgr32, 		core::raw_format::yuv444)
 
-		ADD_CONVERSION(YURI_FMT_RGB24, 		YURI_FMT_YUV422)
-		ADD_CONVERSION(YURI_FMT_RGBA, 		YURI_FMT_YUV422)
-		ADD_CONVERSION(YURI_FMT_BGR, 		YURI_FMT_YUV422)
-		ADD_CONVERSION(YURI_FMT_BGRA, 		YURI_FMT_YUV422)
+		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::yuyv422)
+		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::yuyv422)
+		ADD_CONVERSION(core::raw_format::bgr24, 		core::raw_format::yuyv422)
+		ADD_CONVERSION(core::raw_format::abgr32, 		core::raw_format::yuyv422)
 
-		ADD_CONVERSION(YURI_FMT_YUV444,		YURI_FMT_RGB24)
-		ADD_CONVERSION(YURI_FMT_YUV422,		YURI_FMT_RGB24)
-		ADD_CONVERSION(YURI_FMT_UYVY422,	YURI_FMT_RGB24)
+		ADD_CONVERSION(core::raw_format::yuv444,		core::raw_format::rgb24)
+		ADD_CONVERSION(core::raw_format::yuyv422,		core::raw_format::rgb24)
+		ADD_CONVERSION(core::raw_format::uyvy422,	core::raw_format::rgb24)
 
-		ADD_CONVERSION(YURI_FMT_V210, 		YURI_FMT_YUV422)
-		ADD_CONVERSION(YURI_FMT_V210, 		YURI_FMT_UYVY422)
-		ADD_CONVERSION(YURI_FMT_YUV422,		YURI_FMT_V210)
-		ADD_CONVERSION(YURI_FMT_UYVY422,	YURI_FMT_V210)
+//		ADD_CONVERSION(YURI_FMT_V210, 		core::raw_format::yuyv422)
+//		ADD_CONVERSION(YURI_FMT_V210, 		core::raw_format::uyvy422)
+//		ADD_CONVERSION(core::raw_format::yuyv422,		YURI_FMT_V210)
+//		ADD_CONVERSION(core::raw_format::uyvy422,	YURI_FMT_V210)
 
-	;
+	};
 
 }
 
-core::pParameters YuriConvertor::configure()
+core::Parameters YuriConvertor::configure()
 {
-	core::pParameters p = BasicIOFilter::configure();
-	(*p)["colorimetry"]["Colorimetry to use when converting from RGB (BT709, BT601, BT2020)"]="BT709";
-	(*p)["format"]["Output format"]=std::string("YUV422");
-	(*p)["full"]["Assume YUV values in full range"]=true;
+	core::Parameters p = core::SpecializedIOFilter<core::RawVideoFrame>::configure();
+	p["colorimetry"]["Colorimetry to use when converting from RGB (BT709, BT601, BT2020)"]="BT709";
+	p["format"]["Output format"]=std::string("YUV422");
+	p["full"]["Assume YUV values in full range"]=true;
 	return p;
 }
 
-YuriConvertor::YuriConvertor(log::Log &log_, core::pwThreadBase parent, core::Parameters& parameters) IO_THREAD_CONSTRUCTOR
-	:core::BasicIOFilter(log_,parent,"YuriConv"),colorimetry_(YURI_COLORIMETRY_REC709),full_range_(true)
+YuriConvertor::YuriConvertor(log::Log &log_, core::pwThreadBase parent, const core::Parameters& parameters)
+	:core::SpecializedIOFilter<core::RawVideoFrame> (log_,parent,"YuriConv"),colorimetry_(YURI_COLORIMETRY_REC709),full_range_(true)
 {
-	IO_THREAD_INIT("Yuri Convert")
+	IOTHREAD_INIT(parameters)
 		log[log::info] << "Initialized " << converters.size() << " converters";
 	for (auto it = converters.begin();	it!=converters.end(); ++it) {
 		const format_pair_t& fp = it->first;
-		log[log::debug] << "Converter: " << core::BasicPipe::get_format_string(fp.first) << " -> "
-				<< core::BasicPipe::get_format_string(fp.second);
+		log[log::debug] << "Converter: " << core::raw_format::get_format_name(fp.first) << " -> "
+				<< core::raw_format::get_format_name(fp.second);
 	}
 }
 
-YuriConvertor::~YuriConvertor() {
+YuriConvertor::~YuriConvertor() noexcept{
 }
 
-core::pBasicFrame YuriConvertor::do_simple_single_step(const core::pBasicFrame& frame)
+core::pFrame YuriConvertor::do_special_single_step(const core::pRawVideoFrame& frame)
 //bool YuriConvertor::step()
 {
 //	if (!in[0] || in[0]->is_empty()) return true;
-//	core::pBasicFrame frame = in[0]->pop_frame();
-	if (!frame) return core::pBasicFrame();
-	core::pBasicFrame outframe;
+//	core::pRawVideoFrame frame = in[0]->pop_frame();
+	core::pRawVideoFrame outframe;
+	if (!frame) return outframe;
+
 	format_t in_fmt = frame->get_format();
 	format_pair_t conv_pair = std::make_pair(in_fmt, format_);
 	converter_t converter;
@@ -165,23 +168,24 @@ core::pBasicFrame YuriConvertor::do_simple_single_step(const core::pBasicFrame& 
 	} else if (in_fmt == format_) {
 		outframe = frame;
 	} else {
-		log[log::debug] << "Unknown format combination " << core::BasicPipe::get_format_string(frame->get_format()) << " -> "
-				<< core::BasicPipe::get_format_string(format_) << "\n";
-		return core::pBasicFrame();
-	}
-	if (outframe) {
-		outframe->set_info(frame->get_info());
-		if (outframe->get_pts() == 0) outframe->set_time(frame->get_pts(), frame->get_dts(), frame->get_duration());
-		//push_raw_video_frame (0,outframe);
+
+		log[log::debug] << "Unknown format combination " << core::raw_format::get_format_name(frame->get_format()) << " -> "
+				<< core::raw_format::get_format_name(format_) << "\n";
 		return outframe;
 	}
-	return core::pBasicFrame();
+
+	if (outframe) {
+		//@ TODO fix this...
+		//outframe->set_info(frame->get_info());
+		//if (outframe->get_pts() == 0) outframe->set_time(frame->get_pts(), frame->get_dts(), frame->get_duration());
+	}
+	return outframe;
 }
 
 
 bool YuriConvertor::set_param(const core::Parameter &p)
 {
-	if (iequals(p.name,"colorimetry")) {
+	if (iequals(p.get_name(),"colorimetry")) {
 		std::string clr = p.get<std::string>();
 		if (iequals(clr,"BT709") || iequals(clr,"REC709") || iequals(clr,"BT.709") || iequals(clr,"REC.709")) {
 			colorimetry_=YURI_COLORIMETRY_REC709;
@@ -193,13 +197,14 @@ bool YuriConvertor::set_param(const core::Parameter &p)
 			log[log::warning] << "Unrecognized colorimetry type " << clr << ". Falling back to REC.709" << std::endl;
 			colorimetry_=YURI_COLORIMETRY_REC709;
 		}
-	} else if (iequals(p.name,"format")) {
-		format_ = core::BasicPipe::get_format_from_string(p.get<std::string>(),YURI_TYPE_VIDEO);
-		if (format_==YURI_FMT_NONE) format_=YURI_FMT_YUV422;
-		log[log::info] << "Output format " << core::BasicPipe::get_format_string(format_);
-	} else if (iequals(p.name,"full")) {
+	} else if (iequals(p.get_name(),"format")) {
+		format_ = core::raw_format::parse_format(p.get<std::string>());
+//		format_ = core::BasicPipe::get_format_from_string(p.get<std::string>(),YURI_TYPE_VIDEO);
+		if (format_==core::raw_format::unknown) format_= core::raw_format::yuyv422;
+		log[log::info] << "Output format " << core::raw_format::get_format_name(format_);
+	} else if (iequals(p.get_name(),"full")) {
 		full_range_ = p.get<bool>();
-	} else return BasicIOThread::set_param(p);
+	} else return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(p);
 	return true;
 }
 

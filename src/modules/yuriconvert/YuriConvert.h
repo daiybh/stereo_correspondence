@@ -11,8 +11,8 @@
 #ifndef YURICONVERTOR_H_
 #define YURICONVERTOR_H_
 
-#include "yuri/core/BasicIOFilter.h"
-
+#include "yuri/core/thread/SpecializedIOFilter.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 namespace yuri {
 
 namespace video {
@@ -25,17 +25,17 @@ enum colorimetry_t {
 
 /// @bug Conversion from limited range YUV to RGB does not work properly
 
-class YuriConvertor: public core::BasicIOFilter {
+class YuriConvertor: public core::SpecializedIOFilter<core::RawVideoFrame> {
 public:
-	YuriConvertor(log::Log &log_, core::pwThreadBase parent, core::Parameters& parameters) IO_THREAD_CONSTRUCTOR;
-	virtual ~YuriConvertor();
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
-	bool set_param(const core::Parameter &p);
+	YuriConvertor(log::Log &log_, core::pwThreadBase parent, const core::Parameters& parameters);
+	virtual ~YuriConvertor() noexcept;
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
 	colorimetry_t get_colorimetry() const { return colorimetry_; }
 	bool get_full_range() const { return full_range_; }
 private:
-	core::pBasicFrame do_simple_single_step(const core::pBasicFrame& frame);
+	bool set_param(const core::Parameter &p);
+	core::pFrame do_special_single_step(const core::pRawVideoFrame& frame);
 	colorimetry_t colorimetry_;
 	bool full_range_;
 	yuri::format_t format_;

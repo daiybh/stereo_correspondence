@@ -2,7 +2,7 @@
  * 					RGB conversions
  *************************************************************************** */
 
-void rgb_rgba(plane_t::const_iterator src, plane_t::iterator dest, size_t width, ubyte_t alpha)
+void rgb_rgba(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width, uint8_t alpha)
 {
 	for (size_t pixel = 0; pixel < width; ++pixel) {
 		*dest++=*src++;
@@ -12,19 +12,19 @@ void rgb_rgba(plane_t::const_iterator src, plane_t::iterator dest, size_t width,
 	}
 }
 template<>
-void convert_line<YURI_FMT_RGB24, YURI_FMT_RGBA>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::rgb24, core::raw_format::rgba32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	rgb_rgba(src, dest, width, 255);
 }
 template<>
-void convert_line<YURI_FMT_BGR, YURI_FMT_BGRA>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::bgr24, core::raw_format::abgr32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	rgb_rgba(src, dest, width, 255);
 }
 
-void rgba_rgb(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void rgba_rgb(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width; ++pixel) {
 		*dest++=*src++;
@@ -34,19 +34,19 @@ void rgba_rgb(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 	}
 }
 template<>
-void convert_line<YURI_FMT_RGBA, YURI_FMT_RGB24>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::rgba32, core::raw_format::rgb24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	rgba_rgb(src, dest, width);
 }
 template<>
-void convert_line<YURI_FMT_BGRA, YURI_FMT_BGR>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::abgr32, core::raw_format::bgr24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	rgba_rgb(src, dest, width);
 }
 
-void rgba_bgra(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void rgba_bgra(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width; ++pixel) {
 		*dest++=*(src+2);
@@ -57,18 +57,18 @@ void rgba_bgra(plane_t::const_iterator src, plane_t::iterator dest, size_t width
 	}
 }
 template<>
-void convert_line<YURI_FMT_BGRA, YURI_FMT_RGBA>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::abgr32, core::raw_format::rgba32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	rgba_bgra(src, dest, width);
 }
 template<>
-void convert_line<YURI_FMT_RGBA, YURI_FMT_BGRA>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::rgba32, core::raw_format::abgr32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	rgba_bgra(src, dest, width);
 }
-void rgb_bgra (plane_t::const_iterator src, plane_t::iterator dest, size_t width, ubyte_t alpha)
+void rgb_bgra (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width, uint8_t alpha)
 {
 	for (size_t pixel = 0; pixel < width; ++pixel) {
 		*dest++=*(src+2);
@@ -80,18 +80,18 @@ void rgb_bgra (plane_t::const_iterator src, plane_t::iterator dest, size_t width
 }
 
 template<>
-void convert_line<YURI_FMT_RGB24, YURI_FMT_BGRA>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::rgb24, core::raw_format::abgr32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	rgb_bgra(src, dest, width, 255);
 }
 template<>
-void convert_line<YURI_FMT_BGR, YURI_FMT_RGBA>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::bgr24, core::raw_format::rgba32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	rgb_bgra(src, dest, width, 255);
 }
-void bgra_rgb (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void bgra_rgb (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width; ++pixel) {
 		*dest++=*(src+2);
@@ -102,18 +102,18 @@ void bgra_rgb (plane_t::const_iterator src, plane_t::iterator dest, size_t width
 }
 
 template<>
-void convert_line<YURI_FMT_BGRA, YURI_FMT_RGB24>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::abgr32, core::raw_format::rgb24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	bgra_rgb(src, dest, width);
 }
 template<>
-void convert_line<YURI_FMT_RGBA, YURI_FMT_BGR>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::rgba32, core::raw_format::bgr24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	bgra_rgb(src, dest, width);
 }
-void bgr_rgb (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void bgr_rgb (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width; ++pixel) {
 		*dest++=*(src+2);
@@ -124,14 +124,14 @@ void bgr_rgb (plane_t::const_iterator src, plane_t::iterator dest, size_t width)
 }
 
 template<>
-void convert_line<YURI_FMT_BGR, YURI_FMT_RGB24>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::bgr24, core::raw_format::rgb24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	bgr_rgb(src, dest, width);
 }
 template<>
-void convert_line<YURI_FMT_RGB24, YURI_FMT_BGR>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::rgb24, core::raw_format::bgr24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	bgr_rgb(src, dest, width);
 }
@@ -144,10 +144,10 @@ void convert_line<YURI_FMT_RGB24, YURI_FMT_BGR>
 
 
 template<>
-void convert_line<YURI_FMT_YUV422, YURI_FMT_YUV444>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::yuyv422, core::raw_format::yuv444>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
-	ubyte_t y, u, v;
+	uint8_t y, u, v;
 	for (size_t pixel = 0; pixel < width/2; ++pixel) {
 		*dest++=*src++;
 		u=*dest++=*src++;
@@ -160,8 +160,8 @@ void convert_line<YURI_FMT_YUV422, YURI_FMT_YUV444>
 	}
 }
 template<>
-void convert_line<YURI_FMT_YUV444, YURI_FMT_YUV422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::yuv444, core::raw_format::yuyv422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width/2; ++pixel) {
 		*dest++=*src++;
@@ -174,10 +174,10 @@ void convert_line<YURI_FMT_YUV444, YURI_FMT_YUV422>
 }
 
 template<>
-void convert_line<YURI_FMT_UYVY422, YURI_FMT_YUV444>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::uyvy422, core::raw_format::yuv444>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
-	ubyte_t y, u, v;
+	uint8_t y, u, v;
 	for (size_t pixel = 0; pixel < width/2; ++pixel) {
 		u=*src++;
 		*dest++=*src++;
@@ -191,10 +191,10 @@ void convert_line<YURI_FMT_UYVY422, YURI_FMT_YUV444>
 	}
 }
 template<>
-void convert_line<YURI_FMT_YUV444, YURI_FMT_UYVY422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::yuv444, core::raw_format::uyvy422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
-	ubyte_t y;
+	uint8_t y;
 	for (size_t pixel = 0; pixel < width/2; ++pixel) {
 		y=*src++;
 		*dest++=*src++;
@@ -214,7 +214,7 @@ void convert_line<YURI_FMT_YUV444, YURI_FMT_UYVY422>
 /* ***************************************************************************
  * 					V210 conversions
  *************************************************************************** */
-
+/*
 template<>
 size_t get_linesize<YURI_FMT_V210>(size_t width)
 {
@@ -234,8 +234,8 @@ core::pBasicFrame allocate_frame<YURI_FMT_V210>(size_t width, size_t height)
 
 // Full range
 template<>
-void convert_line<YURI_FMT_V210, YURI_FMT_YUV422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<YURI_FMT_V210, core::raw_format::yuyv422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	const uint32_t* src_pixels = reinterpret_cast<const uint32_t*>(src);
 	for (size_t pixel = 0; pixel < width/3; ++pixel) {
@@ -250,8 +250,8 @@ void convert_line<YURI_FMT_V210, YURI_FMT_YUV422>
 }
 
 template<>
-void convert_line<YURI_FMT_V210, YURI_FMT_UYVY422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<YURI_FMT_V210, core::raw_format::uyvy422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	const uint32_t* src_pixels = reinterpret_cast<const uint32_t*>(src);
 	for (size_t pixel = 0; pixel < width/3; ++pixel) {
@@ -267,8 +267,8 @@ void convert_line<YURI_FMT_V210, YURI_FMT_UYVY422>
 }
 // Full range
 template<>
-void convert_line<YURI_FMT_YUV422, YURI_FMT_V210>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::yuyv422, YURI_FMT_V210>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	uint32_t* dest_pixels = reinterpret_cast<uint32_t*>(dest);
 	for (size_t pixel = 0; pixel < width/3; ++pixel) {
@@ -279,8 +279,8 @@ void convert_line<YURI_FMT_YUV422, YURI_FMT_V210>
 }
 // Full range
 template<>
-void convert_line<YURI_FMT_UYVY422, YURI_FMT_V210>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::uyvy422, YURI_FMT_V210>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	uint32_t* dest_pixels = reinterpret_cast<uint32_t*>(dest);
 	for (size_t pixel = 0; pixel < width/3; ++pixel) {
@@ -290,39 +290,43 @@ void convert_line<YURI_FMT_UYVY422, YURI_FMT_V210>
 		src+=3;
 	}
 }
-
+*/
 /* ***************************************************************************
  * 					Default template definitions
  *************************************************************************** */
 
 template<format_t fmt_in, format_t fmt_out>
-void convert_line(plane_t::const_iterator src, plane_t::iterator dest, size_t width, const YuriConvertor&)
+void convert_line(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width, const YuriConvertor&)
 {
 	return convert_line<fmt_in, fmt_out>(src, dest, width);
 }
 
 template<format_t fmt>
-core::pBasicFrame allocate_frame(size_t width, size_t height)
+core::pRawVideoFrame allocate_frame(size_t width, size_t height)
 {
-	return core::BasicIOThread::allocate_empty_frame(fmt, width, height, true);
+	return core::RawVideoFrame::create_empty(fmt, {width, height}, true);
 }
 template<format_t fmt> size_t get_linesize(size_t width)
 {
-	FormatInfo_t fi_in			= core::BasicPipe::get_format_info(fmt);
-	assert (fi_in && !(fi_in->bpp % 8));
-	return (width * fi_in->bpp) / 8;
+	//FormatInfo_t fi_in			= core::BasicPipe::get_format_info(fmt);
+	//assert (fi_in && !(fi_in->bpp % 8));
+	//return (width * fi_in->bpp) / 8;
+	const auto& fi = core::raw_format::get_format_info(fmt);
+	assert (fi.planes.size()==1);
+	assert (fi.planes[0].bit_depth.first % (8* fi.planes[0].bit_depth.second)== 0);
+	return width * fi.planes[0].bit_depth.first / (8* fi.planes[0].bit_depth.second);
 }
 
 template<format_t fmt_in, format_t fmt_out>
-core::pBasicFrame convert_formats(const core::pBasicFrame& frame, const YuriConvertor& conv)
+core::pRawVideoFrame convert_formats(const core::pRawVideoFrame& frame, const YuriConvertor& conv)
 {
 	const size_t width 			= frame->get_width();
 	const size_t height			= frame->get_height();
 	const size_t linesize_in 	= get_linesize<fmt_in>(width);
 	const size_t linesize_out 	= get_linesize<fmt_out>(width);
-	core::pBasicFrame outframe 	= allocate_frame<fmt_out>(width, height);
-	plane_t::const_iterator src	= PLANE_DATA(frame,0).begin();
-	plane_t::iterator dest		= PLANE_DATA(outframe,0).begin();
+	core::pRawVideoFrame outframe 	= allocate_frame<fmt_out>(width, height);
+	core::Plane::const_iterator src	= PLANE_DATA(frame,0).begin();
+	core::Plane::iterator dest		= PLANE_DATA(outframe,0).begin();
 	for (size_t line = 0; line < height; ++line) {
 		convert_line<fmt_in, fmt_out>(src, dest, width, conv);
 		src+=linesize_in;
@@ -330,4 +334,5 @@ core::pBasicFrame convert_formats(const core::pBasicFrame& frame, const YuriConv
 	}
 	return outframe;
 }
+
 

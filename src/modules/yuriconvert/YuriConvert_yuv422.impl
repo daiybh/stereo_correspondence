@@ -8,7 +8,7 @@
 
 // Converts abcd -> badc
 inline void swap_yuv422_pairs
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width; ++pixel) {
 		*dest++=*(src+1);
@@ -18,7 +18,7 @@ inline void swap_yuv422_pairs
 }
 // Converts abcd -> cbad
 inline void swap_yuv422_0_2
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width/2; ++pixel) {
 		*dest++=*(src+2);
@@ -30,7 +30,7 @@ inline void swap_yuv422_0_2
 }
 // Converts abcd -> adcb
 inline void swap_yuv422_1_3
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width/2; ++pixel) {
 		*dest++=*(src+0);
@@ -42,7 +42,7 @@ inline void swap_yuv422_1_3
 }
 // Converts abcd -> bcda
 inline void swap_yuv422_pairs_1_3
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width/2; ++pixel) {
 		*dest++=*(src+1);
@@ -54,7 +54,7 @@ inline void swap_yuv422_pairs_1_3
 }
 // Converts abcd -> dabc
 inline void swap_yuv422_pairs_0_2
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width/2; ++pixel) {
 		*dest++=*(src+3);
@@ -65,75 +65,75 @@ inline void swap_yuv422_pairs_0_2
 	}
 }
 template<>
-void convert_line<YURI_FMT_YUV422, YURI_FMT_UYVY422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::yuyv422, core::raw_format::uyvy422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	swap_yuv422_pairs(src,dest,width);
 }
 template<>
-void convert_line<YURI_FMT_UYVY422, YURI_FMT_YUV422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::uyvy422, core::raw_format::yuyv422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	swap_yuv422_pairs(src,dest,width);
 }
 template<>
-void convert_line<YURI_FMT_VYUY422, YURI_FMT_YVYU422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::vyuy422, core::raw_format::yvyu422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	swap_yuv422_pairs(src,dest,width);
 }
 template<>
-void convert_line<YURI_FMT_YVYU422, YURI_FMT_VYUY422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::yvyu422, core::raw_format::vyuy422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	swap_yuv422_pairs(src,dest,width);
 }
 
 template<>
-void convert_line<YURI_FMT_UYVY422, YURI_FMT_VYUY422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::uyvy422, core::raw_format::vyuy422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	swap_yuv422_0_2(src,dest,width);
 }
 template<>
-void convert_line<YURI_FMT_VYUY422, YURI_FMT_UYVY422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::vyuy422, core::raw_format::uyvy422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	swap_yuv422_0_2(src,dest,width);
 }
 template<>
-void convert_line<YURI_FMT_YUV422, YURI_FMT_YVYU422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::yuyv422, core::raw_format::yvyu422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	swap_yuv422_1_3(src,dest,width);
 }
 template<>
-void convert_line<YURI_FMT_YVYU422, YURI_FMT_YUV422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::yvyu422, core::raw_format::yuyv422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	swap_yuv422_1_3(src,dest,width);
 }
 template<>
-void convert_line<YURI_FMT_UYVY422, YURI_FMT_YVYU422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::uyvy422, core::raw_format::yvyu422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	swap_yuv422_pairs_1_3(src,dest,width);
 }
 template<>
-void convert_line<YURI_FMT_VYUY422, YURI_FMT_YUV422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::vyuy422, core::raw_format::yuyv422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	swap_yuv422_pairs_1_3(src,dest,width);
 }
 template<>
-void convert_line<YURI_FMT_YUV422, YURI_FMT_VYUY422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::yuyv422, core::raw_format::vyuy422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	swap_yuv422_pairs_0_2(src,dest,width);
 }
 template<>
-void convert_line<YURI_FMT_YVYU422, YURI_FMT_UYVY422>
-(plane_t::const_iterator src, plane_t::iterator dest, size_t width)
+void convert_line<core::raw_format::yvyu422, core::raw_format::uyvy422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	swap_yuv422_pairs_0_2(src,dest,width);
 }

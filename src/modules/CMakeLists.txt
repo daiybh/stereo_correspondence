@@ -17,6 +17,8 @@ add_subdirectory(pad)
 add_subdirectory(rotate)
 add_subdirectory(split_frames)
 add_subdirectory(testcard)
+add_subdirectory(yuriconvert)
+
 
 CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
 
@@ -135,7 +137,6 @@ ENDIF()
 IF(${CORE_CUDA})
 	add_definitions("-DYURI_HAVE_CUDA")
 ENDIF()
-add_subdirectory(yuriconvert)
 
 IF(${CORE_X11})
 	add_subdirectory(simplerenderer)
