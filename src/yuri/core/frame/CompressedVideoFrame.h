@@ -29,6 +29,8 @@ class CompressedVideoFrame: public VideoFrame
 
 	CompressedVideoFrame(format_t format, resolution_t resolution);
 	CompressedVideoFrame(format_t format, resolution_t resolution, uint8_t* data, size_t size);
+	template<class Deleter>
+	CompressedVideoFrame(format_t format, resolution_t resolution, uint8_t* data, size_t size, Deleter deleter);
 	~CompressedVideoFrame() noexcept;
 
 	vector_type&	get_data() { return data_; }
@@ -56,7 +58,12 @@ private:
 	vector_type data_;
 };
 
-
+template<class Deleter>
+CompressedVideoFrame::CompressedVideoFrame(format_t format, resolution_t resolution, uint8_t* data, size_t size, Deleter deleter)
+:VideoFrame(format, resolution)
+{
+	data_.set(data, size, deleter);
+}
 
 }
 }
