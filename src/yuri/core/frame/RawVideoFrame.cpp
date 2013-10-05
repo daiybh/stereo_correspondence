@@ -22,11 +22,9 @@ pRawVideoFrame RawVideoFrame::create_empty(format_t format, resolution_t resolut
 		// Creating with 0 planes and them emplacing planes into it.
 		frame = make_shared<RawVideoFrame>(format, resolution, 0);
 		for (const auto& p: info.planes) {
-			const size_t line_size_nom = resolution.width * p.bit_depth.first;
-			const size_t line_size_den = p.bit_depth.second * p.sub_x * 8;
-			const size_t line_size_unaligned = line_size_nom / line_size_den + line_size_nom % line_size_den;
-			const size_t line_size = p.alignment_requirement?line_size_unaligned+line_size_unaligned%p.alignment_requirement:line_size_unaligned;
-			const size_t frame_size = line_size * resolution.height / p.sub_y;
+			const auto fp = get_plane_params(p, resolution);
+			const size_t line_size = fp.first;//p.alignment_requirement?line_size_unaligned+line_size_unaligned%p.alignment_requirement:line_size_unaligned;
+			const size_t frame_size = fp.second;//line_size * resolution.height / p.sub_y;
 			if (!fixed) {
 				frame->emplace_back(frame_size, resolution, line_size);
 			} else {
@@ -101,6 +99,23 @@ void RawVideoFrame::copy_parameters(Frame& other) const {
 		throw std::runtime_error("Tried to set VideoFrame params to a type not related to VideoFrame");
 	}
 	VideoFrame::copy_parameters(other);
+}
+
+std::pair<size_t, size_t> RawVideoFrame::get_plane_params(const raw_format::raw_format_t& info, size_t plane, resolution_t resolution)
+{
+
+	const auto& p = info.planes[plane];
+	return get_plane_params(p, resolution);
+}
+
+std::pair<size_t, size_t> RawVideoFrame::get_plane_params(const raw_format::plane_info_t& p, resolution_t resolution)
+{
+	const size_t line_size_nom = resolution.width * p.bit_depth.first;
+	const size_t line_size_den = p.bit_depth.second * p.sub_x * 8;
+	const size_t line_size_unaligned = line_size_nom / line_size_den + line_size_nom % line_size_den;
+	const size_t line_size = p.alignment_requirement?line_size_unaligned+line_size_unaligned%p.alignment_requirement:line_size_unaligned;
+	const size_t frame_size = line_size * resolution.height / p.sub_y;
+	return {line_size, frame_size};
 }
 }
 }

@@ -36,6 +36,8 @@ public:
 	{ }
 	GenericPlane(GenericPlane&& rhs) noexcept:resolution_(rhs.resolution_),line_size_(rhs.line_size_),data_(std::move(rhs.data_))
 	{}
+	template<class Deleter>
+	GenericPlane(const T* data, size_t size, resolution_t resolution, dimension_t line_size, Deleter deleter);
 	GenericPlane& operator=(const GenericPlane& rhs) {
 		resolution_ 	= rhs.resolution_;
 		line_size_ 		= rhs.line_size_;
@@ -49,6 +51,8 @@ public:
 		data_.swap(rhs.data_);
 		return *this;
 	}
+	template<class Deleter>
+	void set_data(const T* data, size_t size, Deleter deleter);
 
 	iterator					begin() {return data_.begin();}
 	iterator					end() {return data_.end();}
@@ -70,8 +74,24 @@ private:
 	dimension_t					line_size_;
 	vector_type					data_;
 };
+template<typename T>
+template<class Deleter>
+GenericPlane<T>::GenericPlane(const T* data, size_t size, resolution_t resolution, dimension_t line_size, Deleter deleter)
+:resolution_(resolution),line_size_(line_size)
+{
+	data_.set(data, size, deleter);
+}
+
+template<typename T>
+template<class Deleter>
+void GenericPlane<T>::set_data(const T* data, size_t size, Deleter deleter)
+{
+	data_.set(data, size, deleter);
+}
 
 typedef GenericPlane<uint8_t>	Plane;
+
+
 
 }
 }

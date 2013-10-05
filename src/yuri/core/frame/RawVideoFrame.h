@@ -9,6 +9,7 @@
 #define RAWVIDEOFRAME_H_
 #include "VideoFrame.h"
 #include "Plane.h"
+#include "raw_frame_params.h"
 #include <vector>
 namespace yuri {
 namespace core {
@@ -77,6 +78,9 @@ private:
 	 * @return Size of current frame
 	 */
 	virtual size_t	do_get_size() const noexcept;
+
+	static std::pair<size_t, size_t>	get_plane_params(const raw_format::raw_format_t& info, size_t plane, resolution_t resolution);
+	static std::pair<size_t, size_t>	get_plane_params(const raw_format::plane_info_t& info, resolution_t resolution);
 protected:
 	/*!
 	 * Copies parameters from the frame to other frame.
@@ -104,11 +108,20 @@ pRawVideoFrame RawVideoFrame::create_empty(format_t format, resolution_t resolut
 template<class Deleter>
 pRawVideoFrame RawVideoFrame::create_empty(format_t format, resolution_t resolution, const uint8_t* data, size_t size, Deleter deleter, interlace_t interlace, field_order_t field_order)
 {
-	// Creating with 0 planes and them emplacing planes into it.
-	pRawVideoFrame frame = make_shared<RawVideoFrame>(format, resolution, 0);
-	frame->set_interlacing(interlace);
-	frame->set_field_order(field_order);
-	throw std::exception("Not implemented");
+	pRawVideoFrame frame;
+	try {
+			const auto& info = raw_format::get_format_info(format);
+			size_t line_size, frame_size;
+			std::tie(line_size, frame_size) = get_plane_params(info, 0, resolution);
+//			assert(size>= frame_size);
+			// Creating with 0 planes and them emplacing planes into it.
+			pRawVideoFrame frame = make_shared<RawVideoFrame>(format, resolution, 0);
+			frame->set_interlacing(interlace);
+			frame->set_field_order(field_order);
+
+			frame->emplace_back(data, size, resolution, line_size, deleter);
+	}
+	catch(std::runtime_error&) {frame.reset();}
 	return frame;
 }
 
