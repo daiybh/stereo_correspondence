@@ -42,7 +42,15 @@ pRawVideoFrame RawVideoFrame::create_empty(format_t format, resolution_t resolut
 	}
 	catch (std::runtime_error&) {}
 	return frame;
-
+}
+pRawVideoFrame RawVideoFrame::create_empty(format_t format, resolution_t resolution, const uint8_t* data, size_t size, bool fixed, interlace_t interlace, field_order_t field_order)
+{
+	pRawVideoFrame frame = create_empty(format, resolution, fixed, interlace, field_order);
+	if (frame) {
+		if (PLANE_SIZE(frame,0) < size) size = PLANE_SIZE(frame,0);
+		std::copy(data, data + size, PLANE_DATA(frame,0).begin());
+	}
+	return frame;
 }
 
 RawVideoFrame::RawVideoFrame(format_t format, resolution_t resolution, size_t plane_count)

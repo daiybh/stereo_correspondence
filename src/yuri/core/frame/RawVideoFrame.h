@@ -33,7 +33,13 @@ public:
 	typedef typename vector_type::const_reference
 								const_reference;
 
-	static pRawVideoFrame create_empty(format_t, resolution_t, bool fixed = false, interlace_t interlace = interlace_t::progressive, field_order_t filed_order = field_order_t::none);
+	static pRawVideoFrame create_empty(format_t, resolution_t, bool fixed = false, interlace_t interlace = interlace_t::progressive, field_order_t field_order = field_order_t::none);
+	static pRawVideoFrame create_empty(format_t, resolution_t, const uint8_t* data, size_t size, bool fixed= false, interlace_t interlace = interlace_t::progressive, field_order_t field_order = field_order_t::none);
+	template<class Iter>
+	static pRawVideoFrame create_empty(format_t frame, resolution_t resolution, Iter start, Iter end, bool fixed = false, interlace_t interlace = interlace_t::progressive, field_order_t field_order = field_order_t::none);
+	template<class Deleter>
+	static pRawVideoFrame create_empty(format_t frame, resolution_t resolution, const uint8_t* data, size_t size, Deleter deleter, interlace_t interlace = interlace_t::progressive, field_order_t field_order = field_order_t::none);
+
 
 	RawVideoFrame(format_t format, resolution_t resolution, size_t plane_count = 1);
 	virtual ~RawVideoFrame() noexcept;
@@ -82,6 +88,29 @@ private:
 	vector_type		planes_;
 
 };
+
+
+template<class Iter>
+pRawVideoFrame RawVideoFrame::create_empty(format_t format, resolution_t resolution, Iter start, Iter end, bool fixed, interlace_t interlace, field_order_t field_order)
+{
+	pRawVideoFrame frame = create_empty(format, resolution, fixed, interlace, field_order);
+	if (frame) {
+		if (std::distance(start,end) > PLANE_SIZE(frame,0)) end = start+PLANE_SIZE(frame,0);
+		std::copy(start, end, PLANE_DATA(frame,0).begin());
+	}
+	return frame;
+}
+
+template<class Deleter>
+pRawVideoFrame RawVideoFrame::create_empty(format_t format, resolution_t resolution, const uint8_t* data, size_t size, Deleter deleter, interlace_t interlace, field_order_t field_order)
+{
+	// Creating with 0 planes and them emplacing planes into it.
+	pRawVideoFrame frame = make_shared<RawVideoFrame>(format, resolution, 0);
+	frame->set_interlacing(interlace);
+	frame->set_field_order(field_order);
+	throw std::exception("Not implemented");
+	return frame;
+}
 
 }
 }
