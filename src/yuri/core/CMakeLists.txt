@@ -2,8 +2,11 @@ SET(YURI_SRC ${YURI_SRC}
 	core/frame/Frame.cpp core/frame/Frame.h
 	core/frame/VideoFrame.cpp core/frame/VideoFrame.h
 	core/frame/RawVideoFrame.cpp core/frame/RawVideoFrame.h
+	core/frame/CompressedVideoFrame.cpp core/frame/CompressedVideoFrame.h
 	core/frame/raw_frame_params.cpp core/frame/raw_frame_params.h
 	core/frame/raw_frame_types.h
+	core/frame/compressed_frame_types.h
+	core/frame/compressed_frame_params.cpp core/frame/compressed_frame_params.h
 	
 	core/utils/Timer.cpp core/utils/Timer.h
 	
