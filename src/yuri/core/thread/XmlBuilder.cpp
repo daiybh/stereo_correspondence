@@ -359,7 +359,7 @@ void XmlBuilder::builder_pimpl_t::verify_links()
 		map_elem telem {link.second.target_node, link.second.target_index};
 		auto s2 = used_sources.find(selem);
 		auto t2 = used_targets.find(telem);
-		VALID(s2 == used_sources.end(), "Duplicate specification for source " + selem.first +":"+lexical_cast<std::string>(selem.second)+", specified in "+s2->second+" and "+link.first)
+		VALID(s2 == used_sources.end() || link.second.source_index < 0, "Duplicate specification for source " + selem.first +":"+lexical_cast<std::string>(selem.second)+", specified in "+s2->second+" and "+link.first)
 		VALID(t2 == used_targets.end(), "Duplicate specification for target " + telem.first +":"+lexical_cast<std::string>(telem.second)+", specified in "+t2->second+" and "+link.first)
 		used_sources[selem]=link.first;
 		used_targets[telem]=link.first;
@@ -448,13 +448,13 @@ pIOThread XmlBuilder::builder_pimpl_t::get_node(const std::string& name)
 	auto it = nodes.find(name);
 	if (it != nodes.end()) {
 		p = it->second.instance;
-		if (p) log[log::info] << "Found " << name;
+		if (p) log[log::debug] << "Found " << name;
 	}
 	if (!p) {
 		if (name == this->name || name == "@") {
 			p = dynamic_pointer_cast<IOThread>(builder.get_this_ptr());
 		}
-		if (p) log[log::info] << "Resolved " << name << " as this";
+		if (p) log[log::debug] << "Resolved " << name << " as this";
 	}
 	return p;
 }
