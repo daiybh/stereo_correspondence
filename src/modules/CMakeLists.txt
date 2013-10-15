@@ -36,6 +36,16 @@ IF(ALSA_FOUND)
 	add_subdirectory(midi_device)
 ENDIF()
 
+#### UV #####
+IF(NOT YURI_DISABLE_ULTRAGRID)
+	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)
+	add_subdirectory(uv_udp)
+ENDIF()
+#############
+
+
+
+
 IF(FALSE)
 #################################################################
 # Add modules that are compile unconditionally

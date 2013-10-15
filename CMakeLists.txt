@@ -84,6 +84,8 @@ OPTION (YURI_DISABLE_DECKLINK "Disable building of decklink API helpers" ON)
 OPTION (YURI_DISABLE_PNG "Disable building of CUDA helpers" ON)
 OPTION (YURI_DISABLE_BOOST "Disable boost dependencies" OFF)
 
+OPTION (YURI_DISABLE_ULTRAGRID "Disable boost dependencies" ON)
+
 #################################################################
 # And finally submerge into source directories
 #################################################################
