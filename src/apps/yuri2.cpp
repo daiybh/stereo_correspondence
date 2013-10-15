@@ -20,6 +20,7 @@
 #include "yuri/core/parameter/Parameters.h"
 #include "yuri/core/pipe/Pipe.h"
 #include "yuri/core/thread/IOThreadGenerator.h"
+#include "yuri/core/socket/DatagramSocketGenerator.h"
 #include "yuri/core/frame/raw_frame_params.h"
 //using namespace std;
 //using namespace yuri;
@@ -129,6 +130,18 @@ void list_formats(yuri::log::Log& l_)
 
 	}
 }
+void list_dgram_sockets(yuri::log::Log& l_)
+{
+	using namespace yuri;
+	l_[log::info] << "List of registered datagram_socket implementations:";
+	const auto& reg = core::DatagramSocketGenerator::get_instance();
+	for (const auto& sock: reg.list_keys())
+	{
+		l_[log::info] << sock;
+
+	}
+}
+
 //void list_converters(Log l_)
 //{
 //	for (const auto& conv: core::RegisteredClass::get_all_converters()) {
@@ -212,6 +225,7 @@ int main(int argc, char**argv)
 		l_.set_quiet(true);
 		std::string list_what = vm["list"].as<std::string>();
 		if (iequals(list_what,"formats")) list_formats(l_);
+		else if (iequals(list_what,"datagram_sockets") || iequals(list_what,"datagram")) list_dgram_sockets(l_);
 		else list_registered(l_);
 		return 0;
 	}
@@ -233,6 +247,7 @@ int main(int argc, char**argv)
 				l_.set_flags(log::info);
 				l_.set_quiet(true);
 				if (iequals(list_what,"formats")) list_formats(l_);
+				else if (iequals(list_what,"datagram_sockets") || iequals(list_what,"datagram")) list_dgram_sockets(l_);
 				else list_registered(l_);
 			}
 		} else {
