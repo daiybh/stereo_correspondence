@@ -43,6 +43,14 @@ ENDIF()
 IF(CORE_UV)
 	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)	
 	add_subdirectory(uv_udp)
+	
+	
+	pkg_check_modules(libv4l2 libv4l2)
+	IF (libv4l2_FOUND)
+		add_subdirectory(uv_v4l2)
+	ENDIF()
+	
+	
 ENDIF()
 #############
 
