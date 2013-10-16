@@ -16,7 +16,13 @@ namespace socket {
 
 class host_not_found: public std::runtime_error
 {
+public:
 	host_not_found(const std::string& hostname):std::runtime_error("Host "+hostname+" not found"){}
+};
+class socket_not_connected: public std::runtime_error
+{
+public:
+	socket_not_connected():std::runtime_error("Socket is not connected"){}
 };
 
 }
