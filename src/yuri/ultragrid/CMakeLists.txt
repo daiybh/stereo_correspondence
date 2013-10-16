@@ -12,6 +12,7 @@ SET(YURI_HELPER_UV_SRC ${YURI_HELPER_DECKLINK_SRC}
 	${YURI_HELPER_UV_INCLUDE}/video_codec.c
 	${YURI_HELPER_UV_INCLUDE}/video_display.c
 	${YURI_HELPER_UV_INCLUDE}/video_frame.c
+	${YURI_HELPER_UV_INCLUDE}/x11_common.c
 	
 	${YURI_HELPER_UV_INCLUDE}/audio/wav_reader.c
 	

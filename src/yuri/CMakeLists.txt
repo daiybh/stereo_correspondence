@@ -10,8 +10,9 @@ ENDIF()
 #################################################################
 # Checking for optional dependencies for helper libraries
 #################################################################
+
 IF(NOT YURI_DISABLE_X11)
-	find_package( X11 )
+	find_package( X11 )	
 	find_package( OpenGL )
 ENDIF()
 IF(NOT YURI_DISABLE_LIBAV)
@@ -44,6 +45,7 @@ IF(NOT YURI_DISABLE_ULTRAGRID)
 	# This should be replaced by a proper detection!
 	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)
 	SET(ULTRAGRID_FOUND TRUE)
+	find_package(X11)
 ENDIF()
 
 #################################################################
@@ -92,7 +94,7 @@ ENDIF()
 
 IF(NOT YURI_DISABLE_ULTRAGRID)
 	SET(YURI_HELPER_UV_INCLUDE ${UV_BASE})
-	#SET(YURI_HELPER_UV_LIBS ${LIBNAME})
+	SET(YURI_HELPER_UV_LIBS ${LIBNAME} ${X11_LIBRARIES} ${X11_Xfixes_LIB})
 ENDIF()
 #################################################################
 # Adding CXXFLAGS and LDFLAGS for libyuri_core
