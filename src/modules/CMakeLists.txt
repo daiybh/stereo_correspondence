@@ -44,6 +44,10 @@ IF(CORE_UV)
 	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)	
 	add_subdirectory(uv_udp)
 	
+	find_package(X11)
+	if (X11_FOUND)
+		add_subdirectory(uv_screen)
+	ENDIF()
 	
 	pkg_check_modules(libv4l2 libv4l2)
 	IF (libv4l2_FOUND)
