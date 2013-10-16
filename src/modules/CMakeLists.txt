@@ -37,10 +37,11 @@ IF(ALSA_FOUND)
 ENDIF()
 
 #### UV #####
-IF(NOT YURI_DISABLE_ULTRAGRID)
+#IF(NOT YURI_DISABLE_ULTRAGRID)
 	# This should be replaced by a proper detection!
-	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)
 	
+IF(CORE_UV)
+	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)	
 	add_subdirectory(uv_udp)
 ENDIF()
 #############
