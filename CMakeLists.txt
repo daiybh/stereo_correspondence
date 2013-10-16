@@ -26,9 +26,12 @@ git_describe(YURI_GIT_VERSION)
 # Add strict warning if building under linux
 #################################################################
 IF (UNIX)
-add_definitions("-Wall -pedantic -Wextra -std=c++0x -DYURI_USE_CXX11") 
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra -std=c++0x")
+	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -Wextra -std=gnu99")
+
 ENDIF ()
 
+add_definitions("-DYURI_USE_CXX11") 
 #################################################################
 # Set versions
 #################################################################
@@ -47,6 +50,8 @@ SET(LIBNAME_HELPER_X11 yuri_helper_x11)
 SET(LIBNAME_HELPER_IEEE1394 yuri_helper_ieee1394)
 SET(LIBNAME_HELPER_ASIO yuri_helper_asio)
 SET(LIBNAME_HELPER_DECKLINK yuri_helper_decklink)
+
+SET(LIBNAME_HELPER_UV yuri2.8_helper_uv)
 
 #################################################################
 # Set prefix for modules
@@ -69,6 +74,7 @@ SET(CORE_CUDA FALSE)
 SET(CORE_X11 FALSE)
 SET(CORE_IEEE1394 FALSE)
 SET(CORE_ASIO FALSE)
+SET(CORE_UV FALSE)
 
 #################################################################
 # Add some options to control build
@@ -84,7 +90,7 @@ OPTION (YURI_DISABLE_DECKLINK "Disable building of decklink API helpers" ON)
 OPTION (YURI_DISABLE_PNG "Disable building of CUDA helpers" ON)
 OPTION (YURI_DISABLE_BOOST "Disable boost dependencies" OFF)
 
-OPTION (YURI_DISABLE_ULTRAGRID "Disable boost dependencies" ON)
+OPTION (YURI_DISABLE_ULTRAGRID "Disable ultragrid helper and modules" ON)
 
 #################################################################
 # And finally submerge into source directories
