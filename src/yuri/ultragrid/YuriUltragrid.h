@@ -29,6 +29,13 @@ core::pFrame copy_from_from_uv(const video_frame*, log::Log&);
 }
 }
 
+// Clang issues warning about mismatch of struct/class in hash definitions somewhere in gcc stdlib...
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmismatched-tags"
+#endif
+
 namespace std {
 template<>
 struct hash<codec_t> {
@@ -38,6 +45,9 @@ struct hash<codec_t> {
 }
 };
 
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 }
 
 
