@@ -22,6 +22,7 @@ std::unordered_map<codec_t, format_t> uv_to_yuri_formats =
 	{VIDEO_CODEC_NONE, core::raw_format::unknown},
 	{RGBA, core::raw_format::rgba32},
 	{BGR, core::raw_format::bgr24},
+	{RGB, core::raw_format::rgb24},
 	{UYVY, core::raw_format::uyvy422},
 	{YUYV, core::raw_format::yuyv422},
 
@@ -35,6 +36,7 @@ std::unordered_map<codec_t, std::string> uv_to_strings =
 	{VIDEO_CODEC_NONE, "NONE"},
 	{RGBA, "RGBA"},
 	{BGR, "BGR"},
+	{RGB, "RGB"},
 	{UYVY, "UYVY"},
 	{YUYV, "YUYV"},
 
@@ -69,6 +71,7 @@ core::pFrame copy_from_from_uv(const video_frame* uv_frame, log::Log& log)
 	core::pFrame frame;
 	format_t fmt = ultragrid::uv_to_yuri(uv_frame->color_spec);
 	if (!fmt) {
+		log[log::warning] << "Unsupported frame format (" << uv_frame->color_spec <<")";
 		return frame;
 	}
 
