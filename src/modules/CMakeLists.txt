@@ -38,12 +38,14 @@ ENDIF()
 
 #### UV #####
 IF(NOT YURI_DISABLE_ULTRAGRID)
+	# This should be replaced by a proper detection!
 	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)
+	
 	add_subdirectory(uv_udp)
 ENDIF()
 #############
 
-
+add_subdirectory(osc_receiver)
 
 
 IF(FALSE)
@@ -166,7 +168,6 @@ IF(${CORE_ASIO})
 	add_subdirectory(vncclient)
 	add_subdirectory(tsrtp_receiver)
 	add_subdirectory(tsrtp_streamer)
-	add_subdirectory(osc_receiver)
 	add_subdirectory(irc_client)
 ENDIF()
 

@@ -8,6 +8,6 @@ SET (SRC OSCReceiver.cpp
 
  
 add_library(${MODULE} MODULE ${SRC})
-target_link_libraries(${MODULE} ${LIBNAME} ${LIBNAME_HELPER_ASIO})
+target_link_libraries(${MODULE} ${LIBNAME})
 
 YURI_INSTALL_MODULE(${MODULE})
