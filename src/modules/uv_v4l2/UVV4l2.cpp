@@ -51,18 +51,20 @@ core::IOThread(log_,parent,1,1,std::string("uv_v4l2"))
 	}
 	std::string uv_fmt_str = ultragrid::uv_to_string(uv_fmt);
 
-	vidcap_params* par = vidcap_params_allocate();
+	unique_ptr<vidcap_params, void(*)(vidcap_params*)> par (vidcap_params_allocate(),
+			[](vidcap_params* par){vidcap_params_free_struct(par);});
+
 	std::stringstream strs;
 	// @ TODO : set format!
 	strs << "v4l2:" << device_ << ":" << uv_fmt_str << ":" << resolution_.width << ":" << resolution_.height << ":1/" << fps_;// << ":"
 	const std::string uv_params = strs.str();
 	log[log::debug] << "Initializing UV v4l2 input with string: " << uv_params;
-	vidcap_params_assign_device(par, uv_params.c_str());
+	vidcap_params_assign_device(par.get(), uv_params.c_str());
 
-	log[log::debug] << "Format string is " << vidcap_params_get_fmt(par);
-	state_ = vidcap_v4l2_init(par);
+	log[log::debug] << "Format string is " << vidcap_params_get_fmt(par.get());
+	state_ = vidcap_v4l2_init(par.get());
 
-	vidcap_params_free_struct(par);
+
 	if (!state_) {
 		throw exception::InitializationFailed("Failed to initialize v4l2 device!");
 	}
@@ -81,13 +83,6 @@ void UVV4l2::run()
 			sleep(get_latency());
 			continue;
 		}
-	/*	format_t fmt = ultragrid::uv_to_yuri(uv_frame->color_spec);
-		if (!fmt) {
-			log[log::warning] << "Received unsupported frame type. ("<<uv_frame->color_spec<<")";
-			continue;
-		}
-*/
-
 		core::pFrame frame = ultragrid::copy_from_from_uv(uv_frame, log);
 		if (frame) push_frame(0, frame);
 
