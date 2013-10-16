@@ -1,4 +1,4 @@
-SET (MODULE v4l2)
+SET (MODULE v4l2_source)
 CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
 
 SET (SRC V4l2Source.cpp
