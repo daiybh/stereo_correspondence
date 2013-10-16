@@ -10,26 +10,29 @@
 #ifndef OSCRECEIVER_H_
 #define OSCRECEIVER_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/thread/IOThread.h"
 #include "yuri/event/BasicEventProducer.h"
-#include "yuri/asio/ASIOUDPSocket.h"
+#include "yuri/core/socket/DatagramSocket.h"
+
 namespace yuri {
 namespace osc_receiver {
 
-class OSCReceiver: public core::BasicIOThread, public event::BasicEventProducer
+class OSCReceiver: public core::IOThread, public event::BasicEventProducer
 {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
-	virtual ~OSCReceiver();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+	OSCReceiver(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~OSCReceiver() noexcept;
 private:
-	OSCReceiver(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
-	virtual void run();
-	virtual bool set_param(const core::Parameter& param);
+
+	virtual void run() override;
+	virtual bool set_param(const core::Parameter& param) override;
 	template<class Iterator>
 	void process_data(Iterator& first, const Iterator& last);
-	std::unique_ptr<asio::ASIOUDPSocket> socket_;
-	ushort_t	port_;
+	std::shared_ptr<core::socket::DatagramSocket> socket_;
+	uint16_t	port_;
+	std::string socket_type_;
 };
 
 } /* namespace osc_receiver */

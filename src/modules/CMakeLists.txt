@@ -36,6 +36,27 @@ IF(ALSA_FOUND)
 	add_subdirectory(midi_device)
 ENDIF()
 
+#### UV #####
+#IF(NOT YURI_DISABLE_ULTRAGRID)
+	# This should be replaced by a proper detection!
+	
+IF(CORE_UV)
+	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)	
+	add_subdirectory(uv_udp)
+	
+	
+	pkg_check_modules(libv4l2 libv4l2)
+	IF (libv4l2_FOUND)
+		add_subdirectory(uv_v4l2)
+	ENDIF()
+	
+	
+ENDIF()
+#############
+
+add_subdirectory(osc_receiver)
+
+
 IF(FALSE)
 #################################################################
 # Add modules that are compile unconditionally
@@ -156,7 +177,6 @@ IF(${CORE_ASIO})
 	add_subdirectory(vncclient)
 	add_subdirectory(tsrtp_receiver)
 	add_subdirectory(tsrtp_streamer)
-	add_subdirectory(osc_receiver)
 	add_subdirectory(irc_client)
 ENDIF()
 

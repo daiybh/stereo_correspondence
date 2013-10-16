@@ -38,6 +38,9 @@ SET(YURI_SRC ${YURI_SRC}
 	core/parameter/Parameters.cpp core/parameter/Parameters.h
 	core/parameter/Parameter.h
 	
+	core/socket/socket_errors.h
+	core/socket/DatagramSocket.cpp core/socket/DatagramSocket.h
+	core/socket/DatagramSocketGenerator.h
 	
 
 #	core/BasicFrame.cpp

@@ -31,7 +31,7 @@ IF(NOT YURI_DISABLE_IEEE1394)
 	pkg_check_modules(ieee1394 libiec61883 libavc1394)
 ENDIF()
 
-# This wont't work as the linking for this program fails with unresolved symbost from libboost_system
+# This wont't work as the linking for this program fails with unresolved symbols from libboost_system
 #IF(NOT YURI_DISABLE_ASIO)
 #	CHECK_INCLUDE_FILE_CXX ("boost/asio.hpp" HAVE_BOOST_ASIO_H)
 #ENDIF()
@@ -39,6 +39,13 @@ ENDIF()
 IF(NOT YURI_DISABLE_DECKLINK)
 	find_package(DECKLINK)
 ENDIF()
+
+IF(NOT YURI_DISABLE_ULTRAGRID)
+	# This should be replaced by a proper detection!
+	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)
+	SET(ULTRAGRID_FOUND TRUE)
+ENDIF()
+
 #################################################################
 # Set up dependencies for libyuri_core
 #################################################################
@@ -83,6 +90,10 @@ IF(NOT YURI_DISABLE_DECKLINK AND DECKLINK_FOUND)
 	SET(YURI_HELPER_DECKLINK_LIBS ${DECKLINK_LIBRARIES})
 ENDIF()
 
+IF(NOT YURI_DISABLE_ULTRAGRID)
+	SET(YURI_HELPER_UV_INCLUDE ${UV_BASE})
+	#SET(YURI_HELPER_UV_LIBS ${LIBNAME})
+ENDIF()
 #################################################################
 # Adding CXXFLAGS and LDFLAGS for libyuri_core
 #################################################################
@@ -155,6 +166,17 @@ ELSE()
 	SET(CORE_DECKLINK FALSE PARENT_SCOPE)
 	SET(CORE_DECKLINK FALSE)
 ENDIF()
+
+IF(NOT YURI_DISABLE_ULTRAGRID AND ULTRAGRID_FOUND)
+	add_subdirectory(ultragrid)
+	SET(CORE_UV TRUE PARENT_SCOPE)
+	SET(CORE_UV TRUE)
+	add_definitions("-DYURI_HAVE_UV")
+ELSE()
+	SET(CORE_UV FALSE PARENT_SCOPE)
+	SET(CORE_UV FALSE)
+ENDIF()
+
 #################################################################
 # Generate version.cpp with current git revision
 #################################################################
@@ -237,6 +259,24 @@ IF(${CORE_DECKLINK})
 						LIBRARY DESTINATION lib 
 						ARCHIVE DESTINATION lib)
 	
+ENDIF()
+IF(${CORE_UV})
+		
+	MESSAGE("Building ULTRAGRID helper library!")
+	add_library(${LIBNAME_HELPER_UV} ${YURI_HELPER_UV_SRC})
+	target_link_libraries ( ${LIBNAME_HELPER_UV} ${YURI_HELPER_UV_LIBS})
+	SET_TARGET_PROPERTIES( ${LIBNAME_HELPER_UV} PROPERTIES SOVERSION ${SO_VERSION} VERSION ${YURI_CORE_VERSION} )
+	SET_TARGET_PROPERTIES(${LIBNAME_HELPER_UV} PROPERTIES COMPILE_FLAGS "-DHAVE_CONFIG_H -DUV_IN_YURI")
+	SET_PROPERTY(TARGET ${LIBNAME_HELPER_UV} PROPERTY INCLUDE_DIRECTORIES ${YURI_HELPER_UV_INCLUDE}/..;${YURI_HELPER_UV_INCLUDE})
+	#SET_TARGET_PROPERTIES(${LIBNAME_HELPER_UV} PROPERTIES INCLUDE_DIRECTORIES ${YURI_HELPER_UV_INCLUDE})
+	
+	
+	
+
+	include_directories( ${CMAKE_SOURCE_DIR}/src )
+	install(TARGETS ${LIBNAME_HELPER_UV} 	RUNTIME DESTINATION bin
+						LIBRARY DESTINATION lib 
+						ARCHIVE DESTINATION lib)
 ENDIF()
 IF(UNIX)
 	IF(APPLE)
