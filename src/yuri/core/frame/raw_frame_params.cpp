@@ -43,7 +43,7 @@ namespace {
 			{bgr48,	{bgr48, "BGR 48 bit",		{"BGR48"}, "",			{{"BGR",{48, 1}, {16,16,16}}} }},
 
 			{rgba16,{rgba16, "RGBA 16 bit (5551)",{"RGBA16"}, "",		{{"RGBA",{16, 1}, {5,5,5,1}}} }},
-			{rgba32,{rgba32, "RGBA 32 bit",		{"RGBA32"}, "",			{{"RGBA",{32, 1}, {8,8,8,8}}} }},
+			{rgba32,{rgba32, "RGBA 32 bit",		{"RGBA32","RGBA"}, "",			{{"RGBA",{32, 1}, {8,8,8,8}}} }},
 			{rgba64,{rgba64, "RGBA 64 bit",		{"RGBA64"}, "",			{{"RGBA",{64, 1}, {16,16,16,16}}} }},
 			{abgr16,{abgr16, "ABGR 16 bit (5551)",{"ABGR16"}, "",		{{"ABGR",{16, 1}, {5,5,5,1}}} }},
 			{abgr32,{abgr32, "ABGR 32 bit",		{"ABGR32"}, "",			{{"ABGR",{32, 1}, {8,8,8,8}}} }},
