@@ -23,6 +23,7 @@ class DatagramSocket {
 public:
 
 	DatagramSocket(const log::Log& log_, const std::string& url = std::string());
+	~DatagramSocket() noexcept;
 	/*!
 	 * Binds socket to local port (if the underlying socket supports this).
 	 * @param url Address to bind localy. Exact meaning is implementation dependent, may contain port specification

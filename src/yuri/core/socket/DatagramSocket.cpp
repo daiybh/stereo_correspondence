@@ -12,7 +12,16 @@ namespace yuri {
 namespace core {
 namespace socket {
 
+DatagramSocket::DatagramSocket(const log::Log& log_, const std::string& /*url*/)
+:log(log_)
+{
 
+}
+
+DatagramSocket::~DatagramSocket() noexcept
+{
+
+}
 size_t DatagramSocket::send_datagram(const uint8_t* data, size_t size) {
 	return do_send_datagram(data, size);
 }
