@@ -44,6 +44,10 @@ IF(CORE_UV)
 	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)	
 	add_subdirectory(uv_udp)
 	add_subdirectory(uv_testcard)
+	add_subdirectory(uv_rtp_sender)
+	add_subdirectory(uv_rtp_receiver)
+	
+	
 	
 	
 	find_package(X11)
@@ -60,9 +64,11 @@ IF(CORE_UV)
 		add_subdirectory(uv_sdl)
 	ENDIF()
 	
-	add_subdirectory(uv_rtp_sender)
-	add_subdirectory(uv_rtp_receiver)
-	
+	find_package(GLUT)
+	find_package(GLEW)
+	IF(GLUT_FOUND AND GLEW_FOUND)
+		add_subdirectory(uv_gl)
+	ENDIF()
 ENDIF()
 #############
 
