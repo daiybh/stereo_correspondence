@@ -43,6 +43,7 @@ ENDIF()
 IF(CORE_UV)
 	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)	
 	add_subdirectory(uv_udp)
+	add_subdirectory(uv_testcard)
 	
 	find_package(X11)
 	if (X11_FOUND)
