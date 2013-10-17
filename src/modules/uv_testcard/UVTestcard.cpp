@@ -36,7 +36,7 @@ core::Parameters UVTestcard::configure()
 
 
 UVTestcard::UVTestcard(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("uv_screen")),state_(nullptr),resolution_{800,600},
+core::IOThread(log_,parent,1,1,std::string("uv_testcard")),state_(nullptr),resolution_{800,600},
 format_(core::raw_format::yuyv422),fps_(25)
 {
 	IOTHREAD_INIT(parameters)
