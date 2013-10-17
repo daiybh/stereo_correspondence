@@ -7,7 +7,7 @@
 
 #include "YuriUltragrid.h"
 #include <unordered_map>
-//#include "video_codec.h"
+#include "video_frame.h"
 
 namespace yuri {
 namespace ultragrid {
@@ -107,6 +107,34 @@ bool copy_to_uv_frame(const core::pRawVideoFrame& frame_in, video_frame* frame_o
 	return true;
 }
 
+video_frame* allocate_uv_frame(const core::pRawVideoFrame& in_frame)
+{
+	video_frame* out_frame = vf_alloc(1);
+	if (out_frame) {
+		auto &tile = out_frame->tiles[0];
+		tile.data=new char[PLANE_SIZE(in_frame,0)];
+		resolution_t res = in_frame->get_resolution();
+		tile.width = res.width;
+		tile.height = res.height;
+		out_frame->color_spec = yuri_to_uv(in_frame->get_format());
+		out_frame->interlacing = PROGRESSIVE;
+		out_frame->fragment = 0;
+
+	}
+
+	if (!copy_to_uv_frame(in_frame, out_frame)) {
+		if (out_frame) {
+			if (out_frame->tiles[0].data) {
+				delete [] out_frame->tiles[0].data;
+				out_frame->tiles[0].data=nullptr;
+			}
+			vf_free(out_frame);
+			out_frame = nullptr;
+		}
+	}
+	return out_frame;
+
+}
 }
 }
 
