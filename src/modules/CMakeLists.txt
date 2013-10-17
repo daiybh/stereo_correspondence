@@ -61,6 +61,7 @@ IF(CORE_UV)
 	ENDIF()
 	
 	add_subdirectory(uv_rtp_sender)
+	add_subdirectory(uv_rtp_receiver)
 	
 ENDIF()
 #############
