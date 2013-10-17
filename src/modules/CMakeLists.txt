@@ -45,6 +45,7 @@ IF(CORE_UV)
 	add_subdirectory(uv_udp)
 	add_subdirectory(uv_testcard)
 	
+	
 	find_package(X11)
 	if (X11_FOUND)
 		add_subdirectory(uv_screen)
@@ -57,6 +58,11 @@ IF(CORE_UV)
 	
 	IF(SDL_FOUND)
 		add_subdirectory(uv_sdl)
+	ENDIF()
+	
+	find_package(OpenSSL)
+	IF(OPENSSL_FOUND)
+		add_subdirectory(uv_rtp_sender)
 	ENDIF()
 ENDIF()
 #############
