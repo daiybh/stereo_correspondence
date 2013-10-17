@@ -9,6 +9,7 @@
 #define YURIULTRAGRID_H_
 
 #include "yuri/core/utils/new_types.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/forward.h"
 #include "yuri/log/Log.h"
@@ -25,7 +26,7 @@ std::string uv_to_string(codec_t);
 
 core::pFrame copy_from_from_uv(const video_frame*, log::Log&);
 
-
+bool copy_to_uv_frame(const core::pRawVideoFrame&, video_frame*);
 }
 }
 
@@ -35,6 +36,21 @@ core::pFrame copy_from_from_uv(const video_frame*, log::Log&);
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmismatched-tags"
 #endif
+
+inline bool operator==(const video_desc& a, const video_desc&b)
+{
+	return	(a.width 	== b.width) &&
+			(a.height 	== b.height) &&
+			(a.color_spec == b.color_spec) &&
+			(a.interlacing == b.interlacing) &&
+			(a.tile_count == b.tile_count);
+	// Not comparing fps...
+
+}
+inline bool operator!=(const video_desc& a, const video_desc&b)
+{
+	return !(a==b);
+}
 
 namespace std {
 template<>

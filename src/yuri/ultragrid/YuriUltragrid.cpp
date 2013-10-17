@@ -6,7 +6,6 @@
  */
 
 #include "YuriUltragrid.h"
-#include "yuri/core/frame/RawVideoFrame.h"
 #include <unordered_map>
 //#include "video_codec.h"
 
@@ -78,7 +77,7 @@ core::pFrame copy_from_from_uv(const video_frame* uv_frame, log::Log& log)
 
 	const auto& tile = uv_frame->tiles[0];
 	resolution_t res = {tile.width, tile.height};
-	log[log::info] << "Received frame "<<res<<" in format '"<< core::raw_format::get_format_name(fmt) << "' with " << uv_frame->tile_count << " tiles";
+	log[log::debug] << "Received frame "<<res<<" in format '"<< core::raw_format::get_format_name(fmt) << "' with " << uv_frame->tile_count << " tiles";
 
 	frame = core::RawVideoFrame::create_empty(fmt,
 				res,
@@ -87,6 +86,18 @@ core::pFrame copy_from_from_uv(const video_frame* uv_frame, log::Log& log)
 				true );
 	return frame;
 
+}
+
+bool copy_to_uv_frame(const core::pRawVideoFrame& frame_in, video_frame* frame_out)
+{
+	if (!frame_in || !frame_out) return false;
+	format_t fmt = yuri_to_uv(frame_in->get_format());
+	if (fmt != frame_out->color_spec) return false;
+//	const auto& fi = core::raw_format::get_format_info(fmt);
+	auto beg = PLANE_RAW_DATA(frame_in,0);
+	// TODO OK, this is ugly and NEED to be redone...
+	std::copy(beg, beg + frame_out->tiles[0].data_len, frame_out->tiles[0].data);
+	return true;
 }
 
 }
