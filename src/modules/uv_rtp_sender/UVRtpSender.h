@@ -30,6 +30,11 @@ private:
 	virtual bool set_param(const core::Parameter& param);
 	rtp* rtp_session_;
 	tx* tx_session_;
+	std::string destination_;
+	uint16_t	rx_port_;
+	uint16_t	tx_port_;
+	int			ttl_;
+
 };
 
 } /* namespace uv_rtp_sender */

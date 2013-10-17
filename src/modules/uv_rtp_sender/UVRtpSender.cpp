@@ -30,6 +30,10 @@ core::Parameters UVRtpSender::configure()
 {
 	core::Parameters p = core::IOThread::configure();
 	p.set_description("UVRtpSender");
+	p["address"]["Target address (hostname or IP address (4 or 6))"]="127.0.0.1";
+	p["rx_port"]["RX port number"]=5004;
+	p["tx_port"]["TX port number"]=5004;
+	p["ttl"]["TTL"]=255;
 	return p;
 }
 
@@ -44,7 +48,9 @@ rtp_session_(nullptr),tx_session_(nullptr)
 		log[log::fatal] << "Failed to prepare tx session";
 		throw exception::InitializationFailed("Failed to prepare tx session");
 	}
-	if (!(rtp_session_ = rtp_init("147.32.211.178", 2200, 2300, 200, 5000*1048675, 0, nullptr, nullptr,false))) {
+	if (!(rtp_session_ = rtp_init(destination_.c_str(),
+				rx_port_, tx_port_, ttl_,
+				5000*1048675, 0, nullptr, nullptr,false))) {
 		log[log::fatal] << "Failed to prepare rtp session";
 		throw exception::InitializationFailed("Failed to prepare rtp session");
 	}
@@ -62,7 +68,6 @@ core::pFrame UVRtpSender::do_simple_single_step(const core::pFrame& framex)
 	if (frame) {
 		video_frame* f = ultragrid::allocate_uv_frame(frame);
 		if (f) {
-			log[log::info] << "Sending rtp";
 			tx_send(tx_session_, f, rtp_session_);
 		}
 		vf_free(f);
@@ -71,7 +76,18 @@ core::pFrame UVRtpSender::do_simple_single_step(const core::pFrame& framex)
 }
 bool UVRtpSender::set_param(const core::Parameter& param)
 {
-	return core::IOThread::set_param(param);
+	if (param.get_name() == "address") {
+		destination_=param.get<std::string>();
+	} else if (param.get_name() == "rx_port") {
+		rx_port_=param.get<uint16_t>();
+		if (rx_port_%2) rx_port_++;
+	} else if (param.get_name() == "tx_port") {
+		tx_port_=param.get<uint16_t>();
+		if (tx_port_%2) tx_port_++;
+	} else if (param.get_name() == "ttl") {
+		ttl_=param.get<int>();
+	} else return core::IOFilter::set_param(param);
+	return true;
 }
 
 } /* namespace uv_rtp_sender */
