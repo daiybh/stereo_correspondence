@@ -91,6 +91,7 @@ core::pFrame copy_from_from_uv(const video_frame* uv_frame, log::Log& log)
 				reinterpret_cast<const uint8_t*>(tile.data),
 				static_cast<size_t>(tile.data_len),
 				true );
+	frame->set_duration(1_s/uv_frame->fps);
 	return frame;
 
 }
@@ -120,7 +121,8 @@ video_frame* allocate_uv_frame(const core::pRawVideoFrame& in_frame)
 		out_frame->color_spec = yuri_to_uv(in_frame->get_format());
 		out_frame->interlacing = PROGRESSIVE;
 		out_frame->fragment = 0;
-
+		int64_t dur_val = in_frame->get_duration().value;
+		out_frame->fps = dur_val?1e6/dur_val:30;
 	}
 
 	if (!copy_to_uv_frame(in_frame, out_frame)) {
