@@ -60,10 +60,8 @@ IF(CORE_UV)
 		add_subdirectory(uv_sdl)
 	ENDIF()
 	
-	find_package(OpenSSL)
-	IF(OPENSSL_FOUND)
-		add_subdirectory(uv_rtp_sender)
-	ENDIF()
+	add_subdirectory(uv_rtp_sender)
+	
 ENDIF()
 #############
 

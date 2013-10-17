@@ -4,7 +4,6 @@ SET (MODULE uv_udp)
 # Set all source files module uses
 SET (SRC UVUdpSocket.cpp
 		 UVUdpSocket.h
-		 ${UV_BASE}/rtp/net_udp.c
 		 )
 
 
