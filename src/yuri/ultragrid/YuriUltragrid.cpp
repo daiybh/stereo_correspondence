@@ -64,7 +64,14 @@ std::string uv_to_string(codec_t x)
 	if (it==uv_to_strings.end()) return "";
 	return it->second;
 }
-
+std::string yuri_to_uv_string(format_t fmt)
+{
+	codec_t codec = yuri_to_uv(fmt);
+	if (codec != VIDEO_CODEC_NONE) {
+		return uv_to_string(codec);
+	}
+	return {};
+}
 core::pFrame copy_from_from_uv(const video_frame* uv_frame, log::Log& log)
 {
 	core::pFrame frame;
