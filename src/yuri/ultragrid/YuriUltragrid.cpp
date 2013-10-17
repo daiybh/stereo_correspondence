@@ -113,6 +113,7 @@ video_frame* allocate_uv_frame(const core::pRawVideoFrame& in_frame)
 	if (out_frame) {
 		auto &tile = out_frame->tiles[0];
 		tile.data=new char[PLANE_SIZE(in_frame,0)];
+		tile.data_len = PLANE_SIZE(in_frame,0);
 		resolution_t res = in_frame->get_resolution();
 		tile.width = res.width;
 		tile.height = res.height;
