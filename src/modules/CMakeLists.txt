@@ -54,7 +54,9 @@ IF(CORE_UV)
 		add_subdirectory(uv_v4l2)
 	ENDIF()
 	
-	
+	IF(SDL_FOUND)
+		add_subdirectory(uv_sdl)
+	ENDIF()
 ENDIF()
 #############
 
