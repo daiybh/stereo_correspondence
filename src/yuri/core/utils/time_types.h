@@ -123,6 +123,35 @@ inline constexpr duration_t operator+(const duration_t& a, const duration_t& b)
 {
 	return duration_t(a.value+b.value);
 }
+template<typename T>
+inline constexpr
+typename std::enable_if<std::is_arithmetic<T>::value,duration_t>::type
+operator/(const duration_t& a, const T& b)
+{
+	return duration_t(a.value/b);
+}
+template<typename T>
+inline constexpr
+typename std::enable_if<std::is_arithmetic<T>::value,duration_t>::type
+operator/(const T& b, const duration_t& a)
+{
+	return duration_t(a.value/b);
+}
+template<typename T>
+inline constexpr
+typename std::enable_if<std::is_arithmetic<T>::value,duration_t>::type
+operator*(const duration_t& a, const T& b)
+{
+	return duration_t(a.value*b);
+}
+template<typename T>
+inline constexpr
+typename std::enable_if<std::is_arithmetic<T>::value,duration_t>::type
+operator*(const T& b, const duration_t& a)
+{
+	return duration_t(a.value*b);
+}
+
 template<class Stream>
 Stream& operator<<(Stream& os, const duration_t& duration)
 {
