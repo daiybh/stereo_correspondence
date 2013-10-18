@@ -18,6 +18,8 @@ const format_t jpeg			= 0x10001;
 const format_t mjpg			= 0x10002;
 const format_t png			= 0x10003;
 const format_t x264			= 0x10004;
+const format_t dxt1			= 0x10005;
+const format_t dxt5			= 0x10006;
 
 const format_t user_start 	= 0x11000;
 
