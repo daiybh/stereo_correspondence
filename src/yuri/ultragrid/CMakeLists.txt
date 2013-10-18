@@ -13,6 +13,7 @@ SET(YURI_HELPER_UV_SRC ${YURI_HELPER_UV_SRC}
 	${YURI_HELPER_UV_INCLUDE}/vf_split.c
 	${YURI_HELPER_UV_INCLUDE}/video_capture.c
 	${YURI_HELPER_UV_INCLUDE}/video_codec.c
+	${YURI_HELPER_UV_INCLUDE}/video_compress.cpp
 	${YURI_HELPER_UV_INCLUDE}/video_display.c
 	${YURI_HELPER_UV_INCLUDE}/video_frame.c
 	${YURI_HELPER_UV_INCLUDE}/x11_common.c
@@ -44,11 +45,15 @@ SET(YURI_HELPER_UV_SRC ${YURI_HELPER_UV_SRC}
 	
 	${YURI_HELPER_UV_INCLUDE}/utils/config_file.c
 	${YURI_HELPER_UV_INCLUDE}/utils/list.c
+	${YURI_HELPER_UV_INCLUDE}/utils/message_queue.cpp
 	${YURI_HELPER_UV_INCLUDE}/utils/resource_manager.cpp
 	${YURI_HELPER_UV_INCLUDE}/utils/ring_buffer.c
+	${YURI_HELPER_UV_INCLUDE}/utils/worker.cpp
 	
 	${YURI_HELPER_UV_INCLUDE}/video_capture/null.c
-		
+	
+	${YURI_HELPER_UV_INCLUDE}/video_compress/none.c
+	
 	${YURI_HELPER_UV_INCLUDE}/video_display/null.c
 		
 	${YURI_HELPER_UV_INCLUDE}/../ldgm-coding/ldgm-session.cpp
