@@ -9,7 +9,6 @@
 #define YURIULTRAGRID_H_
 
 #include "yuri/core/utils/new_types.h"
-#include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/forward.h"
 #include "yuri/log/Log.h"
@@ -22,21 +21,23 @@ namespace ultragrid {
 
 codec_t yuri_to_uv(format_t);
 format_t uv_to_yuri(codec_t );
+codec_t yuri_to_uv_compressed(format_t);
+format_t uv_to_yuri_compressed(codec_t );
+
 std::string uv_to_string(codec_t);
 std::string yuri_to_uv_string(format_t);
+
 core::pFrame copy_from_from_uv(const video_frame*, log::Log&);
 
 bool copy_to_uv_frame(const core::pRawVideoFrame&, video_frame*);
+bool copy_to_uv_frame(const core::pCompressedVideoFrame&, video_frame*);
+
 video_frame* allocate_uv_frame(const core::pRawVideoFrame&);
+video_frame* allocate_uv_frame(const core::pCompressedVideoFrame&);
+video_frame* allocate_uv_frame(const core::pFrame&);
 }
 }
 
-// Clang issues warning about mismatch of struct/class in hash definitions somewhere in gcc stdlib...
-
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmismatched-tags"
-#endif
 
 inline bool operator==(const video_desc& a, const video_desc&b)
 {
@@ -52,6 +53,13 @@ inline bool operator!=(const video_desc& a, const video_desc&b)
 {
 	return !(a==b);
 }
+
+// Clang issues warning about mismatch of struct/class in hash definitions somewhere in gcc stdlib...
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmismatched-tags"
+#endif
 
 namespace std {
 template<>

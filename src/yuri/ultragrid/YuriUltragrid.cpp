@@ -6,8 +6,14 @@
  */
 
 #include "YuriUltragrid.h"
+#include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/frame/CompressedVideoFrame.h"
+#include "yuri/core/frame/compressed_frame_params.h"
+#include "yuri/core/frame/compressed_frame_types.h"
+#include "yuri/core/utils/array_range.h"
 #include <unordered_map>
 #include "video_frame.h"
+
 
 namespace yuri {
 namespace ultragrid {
@@ -16,7 +22,7 @@ namespace ultragrid {
 namespace {
 
 
-std::unordered_map<codec_t, format_t> uv_to_yuri_formats =
+std::unordered_map<codec_t, format_t> uv_to_yuri_raw_formats =
 {
 	{VIDEO_CODEC_NONE, core::raw_format::unknown},
 	{RGBA, core::raw_format::rgba32},
@@ -30,6 +36,14 @@ std::unordered_map<codec_t, format_t> uv_to_yuri_formats =
 
 };
 
+std::unordered_map<codec_t, format_t> uv_to_yuri_compressed_formats =
+{
+	{VIDEO_CODEC_NONE, core::compressed_frame::unknown},
+	{DXT1, core::compressed_frame::dxt1},
+	{DXT5, core::compressed_frame::dxt5},
+	{JPEG, core::compressed_frame::jpeg},
+};
+
 std::unordered_map<codec_t, std::string> uv_to_strings =
 {
 	{VIDEO_CODEC_NONE, "NONE"},
@@ -41,23 +55,49 @@ std::unordered_map<codec_t, std::string> uv_to_strings =
 
 	{Vuy2, "VYU2"},
 	{DVS8, "DVS8"},
+
+	{DXT1, "DXT1"},
+	{DXT5, "DXT5"},
 };
+
+void video_frame_deleter(video_frame* frame)
+{
+	for (auto& ptr: array_range<tile>(frame->tiles, frame->tile_count)) {
+		delete [] ptr.data;
+		ptr.data = nullptr;
+	}
+}
 
 }
 
 codec_t yuri_to_uv(format_t x)
 {
-	for (const auto& f: uv_to_yuri_formats) {
+	for (const auto& f: uv_to_yuri_raw_formats) {
 		if (f.second == x) return f.first;
 	}
 	return VIDEO_CODEC_NONE;
 }
 format_t uv_to_yuri(codec_t x)
 {
-	auto it = uv_to_yuri_formats.find(x);
-	if (it==uv_to_yuri_formats.end()) return core::raw_format::unknown;
+	auto it = uv_to_yuri_raw_formats.find(x);
+	if (it==uv_to_yuri_raw_formats.end()) return core::raw_format::unknown;
 	return it->second;
 }
+
+codec_t yuri_to_uv_compressed(format_t x)
+{
+	for (const auto& f: uv_to_yuri_compressed_formats) {
+		if (f.second == x) return f.first;
+	}
+	return VIDEO_CODEC_NONE;
+}
+format_t uv_to_yuri_compressed(codec_t x)
+{
+	auto it = uv_to_yuri_compressed_formats.find(x);
+	if (it==uv_to_yuri_compressed_formats.end()) return core::compressed_frame::unknown;
+	return it->second;
+}
+
 std::string uv_to_string(codec_t x)
 {
 	auto it = uv_to_strings.find(x);
@@ -67,6 +107,9 @@ std::string uv_to_string(codec_t x)
 std::string yuri_to_uv_string(format_t fmt)
 {
 	codec_t codec = yuri_to_uv(fmt);
+	if (codec == VIDEO_CODEC_NONE) {
+		codec = yuri_to_uv_compressed(fmt);
+	}
 	if (codec != VIDEO_CODEC_NONE) {
 		return uv_to_string(codec);
 	}
@@ -75,23 +118,26 @@ std::string yuri_to_uv_string(format_t fmt)
 core::pFrame copy_from_from_uv(const video_frame* uv_frame, log::Log& log)
 {
 	core::pFrame frame;
-	format_t fmt = ultragrid::uv_to_yuri(uv_frame->color_spec);
-	if (!fmt) {
-		log[log::warning] << "Unsupported frame format (" << uv_frame->color_spec <<")";
-		return frame;
-	}
-
-
 	const auto& tile = uv_frame->tiles[0];
 	resolution_t res = {tile.width, tile.height};
-	log[log::debug] << "Received frame "<<res<<" in format '"<< core::raw_format::get_format_name(fmt) << "' with " << uv_frame->tile_count << " tiles";
-
-	frame = core::RawVideoFrame::create_empty(fmt,
-				res,
-				reinterpret_cast<const uint8_t*>(tile.data),
-				static_cast<size_t>(tile.data_len),
-				true );
-	frame->set_duration(1_s/uv_frame->fps);
+	format_t fmt = ultragrid::uv_to_yuri(uv_frame->color_spec);
+	if (fmt) {
+		log[log::debug] << "Received frame "<<res<<" in format '"<< core::raw_format::get_format_name(fmt) << "' with " << uv_frame->tile_count << " tiles";
+		frame = core::RawVideoFrame::create_empty(fmt,
+					res,
+					reinterpret_cast<const uint8_t*>(tile.data),
+					static_cast<size_t>(tile.data_len),
+					true );
+	} else if ((fmt = uv_to_yuri_compressed(uv_frame->color_spec))) {
+		log[log::debug] << "Received compressed frame "<<res<<" in format '"<< core::compressed_frame::get_format_name(fmt) << "' with " << uv_frame->tile_count << " tiles";
+		frame = core::CompressedVideoFrame::create_empty(fmt,
+					res,
+					reinterpret_cast<const uint8_t*>(tile.data),
+					static_cast<size_t>(tile.data_len));
+	} else {
+		log[log::warning] << "Unsupported frame format (" << uv_frame->color_spec <<")";
+	}
+	if (frame) frame->set_duration(1_s/uv_frame->fps);
 	return frame;
 
 }
@@ -100,25 +146,41 @@ bool copy_to_uv_frame(const core::pRawVideoFrame& frame_in, video_frame* frame_o
 {
 	if (!frame_in || !frame_out) return false;
 	format_t fmt = yuri_to_uv(frame_in->get_format());
-	if (fmt != frame_out->color_spec) return false;
-//	const auto& fi = core::raw_format::get_format_info(fmt);
+	if (!fmt || (fmt != frame_out->color_spec)) return false;
+
 	auto beg = PLANE_RAW_DATA(frame_in,0);
-	// TODO OK, this is ugly and NEED to be redone...
+	// TODO OK, this is ugly and NEEDs to be redone...
 	std::copy(beg, beg + frame_out->tiles[0].data_len, frame_out->tiles[0].data);
+	return true;
+}
+
+bool copy_to_uv_frame(const core::pCompressedVideoFrame& frame_in, video_frame* frame_out)
+{
+	if (!frame_in || !frame_out) return false;
+	format_t fmt = yuri_to_uv_compressed(frame_in->get_format());
+	if (!fmt || (fmt != frame_out->color_spec)) return false;
+
+	auto beg = frame_in->cbegin();
+	// TODO OK, this is ugly and NEEDs to be redone...
+	std::copy(beg, beg + std::min<size_t>(frame_out->tiles[0].data_len, frame_in->size()), frame_out->tiles[0].data);
 	return true;
 }
 
 video_frame* allocate_uv_frame(const core::pRawVideoFrame& in_frame)
 {
+	codec_t uv_fmt = yuri_to_uv(in_frame->get_format());
+	if (!uv_fmt) return nullptr;
+
 	video_frame* out_frame = vf_alloc(1);
 	if (out_frame) {
 		auto &tile = out_frame->tiles[0];
 		tile.data=new char[PLANE_SIZE(in_frame,0)];
 		tile.data_len = PLANE_SIZE(in_frame,0);
+		out_frame->data_deleter = video_frame_deleter;
 		resolution_t res = in_frame->get_resolution();
 		tile.width = res.width;
 		tile.height = res.height;
-		out_frame->color_spec = yuri_to_uv(in_frame->get_format());
+		out_frame->color_spec = uv_fmt;
 		out_frame->interlacing = PROGRESSIVE;
 		out_frame->fragment = 0;
 		int64_t dur_val = in_frame->get_duration().value;
@@ -127,17 +189,54 @@ video_frame* allocate_uv_frame(const core::pRawVideoFrame& in_frame)
 
 	if (!copy_to_uv_frame(in_frame, out_frame)) {
 		if (out_frame) {
-			if (out_frame->tiles[0].data) {
-				delete [] out_frame->tiles[0].data;
-				out_frame->tiles[0].data=nullptr;
-			}
 			vf_free(out_frame);
 			out_frame = nullptr;
 		}
 	}
 	return out_frame;
+}
+
+video_frame* allocate_uv_frame(const core::pCompressedVideoFrame& in_frame)
+{
+	video_frame* out_frame = vf_alloc(1);
+	if (out_frame) {
+		auto &tile = out_frame->tiles[0];
+		tile.data=new char[in_frame->size()];
+		tile.data_len = in_frame->size();
+		out_frame->data_deleter = video_frame_deleter;
+		resolution_t res = in_frame->get_resolution();
+		tile.width = res.width;
+		tile.height = res.height;
+		out_frame->color_spec = yuri_to_uv_compressed(in_frame->get_format());
+		out_frame->interlacing = PROGRESSIVE;
+		out_frame->fragment = 0;
+		int64_t dur_val = in_frame->get_duration().value;
+		out_frame->fps = dur_val?1e6/dur_val:30;
+	}
+
+	if (!copy_to_uv_frame(in_frame, out_frame)) {
+		if (out_frame) {
+			vf_free(out_frame);
+			out_frame = nullptr;
+		}
+	}
+	return out_frame;
+}
+
+
+video_frame* allocate_uv_frame(const core::pFrame& in_frame)
+{
+	if (core::pRawVideoFrame raw_frame = dynamic_pointer_cast<core::RawVideoFrame>(in_frame)) {
+		return allocate_uv_frame(raw_frame);
+	}
+	if (core::pCompressedVideoFrame comp_frame = dynamic_pointer_cast<core::CompressedVideoFrame>(in_frame)) {
+		return allocate_uv_frame(comp_frame);
+	}
+	return nullptr;
 
 }
+
+
 }
 }
 
