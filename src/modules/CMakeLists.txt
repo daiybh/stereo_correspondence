@@ -68,6 +68,7 @@ IF(CORE_UV)
 	find_package(GLEW)
 	IF(GLUT_FOUND AND GLEW_FOUND)
 		add_subdirectory(uv_gl)
+		add_subdirectory(uv_rtdxt)
 	ENDIF()
 ENDIF()
 #############
