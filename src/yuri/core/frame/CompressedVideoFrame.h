@@ -16,6 +16,7 @@ namespace core {
 
 class CompressedVideoFrame: public VideoFrame
 {
+public:
 	typedef	uint8_t				value_type;
 	typedef uvector<value_type>	vector_type;
 	typedef typename vector_type::iterator
@@ -28,10 +29,16 @@ class CompressedVideoFrame: public VideoFrame
 								const_reference;
 
 	CompressedVideoFrame(format_t format, resolution_t resolution);
-	CompressedVideoFrame(format_t format, resolution_t resolution, uint8_t* data, size_t size);
+	CompressedVideoFrame(format_t format, resolution_t resolution, const uint8_t* data, size_t size);
 	template<class Deleter>
-	CompressedVideoFrame(format_t format, resolution_t resolution, uint8_t* data, size_t size, Deleter deleter);
+	CompressedVideoFrame(format_t format, resolution_t resolution, const uint8_t* data, size_t size, Deleter deleter);
 	~CompressedVideoFrame() noexcept;
+
+	template<class... Args>
+	static pFrame				create_empty(Args... args)
+	{
+		return make_shared<CompressedVideoFrame>(std::forward<Args>(args)...);
+	}
 
 	vector_type&	get_data() { return data_; }
 
@@ -55,11 +62,15 @@ class CompressedVideoFrame: public VideoFrame
 //	template<class... Args>
 //	void						emplace_back(Args&&... args) { data_.emplace_back(std::forward<Args>(args)...); }
 private:
+	// TODO Implement this!
+	virtual pFrame	do_get_copy() const { return pFrame(); }
+	virtual size_t	do_get_size() const noexcept { return size(); };
+
 	vector_type data_;
 };
 
 template<class Deleter>
-CompressedVideoFrame::CompressedVideoFrame(format_t format, resolution_t resolution, uint8_t* data, size_t size, Deleter deleter)
+CompressedVideoFrame::CompressedVideoFrame(format_t format, resolution_t resolution, const uint8_t* data, size_t size, Deleter deleter)
 :VideoFrame(format, resolution)
 {
 	data_.set(data, size, deleter);

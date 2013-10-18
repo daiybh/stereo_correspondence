@@ -14,7 +14,7 @@ CompressedVideoFrame::CompressedVideoFrame(format_t format, resolution_t resolut
 {
 
 }
-CompressedVideoFrame::CompressedVideoFrame(format_t format, resolution_t resolution, uint8_t* data, size_t size)
+CompressedVideoFrame::CompressedVideoFrame(format_t format, resolution_t resolution, const uint8_t* data, size_t size)
 :VideoFrame(format, resolution)
 {
 	data_.resize(size);
