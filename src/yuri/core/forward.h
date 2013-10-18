@@ -37,6 +37,11 @@ namespace core
  	 class IOThread;
  	 typedef yuri::shared_ptr<class IOThread> pIOThread;
 
+ 	 class RawVideoFrame;
+	 typedef yuri::shared_ptr<class RawVideoFrame> pRawVideoFrame;
+
+	 class CompressedVideoFrame;
+	 typedef yuri::shared_ptr<class CompressedVideoFrame> pCompressedVideoFrame;
 }
 
 
