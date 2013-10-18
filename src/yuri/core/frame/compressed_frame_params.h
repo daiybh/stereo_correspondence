@@ -41,6 +41,9 @@ format_t new_user_format();
 format_t parse_format(const std::string& name);
 const std::string& get_format_name(format_t format);
 
+
+
+inline const std::string& get_format_name(format_t format) { return get_format_info(format).name; }
 }
 }
 }
