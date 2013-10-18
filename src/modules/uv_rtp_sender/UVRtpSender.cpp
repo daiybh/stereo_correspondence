@@ -10,6 +10,7 @@
 #include "UVRtpSender.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/frame/CompressedVideoFrame.h"
 #include "yuri/ultragrid/YuriUltragrid.h"
 extern "C" {
 #include "transmit.h"
@@ -62,14 +63,11 @@ UVRtpSender::~UVRtpSender() noexcept
 //	rtp_done(rtp_session_);
 }
 
-core::pFrame UVRtpSender::do_simple_single_step(const core::pFrame& framex)
+core::pFrame UVRtpSender::do_simple_single_step(const core::pFrame& frame)
 {
-	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(framex);
-	if (frame) {
-		video_frame* f = ultragrid::allocate_uv_frame(frame);
-		if (f) {
-			tx_send(tx_session_, f, rtp_session_);
-		}
+	video_frame* f = ultragrid::allocate_uv_frame(frame);
+	if (f) {
+		tx_send(tx_session_, f, rtp_session_);
 		vf_free(f);
 	}
 	return {};
