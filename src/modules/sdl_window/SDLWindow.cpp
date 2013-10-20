@@ -12,6 +12,7 @@
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/version.h"
 #include <unordered_map>
 namespace yuri {
 namespace sdl_window {
@@ -45,6 +46,7 @@ core::Parameters SDLWindow::configure()
 	p["fullscreen"]["Start in fullscreen"]=false;
 	p["opengl"]["Use OpenGL for rendering"]=false;
 	p["default_keys"]["Enable default key events. This includes ESC for quit and f for fullscreen toggle."]=true;
+	p["window_title"]["Window title"]=std::string();
 	return p;
 }
 
@@ -52,7 +54,7 @@ core::Parameters SDLWindow::configure()
 SDLWindow::SDLWindow(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOThread(log_,parent,1,0,std::string("sdl_window")),
 resolution_({800,600}),fullscreen_(false),default_keys_(true),use_gl_(false),
-sdl_bpp_(32)
+sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")")
 {
 	IOTHREAD_INIT(parameters)
 	set_latency(10_ms);
@@ -66,6 +68,7 @@ sdl_bpp_(32)
 		      (use_gl_?SDL_OPENGL:0)))) {
 		throw exception::InitializationFailed("Failed to set video mode");
 	}
+	SDL_WM_SetCaption(title_.c_str(), "yuri2");
 
 }
 
@@ -147,6 +150,9 @@ bool SDLWindow::set_param(const core::Parameter& param)
 		default_keys_ = param.get<bool>();
 	} else if (iequals(param.get_name(), "opengl")) {
 		use_gl_ = param.get<bool>();
+	} else if (iequals(param.get_name(), "window_title")) {
+		std::string new_title = param.get<std::string>();
+		if (!new_title.empty()) title_=std::move(new_title);
 	} else return core::IOThread::set_param(param);
 	return true;
 }
@@ -211,8 +217,8 @@ bool SDLWindow::prepare_rgb_overlay(const core::pRawVideoFrame& frame)
 	const auto& fi = core::raw_format::get_format_info(format);
 	int bpp = fi.planes[0].bit_depth.first/fi.planes[0].bit_depth.second;
 	if (!rgb_surface_ ||
-			rgb_surface_->w != res.width ||
-			rgb_surface_->h != res.height ||
+			static_cast<dimension_t>(rgb_surface_->w) != res.width ||
+			static_cast<dimension_t>(rgb_surface_->h) != res.height ||
 			rgb_surface_->format->BitsPerPixel != bpp) {
 		log[log::info] << "(Re)creating RGB surface with " << bpp << " bpp.";
 		rgb_surface_.reset(SDL_CreateRGBSurface(SDL_SWSURFACE, res.width, res.height, bpp,

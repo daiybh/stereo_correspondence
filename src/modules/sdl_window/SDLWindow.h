@@ -40,6 +40,7 @@ private:
 	shared_ptr<SDL_Surface>	rgb_surface_;
 	shared_ptr<SDL_Surface>	rgb_surface2_;
 	int				sdl_bpp_;
+	std::string		title_;
 };
 
 } /* namespace sdl_window */
