@@ -3,7 +3,7 @@
  * @author 		<Your name>
  * @date		${date}
  * @copyright	Institute of Intermedia, 2013
- * 				Distributed under GNU Public License 3.0
+ * 				Distributed BSD License
  *
  */
 
@@ -28,13 +28,13 @@ core::Parameters ${class_name}::configure()
 }
 
 
-${class_name}::${class_name}(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
+${class_name}::${class_name}(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOThread(log_,parent,1,1,std::string("${module}"))
 {
 	IOTHREAD_INIT(parameters)
 }
 
-${class_name}::~${class_name}()
+${class_name}::~${class_name}() noexcept
 {
 }
 
