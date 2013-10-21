@@ -70,6 +70,10 @@ IF(CORE_UV)
 		add_subdirectory(uv_gl)
 		add_subdirectory(uv_rtdxt)
 	ENDIF()
+	
+	IF(ALSA_FOUND)
+		add_subdirectory(uv_alsa)
+	ENDIF()
 ENDIF()
 #############
 
