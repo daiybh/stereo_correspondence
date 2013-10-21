@@ -20,8 +20,8 @@ class ${class_name}: public core::IOThread
 public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
-	${class_name}(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
-	virtual ~${class_name}();
+	${class_name}(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~${class_name}() noexcept;
 private:
 	
 	virtual bool step();

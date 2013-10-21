@@ -56,6 +56,7 @@ public:
 	typedef T& 					reference;
 	typedef const T& 			const_reference;
 	typedef T* 					pointer;
+	typedef const T* 			const_pointer;
 	typedef T* 					iterator;
 	typedef const T* 			const_iterator;
 	typedef std::unique_ptr<T[]>upointer;
@@ -91,6 +92,13 @@ public:
 		// By using swap, there's no need to deallocate data immediately
 		swap(rhs);
 		return *this;
+	}
+
+	template<class Iterator>
+	uvector(Iterator first, Iterator last)
+				:size_(0),allocated_(0) {
+		resize(std::distance(first, last));
+		std::copy(first,last,begin());
 	}
 
 	template<class Deleter> uvector(pointer data, size_type size, Deleter deleter)
@@ -133,6 +141,8 @@ public:
 	const_iterator	 		cbegin() const noexcept { return &data_[0]; }
 	const_iterator 			cend() const noexcept { return &data_[size_]; }
 
+	pointer					data() noexcept { return data_.get();}
+	const_pointer			data() const noexcept { return data_.get();}
 
 	void 					reserve(size_type size) {reserve_impl<Realloc>(size);}
 
