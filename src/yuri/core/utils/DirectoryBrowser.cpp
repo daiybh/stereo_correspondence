@@ -30,12 +30,12 @@ std::vector<std::string> browse_files(const std::string& path, const std::string
 		return paths;
 	for (boost::filesystem::directory_iterator dit(p);
 						dit !=boost::filesystem::directory_iterator(); ++dit) {
-		const auto& file = dit->path();
+		const std::string file = dit->path().string();
+		const std::string fname = dit->path().filename().string();
 		if (prefix.empty()) {
-			paths.push_back(file.string());
+			paths.push_back(file);
 		} else {
-			const auto& filename = file.filename().string();
-			if (filename.substr(0,prefix.size())==prefix) paths.push_back(file.string());
+			if (fname.substr(0,prefix.size())==prefix) paths.push_back(file);
 		}
 	}
 	return paths;
