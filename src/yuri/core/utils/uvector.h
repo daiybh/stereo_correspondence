@@ -56,6 +56,7 @@ public:
 	typedef T& 					reference;
 	typedef const T& 			const_reference;
 	typedef T* 					pointer;
+	typedef const T* 			const_pointer;
 	typedef T* 					iterator;
 	typedef const T* 			const_iterator;
 	typedef std::unique_ptr<T[]>upointer;
@@ -133,6 +134,8 @@ public:
 	const_iterator	 		cbegin() const noexcept { return &data_[0]; }
 	const_iterator 			cend() const noexcept { return &data_[size_]; }
 
+	pointer					data() noexcept { return data_.get();}
+	const_pointer			data() const noexcept { return data_.get();}
 
 	void 					reserve(size_type size) {reserve_impl<Realloc>(size);}
 
