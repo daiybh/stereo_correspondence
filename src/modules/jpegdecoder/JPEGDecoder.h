@@ -12,7 +12,8 @@
 #define JPEGDECODER_H_
 
 
-#include <yuri/core/BasicIOThread.h>
+#include "yuri/core/thread/SpecializedIOFilter.h"
+#include "yuri/core/frame/CompressedVideoFrame.h"
 #include <jpeglib.h>
 
 
@@ -20,16 +21,17 @@ namespace yuri {
 
 namespace jpg {
 
-class JPEGDecoder:public core::BasicIOThread {
+class JPEGDecoder:public core::SpecializedIOFilter<core::CompressedVideoFrame> {
 public:
-	JPEGDecoder(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters);
-	virtual ~JPEGDecoder();
-	//static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters);
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
+	JPEGDecoder(const log::Log &_log, core::pwThreadBase parent, const core::Parameters& parameters);
+	virtual ~JPEGDecoder() noexcept;
+	//static core::pIOThread generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters);
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
 
-	static bool validate(core::pBasicFrame f);
-	virtual bool step();
+//	static bool validate(core::pFrame f);
+	//virtual bool step();
+	virtual core::pFrame do_special_single_step(const core::pCompressedVideoFrame& frame) override;
 //	void forceLineWidthMult(int mult) { if (mult>1)line_width_mult = mult; else mult=1; }
 private:
 	bool set_param(const core::Parameter& param);
@@ -44,7 +46,7 @@ private:
 	static void errorExit(jpeg_common_struct* cinfo);
 	void abort();
 
-	core::pBasicFrame frame;
+	core::pCompressedVideoFrame frame;
 	int line_width_mult;
 	bool aborted;
 	format_t format_;

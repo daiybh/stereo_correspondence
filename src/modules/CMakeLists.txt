@@ -18,6 +18,7 @@ add_subdirectory(rotate)
 add_subdirectory(split_frames)
 add_subdirectory(testcard)
 add_subdirectory(yuriconvert)
+add_subdirectory(osc_receiver)
 
 
 CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
@@ -34,6 +35,12 @@ ENDIF()
 find_package(ALSA)
 IF(ALSA_FOUND)
 	add_subdirectory(midi_device)
+ENDIF()
+
+find_package(JPEG)
+IF(JPEG_FOUND)
+	add_subdirectory(jpegdecoder)
+#	add_subdirectory(jpegencoder)
 ENDIF()
 
 #### UV #####
@@ -73,8 +80,6 @@ IF(CORE_UV)
 ENDIF()
 #############
 
-add_subdirectory(osc_receiver)
-
 
 IF(FALSE)
 #################################################################
@@ -108,7 +113,7 @@ add_subdirectory(fade)
 # Let's check for libraries required 
 # for optional modules, respecting YURI_DISABLE_*
 #################################################################
-find_package(JPEG)
+
 find_package(PNG)
 find_package(CURL)
 find_package(ImageMagick COMPONENTS Magick++)
@@ -144,10 +149,6 @@ find_path(VIDEOMASTER_INCLUDE_DIR VideoMasterHD_Sdi.h
 #################################################################
 # Add optional modules based on results of the detection
 #################################################################
-IF(JPEG_FOUND)
-	add_subdirectory(jpegdecoder)
-	add_subdirectory(jpegencoder)
-ENDIF()
 
 
 IF(PNG_FOUND)
@@ -231,7 +232,6 @@ ENDIF()
 
 IF(UNIX)
 	add_subdirectory(event_device)
-	
 ENDIF()
 
 

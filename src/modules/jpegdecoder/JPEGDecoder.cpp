@@ -10,62 +10,83 @@
 
 #include "JPEGDecoder.h"
 #include "yuri/core/Module.h"
-#include <boost/assign.hpp>
+#include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/frame/compressed_frame_types.h"
+#include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/raw_frame_params.h"
+
 namespace yuri {
 
 namespace jpg {
 
-REGISTER("jpegdecoder",JPEGDecoder)
-IO_THREAD_GENERATOR(JPEGDecoder)
+IOTHREAD_GENERATOR(JPEGDecoder)
+
+MODULE_REGISTRATION_BEGIN("jpegdecoder")
+		REGISTER_IOTHREAD("jpegdecoder",JPEGDecoder)
+MODULE_REGISTRATION_END()
 
 
 namespace {
-	std::map<format_t, J_COLOR_SPACE> yuri_to_jpg_formats = boost::assign::map_list_of<format_t, J_COLOR_SPACE>
-	(YURI_FMT_RGB,JCS_RGB)
-	(YURI_FMT_YUV444,JCS_YCbCr);
+	std::map<format_t, J_COLOR_SPACE> yuri_to_jpg_formats = {
+	{core::raw_format::rgb24,		JCS_RGB},
+	{core::raw_format::yuv444,	JCS_YCbCr}
+	};
 }
-core::pParameters JPEGDecoder::configure()
+core::Parameters JPEGDecoder::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
-	(*p)["line_multiply"]=1;
-	(*p)["format"]["Output format"]=std::string("YUV444");
-	(*p)["fast"]["Fast decoding (slightly worse quality)"]=false;
+	core::Parameters p = core::SpecializedIOFilter<core::CompressedVideoFrame>::configure();
+	p["line_multiply"]=1;
+	p["format"]["Output format"]=std::string("YUV444");
+	p["fast"]["Fast decoding (slightly worse quality)"]=false;
 	return p;
 }
 
 
-JPEGDecoder::JPEGDecoder(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters)
-	:core::BasicIOThread(_log,parent,1,1,"JPEGDecoder"),line_width_mult(1),aborted(false),
-	 format_(YURI_FMT_YUV444),raw_(false),fast_(false)
+JPEGDecoder::JPEGDecoder(const log::Log &_log, core::pwThreadBase parent, const core::Parameters& parameters)
+:core::SpecializedIOFilter<core::CompressedVideoFrame>(_log,parent,"JPEGDecoder"),
+ line_width_mult(1),aborted(false), format_(core::raw_format::yuv444),raw_(false),fast_(false)
 {
-	IO_THREAD_INIT("[JPEGDecoder]");
+	IOTHREAD_INIT(parameters);
 }
 
-JPEGDecoder::~JPEGDecoder() {
+JPEGDecoder::~JPEGDecoder() noexcept {
 }
 
 namespace {
 format_t get_format(const jpeg_decompress_struct& cinfo)
 {
-	if (cinfo.comp_info[0].h_samp_factor ==2 && cinfo.comp_info[0].v_samp_factor==1 &&
+	if (cinfo.comp_info[0].h_samp_factor ==1 && cinfo.comp_info[0].v_samp_factor==1 &&
 			cinfo.comp_info[1].h_samp_factor == 1 && cinfo.comp_info[1].v_samp_factor==1 &&
 			cinfo.comp_info[2].h_samp_factor == 1 && cinfo.comp_info[2].v_samp_factor==1) {
-		return YURI_FMT_YUV422_PLANAR;
-	} else if (cinfo.comp_info[0].h_samp_factor ==2 && cinfo.comp_info[0].v_samp_factor==2 &&
+		return core::raw_format::yuv444;
+	} else if (cinfo.comp_info[0].h_samp_factor ==2 && cinfo.comp_info[0].v_samp_factor==1 &&
 			cinfo.comp_info[1].h_samp_factor == 1 && cinfo.comp_info[1].v_samp_factor==1 &&
 			cinfo.comp_info[2].h_samp_factor == 1 && cinfo.comp_info[2].v_samp_factor==1) {
-		return YURI_FMT_YUV420_PLANAR;
+		return core::raw_format::yuyv422;
+	} /*else if (cinfo.comp_info[0].h_samp_factor ==2 && cinfo.comp_info[0].v_samp_factor==2 &&
+			cinfo.comp_info[1].h_samp_factor == 1 && cinfo.comp_info[1].v_samp_factor==1 &&
+			cinfo.comp_info[2].h_samp_factor == 1 && cinfo.comp_info[2].v_samp_factor==1) {
+		return core::raw_format::yuv420p;
+	}*/
+	return 0;
+}
+}
+
+core::pFrame JPEGDecoder::do_special_single_step(const core::pCompressedVideoFrame& framex) {
+//bool JPEGDecoder::step() {
+
+	format_t fmt = framex->get_format();
+	if ((fmt != core::compressed_frame::jpeg) &&
+			(fmt != core::compressed_frame::mjpg))	{
+		log[log::info] << "Unsupported format!";
+		return {};
 	}
-	return YURI_FMT_NONE;
-}
-}
-bool JPEGDecoder::step() {
+	frame = framex;
 	int width, height, colorspace;
-	if (!in[0] || !(frame = in[0]->pop_frame()))
-		return true;
 	bool decompressed = false;
 	aborted = false;
 	//log[log::debug] << "Reading packet " << frame->get_size() << " bytes long" << std::endl;
+
 
 	struct jpeg_decompress_struct cinfo;
 	cinfo.client_data=reinterpret_cast<void*>(this);
@@ -78,12 +99,12 @@ bool JPEGDecoder::step() {
 
 	int bpp;
 	int linesize;
-	core::pBasicFrame out_frame;// (new core::BasicFrame(1));
+	core::pRawVideoFrame out_frame;// (new core::BasicFrame(1));
 	//while (cinfo.next_scanline < cinfo.image_height) {
 	try {
 		if (jpeg_read_header(&cinfo,true)!=JPEG_HEADER_OK) {
-			log[log::warning] << "Unrecognized file header!!" << std::endl;
-			return true;
+			log[log::warning] << "Unrecognized file header!!";
+			return {};//true;
 		}
 		if (!raw_) {
 		//log[log::info] << "jpg colorspace: " << cinfo.jpeg_color_space << ", out csp: " << cinfo.out_color_space;
@@ -100,7 +121,7 @@ bool JPEGDecoder::step() {
 			cinfo.do_block_smoothing = false;
 //				cinfo.quantize_colors = false;
 		}
-		if (colorspace == YURI_FMT_NONE) {
+		if (colorspace == 0) {
 			aborted = true;
 			log[log::warning] << "Aborting decompression, unknown format";
 		}
@@ -114,7 +135,12 @@ bool JPEGDecoder::step() {
 		height = cinfo.image_height;
 		bpp = cinfo.output_components;
 		linesize = width*bpp;
-		out_frame = allocate_empty_frame(colorspace,width,height);
+
+		//out_frame = allocate_empty_frame(colorspace,width,height);
+
+		out_frame = core::RawVideoFrame::create_empty(colorspace,
+				{static_cast<dimension_t>(width),
+				static_cast<dimension_t>(height)});
 
 
 
@@ -156,7 +182,7 @@ bool JPEGDecoder::step() {
 //			completed += processed;
 //			if (static_cast<int>(completed) >= height) break;
 			if (!processed) {
-				log[log::error] << "No lines processed ... corrupt file?" << std::endl;
+				log[log::error] << "No lines processed ... corrupt file?";
 				break;
 			}
 		}
@@ -174,42 +200,46 @@ bool JPEGDecoder::step() {
 		}
 	}
 	catch (yuri::exception::Exception &e) {
-		log[log::error] << "Decoding failed!: " << e.what() << std::endl;
+		log[log::error] << "Decoding failed!: " << e.what();
 		jpeg_abort(reinterpret_cast<j_common_ptr>(&cinfo));
-		return true;
+		return {};
 	}
 
 
-	if (decompressed && out[0] && out_frame) {
-		push_video_frame(0,out_frame,colorspace,width,height);
+	if (decompressed) {// && out[0] && out_frame) {
+//		push_video_frame(0,out_frame,colorspace,width,height);
+		core::pRawVideoFrame f = out_frame;
 		out_frame.reset();
+		return f;
+
 		//out[0]->set_params(width,height,colorspace);
 		//out[0]->push_frame(mem,linesize*height,true);
 	}
-	return true;
+	return {};
 }
 
 bool JPEGDecoder::set_param(const core::Parameter& param)
 {
-	if (param.name=="line_multiply") {
+	if (param.get_name()=="line_multiply") {
 		int mult = param.get<int>();
 		if (mult>1)line_width_mult = mult; else mult=1;
-	} else if (param.name=="fast") {
+	} else if (param.get_name()=="fast") {
 		fast_ = param.get<bool>();
-	} else if (param.name=="format") {
+	} else if (param.get_name()=="format") {
 		std::string fmt = param.get<std::string>();
 		if (fmt == "raw") {
-			format_ = YURI_FMT_NONE;
+			format_ = 0;//YURI_FMT_NONE;
 			raw_ = true;
 		} else {
 			raw_ = false;
-			format_ = core::BasicPipe::get_format_from_string(fmt);
+			//format_ = core::BasicPipe::get_format_from_string(fmt);
+			format_ = core::raw_format::parse_format(fmt);
 			if (yuri_to_jpg_formats.count(format_)==0) {
 				log[log::warning] << "Unsupported output format, using YUV444";
-				format_ = YURI_FMT_YUV444;
+				format_ = core::raw_format::yuv444;
 			}
 		}
-	} else return core::BasicIOThread::set_param(param);
+	} else return core::IOThread::set_param(param);
 	return true;
 }
 
@@ -217,8 +247,8 @@ void JPEGDecoder::setDestManager(jpeg_decompress_struct* cinfo)
 {
 	cinfo->src = new jpeg_source_mgr;
 	cinfo->src->init_source=initSrc;
-	cinfo->src->next_input_byte=(JOCTET *)PLANE_RAW_DATA(frame,0);
-	cinfo->src->bytes_in_buffer=PLANE_SIZE(frame,0);
+	cinfo->src->next_input_byte=(JOCTET *)frame->data();//PLANE_RAW_DATA(frame,0);
+	cinfo->src->bytes_in_buffer=frame->size();//PLANE_SIZE(frame,0);
 	cinfo->src->fill_input_buffer=fillInput;
 	cinfo->src->resync_to_restart=resyncData;
 	cinfo->src->skip_input_data=skipData;
@@ -227,18 +257,18 @@ void JPEGDecoder::setDestManager(jpeg_decompress_struct* cinfo)
 }
 
 /// Check if there's valid JPEG magic
-bool JPEGDecoder::validate(core::pBasicFrame frame)
-{
-	if (!frame || PLANE_SIZE(frame,0)<4) return false;
-	uint8_t *magic = reinterpret_cast<uint8_t*>(PLANE_RAW_DATA(frame,0));
-	if  (magic[0] == 0xff &&
-		 magic[1] == 0xd8 ) return true;
-		/*(magic[2] == 0xff) || (magic[2] == 0x00))
-			return true;*/
-//	cout << "Magic: " << hex << (uint)magic[0] << (uint)magic[1] << dec << std::endl;
-
-	return false;
-}
+//bool JPEGDecoder::validate(core::pFrame frame)
+//{
+//	if (!frame || PLANE_SIZE(frame,0)<4) return false;
+//	uint8_t *magic = reinterpret_cast<uint8_t*>(PLANE_RAW_DATA(frame,0));
+//	if  (magic[0] == 0xff &&
+//		 magic[1] == 0xd8 ) return true;
+//		/*(magic[2] == 0xff) || (magic[2] == 0x00))
+//			return true;*/
+////	cout << "Magic: " << hex << (uint)magic[0] << (uint)magic[1] << dec << std::endl;
+//
+//	return false;
+//}
 
 void JPEGDecoder::initSrc(jpeg_decompress_struct* /*cinfo*/)
 {
