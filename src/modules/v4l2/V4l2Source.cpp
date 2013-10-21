@@ -18,7 +18,9 @@
 #include <cstring>
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/raw_frame_types.h"
-
+#include "yuri/core/frame/compressed_frame_types.h"
+#include "yuri/core/frame/compressed_frame_params.h"
+#include "yuri/core/frame/CompressedVideoFrame.h"
 namespace yuri {
 
 namespace io {
@@ -32,6 +34,7 @@ MODULE_REGISTRATION_END()
 
 namespace {
 	using namespace yuri::core::raw_format;
+	using namespace yuri::core::compressed_frame;
 	std::map<yuri::format_t, uint32_t> formats_map=
 			yuri::map_list_of<yuri::format_t, uint32_t>
 			(rgb24,		V4L2_PIX_FMT_RGB24)
@@ -51,7 +54,12 @@ namespace {
 			(bayer_bggr,V4L2_PIX_FMT_SBGGR8)
 			(bayer_rggb,V4L2_PIX_FMT_SRGGB8)
 			(bayer_grbg,V4L2_PIX_FMT_SGRBG8)
-			(bayer_gbrg,V4L2_PIX_FMT_SGBRG8);
+			(bayer_gbrg,V4L2_PIX_FMT_SGBRG8)
+
+			(mjpg, 		V4L2_PIX_FMT_MJPEG)
+			(jpeg, 		V4L2_PIX_FMT_JPEG)
+
+			;
 
 
 	std::map<std::string, uint32_t> special_formats=yuri::map_list_of<std::string, uint32_t>
@@ -215,7 +223,7 @@ bool V4l2Source::init_mmap()
 		}
 	}
 	if (req.count < 2) {
-		log[log::warning] << "Insufficient buffer memory" << std::endl;
+		log[log::warning] << "Insufficient buffer memory";
 		return false;
 	}
 	no_buffers=req.count;
@@ -228,7 +236,7 @@ bool V4l2Source::init_mmap()
 	    buf.index = i;
 	    if (xioctl (fd, VIDIOC_QUERYBUF, &buf)<0) {
 	    	log[log::error] << "VIDIOC_QUERYBUF failed. (" << strerror(errno)
-							<< ")" << std::endl;
+							<< ")";
 	    	return false;
 	    }
 		buffers[i].length = buf.length;
@@ -237,7 +245,7 @@ bool V4l2Source::init_mmap()
 
 		if (buffers[i].start == MAP_FAILED) {
 				log[log::error] << "mmap failed (" << errno << ") - "
-					<< strerror(errno) << std::endl;
+					<< strerror(errno);
 				return false;
 		}
 	}
@@ -487,6 +495,12 @@ bool V4l2Source::set_param(const core::Parameter &param)
 	} else if (param.get_name() == "format") {
 		std::string format = param.get<std::string>();
 		format_t fmt = core::raw_format::parse_format(format);
+		if (!fmt) {
+			log[log::info] << "Specified not-raw format";
+			fmt = core::compressed_frame::parse_format(format);
+			log[log::info] << "Format parsed as: " << fmt;
+		}
+
 		pixelformat = yuri_format_to_v4l2(fmt);
 		if (!pixelformat) {
 			// Process special formats....
@@ -526,24 +540,21 @@ bool V4l2Source::prepare_frame(uint8_t *data, yuri::size_t size)
 	yuri::format_t fmt = v4l2_format_to_yuri(pixelformat);
 	if (!fmt) return false;
 
-	const raw_format_t& fi = core::raw_format::get_format_info(fmt);
-	size_t frame_size = resolution.width*resolution.height*fi.planes[0].bit_depth.first/fi.planes[0].bit_depth.second/8;
+	try {
+		const raw_format_t& fi = core::raw_format::get_format_info(fmt);
+		size_t frame_size = resolution.width*resolution.height*fi.planes[0].bit_depth.first/fi.planes[0].bit_depth.second/8;
 
-//	if (!fi->compressed) {
-		if (!output_frame) {
-//			output_frame = allocate_empty_frame(fmt,width,height,true);
-			output_frame = core::RawVideoFrame::create_empty(fmt, resolution, true);
+		core::pRawVideoFrame rframe = dynamic_pointer_cast<core::RawVideoFrame>(output_frame);
+		if (!rframe) {
+			rframe = core::RawVideoFrame::create_empty(fmt, resolution, true);
 			buffer_free = frame_size;
+			output_frame = rframe;
 		}
 		yuri::size_t frame_position = frame_size - buffer_free;
-//		log[log::verbose_debug] << "Allocating " << fi.planes.count() << " (got " << output_frame->get_planes_count() << ")" << std::endl;
 		log[log::verbose_debug] << "Frame " << resolution.width << ", " << resolution.height << ", size: " << size;
 		if (fi.planes.size()==1) {
-//			assert((*frame)[0].get_size()>=size);
-			//yuri::size_t cp = size;
 			if (size>buffer_free) size = buffer_free;
-			//memcpy(PLANE_RAW_DATA(output_frame,0)+frame_position,data,size);
-			std::copy(data, data + size, PLANE_DATA(output_frame, 0).begin());
+			std::copy(data, data + size, PLANE_DATA(rframe, 0).begin());
 			buffer_free -= size;
 		} else {
 			yuri::size_t offset = 0;
@@ -567,17 +578,21 @@ bool V4l2Source::prepare_frame(uint8_t *data, yuri::size_t size)
 					plane_size = buffer_free;
 				}
 				log[log::info] << "Copying " << plane_size << " bytes, have " << size-offset <<", free buffer: " << buffer_free<< std::endl;
-				std::copy(data+offset, data+offset+plane_size, PLANE_DATA(output_frame, i).begin());
+				std::copy(data+offset, data+offset+plane_size, PLANE_DATA(rframe, i).begin());
 				//memcpy(PLANE_RAW_DATA(output_frame,i),data+offset,plane_size);
 				offset+=plane_size;
 				buffer_free-=plane_size;
 			}
 		}
-//	} else {
-//		output_frame = allocate_frame_from_memory(data,size);
-//		output_frame->set_parameters(fmt,width,height);
-//		buffer_free = 0;
-//	}
+	}
+	catch (std::runtime_error& ) {
+		core::pCompressedVideoFrame cframe = core::CompressedVideoFrame::create_empty(fmt, resolution, data, size);
+		buffer_free = 0;//frame_size;
+		output_frame = cframe;
+
+
+	}
+
 	// If we're no combining frames, we have to discard incomplete ones
 	if (buffer_free && !combine_frames) {
 

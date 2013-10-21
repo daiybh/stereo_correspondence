@@ -92,7 +92,7 @@ protected:
 	size_t no_buffers;
 	size_t input_number;
 	size_t buffer_free;
-	core::pRawVideoFrame output_frame;
+	core::pFrame output_frame;
 	bool combine_frames;
 	std::vector<int> supported_formats;
 	size_t number_of_inputs;
