@@ -47,6 +47,7 @@ IF(NOT YURI_DISABLE_ULTRAGRID)
 	SET(ULTRAGRID_FOUND TRUE)
 	find_package(X11)
 	find_package(OpenSSL)
+	pkg_check_modules(SPEEX speex speexdsp)
 ENDIF()
 
 #################################################################
@@ -95,7 +96,7 @@ ENDIF()
 
 IF(NOT YURI_DISABLE_ULTRAGRID)
 	SET(YURI_HELPER_UV_INCLUDE ${UV_BASE})
-	SET(YURI_HELPER_UV_LIBS ${LIBNAME} ${X11_LIBRARIES} ${X11_Xfixes_LIB} ${OPENSSL_LIBRARIES})
+	SET(YURI_HELPER_UV_LIBS ${LIBNAME} ${X11_LIBRARIES} ${X11_Xfixes_LIB} ${OPENSSL_LIBRARIES} ${SPEEX_LIBRARIES} ${SPEEXDSP_LIBRARIES})
 ENDIF()
 #################################################################
 # Adding CXXFLAGS and LDFLAGS for libyuri_core
