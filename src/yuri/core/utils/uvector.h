@@ -94,6 +94,13 @@ public:
 		return *this;
 	}
 
+	template<class Iterator>
+	uvector(Iterator first, Iterator last)
+				:size_(0),allocated_(0) {
+		resize(std::distance(first, last));
+		std::copy(first,last,begin());
+	}
+
 	template<class Deleter> uvector(pointer data, size_type size, Deleter deleter)
 			:size_(0),allocated_(0) { set(data, size, deleter); }
 	/*!
