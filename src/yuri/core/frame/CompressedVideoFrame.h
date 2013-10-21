@@ -13,6 +13,8 @@
 
 namespace yuri {
 namespace core {
+class CompressedVideoFrame;
+typedef shared_ptr<CompressedVideoFrame> pCompressedVideoFrame;
 
 class CompressedVideoFrame: public VideoFrame
 {
@@ -35,7 +37,7 @@ public:
 	~CompressedVideoFrame() noexcept;
 
 	template<class... Args>
-	static pFrame				create_empty(Args... args)
+	static pCompressedVideoFrame create_empty(Args... args)
 	{
 		return make_shared<CompressedVideoFrame>(std::forward<Args>(args)...);
 	}
