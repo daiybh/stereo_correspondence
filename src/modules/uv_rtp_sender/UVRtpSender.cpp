@@ -51,7 +51,7 @@ rtp_session_(nullptr),tx_session_(nullptr)
 	}
 	if (!(rtp_session_ = rtp_init(destination_.c_str(),
 				rx_port_, tx_port_, ttl_,
-				5000*1048675, 0, nullptr, nullptr,false))) {
+				5000.0*1048675, 0, nullptr, nullptr,false))) {
 		log[log::fatal] << "Failed to prepare rtp session";
 		throw exception::InitializationFailed("Failed to prepare rtp session");
 	}
