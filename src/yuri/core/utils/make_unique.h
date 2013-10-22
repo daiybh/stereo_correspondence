@@ -1,8 +1,10 @@
-/*
- * make_unique.h
+/*!
+ * @file 		make_unique.h
+ * @author 		Zdenek Travnicek
+ * @date		6.9.2013
+ * @copyright	Institute of Intermedia, 2013
+ * 				Distributed under BSD license
  *
- *  Created on: 6.9.2013
- *      Author: neneko
  */
 
 #ifndef MAKE_UNIQUE_H_

@@ -2,8 +2,9 @@
  * @file 		uvector.h
  * @author 		Zdenek Travnicek
  * @date		16.2.2013
+ * @date		21.10.2013
  * @copyright	Institute of Intermedia, 2013
- * 				Distributed under GNU Public License 3.0
+ * 				Distributed under BSD license
  *
  */
 
