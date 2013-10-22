@@ -15,6 +15,7 @@ namespace pipe {
 template<>
 bool SingleFramePolicy<false>::impl_push_frame(const pFrame &frame)
 {
+	drop_frame(frame_);
 	frame_ = frame;
 	return true;
 }
@@ -36,6 +37,7 @@ bool SizeLimitedPolicy<false>::impl_push_frame(const pFrame &frame)
 		pFrame f = frames_.front();
 		frames_.pop_front();
 		actual_size_-=f->get_size();
+		drop_frame(f);
 	}
 	return true;
 }
@@ -52,7 +54,10 @@ template<>
 bool CountLimitedPolicy<false>::impl_push_frame(const pFrame &frame)
 {
 	frames_.push_back(frame);
-	while (frames_.size()>max_count_) frames_.pop_front();
+	while (frames_.size()>max_count_) {
+		drop_frame(frames_.front());
+		frames_.pop_front();
+	}
 	return true;
 }
 

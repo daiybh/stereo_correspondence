@@ -36,6 +36,10 @@ private:
 	{
 		return Policy<blocking>::impl_get_size();
 	}
+	virtual void 				drop_frame(const pFrame& frame)
+	{
+		Pipe::drop_frame(frame);
+	}
 };
 
 using BlockingUnlimitedPipe 		= SpecialPipe<pipe::UnlimitedPolicy, 	true>;

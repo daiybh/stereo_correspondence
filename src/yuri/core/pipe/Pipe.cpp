@@ -12,14 +12,14 @@ namespace core {
 
 
 Pipe::Pipe(const std::string& name, const log::Log& log_):log(log_),name_(name),
-		finished_(false),closed_(false),frames_passed_(0)
+		finished_(false),closed_(false),frames_passed_(0),frames_dropped_(0)
 {
 	log.set_label("[Pipe: "+name+"] ");
 }
 
 Pipe::~Pipe() noexcept
 {
-	log[log::info] << "Processed " << frames_passed_ << " frames";
+	log[log::info] << "Processed " << frames_passed_ << " frames, " << frames_dropped_ << " dropped.";
 }
 
 pFrame Pipe::pop_frame()

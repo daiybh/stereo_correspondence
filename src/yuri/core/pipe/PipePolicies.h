@@ -44,6 +44,7 @@ protected:
 		return frames_.size();
 	}
 private:
+	virtual void drop_frame(const pFrame& frame) = 0;
 	std::deque<pFrame> frames_;
 };
 
@@ -68,7 +69,9 @@ protected:
 	size_t impl_get_size() const {
 		return frame_?1:0;
 	}
+
 private:
+	virtual void drop_frame(const pFrame& frame) = 0;
 	pFrame frame_;
 };
 
@@ -108,6 +111,7 @@ protected:
 		return frames_.size();
 	}
 private:
+	virtual void drop_frame(const pFrame& frame) = 0;
 	std::deque<pFrame> frames_;
 	yuri::size_t actual_size_;
 	yuri::size_t max_size_;
@@ -147,6 +151,7 @@ protected:
 		return frames_.size();
 	}
 private:
+	virtual void drop_frame(const pFrame& frame) = 0;
 	std::deque<pFrame> frames_;
 	yuri::size_t max_count_;
 };

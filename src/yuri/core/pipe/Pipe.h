@@ -54,6 +54,7 @@ public:
 	void						set_notifiable(pwPipeNotifiable) noexcept;
 protected:
 								Pipe(const std::string& name, const log::Log& log_);
+	void						drop_frame(const pFrame &frame) { if(frame) frames_dropped_++; }
 	log::Log					log;
 private:
 	virtual bool 				do_push_frame(const pFrame &frame) = 0;
@@ -66,6 +67,7 @@ private:
 	std::atomic<bool>			closed_;
 	pwPipeNotifiable			notifiable_;
 	size_t						frames_passed_;
+	size_t						frames_dropped_;
 };
 
 } /* namespace core */
