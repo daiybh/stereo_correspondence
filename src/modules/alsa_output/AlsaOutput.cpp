@@ -82,6 +82,44 @@ bool AlsaOutput::is_different_format(const core::pRawAudioFrame& frame)
 			(frame->get_sampling_frequency() != sampling_rate_) ||
 			(frame->get_channel_count() != channels_);
 }
+
+namespace {
+const uint8_t* write_data(log::Log& log, const uint8_t* start, const uint8_t* end, snd_pcm_t* handle, int timeout, size_t frame_size)
+{
+	if (!snd_pcm_wait(handle, timeout)) {
+		log[log::warning] << "Device busy";
+		return start;
+	}
+	snd_pcm_sframes_t avail_frames = (end - start) / frame_size;
+	snd_pcm_sframes_t frames_free = snd_pcm_avail(handle);
+	snd_pcm_sframes_t write_frames = std::min(frames_free, avail_frames);
+	if (write_frames > 0) {
+		log[log::verbose_debug] << "Writing " << write_frames << " samples. Available was " << frames_free << ", I received " << avail_frames;
+		write_frames = snd_pcm_writei(handle, reinterpret_cast<const void*>(start), write_frames);
+		log[log::verbose_debug] << "Written " << write_frames << " frames";
+	}
+	if (write_frames < 0) {
+		int ret = 0;
+		if (write_frames == -EPIPE) {
+			log[log::warning] << "AlsaDevice underrun! Recovering";
+			ret = snd_pcm_recover(handle,write_frames,1);
+		} else {
+			log[log::warning] << "AlsaDevice write error, trying to recover";
+			ret = snd_pcm_recover(handle,write_frames,0);
+		}
+		if (ret<0) {
+			log[log::warning] << "Failed to recover from alsa error!";
+			return end; // This is probably fatal, so no need to care about loosing few frames.
+		}
+	} else {
+		return start + (write_frames * frame_size);
+	}
+	return start;
+
+}
+
+}
+
 core::pFrame AlsaOutput::do_special_single_step(const core::pRawAudioFrame& frame)
 {
 	if (is_different_format(frame)) {
@@ -89,32 +127,12 @@ core::pFrame AlsaOutput::do_special_single_step(const core::pRawAudioFrame& fram
 	}
 
 	if (!handle_) return {};
-	if (!snd_pcm_wait(handle_, static_cast<int>(get_latency().value/1000))) {
-		log[log::warning] << "Device busy";
-		return {};
+
+	const uint8_t* start = frame->data();
+	const uint8_t* end = start+frame->size();
+	while (start != end && still_running()) {
+		start = write_data(log, start, end, handle_, static_cast<int>(get_latency().value/1000), frame->get_sample_size()/8);
 	}
-
-	size_t frames_free = snd_pcm_avail(handle_);
-	snd_pcm_sframes_t write_frames = std::min(frames_free,frame->get_sample_count());
-	write_frames = snd_pcm_writei(handle_,reinterpret_cast<void*>(frame->data()),write_frames);
-
-	//log[log::info] << "Writing " << write_frames << " samples. Available was " << frames_free << ", I received " << frame->get_sample_count();
-	if (write_frames<0) {
-		int ret = 0;
-		if (write_frames == -EPIPE) {
-			log[log::warning] << "AlsaDevice underrun! Recovering";
-			ret = snd_pcm_recover(handle_,write_frames,1);
-		} else {
-			log[log::warning] << "AlsaDevice write error, trying to recover";
-			ret = snd_pcm_recover(handle_,write_frames,0);
-		}
-		if (ret<0) {
-			log[log::warning] << "Failed to recover from alsa error!";
-			return {};
-		}
-	}
-
-
 
 	return {};
 }
@@ -196,8 +214,7 @@ bool AlsaOutput::init_alsa(const core::pRawAudioFrame& frame)
 
 	snd_pcm_sw_params_free (sw_params);
 
-
-	if (!error_call(snd_pcm_prepare (handle_), "Failed to prepare PCM"));
+	if (!error_call(snd_pcm_prepare (handle_), "Failed to prepare PCM")) return false;
 
 	return true;
 }
