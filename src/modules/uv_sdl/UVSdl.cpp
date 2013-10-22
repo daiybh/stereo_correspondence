@@ -65,7 +65,10 @@ core::IOFilter(log_,parent,std::string("uv_sdl")),device_(nullptr),last_desc_{1,
 
 UVSdl::~UVSdl() noexcept
 {
-	display_sdl_done(device_);
+	try {
+		display_sdl_done(device_);
+	}
+	catch (std::runtime_error&) {}
 }
 
 void UVSdl::run()
