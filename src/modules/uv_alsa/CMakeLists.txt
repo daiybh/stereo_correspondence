@@ -1,5 +1,5 @@
 # Set name of the module
-SET (MODULE uv_alsa_input)
+SET (MODULE uv_alsa)
 
 # Set all source files module uses
 SET (SRC UVAlsaInput.cpp
