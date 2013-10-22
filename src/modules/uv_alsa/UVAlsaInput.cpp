@@ -15,6 +15,7 @@
 extern "C" {
 #include "audio/audio.h"
 #include "audio/capture/alsa.h"
+#include "host.h"
 }
 namespace yuri {
 namespace uv_alsa_input {
@@ -27,16 +28,20 @@ core::Parameters UVAlsaInput::configure()
 {
 	core::Parameters p = core::IOThread::configure();
 	p.set_description("UVAlsaInput");
+	p["device"]["Alsa device"]="default";
+	p["channels"]["Number of channels to capture."]=2;
 	return p;
 }
 
 
 UVAlsaInput::UVAlsaInput(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("uv_alsa_input")),device_(nullptr)
+core::IOThread(log_,parent,1,1,std::string("uv_alsa_input")),device_(nullptr),device_name_("default"),capture_channels_(1)
 {
 	IOTHREAD_INIT(parameters)
 	set_latency(2_ms);
-	device_ = audio_cap_alsa_init("alsa");
+	audio_capture_channels = capture_channels_;
+	// TODO Ewwww!! Let's fix upstream to take const char*!!
+	device_ = audio_cap_alsa_init(const_cast<char*>(device_name_.c_str()));
 	if (!device_) throw exception::InitializationFailed("Failed to initialize ALSA device");
 }
 
@@ -53,6 +58,9 @@ void UVAlsaInput::run()
 			sleep(get_latency());
 			continue;
 		}
+//		log[log::info] << "Pushing sample with " << frame->bps << " bytes per sample, "
+//					<< frame->sample_rate << " samples per second and " << frame->ch_count
+//					<< " channels";
 		core::pRawAudioFrame out_frame = core::RawAudioFrame::create_empty(core::raw_audio_format::signed_16bit,
 				frame->ch_count,
 				frame->sample_rate,
@@ -65,7 +73,12 @@ void UVAlsaInput::run()
 }
 bool UVAlsaInput::set_param(const core::Parameter& param)
 {
-	return core::IOThread::set_param(param);
+	if (param.get_name() == "device") {
+		device_name_ = param.get<std::string>();
+	} else if (param.get_name() == "channels") {
+		capture_channels_ = param.get<size_t>();
+	} else return core::IOThread::set_param(param);
+	return true;
 }
 
 } /* namespace uv_alsa_input */

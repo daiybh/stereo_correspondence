@@ -27,6 +27,8 @@ private:
 	virtual void run() override;
 	virtual bool set_param(const core::Parameter& param) override;
 	void* device_;
+	std::string device_name_;
+	size_t capture_channels_;
 };
 
 } /* namespace uv_alsa_input */
