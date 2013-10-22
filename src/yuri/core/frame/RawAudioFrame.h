@@ -105,6 +105,7 @@ public:
 	void					set_data(uvector<uint8_t>&&data);
 
 	size_t					get_sample_count() const { return data_.size() * 8 / sample_size; };
+	size_t					get_sample_size() const { return sample_size; }
 private:
 	/*!
 	 * Implementation of copy, should be implemented in node classes only.
