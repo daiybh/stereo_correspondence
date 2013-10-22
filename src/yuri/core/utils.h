@@ -91,7 +91,7 @@ public:
 
 private:
 	SingletonBase() {};
-	virtual ~SingletonBase() {}
+	virtual ~SingletonBase() noexcept {}
 };
 }
 
