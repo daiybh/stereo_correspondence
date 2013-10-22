@@ -27,10 +27,17 @@ public:
 private:
 	
 	virtual core::pFrame do_special_single_step(const core::pRawAudioFrame& frame) override;
-	virtual bool set_param(const core::Parameter& param);\
-
+	virtual bool set_param(const core::Parameter& param);
+	bool format_changed(const core::pRawAudioFrame& frame);
+	void reconfigure(const core::pRawAudioFrame& frame);
 	void* device_;
 	std::string device_name_;
+
+	format_t format_;
+	size_t channels_;
+	size_t sampling_frequency_;
+
+
 };
 
 } /* namespace uv_alsa_output */

@@ -33,7 +33,7 @@ core::Parameters UVAlsaOutput::configure()
 
 UVAlsaOutput::UVAlsaOutput(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::SpecializedIOFilter<core::RawAudioFrame>(log_,parent,std::string("uv_alsa_output")),device_(nullptr),
-device_name_("default")
+device_name_("default"),format_(0),channels_(0),sampling_frequency_(0)
 {
 	IOTHREAD_INIT(parameters)
 	//TODO Let's fix upstream to take const char*!!!!
@@ -46,29 +46,30 @@ UVAlsaOutput::~UVAlsaOutput() noexcept
 {
 	audio_play_alsa_done(device_);
 }
+bool UVAlsaOutput::format_changed(const core::pRawAudioFrame& frame)
+{
+	return (format_ != frame->get_format()) ||
+			(channels_ != frame->get_channel_count()) ||
+			(sampling_frequency_ != frame->get_sampling_frequency());
+}
+void UVAlsaOutput::reconfigure(const core::pRawAudioFrame& frame)
+{
+	format_ = frame->get_format();
+	channels_ = frame->get_channel_count();
+	sampling_frequency_ = frame->get_sampling_frequency();
+	const auto& fi = core::raw_audio_format::get_format_info(format_);
+	audio_play_alsa_reconfigure(device_, fi.bits_per_sample, channels_, sampling_frequency_);
+}
 
 core::pFrame UVAlsaOutput::do_special_single_step(const core::pRawAudioFrame& frame)
 {
+	if (format_changed(frame)) reconfigure(frame);
 
-
-	// TODO: fill frame params!
-	const auto& fi = core::raw_audio_format::get_format_info(frame->get_format());
-
-
-	audio_play_alsa_reconfigure(device_, fi.bits_per_sample,frame->get_channel_count(), frame->get_sampling_frequency());
 	audio_frame * f = audio_play_alsa_get_frame(device_);
-//	f->bps = fi.bits_per_sample / 8;
-//	f->sample_rate = frame->get_sampling_frequency();
-//	f->ch_count = frame->get_channel_count();
 
-	// Fill in audio_frame
-	f->data_len = std::min<int>(f->data_len, frame->size());
-	std::copy(frame->data(), frame->data() + f->data_len, f->data);
+	f->data_len = std::min<int>(f->max_size, frame->size());
+	std::copy(frame->data(), frame->data() + f->data_len, reinterpret_cast<uint8_t*>(f->data));
 
-
-//	log[log::info] << "Pushing sample with " << f->bps << " bytes per sample, "
-//			<< f->sample_rate << " samples per second and " << f->ch_count
-//			<< " channels.";
 	audio_play_alsa_put_frame(device_, f);
 
 	return {};
