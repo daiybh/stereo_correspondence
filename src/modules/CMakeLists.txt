@@ -49,10 +49,12 @@ ENDIF()
 	
 IF(CORE_UV)
 	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)	
+	add_subdirectory(uv_audio_testcard)
 	add_subdirectory(uv_udp)
 	add_subdirectory(uv_testcard)
 	add_subdirectory(uv_rtp_sender)
 	add_subdirectory(uv_rtp_receiver)
+	
 	
 	
 	
