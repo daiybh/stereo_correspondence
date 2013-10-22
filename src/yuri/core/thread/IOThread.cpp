@@ -82,13 +82,13 @@ void IOThread::run()
 //	IO_THREAD_PRE_RUN
 	try {
 		while (still_running()) {
-			if (!active_pipes_ && in_ports_ ) {
+			if (!active_pipes_ /*&& in_ports_ */) {
 				ThreadBase::sleep(latency_);
 			}
 			if (in_ports_ && !pipes_data_available()) {
 				wait_for(latency_);
 			}
-			log[log::verbose_debug] << "Stepping" << "\n";
+			log[log::verbose_debug] << "Stepping";
 			if (!step()) break;
 		}
 	}
