@@ -30,6 +30,7 @@ private:
 	virtual bool set_param(const core::Parameter& param);\
 
 	void* device_;
+	std::string device_name_;
 };
 
 } /* namespace uv_alsa_output */
