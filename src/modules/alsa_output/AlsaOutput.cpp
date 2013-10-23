@@ -152,16 +152,17 @@ bool AlsaOutput::init_alsa(const core::pRawAudioFrame& frame)
 						"Failed to open device for capture")) return false;
 		log[log::info] << "Device " << device_name_ << " opened";
 	}
-	channels_ = frame->get_channel_count();
-	sampling_rate_ = frame->get_sampling_frequency();
-	format_ = frame->get_format();
+	format_ = 0;
 
 
-	snd_pcm_format_t fmt = get_alsa_format(format_);
+	snd_pcm_format_t fmt = get_alsa_format(frame->get_format());
 	if (fmt == SND_PCM_FORMAT_UNKNOWN) {
 		log[log::warning] << "Received frame in unsupported format";
 		return false;
 	}
+
+	channels_ = frame->get_channel_count();
+	sampling_rate_ = frame->get_sampling_frequency();
 
 	snd_pcm_hw_params_t *hw_params;
 	snd_pcm_sw_params_t *sw_params;
@@ -216,6 +217,7 @@ bool AlsaOutput::init_alsa(const core::pRawAudioFrame& frame)
 
 	if (!error_call(snd_pcm_prepare (handle_), "Failed to prepare PCM")) return false;
 
+	format_ = frame->get_format();
 	return true;
 }
 bool AlsaOutput::set_param(const core::Parameter& param)
