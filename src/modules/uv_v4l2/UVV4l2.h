@@ -10,12 +10,13 @@
 #ifndef UVV4L2_H_
 #define UVV4L2_H_
 
-#include "yuri/core/thread/IOThread.h"
+#include "yuri/ultragrid/UVVideoSource.h"
+
 
 namespace yuri {
 namespace uv_v4l2 {
 
-class UVV4l2: public core::IOThread
+class UVV4l2: public ultragrid::UVVideoSource
 {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
@@ -24,9 +25,7 @@ public:
 	virtual ~UVV4l2() noexcept;
 private:
 	
-	virtual void run() override;
 	virtual bool set_param(const core::Parameter& param) override;
-	void* state_;
 	std::string device_;
 	int	fps_;
 	resolution_t resolution_;
