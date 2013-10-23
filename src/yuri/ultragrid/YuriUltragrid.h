@@ -29,6 +29,7 @@ std::string yuri_to_uv_string(format_t);
 
 core::pFrame copy_from_from_uv(const video_frame*, log::Log&);
 
+bool copy_to_uv_frame(const core::pFrame&, video_frame*);
 bool copy_to_uv_frame(const core::pRawVideoFrame&, video_frame*);
 bool copy_to_uv_frame(const core::pCompressedVideoFrame&, video_frame*);
 

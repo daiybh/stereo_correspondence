@@ -142,6 +142,16 @@ core::pFrame copy_from_from_uv(const video_frame* uv_frame, log::Log& log)
 
 }
 
+bool copy_to_uv_frame(const core::pFrame& frame_in, video_frame* frame_out)
+{
+	if (core::pRawVideoFrame raw_frame = dynamic_pointer_cast<core::RawVideoFrame>(frame_in)) {
+		return copy_to_uv_frame(raw_frame, frame_out);
+	}
+	if (core::pCompressedVideoFrame comp_frame = dynamic_pointer_cast<core::CompressedVideoFrame>(frame_in)) {
+		return copy_to_uv_frame(comp_frame, frame_out);
+	}
+	return false;
+}
 bool copy_to_uv_frame(const core::pRawVideoFrame& frame_in, video_frame* frame_out)
 {
 	if (!frame_in || !frame_out) return false;
