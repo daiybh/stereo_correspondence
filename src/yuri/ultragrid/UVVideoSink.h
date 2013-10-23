@@ -10,6 +10,7 @@
 
 #include "yuri/core/thread/IOFilter.h"
 #include "types.h"
+#include <unordered_set>
 namespace yuri {
 namespace ultragrid {
 namespace detail {
@@ -67,6 +68,7 @@ private:
 
 	video_desc last_desc_;
 	detail::uv_display_params sink_params_;
+	std::unordered_set<format_t> supported_formats_;
 };
 
 

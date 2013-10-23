@@ -63,6 +63,27 @@ UVVideoSink::~UVVideoSink() noexcept
 
 void UVVideoSink::run()
 {
+	if (sink_params_.get_property_func) {
+		log[log::info] << "Querying supported formats";
+		std::vector<codec_t> scodecs(100);
+		size_t len = scodecs.size()* sizeof(codec_t);
+		if (sink_params_.get_property_func(device_, DISPLAY_PROPERTY_CODECS,
+				scodecs.data(), &len)) {
+			scodecs.resize(len/sizeof(codec_t));
+			for (auto c: scodecs) {
+				format_t yfmt = uv_to_yuri(c);
+				if (!yfmt) {
+					yfmt = uv_to_yuri_compressed(c);
+				}
+				if (yfmt) {
+					supported_formats_.insert(yfmt);
+				} else {
+					log[log::info] << "Unsupported codec " << c ;
+				}
+			}
+		}
+	}
+
 	if (sink_params_.run_func) {
 		core::pThreadBase helper = make_shared<UVSinkHelper>(log,get_this_ptr(),[this](){sink_params_.run_func(device_);});
 		spawn_thread(helper);
@@ -76,7 +97,15 @@ void UVVideoSink::child_ends_hook(core::pwThreadBase /*child*/, int /*code*/, si
 
 core::pFrame UVVideoSink::do_simple_single_step(const core::pFrame& framex)
 {
-	codec_t uv_fmt = ultragrid::yuri_to_uv(framex->get_format());
+	format_t yfmt = framex->get_format();
+	if (!supported_formats_.empty()) {
+		if (supported_formats_.find(yfmt) == supported_formats_.end()) {
+			log[log::warning] << "Received frame in unsupported format";
+			// TODO: Convert to an supported format....
+			return {};
+		}
+	}
+	codec_t uv_fmt = ultragrid::yuri_to_uv(yfmt);
 	if (!uv_fmt) return {};
 	core::pVideoFrame frame = dynamic_pointer_cast<core::VideoFrame>(framex);
 
