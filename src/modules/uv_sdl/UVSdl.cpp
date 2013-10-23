@@ -27,14 +27,20 @@ core::Parameters UVSdl::configure()
 {
 	core::Parameters p = core::IOThread::configure();
 	p.set_description("UVSdl");
+	p["fullscreen"]["Start in fullscreen"]=false;
+	p["deinterlace"]["Enable deinterlacing"]=false;
 	return p;
 }
 
 UVSdl::UVSdl(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-ultragrid::UVVideoSink(log_, parent, "uv_sdl", UV_SINK_DETAIL(sdl))
+ultragrid::UVVideoSink(log_, parent, "uv_sdl", UV_SINK_DETAIL(sdl)),
+fullscreen_(false),deinterlace_(false)
 {
 	IOTHREAD_INIT(parameters)
-	if (!init_sink("",0)) {
+	// UV SDL seems to accept either deinterlace or fullscreen, not both...
+	std::string sdl_params = std::string() + (fullscreen_?"fs":(deinterlace_?"d":""));
+	log[log::info] << "SDL params: " << sdl_params;
+	if (!init_sink(sdl_params,0)) {
 		log[log::fatal] << "Failed to initialize SDL device";
 		throw exception::InitializationFailed("Failed to initialzie SDL device");
 	}
@@ -46,7 +52,12 @@ UVSdl::~UVSdl() noexcept
 
 bool UVSdl::set_param(const core::Parameter& param)
 {
-	return ultragrid::UVVideoSink::set_param(param);
+	if (param.get_name() == "fullscreen") {
+		fullscreen_ = param.get<bool>();
+	} else if (param.get_name() == "deinterlace") {
+		deinterlace_ = param.get<bool>();
+	} else return ultragrid::UVVideoSink::set_param(param);
+	return true;
 }
 
 } /* namespace uv_sdl */

@@ -23,7 +23,8 @@ public:
 	virtual ~UVSdl() noexcept;
 private:
 	virtual bool set_param(const core::Parameter& param);
-
+	bool fullscreen_;
+	bool deinterlace_;
 
 };
 
