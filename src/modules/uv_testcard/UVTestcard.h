@@ -10,23 +10,21 @@
 #ifndef UVV4L2_H_
 #define UVV4L2_H_
 
-#include "yuri/core/thread/IOThread.h"
+#include "yuri/ultragrid/UVVideoSource.h"
 
 namespace yuri {
 namespace uv_v4l2 {
 
-class UVTestcard: public core::IOThread
+class UVTestcard: public ultragrid::UVVideoSource
 {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
-	UVTestcard(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	UVTestcard(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~UVTestcard() noexcept;
 private:
 	
-	virtual void run() override;
 	virtual bool set_param(const core::Parameter& param) override;
-	void* state_;
 	resolution_t resolution_;
 	format_t format_;
 	int	fps_;
