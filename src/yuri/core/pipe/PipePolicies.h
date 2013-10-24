@@ -23,7 +23,11 @@ namespace pipe {
 template<bool blocking>
 class UnlimitedPolicy {
 public:
-	static Parameters configure() {return Parameters{};}
+	static Parameters configure() {
+		Parameters p;
+		p.set_description("Pipe storing an unlimited number of frames");
+		return p;
+	}
 protected:
 	UnlimitedPolicy(const Parameters&) {}
 	~UnlimitedPolicy() noexcept {}
@@ -55,7 +59,11 @@ private:
 template<bool blocking>
 class SingleFramePolicy {
 public:
-	static Parameters configure() {return Parameters{};}
+	static Parameters configure() {
+		Parameters p;
+		p.set_description(std::string("Pipe storing only single frame")+(blocking?" (blocking).":"."));
+		return p;
+	}
 protected:
 	SingleFramePolicy(const Parameters&) {}
 	~SingleFramePolicy() noexcept {}
@@ -83,7 +91,8 @@ class SizeLimitedPolicy {
 public:
 	static Parameters configure() {
 			Parameters p;
-			p["size"]=1048576;
+			p.set_description(std::string("Pipe limited by total size of frames stored")+(blocking?" (blocking).":"."));
+			p["size"]["Max size to store (in bytes)"]=1048576;
 			return p;
 		}
 protected:
@@ -125,7 +134,8 @@ class CountLimitedPolicy {
 public:
 	static Parameters configure() {
 		Parameters p;
-		p["count"]=10;
+		p.set_description(std::string("Pipe limited by number of frames stored")+(blocking?" (blocking).":"."));
+		p["count"]["Max. number of frames to store"]=10;
 		return p;
 	}
 protected:
