@@ -1,8 +1,9 @@
 
 SET(YURI_HELPER_UV_SRC ${YURI_HELPER_UV_SRC}
-	ultragrid/YuriUltragrid.cpp ultragrid/YuriUltragrid.h
-	ultragrid/UVVideoSink.cpp ultragrid/UVVideoSink.h
-	ultragrid/UVVideoSource.cpp ultragrid/UVVideoSource.h
+	ultragrid/YuriUltragrid.cpp 	ultragrid/YuriUltragrid.h
+	ultragrid/UVVideoSink.cpp 		ultragrid/UVVideoSink.h
+	ultragrid/UVVideoSource.cpp 	ultragrid/UVVideoSource.h
+	ultragrid/UVVideoCompress.cpp 	ultragrid/UVVideoCompress.h
 	
 	${YURI_HELPER_UV_INCLUDE}/capture_filter.c
 	${YURI_HELPER_UV_INCLUDE}/debug.c
