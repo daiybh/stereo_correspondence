@@ -10,24 +10,27 @@
 #ifndef FADE_H_
 #define FADE_H_
 
-#include "yuri/core/BasicIOFilter.h"
+#include "yuri/core/thread/SpecializedMultiIOFilter.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/event/BasicEventConsumer.h"
 
 namespace yuri {
 namespace fade {
 
-class Fade: public core::BasicMultiIOFilter, public event::BasicEventConsumer
+class Fade: public core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>,
+			public event::BasicEventConsumer
 {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters 	configure();
-	virtual 					~Fade();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters 	configure();
+								Fade(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual 					~Fade() noexcept;
 private:
-								Fade(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
-	virtual bool 				set_param(const core::Parameter& param);
-	virtual std::vector<core::pBasicFrame>
-								do_single_step(const std::vector<core::pBasicFrame>& frames);
-	virtual bool 				do_process_event(const std::string& event_name, const event::pBasicEvent& event);
+
+	virtual bool 				set_param(const core::Parameter& param) override;
+	virtual std::vector<core::pFrame>
+								do_special_step(const std::tuple<core::pRawVideoFrame, core::pRawVideoFrame>& frames) override;
+	virtual bool 				do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 
 	double						transition_;
 };

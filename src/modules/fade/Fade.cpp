@@ -13,27 +13,29 @@
 namespace yuri {
 namespace fade {
 
-REGISTER("fade",Fade)
+IOTHREAD_GENERATOR(Fade)
 
-IO_THREAD_GENERATOR(Fade)
+MODULE_REGISTRATION_BEGIN("fade")
+		REGISTER_IOTHREAD("fade",Fade)
+MODULE_REGISTRATION_END()
 
-core::pParameters Fade::configure()
+core::Parameters Fade::configure()
 {
-	core::pParameters p = core::BasicMultiIOFilter::configure();
-	p->set_description("Fade");
-	p->set_max_pipes(2,1);
+	core::Parameters p = core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>::configure();
+	p.set_description("Fade");
+//	p-set_max_pipes(2,1);
 	return p;
 }
 
 
-Fade::Fade(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicMultiIOFilter(log_,parent,2,1,std::string("fade")),
+Fade::Fade(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
+core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, parent, 1, std::string("fade")),
 event::BasicEventConsumer(log),transition_(0.0)
 {
-	IO_THREAD_INIT("fade")
+	IOTHREAD_INIT(parameters)
 }
 
-Fade::~Fade()
+Fade::~Fade() noexcept
 {
 }
 //template<typename T>
@@ -41,27 +43,29 @@ Fade::~Fade()
 //{
 //
 //}
-std::vector<core::pBasicFrame> Fade::do_single_step(const std::vector<core::pBasicFrame>& frames)
+//std::vector<core::pFrame> Fade::do_single_step(const std::vector<core::pFrame>& frames)
+std::vector<core::pFrame> Fade::do_special_step(const std::tuple<core::pRawVideoFrame, core::pRawVideoFrame>& frames)
 {
 	process_events();
-	if (frames.size() != 2) return {};
-	if (frames[0]->get_format() != frames[1]->get_format()) return {};
-	if (PLANE_SIZE(frames[0],0) != PLANE_SIZE(frames[1],0)) return {};
-	core::pBasicFrame outframe = allocate_empty_frame(frames[0]->get_format(), frames[0]->get_width(), frames[0]->get_height());
-	auto it0 = PLANE_DATA(frames[0],0).begin();
-	auto it1 = PLANE_DATA(frames[1],0).begin();
+//	if (frames.size() != 2) return {};
+	if (std::get<0>(frames)->get_format() != std::get<1>(frames)->get_format()) return {};
+	if (PLANE_SIZE(std::get<0>(frames),0) != PLANE_SIZE(std::get<1>(frames),0)) return {};
+	resolution_t res = {std::get<0>(frames)->get_width(), std::get<0>(frames)->get_height()};
+	core::pRawVideoFrame outframe = core::RawVideoFrame::create_empty(std::get<0>(frames)->get_format(), res);
+	auto it0 = PLANE_DATA(std::get<0>(frames),0).begin();
+	auto it1 = PLANE_DATA(std::get<1>(frames),0).begin();
 	auto it_out = PLANE_DATA(outframe,0).begin();
 	auto it_last = PLANE_DATA(outframe,0).end();
 	const double t1 = 1.0 - transition_;
 	while (it_out != it_last) {
-		*it_out++ = static_cast<ubyte_t>(t1 * static_cast<double>(*it0++) +
+		*it_out++ = static_cast<uint8_t>(t1 * static_cast<double>(*it0++) +
 										transition_ * static_cast<double>(*it1++));
 	}
 	return {outframe};
 }
 bool Fade::set_param(const core::Parameter& param)
 {
-	return core::BasicMultiIOFilter::set_param(param);
+	return core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>::set_param(param);
 }
 bool Fade::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
