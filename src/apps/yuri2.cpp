@@ -23,7 +23,7 @@
 #include "yuri/core/socket/DatagramSocketGenerator.h"
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/event/BasicEventConversions.h"
-
+#include "yuri/core/pipe/PipeGenerator.h"
 //using namespace std;
 //using namespace yuri;
 //using namespace yuri::log;
@@ -72,6 +72,25 @@ void usage(const po::options_description& options)
 }
 #endif
 //
+void list_params(yuri::log::Log& l_, const yuri::core::Parameters& params)
+{
+	using namespace yuri;
+	for (const auto& p: params) {
+		const auto& param = p.second;
+		const std::string& pname = param.get_name();
+		if (pname[0] != '_') {
+			l_[log::info] << "\t\t"
+				<< std::setfill(' ') << std::left << std::setw(20)
+				<< (pname + ": ")
+				<< std::right << std::setw(10) << param.get<std::string>();
+			const std::string& d = param.get_description();
+			if (!d.empty()) {
+				l_[log::info] << "\t\t\t" << d;
+			}
+		}
+	}
+}
+
 void list_registered(yuri::log::Log& l_)
 {
 	using namespace yuri;
@@ -87,20 +106,7 @@ void list_registered(yuri::log::Log& l_)
 			if (!desc.empty()) {
 				l_[log::info] << "\t" << desc;
 			}
-			for (const auto& p: params) {
-				const auto& param = p.second;
-				const std::string& pname = param.get_name();
-				if (pname[0] != '_') {
-					l_[log::info] << "\t\t"
-						<< std::setfill(' ') << std::left << std::setw(20)
-						<< (pname + ": ")
-						<< std::right << std::setw(10) << param.get<std::string>();
-					const std::string& d = param.get_description();
-					if (!d.empty()) {
-						l_[log::info] << "\t\t\t" << d;
-					}
-				}
-			}
+			list_params(l_, params);
 			l_[log::info];
 		}
 	}
@@ -196,8 +202,27 @@ void list_functions(yuri::log::Log& l_)
 			l_[log::info] << "\t" << sig;
 		}
 	}
+}
 
-
+void list_pipes(yuri::log::Log& l_)
+{
+	using namespace yuri;
+	l_[log::info] << "List of registered pipe classes:";
+	const auto& generator = core::PipeGenerator::get_instance();
+	for (const auto& name: generator.list_keys()) {
+		if (verbosity < 0) {
+			l_[log::info] << name;
+		} else {
+			l_[log::info] /*<< "Module: "*/ << "..:: " << name << " ::..";
+			const auto& params = generator.configure(name);
+			const std::string& desc = params.get_description();
+			if (!desc.empty()) {
+				l_[log::info] << "\t" << desc;
+			}
+			list_params(l_, params);
+			l_[log::info];
+		}
+	}
 }
 //void list_converters(Log l_)
 //{
@@ -284,6 +309,7 @@ int main(int argc, char**argv)
 		if (iequals(list_what,"formats")) list_formats(l_);
 		else if (iequals(list_what,"datagram_sockets") || iequals(list_what,"datagram")) list_dgram_sockets(l_);
 		else if (iequals(list_what,"functions")) list_functions(l_);
+		else if (iequals(list_what,"pipes")) list_pipes(l_);
 		else list_registered(l_);
 		return 0;
 	}
@@ -306,6 +332,8 @@ int main(int argc, char**argv)
 				l_.set_quiet(true);
 				if (iequals(list_what,"formats")) list_formats(l_);
 				else if (iequals(list_what,"datagram_sockets") || iequals(list_what,"datagram")) list_dgram_sockets(l_);
+				else if (iequals(list_what,"functions")) list_functions(l_);
+				else if (iequals(list_what,"pipes")) list_pipes(l_);
 				else list_registered(l_);
 			}
 		} else {
