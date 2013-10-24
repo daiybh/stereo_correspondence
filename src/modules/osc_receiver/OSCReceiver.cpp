@@ -142,19 +142,19 @@ void OSCReceiver::process_data(Iterator& first, const Iterator& last)
 {
 	std::string name = read_string(first, last);
 	if (name.empty()) return;
-	log[log::info] << "Found name " << name;
+	log[log::verbose_debug] << "Found name " << name;
 	if (name == "#bundle") {
 		read_timestamp(first, last);
 		while (first!=last) {
 			int32_t size = read_size(first, last);
-			log[log::info] << "Element of size " << size;
+			log[log::verbose_debug] << "Element of size " << size;
 			auto last2 = std::min(first+size,last);
 			process_data(first,last2);
 			first = last;
 		}
 	} else {
 		std::string type = read_string(first,last);
-		log[log::info] << "Found types: " << type;
+		log[log::verbose_debug] << "Found types: " << type;
 		if (type.size() < 2) {first=last;return;}
 		if (type[0]!=',') {first=last;return;}
 		std::vector<event::pBasicEvent> events;
@@ -163,12 +163,12 @@ void OSCReceiver::process_data(Iterator& first, const Iterator& last)
 				case 'f': {
 					float f = read_float(first,last);
 					events.push_back(make_shared<event::EventDouble>(static_cast<double>(f)));
-					log[log::info] << "Float value: " << f;
+					log[log::verbose_debug] << "Float value: " << f;
 				}; break;
 				case 'i': {
 					int32_t i = read_int32(first,last);
 					events.push_back(make_shared<event::EventInt>(i));
-					log[log::info] << "Int value: " << i;
+					log[log::verbose_debug] << "Int value: " << i;
 				}; break;
 				default:
 					{first=last;return;}
@@ -203,10 +203,10 @@ void OSCReceiver::run()
 			sleep(10_ms);
 			continue;
 		} else {
-			log[log::info] << "reading data";
+			log[log::verbose_debug] << "reading data";
 			read_bytes = socket_->receive_datagram(&buffer[0],buffer.size());
 			if (read_bytes > 0) {
-				log[log::info] << "Read " << read_bytes << " bytes";
+				log[log::verbose_debug] << "Read " << read_bytes << " bytes";
 				auto first = buffer.begin();
 				process_data(first, first + read_bytes);
 			}
