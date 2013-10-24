@@ -9,7 +9,7 @@
 namespace yuri {
 namespace core {
 
-	REGISTER_PIPE("unlimited_blocking",		BlockingUnlimitedPipe)
+//	REGISTER_PIPE("unlimited_blocking",		BlockingUnlimitedPipe)
 	REGISTER_PIPE("unlimited",				NonBlockingUnlimitedPipe)
 	REGISTER_PIPE("single_blocking",		BlockingSingleFramePipe)
 	REGISTER_PIPE("single",					NonBlockingSingleFramePipe)
