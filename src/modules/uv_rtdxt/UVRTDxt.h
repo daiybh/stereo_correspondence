@@ -10,15 +10,13 @@
 #ifndef UVRTDXT_H_
 #define UVRTDXT_H_
 
-#include "yuri/core/thread/SpecializedIOFilter.h"
-#include "yuri/core/frame/RawVideoFrame.h"
-struct module;
+#include "yuri/ultragrid/UVVideoCompress.h"
 namespace yuri {
 namespace uv_rtdxt {
 
 
 
-class UVRTDxt: public core::SpecializedIOFilter<core::RawVideoFrame>
+class UVRTDxt: public ultragrid::UVVideoCompress
 {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
@@ -27,10 +25,10 @@ public:
 	virtual ~UVRTDxt() noexcept;
 private:
 	
-	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
+//	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
 	virtual bool set_param(const core::Parameter& param);
 
-	module* encoder_;
+//	module* encoder_;
 };
 
 } /* namespace uv_rtdxt */

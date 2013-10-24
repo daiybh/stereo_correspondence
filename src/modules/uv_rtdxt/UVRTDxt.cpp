@@ -27,18 +27,18 @@ MODULE_REGISTRATION_END()
 
 core::Parameters UVRTDxt::configure()
 {
-	core::Parameters p = core::IOThread::configure();
+	core::Parameters p = ultragrid::UVVideoCompress::configure();
 	p.set_description("UVRTDxt");
 	return p;
 }
 
 
 UVRTDxt::UVRTDxt(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent, std::string("uv_rtdxt"))
+ultragrid::UVVideoCompress(log_,parent, "uv_rtdxt", UV_COMPRESS_DETAIL(dxt_glsl))
 {
 	IOTHREAD_INIT(parameters)
-	video_compress_params params{"DXT1"};
-	if (!(encoder_ = dxt_glsl_compress_init(nullptr,&params))) {
+
+	if(!init_compressor("DXT1")) {
 		log[log::fatal] << "Failed to create encoder";
 		throw exception::InitializationFailed("Failed to create DXT encoder");
 	}
@@ -48,19 +48,7 @@ UVRTDxt::~UVRTDxt() noexcept
 {
 }
 
-core::pFrame UVRTDxt::do_special_single_step(const core::pRawVideoFrame& frame)
-{
-	video_frame * uv_frame = ultragrid::allocate_uv_frame(frame);
-	video_frame * out_uv_frame  = dxt_glsl_compress(encoder_, uv_frame, 0);
-	vf_free(uv_frame);
 
-
-	if (out_uv_frame) {
-		core::pFrame out_frame = ultragrid::copy_from_from_uv(out_uv_frame, log);
-		if (out_frame) return {out_frame};
-	}
-	return {};
-}
 bool UVRTDxt::set_param(const core::Parameter& param)
 {
 	return core::IOThread::set_param(param);
