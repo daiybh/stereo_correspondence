@@ -22,6 +22,8 @@
 #include "yuri/core/thread/IOThreadGenerator.h"
 #include "yuri/core/socket/DatagramSocketGenerator.h"
 #include "yuri/core/frame/raw_frame_params.h"
+#include "yuri/event/BasicEventConversions.h"
+
 //using namespace std;
 //using namespace yuri;
 //using namespace yuri::log;
@@ -142,6 +144,61 @@ void list_dgram_sockets(yuri::log::Log& l_)
 	}
 }
 
+namespace {
+using namespace yuri;
+std::map<event::event_type_t, std::string> event_names=
+{
+		{event::event_type_t::bang_event, 		"BANG"},
+		{event::event_type_t::boolean_event, 	"boolean"},
+		{event::event_type_t::integer_event, 	"integer"},
+		{event::event_type_t::double_event, 	"double"},
+		{event::event_type_t::string_event, 	"string"},
+		{event::event_type_t::time_event, 		"time"},
+		{event::event_type_t::vector_event, 	"vector"},
+		{event::event_type_t::dictionary_event,	"dictionary"},
+		{event::event_type_t::undetermined_event,"undetermined"},
+
+};
+const std::string unknown_event_name {"??"};
+const std::string& event_type_name(event::event_type_t e)
+{
+	auto it = event_names.find(e);
+	if (it == event_names.end()) return unknown_event_name;
+	return it->second;
+}
+}
+
+void list_functions(yuri::log::Log& l_)
+{
+	using namespace yuri;
+	l_[log::info] << "List of registered event functions:";
+	auto& reg = event::EventFunctionsFactory::get_instance();
+	std::map<std::string, std::vector<std::string>> signatures;
+	for (const auto& func: reg.get_map())
+	{
+		const event::event_function_record_t& rec = func.second;
+		//l_[log::info] << func.first;
+		std::stringstream sstr;
+
+		sstr << func.first << "(";
+		bool first = true;
+		for (const auto& x: rec.param_types) {
+			if (first) {first = false;}
+			else sstr << ", ";
+			sstr << event_type_name(x);
+		}
+		sstr << ") -> " << event_type_name(rec.return_type);
+		signatures[func.first].emplace_back(sstr.str());
+	}
+	for (const auto& name: signatures) {
+		l_[log::info] << name.first;
+		for (const auto& sig: name.second) {
+			l_[log::info] << "\t" << sig;
+		}
+	}
+
+
+}
 //void list_converters(Log l_)
 //{
 //	for (const auto& conv: core::RegisteredClass::get_all_converters()) {
@@ -178,7 +235,7 @@ int main(int argc, char**argv)
 		("verbosity",po::value<int> (&verbosity)->default_value(0),"Verbosity level <-3, 4>")
 		("input-file,f",po::value<std::string>(&filename),"Input XML file")
 		("parameter,p",po::value<std::vector<std::string> >(&arguments),"Parameters to pass to libyuri builder")
-		("list,l",po::value<std::string>()->implicit_value("classes"),"List registered objects/formats")
+		("list,l",po::value<std::string>()->implicit_value("classes"),"List registered classes (accepted values classes, functions, formats, datagram_sockets, pipes)")
 		("app-info,a","Show info about XML file");
 
 
@@ -226,6 +283,7 @@ int main(int argc, char**argv)
 		std::string list_what = vm["list"].as<std::string>();
 		if (iequals(list_what,"formats")) list_formats(l_);
 		else if (iequals(list_what,"datagram_sockets") || iequals(list_what,"datagram")) list_dgram_sockets(l_);
+		else if (iequals(list_what,"functions")) list_functions(l_);
 		else list_registered(l_);
 		return 0;
 	}
