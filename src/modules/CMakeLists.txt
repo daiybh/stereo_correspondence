@@ -24,6 +24,13 @@ add_subdirectory(osc_receiver)
 
 CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
 
+IF(NOT YURI_DISABLE_LIBAV)
+	pkg_check_modules(libavformat libavformat) 
+	pkg_check_modules(libavutil libavutil)
+	pkg_check_modules(libswscale libswscale)
+ENDIF()
+
+
 IF(HAVE_VIDEODEV2_H)
 	add_subdirectory(v4l2)
 ENDIF()
@@ -85,6 +92,11 @@ IF(CORE_UV)
 	IF(ALSA_FOUND)
 		add_subdirectory(uv_alsa)
 	ENDIF()
+	
+	pkg_check_modules(libavcodec libavcodec)
+	IF(libavcodec_FOUND)
+		add_subdirectory(uv_libavcodec)
+	ENDIF()
 ENDIF()
 #############
 
@@ -132,11 +144,6 @@ IF(NOT YURI_DISABLE_CUDA)
 	find_package(CUDA)
 ENDIF()
 
-IF(NOT YURI_DISABLE_LIBAV)
-	pkg_check_modules(libavformat libavformat) 
-	pkg_check_modules(libavutil libavutil)
-	pkg_check_modules(libswscale libswscale)
-ENDIF()
 IF(${CORE_IEEE1394})
 	pkg_check_modules(ieee1394 libiec61883)
 ENDIF()
