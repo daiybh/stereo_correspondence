@@ -22,17 +22,16 @@
 #include "yuri/core/thread/IOThreadGenerator.h"
 #include "yuri/core/socket/DatagramSocketGenerator.h"
 #include "yuri/core/frame/raw_frame_params.h"
+#include "yuri/core/frame/compressed_frame_params.h"
+#include "yuri/core/frame/raw_audio_frame_params.h"
 #include "yuri/event/BasicEventConversions.h"
 #include "yuri/core/pipe/PipeGenerator.h"
-//using namespace std;
-//using namespace yuri;
-//using namespace yuri::log;
-//using yuri::iequals;
-//using yuri::shared_ptr;
+
 #ifdef HAVE_BOOST_PROGRAM_OPTIONS
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 #endif
+
 yuri::shared_ptr<yuri::core::XmlBuilder> builder;
 int verbosity = 0;
 yuri::log::Log l(std::clog);
@@ -113,29 +112,68 @@ void list_registered(yuri::log::Log& l_)
 
 }
 
+namespace {
+
+template<class T, class Stream>
+void print_array(Stream& a, const std::vector<T>& data, const std::string& title)
+{
+	if (data.size()) {
+		a << "\t"<< title << ":";
+		for (const auto& sn: data) {
+			a << " " << sn;
+		}
+	}
+}
+
+template<class T>
+void print_array(yuri::log::Log& l_, const std::vector<T>& data, const std::string& title)
+{
+	auto a = l_[yuri::log::info];
+	print_array(a, data, title);
+}
+}
+
 void list_formats(yuri::log::Log& l_)
 {
 	using namespace yuri;
 	l_[log::info] << "List of registered formats:";
+	l_[log::info] << "+++ RAW FORMATS +++";
 	for (const auto& fmt: core::raw_format::formats())
 	{
 		const auto& info = fmt.second;
 		l_[log::info] << "\"" << info.name << "\"";
-		if (info.short_names.size()) {
-			auto a = l_[log::info];
-			a << "\tShort names:";
-			for (const auto& sn: info.short_names) {
-				a << " " << sn;
-			}
-		}
+		print_array(l_, info.short_names, "Short names");
 		auto a = l_[log::info];
 		a << "\tPlanes " << info.planes.size();
 		for (const auto& pi: info.planes) {
 			float bps = static_cast<float>(pi.bit_depth.first)/pi.bit_depth.second;
 			a << ", " << pi.components << ": " << bps << "bps";
 		}
+	}
 
+	l_[log::info] << "\t";
+	l_[log::info] << "+++ COMPRESSED FORMATS +++";
+	for (const auto& fmt: core::compressed_frame::formats())
+	{
+		const auto& info = fmt.second;
+		l_[log::info] << "\"" << info.name << "\"";
+		print_array(l_, info.short_names, "Short names");
+		print_array(l_, info.mime_types, "Mime types");
+		if (!info.fourcc.empty()) {
+			l_[log::info] << "FOURCC: " << info.fourcc;
+		}
+	}
 
+	l_[log::info] << "\t";
+	l_[log::info] << "+++ RAW AUDIO FORMATS +++";
+	for (const auto& fmt: core::raw_audio_format::formats())
+	{
+		const auto& info = fmt.second;
+		l_[log::info] << "\"" << info.name << "\"";
+		print_array(l_, info.short_names, "Short names");
+
+		l_[log::info] << "Bits per sample: " << info.bits_per_sample;
+		l_[log::info] << "Endianness: " << (info.little_endian?"little":"big");
 	}
 }
 void list_dgram_sockets(yuri::log::Log& l_)
