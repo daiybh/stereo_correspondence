@@ -20,6 +20,8 @@ namespace {
 			{jpeg, 	{jpeg,	"JPEG", {"JPG","JPEG"}, {"image/jpeg"} }},
 			{mjpg, 	{mjpg,	"Motion JPEG", {"MJPG","MJPEG"}, {"video/mjpeg"} }},
 			{png, 	{png,	"PNG", {"PNG"}, {"image/png"} }},
+			{h264, 	{h264,	"H.264", {"H264"}, {"image/h264"} }},
+			{vp8, 	{vp8,	"VP8", {"VP8"}, {"image/vp8"} }},
 			{dxt1,  {dxt1,  "DXT1", {"DXT1"}, {}}},
 			{dxt5,  {dxt5,  "DXT5", {"DXT5"}, {}}},
 
