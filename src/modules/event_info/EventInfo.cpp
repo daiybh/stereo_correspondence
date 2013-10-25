@@ -42,12 +42,10 @@ EventInfo::~EventInfo() noexcept
 
 void EventInfo::run()
 {
-//	IO_THREAD_PRE_RUN
 	while (still_running()) {
+		wait_for_events(get_latency());
 		process_events();
-		sleep(get_latency());
 	}
-//	IO_THREAD_POST_RUN
 }
 bool EventInfo::set_param(const core::Parameter& param)
 {
