@@ -27,7 +27,7 @@ private:
 	
 //	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
 	virtual bool set_param(const core::Parameter& param);
-
+	format_t format_;
 //	module* encoder_;
 };
 
