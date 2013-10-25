@@ -66,8 +66,6 @@ IF(CORE_UV)
 	
 	
 	
-	
-	
 	find_package(X11)
 	if (X11_FOUND)
 		add_subdirectory(uv_screen)
@@ -96,6 +94,10 @@ IF(CORE_UV)
 	pkg_check_modules(libavcodec libavcodec)
 	IF(libavcodec_FOUND)
 		add_subdirectory(uv_libavcodec)
+	ENDIF()
+	
+	IF(GPUJPEG_FOUND)
+		add_subdirectory(uv_jpeg)
 	ENDIF()
 ENDIF()
 #############
