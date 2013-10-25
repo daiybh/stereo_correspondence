@@ -42,22 +42,28 @@ std::unordered_map<codec_t, format_t> uv_to_yuri_compressed_formats =
 	{DXT1, core::compressed_frame::dxt1},
 	{DXT5, core::compressed_frame::dxt5},
 	{JPEG, core::compressed_frame::jpeg},
+	{MJPG, core::compressed_frame::mjpg},
+	{H264, core::compressed_frame::h264},
+	{VP8, core::compressed_frame::vp8},
 };
 
 std::unordered_map<codec_t, std::string> uv_to_strings =
 {
 	{VIDEO_CODEC_NONE, "NONE"},
-	{RGBA, "RGBA"},
-	{BGR, "BGR"},
-	{RGB, "RGB"},
-	{UYVY, "UYVY"},
-	{YUYV, "YUYV"},
+	{RGBA,	"RGBA"},
+	{BGR, 	"BGR"},
+	{RGB,	"RGB"},
+	{UYVY,	"UYVY"},
+	{YUYV,	"YUYV"},
 
-	{Vuy2, "VYU2"},
-	{DVS8, "DVS8"},
+	{Vuy2,	"VYU2"},
+	{DVS8,	"DVS8"},
 
-	{DXT1, "DXT1"},
-	{DXT5, "DXT5"},
+	{DXT1,	"DXT1"},
+	{DXT5,	"DXT5"},
+	{MJPG,	"MJPEG"},
+	{H264,	"H.264"},
+	{VP8,	"VP8"}
 };
 
 void video_frame_deleter(video_frame* frame)
