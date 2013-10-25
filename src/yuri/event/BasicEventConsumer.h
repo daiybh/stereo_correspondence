@@ -41,7 +41,7 @@ private:
 	std::deque<event_record_t> 	incomming_events_;
 	mutable mutex				incomming_mutex_;
 	size_t						incomming_max_size_ = 1024;
-	log::Log&					log_c_;
+	log::Log					log_c_;
 	std::condition_variable		incomming_notification_;
 };
 
