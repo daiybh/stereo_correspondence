@@ -20,12 +20,14 @@ namespace ultragrid {
 
 namespace detail {
 typedef function<module* (module *, const video_compress_params *)>	compress_init_t;
-typedef function<video_frame *(module *, video_frame *, int)> 	compress_t;
+typedef function<video_frame* (module *, video_frame *, int)> 	compress_t;
+typedef function<video_frame* (module *, video_frame *, int, int)> compress_tile_t;
 
 struct uv_video_compress_params {
 	std::string 			name;
 	compress_init_t			init_func;
 	compress_t				compress_func;
+	compress_tile_t			compress_tile_func;
 };
 
 #define UV_COMPRESS_DETAIL(name) \
@@ -33,6 +35,15 @@ yuri::ultragrid::detail::uv_video_compress_params { \
 	#name, \
 	name ## _compress_init, \
 	name ## _compress, \
+	{} \
+}
+
+#define UV_COMPRESS_DETAIL_TILE(name) \
+yuri::ultragrid::detail::uv_video_compress_params { \
+	#name, \
+	name ## _compress_init, \
+	{}, \
+	name ## _compress_tile, \
 }
 
 }
@@ -50,7 +61,7 @@ private:
 	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
 	module* encoder_;
 	detail::uv_video_compress_params uv_compress_params_;
-
+	unique_ptr<video_frame, void(*)(video_frame*)> uv_frame;
 };
 }
 
