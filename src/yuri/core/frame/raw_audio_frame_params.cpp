@@ -46,7 +46,14 @@ const raw_audio_format_t &get_format_info(format_t format)
 	return it->second;
 }
 
-
+format_info_map_t::const_iterator formats::begin() const
+{
+	return raw_audio_formats_info.begin();
+}
+format_info_map_t::const_iterator formats::end() const
+{
+	return raw_audio_formats_info.end();
+}
 
 }
 }

@@ -24,7 +24,10 @@ const std::string& get_format_name(format_t format);
 using format_info_map_t = std::map<format_t, raw_audio_format_t>;
 
 
-
+struct formats {
+	format_info_map_t::const_iterator begin() const;
+	format_info_map_t::const_iterator end() const;
+};
 
 
 struct raw_audio_format_t {
