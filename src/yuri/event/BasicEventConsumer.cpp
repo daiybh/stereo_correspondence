@@ -35,6 +35,7 @@ bool BasicEventConsumer::do_receive_event(const std::string& event_name, const p
 	while (incomming_events_.size() > incomming_max_size_) {
 		incomming_events_.pop_front();
 	}
+	incomming_notification_.notify_all();
 	return true;
 }
 bool BasicEventConsumer::process_events(ssize_t max_count)
@@ -48,6 +49,7 @@ bool BasicEventConsumer::do_process_events(ssize_t max_count)
 	while (incomming_events_.size() && max_count!=0) {
 		auto rec = incomming_events_.front();
 		incomming_events_.pop_front();
+
 		try {
 			//if (!do_process_event(rec.first, rec.second)) return false;
 			do_process_event(rec.first, rec.second);
@@ -62,6 +64,13 @@ size_t	BasicEventConsumer::pending_events() const
 {
 	lock_t _(incomming_mutex_);
 	return incomming_events_.size();
+}
+bool BasicEventConsumer::wait_for_events(duration_t timeout)
+{
+	lock_t l(incomming_mutex_);
+	if (incomming_events_.size()) return true;
+	incomming_notification_.wait_for(l, std::chrono::microseconds(timeout));
+	return incomming_events_.size() != 0;
 }
 
 

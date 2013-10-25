@@ -12,6 +12,8 @@
 #include "yuri/event/BasicEvent.h"
 #include "yuri/log/Log.h"
 #include <deque>
+#include "yuri/core/utils/time_types.h"
+
 namespace yuri {
 namespace event {
 typedef std::pair<std::string, const pBasicEvent>
@@ -31,6 +33,7 @@ protected:
 	event_record_t 				fetch_event();
 	bool 						process_events(ssize_t max_count = -1);
 	size_t						pending_events() const;
+	bool						wait_for_events(duration_t timeout);
 private:
 	bool 						do_receive_event(const std::string& event_name, const pBasicEvent& event);
 	bool 						do_process_events(ssize_t max_count);
@@ -39,6 +42,7 @@ private:
 	mutable mutex				incomming_mutex_;
 	size_t						incomming_max_size_ = 1024;
 	log::Log&					log_c_;
+	std::condition_variable		incomming_notification_;
 };
 
 }
