@@ -45,6 +45,8 @@ struct raw_audio_format_t {
 
 };
 
+inline const std::string& get_format_name(format_t format) { return get_format_info(format).name; }
+
 }
 }
 }
