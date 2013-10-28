@@ -21,6 +21,7 @@
 #include "yuri/core/pipe/Pipe.h"
 #include "yuri/core/thread/IOThreadGenerator.h"
 #include "yuri/core/socket/DatagramSocketGenerator.h"
+#include "yuri/core/socket/StreamSocketGenerator.h"
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/compressed_frame_params.h"
 #include "yuri/core/frame/raw_audio_frame_params.h"
@@ -187,7 +188,17 @@ void list_dgram_sockets(yuri::log::Log& l_)
 
 	}
 }
+void list_stream_sockets(yuri::log::Log& l_)
+{
+	using namespace yuri;
+	l_[log::info] << "List of registered datagram_socket implementations:";
+	const auto& reg = core::StreamSocketGenerator::get_instance();
+	for (const auto& sock: reg.list_keys())
+	{
+		l_[log::info] << sock;
 
+	}
+}
 namespace {
 using namespace yuri;
 std::map<event::event_type_t, std::string> event_names=
@@ -346,6 +357,7 @@ int main(int argc, char**argv)
 		std::string list_what = vm["list"].as<std::string>();
 		if (iequals(list_what,"formats")) list_formats(l_);
 		else if (iequals(list_what,"datagram_sockets") || iequals(list_what,"datagram")) list_dgram_sockets(l_);
+		else if (iequals(list_what,"stream_sockets") || iequals(list_what,"stream")) list_stream_sockets(l_);
 		else if (iequals(list_what,"functions")) list_functions(l_);
 		else if (iequals(list_what,"pipes")) list_pipes(l_);
 		else list_registered(l_);
@@ -370,6 +382,7 @@ int main(int argc, char**argv)
 				l_.set_quiet(true);
 				if (iequals(list_what,"formats")) list_formats(l_);
 				else if (iequals(list_what,"datagram_sockets") || iequals(list_what,"datagram")) list_dgram_sockets(l_);
+				else if (iequals(list_what,"stream_sockets") || iequals(list_what,"stream")) list_stream_sockets(l_);
 				else if (iequals(list_what,"functions")) list_functions(l_);
 				else if (iequals(list_what,"pipes")) list_pipes(l_);
 				else list_registered(l_);
