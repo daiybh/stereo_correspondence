@@ -191,10 +191,20 @@ bool FixedMemoryAllocator::step()
 {
 	return true;
 }
-void FixedMemoryAllocator::clear_all()
+std::pair<size_t, size_t> FixedMemoryAllocator::clear_all()
 {
 	lock_t l(mem_lock);
+	size_t total = 0;
+	size_t count = 0;
+	for (auto m: memory_pool) {
+		for (auto v: m.second) {
+			delete [] v;
+			count++;
+			total+=m.first;
+		}
+	}
 	memory_pool.clear();
+	return std::make_pair(count, total);
 }
 
 /** \brief Returns specified block of memory to the memory pool.
