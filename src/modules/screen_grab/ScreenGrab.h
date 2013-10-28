@@ -8,12 +8,12 @@
 #ifndef SCREENGRAB_H_
 #define SCREENGRAB_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 #include "X11/Xlib.h"
 namespace yuri {
 namespace screen {
 
-class ScreenGrab: public core::BasicIOThread
+class ScreenGrab: public core::IOThread
 {
 private:
 	ScreenGrab(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);

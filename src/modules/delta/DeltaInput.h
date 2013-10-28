@@ -11,7 +11,7 @@
 #ifndef DeltaInput_H_
 #define DeltaInput_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 #include "VideoMasterHD_Core.h"
 #include "VideoMasterHD_Sdi.h"
 
@@ -19,7 +19,7 @@
 namespace yuri {
 namespace delta {
 
-class DeltaInput: public yuri::core::BasicIOThread
+class DeltaInput: public yuri::core::IOThread
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION

@@ -17,6 +17,7 @@
 <variable name="color" default="0"/>
 <variable name="sensors" default="1"/>
 <variable name="sync" default="1"/>
+<variable name="skip" default="0"/>
 <variable name="register" default="0"/>
 
 <!-- General settings -->
@@ -34,6 +35,7 @@
         <parameter name="enable_ir">@ir</parameter>
         <parameter name="enable_color">@color</parameter>
         <parameter name="sensors">@sensors</parameter>
+        <parameter name="skip_sensors">@skip</parameter>
         <parameter name="enable_registration">@register</parameter>
         <parameter name="enable_sync">@sync</parameter>
 </node>

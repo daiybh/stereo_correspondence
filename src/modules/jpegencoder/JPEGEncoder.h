@@ -14,18 +14,18 @@
 
 #include <cstdio>
 #include <jpeglib.h>
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 
 namespace yuri {
 
 namespace jpg {
 
 
-class JPEGEncoder: public core::BasicIOThread {
+class JPEGEncoder: public core::IOThread {
 public:
 	JPEGEncoder(log::Log &_log, core::pwThreadBase parent, int level=75, long buffer_size=1048576);
 	virtual ~JPEGEncoder();
-	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent,
+	static core::pIOThread generate(log::Log &_log,core::pwThreadBase parent,
 			core::Parameters& parameters);
 //	static bool configure_converter(Parameters& parameters,
 //			long format_in, long format_out) throw (Exception);

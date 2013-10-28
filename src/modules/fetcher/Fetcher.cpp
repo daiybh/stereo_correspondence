@@ -16,7 +16,7 @@ namespace fetcher {
 
 REGISTER("curlfetcher",Fetcher)
 
-core::pBasicIOThread Fetcher::generate(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters)
+core::pIOThread Fetcher::generate(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters)
 {
 	shared_ptr<Fetcher> fetch (new Fetcher(_log,parent,
 			parameters["url"].get<std::string>()));
@@ -37,7 +37,7 @@ core::pParameters Fetcher::configure()
 
 
 Fetcher::Fetcher(log::Log &_log, core::pwThreadBase parent, std::string url)
-	:core::BasicIOThread(_log,parent,1,1,"Fetcher"),url(url),
+	:core::IOThread(_log,parent,1,1,"Fetcher"),url(url),
 	temp_data(std::ios::in|std::ios::out|std::ios::binary)
 {
 	curl_global_init(CURL_GLOBAL_ALL);
@@ -66,7 +66,7 @@ core::pBasicFrame Fetcher::fetch()
 	curl_easy_setopt(curl.get(),CURLOPT_URL,url.c_str());
 	curl_easy_setopt(curl.get(),CURLOPT_USERAGENT,"Neneko @ libyuri");
 	if (f) { // Uploading a file
-		yuri::lock(upload_lock);
+		yuri::lock_t(upload_lock);
 		log[log::debug] << "Uploading file " << fname << " with size "
 			<< f->get_size();
 
@@ -117,7 +117,7 @@ void Fetcher::run()
 {
 	while(still_running()) {
 		if (!step()) break;
-		BasicIOThread::sleep(latency);
+		IOThread::sleep(latency);
 	}
 }
 
@@ -190,7 +190,7 @@ core::pBasicFrame Fetcher::dumpData()
 
 void Fetcher::setUploadParams(std::string filename, std::string filetype, std::string inputname)
 {
-	yuri::lock(upload_lock);
+	yuri::lock_t(upload_lock);
 	fname = filename;
 	ftype = filetype;
 	iname = inputname;
@@ -198,7 +198,7 @@ void Fetcher::setUploadParams(std::string filename, std::string filetype, std::s
 
 void Fetcher::addUploadSection(std::string name, std::string value)
 {
-	yuri::lock(upload_lock);
+	yuri::lock_t(upload_lock);
 	sections[name]=value;
 }
 
@@ -218,13 +218,13 @@ std::string Fetcher::printCurlFormaddError(int cerror)
 }
 void Fetcher::clearUploadSections()
 {
-	yuri::lock(upload_lock);
+	yuri::lock_t(upload_lock);
 	sections.clear();
 }
 
 void Fetcher::setUrl(std::string new_url)
 {
-	yuri::lock(upload_lock);
+	yuri::lock_t(upload_lock);
 	url=new_url;
 }
 /*

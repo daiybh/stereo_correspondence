@@ -8,13 +8,13 @@
 #ifndef READPCAP_H_
 #define READPCAP_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 #include <fstream>
 
 namespace yuri {
 namespace pcap {
 
-class ReadPcap: public core::BasicIOThread
+class ReadPcap: public core::IOThread
 {
 public:
 	virtual ~ReadPcap();

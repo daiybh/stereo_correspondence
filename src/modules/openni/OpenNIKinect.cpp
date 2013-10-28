@@ -17,7 +17,7 @@ IO_THREAD_GENERATOR(OpenNIKinect)
 
 core::pParameters OpenNIKinect::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
+	core::pParameters p = IOThread::configure();
 	p->set_description("OpenNIKinect Kinect source.");
 	(*p)["enable_depth"]["Enable depth sensors"]=true;
 	(*p)["enable_ir"]	["Enable ir sensors"]	=false;
@@ -25,15 +25,16 @@ core::pParameters OpenNIKinect::configure()
 	(*p)["enable_sync"]["Enable depth-color sync"]	=true;
 	(*p)["enable_registration"]["Enable depth-color registration"]	=false;
 	(*p)["sensors"]["Max number of activated sensors"]=1;
+	(*p)["skip_sensors"]["Number of sensors to skip"]=0;
 
 	p->set_max_pipes(0,1);
 	return p;
 }
 
 OpenNIKinect::OpenNIKinect(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,0,16,std::string("OpenNIKinect")),enable_depth(true),
+core::IOThread(log_,parent,0,16,std::string("OpenNIKinect")),enable_depth(true),
 enable_ir(false),enable_color(false),enable_sync(true),enable_registration(false),
-max_sensors(1)
+max_sensors(1),skip_sensors(0)
 {
 	latency=100;
 	IO_THREAD_INIT("OpenNIKinect")
@@ -50,7 +51,7 @@ max_sensors(1)
 	}
 	log[log::debug] << "Enabled:  depth: " << enable_depth << ", ir: "<< enable_ir<< ", color: " <<enable_color<<"\n";
 	yuri::size_t activated = 0;
-	for (int i=0;i<device_infos.getSize();++i) {
+	for (int i=std::min<size_t>(skip_sensors,device_infos.getSize());i<device_infos.getSize();++i) {
 		log[log::info] << "Device " << i <<": " << device_infos[i].getName() << ", uri: " << device_infos[i].getUri() << "\n";
 		if (activated<max_sensors) {
 			pDevice dev(new openni::Device());
@@ -191,7 +192,7 @@ void OpenNIKinect::run()
 						}
 					}
 				}
-				core::pBasicFrame frame = core::BasicIOThread::allocate_frame_from_memory(
+				core::pBasicFrame frame = core::IOThread::allocate_frame_from_memory(
 						reinterpret_cast<const yuri::ubyte_t*>(frame_ref.getData()),
 						frame_ref.getDataSize(),true);
 				openni::VideoMode mode = frame_ref.getVideoMode();
@@ -251,7 +252,9 @@ bool OpenNIKinect::set_param(const core::Parameter& param)
 		enable_registration = param.get<bool>();
 	} else if (param.name == "sensors") {
 		max_sensors = param.get<yuri::size_t>();
-	} else return BasicIOThread::set_param(param);
+	} else if (param.name == "skip_sensors") {
+		skip_sensors = param.get<yuri::size_t>();
+	} else return IOThread::set_param(param);
 	return true;
 }
 

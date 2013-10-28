@@ -23,7 +23,7 @@ IO_THREAD_GENERATOR(FrameBufferGrabber)
 
 core::pParameters FrameBufferGrabber::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
+	core::pParameters p = IOThread::configure();
 	(*p)["outputs"]["Number of outputs"]=1;
 	(*p)["libgl_path"]["Path to libGL.so"]="/usr/lib/libGL.so";
 	(*p)["libsdl_path"]["Path to libSDL.so"]="/usr/lib/libSDL.so";
@@ -44,7 +44,7 @@ std::map<yuri::format_t, GLenum> yuri_gl_formats = map_list_of<yuri::format_t, G
 			(YURI_FMT_BGRA, GL_BGRA);
 }
 FrameBufferGrabber::FrameBufferGrabber(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters):
-		BasicIOThread(_log,parent,1,0,"Frame Buffer Grabber"),
+		IOThread(_log,parent,1,0,"Frame Buffer Grabber"),
 		method(YURI_GRAB_NONE),update_method(YURI_GRAB_ACTUAL),flip_y(true),
 		show_avatar(false),gl(log)
 {
@@ -52,7 +52,7 @@ FrameBufferGrabber::FrameBufferGrabber(log::Log &_log, core::pwThreadBase parent
 	//params.merge(*configure());
 	//params.merge(parameters);
 	log[log::debug] << "outputs: " << params["outputs"].get<int>();
-	resize(in_ports,params["outputs"].get<int>());
+	resize(in_ports_,params["outputs"].get<int>());
 	set_method(params["method"].get<std::string>());
 	set_default_format(params["default_format"].get<std::string>());
 	set_update_method(params["update_method"].get<std::string>());
@@ -84,7 +84,7 @@ FrameBufferGrabber::~FrameBufferGrabber()
 
 void *FrameBufferGrabber::get_function(std::string name)
 {
-	yuri::lock l(resolve_lock);
+	yuri::lock_t l(resolve_lock);
 
 	if (functions.find(name) != functions.end())
 		return functions[name];
@@ -206,7 +206,7 @@ void FrameBufferGrabber::pre_swap_direct()
 			//frame=allocate_frame_from_memory(data,ctx.frame_size);
 			push_video_frame(ctx.index,frame,fmt,ctx.width,ctx.height,pts,0,pts);
 		} else {
-		//	log[warning] << "output pipe not connected inp: " << out_ports << ", " << ctx.index << endl;
+		//	log[warning] << "output pipe not connected inp: " << out_ports_ << ", " << ctx.index << endl;
 		}
 		if (ctx.stereo) {
 			glReadBuffer(GL_BACK_RIGHT);
@@ -357,7 +357,7 @@ void FrameBufferGrabber::draw_avatar()
 {
 	GLXContext context = glXGetCurrentContext();
 	if (contexts.find(context) == contexts.end() || contexts[context].local) return;
-	if (in_ports && in[0]) if (!in[0]->is_empty()) {
+	if (in_ports_ && in[0]) if (!in[0]->is_empty()) {
 		core::pBasicFrame f  = in[0]->pop_latest();
 		if (f) in_frame = f;
 	}
@@ -413,7 +413,7 @@ bool FrameBufferGrabber::set_param(const core::Parameter& parameter)
 		string tmp =parameter.get<string>();
 		if (conversion_types_map.count(tmp)) conversion=conversion_types_map[tmp];
 		else conversion=LINE_INTERLACED;
-	} else */return BasicIOThread::set_param(parameter);
+	} else */return IOThread::set_param(parameter);
 	return true;
 }
 }

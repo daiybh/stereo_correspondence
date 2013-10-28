@@ -10,7 +10,7 @@
 
 #ifndef TSRTPRECEIVER_H_
 #define TSRTPRECEIVER_H_
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 #include "yuri/asio/ASIOUDPSocket.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -31,9 +31,9 @@ struct RTPPacket {
 } __attribute__ ((packed));
 using namespace boost::posix_time;
 
-class TSRtpReceiver: public core::BasicIOThread {
+class TSRtpReceiver: public core::IOThread {
 public:
-	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters);
+	static core::pIOThread generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters);
 	static core::pParameters configure();
 
 	TSRtpReceiver(log::Log &log_, core::pwThreadBase parent,core::Parameters& parameters);

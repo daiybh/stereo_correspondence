@@ -23,7 +23,7 @@ using namespace yuri::log;
 
 core::pParameters RepackAudio::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
+	core::pParameters p = core::IOThread::configure();
 	p->set_description("Repack audio.");
 	//(*p)["fps"]["Framerate of output"]=24.0;
 	(*p)["samples"]["Number of samples in output chunk"]=2000;
@@ -34,7 +34,7 @@ core::pParameters RepackAudio::configure()
 
 
 RepackAudio::RepackAudio(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,1,1,std::string("repack")),samples_(2000,0)
+core::IOThread(log_,parent,1,1,std::string("repack")),samples_(2000,0)
 ,samples_missing_(2000),total_samples_(2000),channels_(2),current_format_(YURI_AUDIO_PCM_S16_BE)
 {
 	IO_THREAD_INIT("RepackAudio")
@@ -96,7 +96,7 @@ bool RepackAudio::set_param(const core::Parameter& param)
 		total_samples_ = samples_missing_;
 	} else if (param.name == "channels") {
 		channels_ = param.get<size_t>();
-	} else return core::BasicIOThread::set_param(param);
+	} else return core::IOThread::set_param(param);
 	return true;
 }
 

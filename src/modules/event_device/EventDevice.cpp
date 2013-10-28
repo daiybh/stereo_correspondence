@@ -21,7 +21,7 @@ IO_THREAD_GENERATOR(EventDevice)
 
 core::pParameters EventDevice::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
+	core::pParameters p = core::IOThread::configure();
 	p->set_description("EventDevice");
 	(*p)["device"]["Path to the device"]=std::string("/dev/input/event0");
 	(*p)["min_fuzz"]["Minimal value for fuzz. Increase if the device generates noised valued"]=0;
@@ -71,7 +71,7 @@ namespace {
 }
 
 EventDevice::EventDevice(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,1,1,std::string("event_device")),
+core::IOThread(log_,parent,1,1,std::string("event_device")),
 event::BasicEventProducer(log),
 handle_(-1),min_fuzz_(0)
 {
@@ -138,7 +138,7 @@ bool EventDevice::set_param(const core::Parameter& param)
 		device_path_ = param.get<std::string>();
 	} else if (iequals(param.name, "min_fuzz")) {
 		min_fuzz_ = param.get<int>();
-	} else return core::BasicIOThread::set_param(param);
+	} else return core::IOThread::set_param(param);
 	return true;
 }
 

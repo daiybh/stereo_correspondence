@@ -23,7 +23,7 @@ public:
 	DVSource(log::Log &log_,core::pwThreadBase parent, nodeid_t node=0, int port = 0, int64_t guid=-1);
 	virtual ~DVSource();
 
-	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters);
+	static core::pIOThread generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters);
 	static core::pParameters configure();
 protected:
 	virtual bool start_receiving();

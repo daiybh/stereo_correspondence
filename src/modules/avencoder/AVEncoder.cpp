@@ -111,7 +111,7 @@ void AVEncoder::run()
 
 		usleep(1000);
 	}*/
-	BasicIOThread::run();
+	IOThread::run();
 	//close_pipes();
 }
 
@@ -210,7 +210,7 @@ bool AVEncoder::set_param(const core::Parameter &param)
 		codec_id = get_codec_from_string(param.get<std::string>());
 	} else
 
-		return BasicIOThread::set_param(param);
+		return IOThread::set_param(param);
 	return true;
 
 }

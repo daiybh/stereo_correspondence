@@ -109,7 +109,7 @@ void list_formats(Log& l_)
 {
 	l_[info] << "List of registered formats:" << std::endl;
 	std::string name;
-	yuri::lock lock(core::BasicPipe::format_lock);
+	yuri::lock_t lock(core::BasicPipe::format_lock);
 //	std::pair<yuri::format_t, yuri::FormatInfo_t > fmtp;
 //	BOOST_FOREACH(fmtp, core::BasicPipe::formats) {
 	for (const auto& fmtp: core::BasicPipe::formats) {

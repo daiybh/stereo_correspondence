@@ -19,7 +19,7 @@ namespace yuri {
 namespace ieee1394 {
 
 IEEE1394SourceBase::IEEE1394SourceBase(log::Log &log_, core::pwThreadBase parent, nodeid_t node0, int port, uint64_t guid, std::string id)
-	:BasicIOThread(log_,parent,0,1,id),channel(0),port(port),oplug(-1),iplug(-1),bandwidth(0)
+	:IOThread(log_,parent,0,1,id),channel(0),port(port),oplug(-1),iplug(-1),bandwidth(0)
 {
 	node=node0|0xffc0;
 

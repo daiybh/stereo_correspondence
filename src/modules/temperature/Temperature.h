@@ -11,12 +11,12 @@
 #ifndef Temperature_H_
 #define Temperature_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 
 namespace yuri {
 namespace temperature {
 
-class Temperature: public yuri::core::BasicIOThread
+class Temperature: public yuri::core::IOThread
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION

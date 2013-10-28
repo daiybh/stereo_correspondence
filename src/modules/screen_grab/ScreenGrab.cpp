@@ -17,7 +17,7 @@ IO_THREAD_GENERATOR(ScreenGrab)
 
 core::pParameters ScreenGrab::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
+	core::pParameters p = core::IOThread::configure();
 	p->set_description("ScreenGrab module.");
 	(*p)["display"]["X display"]=std::string();
 	(*p)["fps"]["Frames per second"]=10.0;
@@ -93,7 +93,7 @@ Window find_child(Display* dpy, Window top, T val, F func)
 }
 
 ScreenGrab::ScreenGrab(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,1,1,std::string("screen_grab")),win(0),x(0),y(0),
+core::IOThread(log_,parent,1,1,std::string("screen_grab")),win(0),x(0),y(0),
 width(-1),height(-1),pid(0),win_id_(0)
 {
 	IO_THREAD_INIT("ScreenGrab")
@@ -206,7 +206,7 @@ bool ScreenGrab::set_param(const core::Parameter &param)
 		pid = param.get<size_t>();
 	} else if (param.name == "win_id") {
 		win_id_ = param.get<Window>();
-	} else return core::BasicIOThread::set_param(param);
+	} else return core::IOThread::set_param(param);
 	return true;
 }
 

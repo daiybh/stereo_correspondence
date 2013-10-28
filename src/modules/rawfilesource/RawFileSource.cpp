@@ -21,15 +21,15 @@ namespace rawfilesource {
 
 REGISTER("raw_filesource",RawFileSource)
 
-core::pBasicIOThread RawFileSource::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
+core::pIOThread RawFileSource::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
 {
-	core::pBasicIOThread c (new RawFileSource(_log,parent,parameters));
+	core::pIOThread c (new RawFileSource(_log,parent,parameters));
 	return c;
 }
 
 core::pParameters RawFileSource::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
+	core::pParameters p = IOThread::configure();
 	(*p)["path"]["Path to the file"]=std::string();
 	(*p)["keep_alive"]["Stay idle after pushing the file (setting to false will cause the object to quit afterward)"]=true;
 	(*p)["output_format"]["Force output format"]=std::string("single16");
@@ -47,7 +47,7 @@ core::pParameters RawFileSource::configure()
 
 
 RawFileSource::RawFileSource(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters):
-			core::BasicIOThread(_log,parent,1,2,"RawFileSource"), position(0),
+			core::IOThread(_log,parent,1,2,"RawFileSource"), position(0),
 			chunk_size(0), width(0), height(0),output_format(YURI_FMT_NONE),
 			fps(25.0),last_send(time_value::min()),keep_alive(true),loop(true),
 			failed_read(false),sequence(false),block(0),loop_number(0),sequence_pos(0)
@@ -145,7 +145,7 @@ bool RawFileSource::read_chunk()
 			std::istreambuf_iterator<char> it(file);
 			frame->get_plane(i).resize(plane_length);
 //			std::copy(it,it+plane_length,std::back_inserter(frame->get_plane(0)));
-//			shared_array<yuri::ubyte_t> data = BasicIOThread::allocate_memory_block(plane_length,true);
+//			shared_array<yuri::ubyte_t> data = IOThread::allocate_memory_block(plane_length,true);
 
 			file.read(reinterpret_cast<char*>(PLANE_RAW_DATA(frame,i)),plane_length);
 			if (static_cast<yuri::size_t>(file.gcount()) != plane_length ) {
@@ -213,7 +213,7 @@ bool RawFileSource::set_param(const core::Parameter &parameter)
 		loop=parameter.get<bool>();
 	} else if (parameter.name == "block") {
 		block=parameter.get<usize_t>();
-	} else return BasicIOThread::set_param(parameter);
+	} else return IOThread::set_param(parameter);
 	return true;
 }
 

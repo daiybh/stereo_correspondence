@@ -58,7 +58,9 @@ std::map<std::string,stereo::_type> stereo_types = boost::assign::map_list_of<st
 	("quadbuffer",stereo::quadbuffer);
 }
 SimpleRenderer::SimpleRenderer(log::Log &log_,core::pwThreadBase parent, core::Parameters &parameters)
-	:BasicIOThread(log_,parent,1,0,"SimpleRenderer"),keep_aspect(false),
+	:IOThread(log_,parent,1,0,"SimpleRenderer"),
+	 event::BasicEventProducer(log),
+	 keep_aspect(false),
 	 flip_x(false),flip_y(false),flip_y_right(false),quality(1),vsync(false),gl(log),
 	 measure(0),measurement_frames(0),stereo_3d(false),stereo_type(stereo::none),
 	 stereo_correction(0.0),swap_eyes(false)
@@ -122,6 +124,7 @@ void SimpleRenderer::run()
 				exitCode = YURI_EXIT_USER_BREAK;
 				request_end();
 			}
+			if (glx->check_key(114)) { emit_event("right",make_shared<event::EventBool>(true)); }
 			break;
 		}
 		if (!step()) break;
@@ -136,7 +139,7 @@ void SimpleRenderer::run()
 void SimpleRenderer::init_gl(core::pwThreadBase global, core::pwThreadBase /*data*/)
 {
 	if (global.expired()) return;
-	shared_ptr<graphics::WindowBase> win = dynamic_pointer_cast<graphics::WindowBase>(global.lock());
+	shared_ptr<graphics::WindowBase> win = dynamic_pointer_cast<graphics::WindowBase>(global.lock_t());
 
 	GL::enable_smoothing();
 
@@ -145,10 +148,10 @@ void SimpleRenderer::init_gl(core::pwThreadBase global, core::pwThreadBase /*dat
 void SimpleRenderer::draw_gl(core::pwThreadBase global, core::pwThreadBase data)
 {
 	if (global.expired()) throw("global expired");
-	//shared_ptr<ThreadBase> tb = data.lock();
-	shared_ptr<SimpleRenderer> simple = dynamic_pointer_cast<SimpleRenderer>(data.lock());
+	//shared_ptr<ThreadBase> tb = data.lock_t();
+	shared_ptr<SimpleRenderer> simple = dynamic_pointer_cast<SimpleRenderer>(data.lock_t());
 	if (data.expired()) throw("data expired");
-	shared_ptr<graphics::WindowBase> win = dynamic_pointer_cast<graphics::WindowBase>(global.lock());
+	shared_ptr<graphics::WindowBase> win = dynamic_pointer_cast<graphics::WindowBase>(global.lock_t());
 	assert (simple);
 	assert(win);
 	simple->_draw_gl(win);
@@ -189,7 +192,7 @@ bool SimpleRenderer::step()
 {
 	if (in[0] && !in[0]->is_empty()) {
 		while (!in[0]->is_empty()) {
-			yuri::lock l(draw_lock);
+			yuri::lock_t l(draw_lock);
 			frames[0] = in[0]->pop_frame();
 		}
 		assert(frames[0]);
@@ -197,7 +200,7 @@ bool SimpleRenderer::step()
 	}
 	if (stereo_3d && in[1] && !in[1]->is_empty()) {
 		while (!in[1]->is_empty()) {
-			yuri::lock l(draw_lock);
+			yuri::lock_t l(draw_lock);
 			frames[1] = in[1]->pop_frame();
 		}
 		assert(frames[1]);
@@ -208,7 +211,7 @@ bool SimpleRenderer::step()
 
 void SimpleRenderer::generate_texture(yuri::uint_t index)
 {
-	yuri::lock l(draw_lock);
+	yuri::lock_t l(draw_lock);
 	if (changed[index]) {
 		time_value _start_time;
 		if (measure) _start_time = std::chrono::steady_clock::now();
@@ -284,7 +287,7 @@ void SimpleRenderer::set_keep_aspect(bool a)
 
 bool SimpleRenderer::set_param(const core::Parameter &parameter)
 {
-	yuri::lock l(draw_lock);
+	yuri::lock_t l(draw_lock);
 	if (parameter.name == "keep_aspect")
 		keep_aspect=parameter.get<bool>();
 	else if (parameter.name == "flip_x")
@@ -324,7 +327,7 @@ bool SimpleRenderer::set_param(const core::Parameter &parameter)
 		flip_y_right=parameter.get<bool>();
 	} else if (parameter.name == "swap_eyes") {
 		swap_eyes=parameter.get<bool>();
-	} else return BasicIOThread::set_param(parameter);
+	} else return IOThread::set_param(parameter);
 	return true;
 }
 }

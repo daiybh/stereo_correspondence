@@ -11,7 +11,7 @@
 #ifndef AVCODECBASE_H_
 #define AVCODECBASE_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 #include "yuri/core/BasicFrame.h"
 #include "yuri/core/BasicPipe.h"
 #include "yuri/core/pipe_types.h"
@@ -23,7 +23,7 @@ namespace yuri
 {
 namespace video
 {
-class AVCodecBase//: public core::BasicIOThread
+class AVCodecBase//: public core::IOThread
 {
 public:
 	AVCodecBase(log::Log& log_);

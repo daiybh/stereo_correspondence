@@ -61,7 +61,7 @@ void UVAudioTestcard::run()
 		}
 //		log[log::info] << "Pushing sample with " << frame->bps << " bytes per sample, "
 //					<< frame->sample_rate << " samples per second and " << frame->ch_count
-//					<< " channels";
+//					<< " channels. Data length: " << frame->data_len;
 		core::pRawAudioFrame out_frame = core::RawAudioFrame::create_empty(core::raw_audio_format::signed_16bit,
 				frame->ch_count,
 				frame->sample_rate,

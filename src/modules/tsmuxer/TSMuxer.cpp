@@ -19,7 +19,7 @@ namespace video {
 REGISTER("tsmuxer",TSMuxer)
 
 
-core::pBasicIOThread TSMuxer::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& /*parameters*/)
+core::pIOThread TSMuxer::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& /*parameters*/)
 {
 	shared_ptr<TSMuxer> s(new TSMuxer(_log,parent));
 	return s;

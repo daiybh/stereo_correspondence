@@ -10,7 +10,7 @@
 #ifndef EVENTDEVICE_H_
 #define EVENTDEVICE_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 #include "yuri/event/BasicEventProducer.h"
 #include <linux/input.h>
 namespace yuri {
@@ -24,7 +24,7 @@ struct abs_axis {
         std::string name;
 };
 
-class EventDevice: public core::BasicIOThread, public event::BasicEventProducer
+class EventDevice: public core::IOThread, public event::BasicEventProducer
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION

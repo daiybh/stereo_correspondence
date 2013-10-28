@@ -11,7 +11,7 @@
 #ifndef BLANKGENERATOR_H_
 #define BLANKGENERATOR_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 //#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace yuri {
@@ -19,7 +19,7 @@ namespace yuri {
 namespace blank {
 //using namespace boost::posix_time;
 
-class BlankGenerator: public core::BasicIOThread {
+class BlankGenerator: public core::IOThread {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
 	static core::pParameters configure();

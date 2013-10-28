@@ -23,7 +23,7 @@ using namespace yuri::log;
 
 core::pParameters DummyModule::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
+	core::pParameters p = core::IOThread::configure();
 	p->set_description("Dummy module. For testing only.");
 	(*p)["size"]["Set size of ....  (ignored ;)"]=666;
 	(*p)["name"]["Set name"]=std::string("");
@@ -33,7 +33,7 @@ core::pParameters DummyModule::configure()
 
 
 DummyModule::DummyModule(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,1,1,std::string("dummy"))
+core::IOThread(log_,parent,1,1,std::string("dummy"))
 {
 	IO_THREAD_INIT("Dummy")
 	if (!dummy_name.empty()) log[info] << "Got name " << dummy_name <<"\n";
@@ -58,7 +58,7 @@ bool DummyModule::set_param(const core::Parameter& param)
 {
 	if (param.name == "name") {
 		dummy_name = param.get<std::string>();
-	} else return core::BasicIOThread::set_param(param);
+	} else return core::IOThread::set_param(param);
 	return true;
 }
 

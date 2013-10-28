@@ -16,7 +16,7 @@ namespace rtp {
 
 REGISTER("ts_receiver",TSRtpReceiver)
 
-core::pBasicIOThread TSRtpReceiver::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
+core::pIOThread TSRtpReceiver::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
 {
 	shared_ptr<TSRtpReceiver> yc (new TSRtpReceiver(_log,parent, parameters));
 //yc->set_endpoint(parameters["address"].get<std::string>(),parameters["port"].get<yuri::size_t>());
@@ -36,7 +36,7 @@ core::pParameters TSRtpReceiver::configure()
 }
 
 TSRtpReceiver::TSRtpReceiver(log::Log &log_, core::pwThreadBase parent,core::Parameters &parameters):
-				BasicIOThread(log_,parent,0,1,"TS RTP Streamer"),seq(0),pseq(0),
+				IOThread(log_,parent,0,1,"TS RTP Streamer"),seq(0),pseq(0),
 				buffer_size(1048576),buffer_position(0),pass_thru(false)
 {
 	params.merge(*configure());

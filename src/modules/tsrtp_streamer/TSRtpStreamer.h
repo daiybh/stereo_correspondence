@@ -11,7 +11,7 @@
 #ifndef TSRTPSTREAMER_H_
 #define TSRTPSTREAMER_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 #include "yuri/asio/ASIOUDPSocket.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -42,11 +42,11 @@ struct RTPPacket {
 	//unsigned int CSRC:32;
 };
 using namespace boost::posix_time;
-class TSRtpStreamer: public yuri::core::BasicIOThread {
+class TSRtpStreamer: public yuri::core::IOThread {
 public:
 	TSRtpStreamer(log::Log &log_, core::pwThreadBase parent);
 	virtual ~TSRtpStreamer();
-	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
+	static core::pIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
 	static core::pParameters configure();
 	bool set_endpoint(std::string address, yuri::size_t port);
 

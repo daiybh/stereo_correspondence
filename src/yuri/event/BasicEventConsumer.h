@@ -42,7 +42,10 @@ private:
 	mutable mutex				incomming_mutex_;
 	size_t						incomming_max_size_ = 1024;
 	log::Log					log_c_;
+<<<<<<< Updated upstream
 	std::condition_variable		incomming_notification_;
+=======
+>>>>>>> Stashed changes
 };
 
 }

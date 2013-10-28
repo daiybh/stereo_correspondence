@@ -34,7 +34,7 @@ core::pParameters BlankGenerator::configure()
 }
 
 BlankGenerator::BlankGenerator(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
-		BasicIOThread(log_,parent,0,1,"BlankGenerator"),next_time(time_value::min()),
+		IOThread(log_,parent,0,1,"BlankGenerator"),next_time(time_value::min()),
 		fps(25),width(640),height(480),format(YURI_FMT_YUV422)
 {
 	IO_THREAD_INIT("Blank generator")
@@ -64,7 +64,7 @@ bool BlankGenerator::set_param(const core::Parameter &p)
 			log[log::error] << "Failed to parse format std::string!" << std::endl;
 			return false;
 		}
-	} else return BasicIOThread::set_param(p);
+	} else return IOThread::set_param(p);
 	return true;
 }
 void BlankGenerator::run()
@@ -98,7 +98,7 @@ core::pBasicFrame BlankGenerator::generate_frame()
 core::pBasicFrame BlankGenerator::generate_frame_yuv422()
 {
 	assert(format==YURI_FMT_YUV422);
-	core::pBasicFrame frame = BasicIOThread::allocate_empty_frame(YURI_FMT_YUV422,width,height);
+	core::pBasicFrame frame = IOThread::allocate_empty_frame(YURI_FMT_YUV422,width,height);
 	yuri::ubyte_t *data = PLANE_RAW_DATA(frame,0);
 	for (yuri::ushort_t y = 0; y<height; ++y) {
 		for (yuri::ushort_t x = 0; x < width; ++x) {
@@ -112,7 +112,7 @@ core::pBasicFrame BlankGenerator::generate_frame_yuv422()
 core::pBasicFrame BlankGenerator::generate_frame_rgb()
 {
 	assert(format==YURI_FMT_RGB24);
-	core::pBasicFrame frame = BasicIOThread::allocate_empty_frame(YURI_FMT_RGB,width,height);
+	core::pBasicFrame frame = IOThread::allocate_empty_frame(YURI_FMT_RGB,width,height);
 	yuri::ubyte_t *data = PLANE_RAW_DATA(frame,0);
 	for (yuri::ushort_t y = 0; y<height; ++y) {
 		for (yuri::ushort_t x = 0; x < width; ++x) {

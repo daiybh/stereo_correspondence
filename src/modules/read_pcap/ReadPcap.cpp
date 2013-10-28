@@ -18,7 +18,7 @@ IO_THREAD_GENERATOR(ReadPcap)
 
 core::pParameters ReadPcap::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
+	core::pParameters p = core::IOThread::configure();
 	p->set_description("ReadPcap module.");
 	(*p)["filename"]["File to read from"]=std::string();
 	p->set_max_pipes(1,1);
@@ -70,7 +70,7 @@ struct udp_header_ {
 
 
 ReadPcap::ReadPcap(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,1,1,std::string("ReadPcap")),packet_count(0),last_valid_size(0)
+core::IOThread(log_,parent,1,1,std::string("ReadPcap")),packet_count(0),last_valid_size(0)
 {
 	IO_THREAD_INIT("ReadPcap")
 	file_.open(filename_.c_str(),std::ios::in|std::ios::binary);
@@ -160,7 +160,7 @@ bool ReadPcap::set_param(const core::Parameter &param)
 {
 	if (param.name == "filename") {
 		filename_ = param.get<std::string>();
-	} else return core::BasicIOThread::set_param(param);
+	} else return core::IOThread::set_param(param);
 	return true;
 }
 

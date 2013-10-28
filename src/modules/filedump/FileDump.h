@@ -10,7 +10,7 @@
 
 #ifndef FILEDUMP_H_
 #define FILEDUMP_H_
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 #include <fstream>
 #include <string>
 
@@ -20,12 +20,12 @@ namespace dump
 {
 
 
-class FileDump: public core::BasicIOThread
+class FileDump: public core::IOThread
 {
 public:
 	FileDump(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
 	virtual ~FileDump();
-	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
+	static core::pIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
 	static core::pParameters configure();
 protected:
 	bool step();

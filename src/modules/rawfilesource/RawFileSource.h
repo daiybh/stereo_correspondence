@@ -11,7 +11,7 @@
 #ifndef RAWFILESOURCE_H_
 #define RAWFILESOURCE_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 //#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace yuri {
@@ -21,12 +21,12 @@ namespace rawfilesource {
 
 //using namespace boost::posix_time;
 
-class RawFileSource: public core::BasicIOThread
+class RawFileSource: public core::IOThread
 {
 public:
 	RawFileSource(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters);
 	virtual ~RawFileSource();
-	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent,
+	static core::pIOThread generate(log::Log &_log,core::pwThreadBase parent,
 			core::Parameters& parameters);
 	static core::pParameters configure();
 	void run();

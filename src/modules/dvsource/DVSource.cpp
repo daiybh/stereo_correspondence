@@ -16,7 +16,7 @@ namespace ieee1394 {
 
 REGISTER("dvsource",DVSource)
 
-core::pBasicIOThread DVSource::generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters)
+core::pIOThread DVSource::generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters)
 {
 	shared_ptr<DVSource> dv(new DVSource(_log,parent,
 			parameters["node"].get<unsigned>(),

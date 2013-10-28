@@ -17,7 +17,7 @@ extern "C" {
 namespace yuri {
 namespace video {
 
-class RawAVFile: public core::BasicIOThread, public AVCodecBase {
+class RawAVFile: public core::IOThread, public AVCodecBase {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
 	static core::pParameters configure();

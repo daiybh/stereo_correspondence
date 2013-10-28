@@ -10,12 +10,12 @@
 #ifndef DUMMYMODULE_H_
 #define DUMMYMODULE_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 
 namespace yuri {
 namespace repack_audio {
 
-class RepackAudio: public core::BasicIOThread
+class RepackAudio: public core::IOThread
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION

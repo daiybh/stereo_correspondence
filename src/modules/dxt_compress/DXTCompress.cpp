@@ -22,7 +22,7 @@ IO_THREAD_GENERATOR(DXTCompress)
 //using boost::iequals;
 core::pParameters DXTCompress::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
+	core::pParameters p = IOThread::configure();
 	p->set_description("Dummy module. For testing only.");
 	(*p)["type"]["Set type of compression (DXT1, DXT3, DXT5)"]="DXT1";
 	p->set_max_pipes(1,1);
@@ -30,7 +30,7 @@ core::pParameters DXTCompress::configure()
 }
 
 DXTCompress::DXTCompress(log::Log &log_,core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,1,1,std::string("dxt_compress")),dxt_type(squish::kDxt1),
+core::IOThread(log_,parent,1,1,std::string("dxt_compress")),dxt_type(squish::kDxt1),
 format(YURI_FMT_DXT1)
 {
 	IO_THREAD_INIT("DXTCompress")
@@ -82,7 +82,7 @@ bool DXTCompress::set_param(const core::Parameter& param)
 			dxt_type = squish::kDxt1; format = YURI_FMT_DXT1;
 			log[log::info] << "Using format DXT1\n";
 		}
-	} else return BasicIOThread::set_param(param);
+	} else return IOThread::set_param(param);
 	return true;
 }
 

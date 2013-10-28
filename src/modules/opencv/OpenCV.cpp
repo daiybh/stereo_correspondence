@@ -114,7 +114,7 @@ bool OpenCV::set_param(const core::Parameter& param)
 {
 	if (param.name =="format") {
 		format = core::BasicPipe::get_format_from_string(param.get<std::string>());
-	} else return core::BasicIOThread::set_param(param);
+	} else return core::IOThread::set_param(param);
 	return true;
 }
 

@@ -43,6 +43,10 @@ resolution_{800,600},format_(core::raw_format::yuyv422),fps_(25)
 	std::stringstream strs;
 
 	std::string codec = ultragrid::yuri_to_uv_string(format_);
+	if (codec.empty()) {
+		log[log::fatal] << "Unsupported format requested!";
+		throw exception::InitializationFailed("Failed to initialize testcard device!");
+	}
 	strs << "testcard:" << resolution_.width << ":" << resolution_.height << ":" << fps_ <<":" << codec;
 	if (!init_capture(strs.str())) {
 		throw exception::InitializationFailed("Failed to initialize testcard device!");

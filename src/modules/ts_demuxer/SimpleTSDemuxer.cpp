@@ -16,7 +16,7 @@ IO_THREAD_GENERATOR(SimpleTSDemuxer)
 
 core::pParameters SimpleTSDemuxer::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
+	core::pParameters p = IOThread::configure();
 	(*p)["program"]["Program to demux"]=0;
 	(*p)["buffer"]["Size of buffer"]=1048576;
 	(*p)["parse_stream"]["Parse stream and look for resolution. No output until resolution is determined!"]=true;
@@ -33,7 +33,7 @@ core::pParameters SimpleTSDemuxer::configure()
 }
 
 SimpleTSDemuxer::SimpleTSDemuxer(log::Log &log_, core::pwThreadBase parent, core::Parameters& parameters):
-		BasicIOThread(log_,parent,1,1,"Simple TS Demux"),program(0),
+		IOThread(log_,parent,1,1,"Simple TS Demux"),program(0),
 		buffer_size(1048576),buffer_position(0),in_buffer_position(0),
 		packet_size(188),parse_stream(false),width(-1),height(-1),pts(0)
 		,last_pts(0)
@@ -271,7 +271,7 @@ bool SimpleTSDemuxer::set_param(const core::Parameter &parameter)
 		strip_pes=parameter.get<bool>();
 	} else if (parameter.name == "quick_strip") {
 		quick_strip=parameter.get<bool>();
-	}else return BasicIOThread::set_param(parameter);
+	}else return IOThread::set_param(parameter);
 	return true;
 }
 

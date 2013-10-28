@@ -11,13 +11,13 @@
 #ifndef DXTCompress_H_
 #define DXTCompress_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 
 namespace yuri {
 namespace dxt_compress {
 
 
-class DXTCompress: public yuri::core::BasicIOThread
+class DXTCompress: public yuri::core::IOThread
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION

@@ -134,12 +134,12 @@ bool GLXWindow::create()
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
 	boost::mutex::scoped_lock l(global_mutex);
 #else
-	yuri::lock l(local_mutex);
+	yuri::lock_t l(local_mutex);
 #endif
 	if (!create_window()) return false;
 	setHideDecoration(hideDecoration);
 	XStoreName(display.get(),win,winname.c_str());
-	yuri::lock bgl(GL::big_gpu_lock);
+	yuri::lock_t bgl(GL::big_gpu_lock);
 	glc = glXCreateContext(display.get(), vi, NULL, GL_TRUE);
 	glXMakeCurrent(display.get(), win, glc);
 	log[log::debug] << "Created GLX Context";
@@ -159,7 +159,7 @@ bool GLXWindow::create()
 				0, 0);
 		XDefineCursor(display.get(),win,cursor);
 	}
-	add_used_context(glc,dynamic_pointer_cast<GLXWindow>(get_this_ptr().lock()));
+	add_used_context(glc,dynamic_pointer_cast<GLXWindow>(get_this_ptr().lock_t()));
 	do_move();
 	do_show();
 
@@ -197,9 +197,9 @@ void GLXWindow::setHideDecoration(bool value)
 void GLXWindow::swap_buffers()
 {
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
-	yuri::lock l(global_mutex);
+	yuri::lock_t l(global_mutex);
 #else
-	yuri::lock l(local_mutex);
+	yuri::lock_t l(local_mutex);
 #endif
 	assert(display);
 	assert(win);
@@ -209,9 +209,9 @@ void GLXWindow::swap_buffers()
 void GLXWindow::show(bool /*value*/)
 {
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
-	yuri::lock l(global_mutex);
+	yuri::lock_t l(global_mutex);
 #else
-	yuri::lock l(local_mutex);
+	yuri::lock_t l(local_mutex);
 #endif
 	do_show();
 }
@@ -219,9 +219,9 @@ void GLXWindow::show(bool /*value*/)
 void GLXWindow::move()
 {
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
-	yuri::lock l(global_mutex);
+	yuri::lock_t l(global_mutex);
 #else
-	yuri::lock l(local_mutex);
+	yuri::lock_t l(local_mutex);
 #endif
 	do_move();
 }
@@ -243,9 +243,9 @@ void GLXWindow::do_move()
 bool GLXWindow::process_events()
 {
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
-	yuri::lock l(global_mutex);
+	yuri::lock_t l(global_mutex);
 #else
-	yuri::lock l(local_mutex);
+	yuri::lock_t l(local_mutex);
 #endif
 	assert(display);
 	assert(win);
@@ -297,9 +297,9 @@ bool GLXWindow::resize(unsigned int w, unsigned int h)
 std::string GLXWindow::get_keyname(int key)
 {
 #ifdef GLXWINDOW_USING_GLOBAL_MUTEX
-	yuri::lock l(global_mutex);
+	yuri::lock_t l(global_mutex);
 #else
-	yuri::lock l(local_mutex);
+	yuri::lock_t l(local_mutex);
 #endif
 	return do_get_keyname(key);
 }
@@ -314,7 +314,7 @@ std::string GLXWindow::do_get_keyname(int key)
 
 bool GLXWindow::check_key(int keysym)
 {
-	yuri::lock l(keys_lock);
+	yuri::lock_t l(keys_lock);
 	assert(display);
 	assert(win);
 	if (keys.find(keysym)==keys.end()) return false;
@@ -323,7 +323,7 @@ bool GLXWindow::check_key(int keysym)
 
 void GLXWindow::exec(core::pCallback c)
 {
-	yuri::lock l(keys_lock);
+	yuri::lock_t l(keys_lock);
 	assert(display);
 	assert(win);
 	if (c) c->run(get_this_ptr());
@@ -336,17 +336,17 @@ bool GLXWindow::have_stereo()
 
 void GLXWindow::add_used_context(GLXContext ctx,shared_ptr<GLXWindow> win)
 {
-	yuri::lock l(contexts_map_mutex);
+	yuri::lock_t l(contexts_map_mutex);
 	used_contexts[ctx]=win;
 }
 void GLXWindow::remove_used_context(GLXContext ctx)
 {
-	yuri::lock l(contexts_map_mutex);
+	yuri::lock_t l(contexts_map_mutex);
 	used_contexts.erase(ctx);
 }
 bool GLXWindow::is_context_used(GLXContext ctx)
 {
-	yuri::lock l(contexts_map_mutex);
+	yuri::lock_t l(contexts_map_mutex);
 	return (bool)(used_contexts.find(ctx) != used_contexts.end());
 }
 

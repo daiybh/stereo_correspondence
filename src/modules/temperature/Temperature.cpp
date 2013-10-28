@@ -20,7 +20,7 @@ IO_THREAD_GENERATOR(Temperature)
 
 core::pParameters Temperature::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
+	core::pParameters p = core::IOThread::configure();
 	p->set_description("Temperature.");
 	p->set_max_pipes(1,1);
 	return p;
@@ -28,7 +28,7 @@ core::pParameters Temperature::configure()
 
 
 Temperature::Temperature(log::Log &log_,core::pwThreadBase parent,core::Parameters &parameters):
-core::BasicIOThread(log_,parent,1,1,std::string("temperature"))
+core::IOThread(log_,parent,1,1,std::string("temperature"))
 {
 	IO_THREAD_INIT("Temperature")
 }
@@ -77,7 +77,7 @@ core::pBasicFrame colorize(const core::pBasicFrame& frame)
 	const size_t width = frame->get_width();
 	const size_t height = frame->get_height();
 	assert(size==width*height);
-	core::pBasicFrame output = core::BasicIOThread::allocate_empty_frame(YURI_FMT_RGB24, width, height);
+	core::pBasicFrame output = core::IOThread::allocate_empty_frame(YURI_FMT_RGB24, width, height);
 	core::pFrameInfo fi = frame->get_info();
 	if (fi) {
 		if (fi->min_value) lower_bound = fi->min_value;
@@ -127,7 +127,7 @@ bool Temperature::step()
 }
 bool Temperature::set_param(const core::Parameter& param)
 {
-	return core::BasicIOThread::set_param(param);
+	return core::IOThread::set_param(param);
 	//return true;
 }
 

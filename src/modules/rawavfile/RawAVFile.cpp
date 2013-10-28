@@ -16,7 +16,7 @@ IO_THREAD_GENERATOR(RawAVFile)
 
 core::pParameters RawAVFile::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
+	core::pParameters p = IOThread::configure();
 	(*p)["block"]["Threat output pipes as blocking. Specify as max number of frames in output pipe."]=0;
 	(*p)["filename"]["File to open"]="";
 	(*p)["decode"]["Decode the stream and push out raw video"]=true;
@@ -29,7 +29,7 @@ core::pParameters RawAVFile::configure()
 
 // TODO: number of output streams should be -1 and custom connect_out should be implemented.
 RawAVFile::RawAVFile(log::Log &_log, core::pwThreadBase parent, core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
-		BasicIOThread(_log,parent,0,1024,"RawAVSource"),AVCodecBase(BasicIOThread::log),
+		IOThread(_log,parent,0,1024,"RawAVSource"),AVCodecBase(BasicIOThread::log),
 		fmtctx(0),block(0),video_format_out_(YURI_FMT_NONE),
 		decode_(true),fps_(0.0),max_video_streams_(1),max_audio_streams_(1)
 {
@@ -252,7 +252,7 @@ bool RawAVFile::set_param(const core::Parameter &parameter)
 	} else if (parameter.name == "max_audio") {
 		max_audio_streams_ = parameter.get<double>();
 	} else {
-		return BasicIOThread::set_param(parameter);
+		return IOThread::set_param(parameter);
 	}
 	return true;
 

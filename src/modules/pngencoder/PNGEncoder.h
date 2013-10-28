@@ -10,14 +10,14 @@
 
 #ifndef PNGENCODE_H_
 #define PNGENCODE_H_
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 #include <png.h>
 
 namespace yuri {
 
 namespace png {
 
-class PNGEncoder: public core::BasicIOThread {
+class PNGEncoder: public core::IOThread {
 public:
 	PNGEncoder(log::Log &_log, core::pwThreadBase parent,core::Parameters& parameters) IO_THREAD_CONSTRUCTOR;
 	virtual ~PNGEncoder();

@@ -663,7 +663,7 @@ static void vivi_fillbuff(struct vivi_dev *dev, struct vivi_buffer *buf)
 	gen_text(dev, vbuf, line++ * 16, 16, str);
 
 	gain = v4l2_ctrl_g_ctrl(dev->gain);
-	mutex_lock(dev->ctrl_handler.lock);
+	mutex_lock(dev->ctrl_handler.lock_t);
 	snprintf(str, sizeof(str), " brightness %3d, contrast %3d, saturation %3d, hue %d ",
 			dev->brightness->cur.val,
 			dev->contrast->cur.val,
@@ -688,7 +688,7 @@ static void vivi_fillbuff(struct vivi_dev *dev, struct vivi_buffer *buf)
 			dev->int_menu->qmenu_int[dev->int_menu->cur.val],
 			dev->int_menu->cur.val);
 	gen_text(dev, vbuf, line++ * 16, 16, str);
-	mutex_unlock(dev->ctrl_handler.lock);
+	mutex_unlock(dev->ctrl_handler.lock_t);
 	if (dev->button_pressed) {
 		dev->button_pressed--;
 		snprintf(str, sizeof(str), " button pressed!");
@@ -1408,7 +1408,7 @@ static int __init vivi_create_instance(int inst)
 	 * Provide a mutex to v4l2 core. It will be used to protect
 	 * all fops and v4l2 ioctls.
 	 */
-	vfd->lock = &dev->mutex;
+	vfd->lock_t = &dev->mutex;
 	video_set_drvdata(vfd, dev);
 
 	ret = video_register_device(vfd, VFL_TYPE_GRABBER, video_nr);

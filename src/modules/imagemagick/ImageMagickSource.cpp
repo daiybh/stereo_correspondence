@@ -29,7 +29,7 @@ std::map<yuri::format_t, std::pair<std::string, Magick::StorageType> > yuri_to_m
 
 core::pParameters ImageMagickSource::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
+	core::pParameters p = IOThread::configure();
 	p->set_description("Image loader based on ImageMagick.");
 	(*p)["format"]["Set output format"]="RGB";
 	p->set_max_pipes(1,1);
@@ -38,7 +38,7 @@ core::pParameters ImageMagickSource::configure()
 
 
 ImageMagickSource::ImageMagickSource(log::Log &log_,core::pwThreadBase parent,core::Parameters &parameters):
-core::BasicIOThread(log_,parent,1,1,std::string("ImageMagickSource"))
+core::IOThread(log_,parent,1,1,std::string("ImageMagickSource"))
 {
 	IO_THREAD_INIT("ImageMagickSource")
 }
@@ -85,7 +85,7 @@ bool ImageMagickSource::set_param(const core::Parameter& param)
 			log[log::warning] << "Specified format is not currently supported. Falling back to RGB\n";
 			format = YURI_FMT_RGB24;
 		}
-	} else return BasicIOThread::set_param(param);
+	} else return IOThread::set_param(param);
 	return true;
 }
 

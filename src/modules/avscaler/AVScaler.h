@@ -26,7 +26,7 @@ class AVScaler:public core::BasicIOFilter, public AVCodecBase
 public:
 	AVScaler(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters);
 	virtual ~AVScaler();
-	//static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
+	//static core::pIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
 	IO_THREAD_GENERATOR_DECLARATION
 	static core::pParameters configure();
 	static bool configure_converter(core::Parameters& parameters,

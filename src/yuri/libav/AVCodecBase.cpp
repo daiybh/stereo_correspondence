@@ -268,7 +268,7 @@ yuri::size_t AVCodecBase::calculate_time(yuri::size_t timestamp, AVRational &bas
 }
 void AVCodecBase::initialize_avcodec()
 {
-	yuri::lock l(avcodec_lock);
+	yuri::lock_t l(avcodec_lock);
 	if (avcodec_initialized) return;
 	avcodec_register_all();
 	avcodec_initialized = true;

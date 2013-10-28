@@ -22,7 +22,7 @@ IO_THREAD_GENERATOR(OpenCVCalib)
 
 core::pParameters OpenCVCalib::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
+	core::pParameters p = core::IOThread::configure();
 	p->set_description("Dummy module. For testing only.");
 	(*p)["size"]["Set size of ....  (ignored ;)"]=666;
 	(*p)["name"]["Set name"]=std::string("");
@@ -32,7 +32,7 @@ core::pParameters OpenCVCalib::configure()
 
 
 OpenCVCalib::OpenCVCalib(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,1,1,std::string("OpenCVCalib")),format(YURI_FMT_RGB24)
+core::IOThread(log_,parent,1,1,std::string("OpenCVCalib")),format(YURI_FMT_RGB24)
 {
 	IO_THREAD_INIT("OpenCVCalib")
 }
@@ -100,7 +100,7 @@ bool OpenCVCalib::set_param(const core::Parameter& param)
 {
 	if (param.name =="format") {
 		format = core::BasicPipe::get_format_from_string(param.get<std::string>());
-	} else return core::BasicIOThread::set_param(param);
+	} else return core::IOThread::set_param(param);
 	return true;
 }
 

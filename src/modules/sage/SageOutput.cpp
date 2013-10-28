@@ -24,7 +24,7 @@ IO_THREAD_GENERATOR(SageOutput)
 
 core::pParameters SageOutput::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
+	core::pParameters p = IOThread::configure();
 
 	(*p)["address"]["SAGE address (ignored)"]=std::string("127.0.0.1");
 	(*p)["app_name"]["Application name to use when registering to SAGE"]=std::string("yuri");
@@ -45,7 +45,7 @@ std::map<format_t, sagePixFmt> yuri_sage_fmt_map = boost::assign::map_list_of<fo
 }
 
 SageOutput::SageOutput(yuri::log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters)
-:BasicIOThread(log_,parent,1,0,"SageOutput"),sail_info(0),width(-1),height(-1),
+:IOThread(log_,parent,1,0,"SageOutput"),sail_info(0),width(-1),height(-1),
  fmt(YURI_FMT_NONE),sage_fmt(PIXFMT_NULL),sage_address("127.0.0.1"),app_name_("yuri")
 {
 	IO_THREAD_INIT("SageOutput")
@@ -160,7 +160,7 @@ bool SageOutput::set_param(const core::Parameter &parameter)
 		sage_address=parameter.get<std::string>();
 	else if (parameter.name == "address")
 		sage_address=parameter.get<std::string>();
-	else */ return BasicIOThread::set_param(parameter);
+	else */ return IOThread::set_param(parameter);
 	return true;
 }
 

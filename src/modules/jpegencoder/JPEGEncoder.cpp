@@ -16,9 +16,9 @@ namespace jpg {
 
 REGISTER("jpegencoder",JPEGEncoder)
 
-core::pBasicIOThread JPEGEncoder::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
+core::pIOThread JPEGEncoder::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
 {
-	core::pBasicIOThread jpg (new JPEGEncoder(_log,parent,
+	core::pIOThread jpg (new JPEGEncoder(_log,parent,
 			parameters["level"].get<int>(),
 			parameters["buffer"].get<long>()));
 	return jpg;
@@ -45,7 +45,7 @@ core::pParameters JPEGEncoder::configure()
 
 JPEGEncoder::JPEGEncoder(log::Log &_log, core::pwThreadBase parent,int level,
 		long buffer_size)
-	:core::BasicIOThread(_log,parent,1,1,"JPG Enc"),level(level),
+	:core::IOThread(_log,parent,1,1,"JPG Enc"),level(level),
 	buffer_size(buffer_size),width(0),height(0)
 {
 }

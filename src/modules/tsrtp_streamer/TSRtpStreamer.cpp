@@ -18,7 +18,7 @@ namespace rtp {
 
 REGISTER("ts_streamer",TSRtpStreamer)
 
-core::pBasicIOThread TSRtpStreamer::generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters)
+core::pIOThread TSRtpStreamer::generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters)
 {
 	shared_ptr<TSRtpStreamer> yc (new TSRtpStreamer(_log,parent));
 	yc->set_endpoint(parameters["address"].get<std::string>(),parameters["port"].get<yuri::size_t>());
@@ -37,7 +37,7 @@ core::pParameters TSRtpStreamer::configure()
 }
 
 TSRtpStreamer::TSRtpStreamer(log::Log &log_, core::pwThreadBase parent):
-		BasicIOThread(log_,parent,1,0,"TS RTP Streamer"),seq(0),pseq(0)
+		IOThread(log_,parent,1,0,"TS RTP Streamer"),seq(0),pseq(0)
 {
 	latency=1;
 }

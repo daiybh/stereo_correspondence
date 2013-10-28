@@ -11,12 +11,12 @@
 #ifndef OpenCVCalib_H_
 #define OpenCVCalib_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 
 namespace yuri {
 namespace opencv {
 
-class OpenCVCalib: public yuri::core::BasicIOThread
+class OpenCVCalib: public yuri::core::IOThread
 {
 public:
 	IO_THREAD_GENERATOR_DECLARATION

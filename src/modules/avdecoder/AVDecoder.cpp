@@ -17,7 +17,7 @@ namespace video
 
 REGISTER("avdecoder",AVDecoder)
 
-core::pBasicIOThread AVDecoder::generate(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters)
+core::pIOThread AVDecoder::generate(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters)
 	//throw (Exception)
 {
 	shared_ptr<AVDecoder> d (new AVDecoder(_log,parent,parameters));
@@ -264,7 +264,7 @@ bool AVDecoder::set_param(const core::Parameter &param)
 	if (param.name == "use_timestamps") {
 		use_timestamps = param.get<bool>();
 	} else
-		return BasicIOThread::set_param(param);
+		return IOThread::set_param(param);
 	return true;
 
 }

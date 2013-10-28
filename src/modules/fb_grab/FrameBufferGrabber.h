@@ -8,7 +8,7 @@
 #ifndef FRAMEBUFFERGRABBER_H_
 #define FRAMEBUFFERGRABBER_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 extern "C" {
 #include "GL/glx.h"
 }
@@ -48,7 +48,7 @@ struct _context_info {
 #define 	YURI_GRAB_FRAME		0x101
 #define 	YURI_GRAB_ABSOLUTE	0x102
 
-class FrameBufferGrabber: public core::BasicIOThread {
+class FrameBufferGrabber: public core::IOThread {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
 	static core::pParameters configure();

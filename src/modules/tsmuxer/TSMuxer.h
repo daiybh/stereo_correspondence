@@ -27,7 +27,7 @@ class TSMuxer:public core::BasicIOFilter, public AVCodecBase
 public:
 	TSMuxer(log::Log &_log, core::pwThreadBase parent);
 	virtual ~TSMuxer();
-	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
+	static core::pIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
 	static core::pParameters configure();
 
 	core::pBasicFrame do_simple_single_step(const core::pBasicFrame& frame);

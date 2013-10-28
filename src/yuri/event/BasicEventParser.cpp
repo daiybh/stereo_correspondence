@@ -594,10 +594,12 @@ namespace {
 		pBasicEvent get_event()
 		{
 			try {
+//				log_er_[log::info] << "GE";
 				return provider->get_value(*this);
 			}
 			catch (std::runtime_error& e)
 			{
+				log_er_[log::info] << "BOO: " << e.what();
 				throw;
 			}
 		}

@@ -23,7 +23,7 @@ void *get_ptr(std::string name);
 using namespace yuri;
 
 
-class __yuri_starter:public yuri::core::BasicIOThread {
+class __yuri_starter:public yuri::core::IOThread {
 public:
 	__yuri_starter(log::Log &l);
 	shared_ptr<core::ApplicationBuilder> builder;
@@ -117,7 +117,7 @@ void __yuri_wrapper_loader(void)
 			else (*l)[log::info] << "Got grabber";
 }
 
-__yuri_starter::__yuri_starter(log::Log &l):core::BasicIOThread(l,core::pwThreadBase(),0,0,"YuriStarter")
+__yuri_starter::__yuri_starter(log::Log &l):core::IOThread(l,core::pwThreadBase(),0,0,"YuriStarter")
 {
 	if (!core::RegisteredClass::is_registered("appbuilder")) {
 		log[log::error] << "No app builder found! This won't work";

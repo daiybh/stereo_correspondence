@@ -11,13 +11,14 @@
 #ifndef SIMPLERENDERER_H_
 #define SIMPLERENDERER_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 #ifdef YURI_HAVE_GTKMM
 #include "yuri/graphics/GTKWindow.h"
 #else
 #include "yuri/graphics/GLXWindow.h"
 #endif
 #include "yuri/graphics/GL.h"
+#include "yuri/event/BasicEventProducer.h"
 //#include <boost/thread/mutex.hpp>
 namespace yuri {
 
@@ -32,7 +33,7 @@ namespace stereo {
 		quadbuffer
 	};
 }
-class SimpleRenderer: public yuri::core::BasicIOThread {
+class SimpleRenderer: public yuri::core::IOThread, public yuri::event::BasicEventProducer {
 public:
 	SimpleRenderer(log::Log &log_,core::pwThreadBase parent, core::Parameters &p);
 	virtual ~SimpleRenderer();

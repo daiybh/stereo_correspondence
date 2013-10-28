@@ -10,13 +10,13 @@
 
 #ifndef PNGDECODE_H_
 #define PNGDECODE_H_
-#include <yuri/core/BasicIOThread.h>
+#include <yuri/core/IOThread.h>
 #include <png.h>
 namespace yuri {
 
 namespace png {
 
-class PNGDecoder: public core::BasicIOThread {
+class PNGDecoder: public core::IOThread {
 public:
 	PNGDecoder(log::Log &_log, core::pwThreadBase parent,core::Parameters& parameters);
 	virtual ~PNGDecoder();

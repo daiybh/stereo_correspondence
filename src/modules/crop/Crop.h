@@ -11,13 +11,13 @@
 #ifndef CROP_H_
 #define CROP_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 
 namespace yuri {
 
 namespace io {
 
-class Crop: public core::BasicIOThread {
+class Crop: public core::IOThread {
 public:
 	virtual ~Crop();
 	IO_THREAD_GENERATOR_DECLARATION

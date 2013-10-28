@@ -20,12 +20,12 @@ IO_THREAD_GENERATOR(PNGDecoder)
 
 core::pParameters PNGDecoder::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
+	core::pParameters p = IOThread::configure();
 	return p;
 }
 
 PNGDecoder::PNGDecoder(log::Log &_log, core::pwThreadBase parent,core::Parameters& parameters):
-	core::BasicIOThread(_log,parent,1,1,"PNGDecoder")
+	core::IOThread(_log,parent,1,1,"PNGDecoder")
 {
 	IO_THREAD_INIT("PNGDecoder")
 }

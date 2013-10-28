@@ -20,7 +20,7 @@ REGISTER("avscaler",AVScaler)
 
 
 IO_THREAD_GENERATOR(AVScaler)
-//core::pBasicIOThread AVScaler::generate(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters)
+//core::pIOThread AVScaler::generate(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters)
 //{
 //	long format = core::BasicPipe::get_format_from_string(parameters["format"].get<std::string>(),YURI_FMT);
 //	if (format == YURI_FMT_NONE) throw exception::InitializationFailed(
@@ -33,7 +33,7 @@ IO_THREAD_GENERATOR(AVScaler)
 //}
 core::pParameters AVScaler::configure()
 {
-	core::pParameters p =BasicIOThread::configure();
+	core::pParameters p =IOThread::configure();
 	p->set_description("Scaling object using libswscale");
 	(*p)["format"]["Color format for the output"]="RGB";
 	(*p)["width"]["Width of the output image. Set to negative value to disable scaling"]=640;
@@ -87,7 +87,7 @@ AVScaler::~AVScaler()
 
 bool AVScaler::set_output_format(int w, int h, long fmt)
 {
-	yuri::lock l(scaler_lock);
+	yuri::lock_t l(scaler_lock);
 	bool changed=false;
 	if (w<0 || h<0) {
 		scaling_disabled=true;
@@ -166,12 +166,12 @@ void AVScaler::do_create_contexts()
 
 void AVScaler::run()
 {
-	BasicIOThread::run();
+	IOThread::run();
 }
 
 core::pBasicFrame AVScaler::scale_frame(const core::pBasicFrame& frame)
 {
-	yuri::lock l(scaler_lock);
+	yuri::lock_t l(scaler_lock);
 	if (!do_prescale_checks()) return core::pBasicFrame();
 	if (!do_fetch_frame(frame)) return core::pBasicFrame();
 	return do_scale_frame();
@@ -287,7 +287,7 @@ bool AVScaler::do_prescale_checks()
 
 bool AVScaler::synchronous_scale(shared_ptr<AVFrame> fr,int w, int h, PixelFormat fmt, int pts)
 {
-	yuri::lock l(scaler_lock);
+	yuri::lock_t l(scaler_lock);
 	if (w_in!=w || h_in!=h || format_in!=fmt) {
 		w_in=w;
 		h_in=h;

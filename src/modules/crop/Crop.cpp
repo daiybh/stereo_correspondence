@@ -34,7 +34,7 @@ core::pParameters Crop::configure()
 
 
 Crop::Crop(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
-	core::BasicIOThread(_log,parent,1,1)
+	core::IOThread(_log,parent,1,1)
 {
 	IO_THREAD_INIT("Crop")
 }
@@ -109,7 +109,7 @@ bool Crop::set_param(const core::Parameter &parameter)
 		dest_w=parameter.get<yuri::ssize_t>();
 	} else if (parameter.name== "height") {
 		dest_h=parameter.get<yuri::ssize_t>();
-	} else  return BasicIOThread::set_param(parameter);
+	} else  return IOThread::set_param(parameter);
 	return true;
 }
 }

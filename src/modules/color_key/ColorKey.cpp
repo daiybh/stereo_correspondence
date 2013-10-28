@@ -36,7 +36,7 @@ core::Parameters ColorKey::configure()
 
 
 ColorKey::ColorKey(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOFilter(log_,parent,std::string("color_key")),r_(140),g_(200),b_(75),
+core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("color_key")),r_(140),g_(200),b_(75),
 delta_(100),delta2_(30),diff_type_(linear)
 {
 	IOTHREAD_INIT(parameters)
@@ -185,33 +185,34 @@ core::pRawVideoFrame ColorKey::dispatch_find_key(const core::pRawVideoFrame& fra
 	return core::pRawVideoFrame();
 }
 //bool ColorKey::step()
-core::pFrame ColorKey::do_simple_single_step(const core::pFrame& gframe)
+core::pFrame ColorKey::do_special_single_step(const core::pRawVideoFrame& frame)
 {
-	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(gframe);
-	if (frame) {
-		const format_t fmt = frame->get_format();
-		core::pRawVideoFrame outframe;
-		switch (fmt) {
-			case core::raw_format::rgb24:
-				outframe = dispatch_find_key<core::raw_format::rgb24>(frame);
-				break;
-			case core::raw_format::bgr24:
-				outframe = dispatch_find_key<core::raw_format::bgr24>(frame);
-				break;
-			case core::raw_format::rgba32:
-				outframe = dispatch_find_key<core::raw_format::rgba32>(frame);
-				break;
-			case core::raw_format::abgr32:
-				outframe = dispatch_find_key<core::raw_format::abgr32>(frame);
-				break;
-			default:
-				log[log::warning] << "Unsupported frame format";
-				return {};
-		}
-
-		if (outframe) push_frame(0, outframe);
+//	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(gframe);
+//	if (frame) {
+	const format_t fmt = frame->get_format();
+	core::pRawVideoFrame outframe;
+	switch (fmt) {
+		case core::raw_format::rgb24:
+			outframe = dispatch_find_key<core::raw_format::rgb24>(frame);
+			break;
+		case core::raw_format::bgr24:
+			outframe = dispatch_find_key<core::raw_format::bgr24>(frame);
+			break;
+		case core::raw_format::rgba32:
+			outframe = dispatch_find_key<core::raw_format::rgba32>(frame);
+			break;
+		case core::raw_format::abgr32:
+			outframe = dispatch_find_key<core::raw_format::abgr32>(frame);
+			break;
+		default:
+			log[log::warning] << "Unsupported frame format";
+			return {};
 	}
-	return {};
+
+	return outframe;
+//	if (outframe) push_frame(0, outframe);
+//	}
+//	return {};
 }
 bool ColorKey::set_param(const core::Parameter& param)
 {

@@ -27,7 +27,7 @@
 #include "yuri/core/frame/raw_audio_frame_params.h"
 #include "yuri/event/BasicEventConversions.h"
 #include "yuri/core/pipe/PipeGenerator.h"
-
+#include "yuri/core/thread/FixedMemoryAllocator.h"
 #ifdef HAVE_BOOST_PROGRAM_OPTIONS
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -463,5 +463,7 @@ int main(int argc, char**argv)
 	// Otherwise it would be destroyed among global variables and this could lead to segfaults.
 	builder.reset();
 	l[log::info] << "Application successfully destroyed";
+	yuri::core::FixedMemoryAllocator::clear_all();
+	l[log::info] << "Memory pool cleared";
 	return 0;
 }

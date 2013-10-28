@@ -16,7 +16,7 @@ namespace ieee1394 {
 
 REGISTER("hdvsource",HDVSource)
 
-core::pBasicIOThread HDVSource::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
+core::pIOThread HDVSource::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
 {
 	shared_ptr<HDVSource> hdv(new HDVSource(_log,parent,
 			parameters["node"].get<unsigned>(),
@@ -112,7 +112,7 @@ int HDVSource::process_frame(unsigned char *data, int length, unsigned int dropp
 	//log[log::debug] << "Counter: " << (int)(data[3]&0xF) << std::endl;
 	total_packets++;
 	if (out[0]) {
-		yuri::lock l(buffer_lock);
+		yuri::lock_t l(buffer_lock);
 		if (!output_buffer.size()) {
 			//l.unlock();
 			//out[0]->push_frame(data,length);
@@ -138,7 +138,7 @@ int HDVSource::process_frame(unsigned char *data, int length, unsigned int dropp
 
 void HDVSource::setOutputBufferSize(long size)
 {
-	yuri::lock l(buffer_lock);
+	yuri::lock_t l(buffer_lock);
 	if (size == buffer_size) return;
 	do_sendOutputBuffer();
 	buffer_size = size;

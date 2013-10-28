@@ -8,7 +8,7 @@
 #ifndef FPSFIXER_H_
 #define FPSFIXER_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 
 //#include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -17,12 +17,12 @@ namespace yuri {
 namespace fps {
 //using namespace boost::posix_time;
 
-class FpsFixer: public yuri::core::BasicIOThread {
+class FpsFixer: public yuri::core::IOThread {
 public:
 	FpsFixer(log::Log &log_, core::pwThreadBase parent, core::Parameters& parameters);
 	virtual ~FpsFixer();
 	IO_THREAD_GENERATOR_DECLARATION
-	//static shared_ptr<BasicIOThread> generate(Log &_log,pThreadBase parent) throw (Exception);
+	//static shared_ptr<IOThread> generate(Log &_log,pThreadBase parent) throw (Exception);
 	static core::pParameters configure();
 	virtual bool set_param(const core::Parameter &parameter);
 	void run();

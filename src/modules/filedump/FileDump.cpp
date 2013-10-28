@@ -19,7 +19,7 @@ namespace dump
 
 REGISTER("filedump",FileDump)
 
-core::pBasicIOThread FileDump::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
+core::pIOThread FileDump::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
 {
 	shared_ptr<FileDump> dump;
 	try {
@@ -41,7 +41,7 @@ core::pParameters FileDump::configure()
 }
 
 FileDump::FileDump(log::Log &log_,core::pwThreadBase parent,core::Parameters &parameters):
-	BasicIOThread(log_,parent,1,0,"Dump"),
+	IOThread(log_,parent,1,0,"Dump"),
 	dump_file(),filename(),seq_chars(0),seq_number(0),dumped_frames(0),
 	dump_limit(0)
 {

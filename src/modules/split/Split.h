@@ -11,7 +11,7 @@
 #ifndef SPLIT_H_
 #define SPLIT_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 #include "yuri/core/BasicIOFilter.h"
 namespace yuri {
 

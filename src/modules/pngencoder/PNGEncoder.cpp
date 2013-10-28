@@ -20,12 +20,12 @@ IO_THREAD_GENERATOR(PNGEncoder)
 
 core::pParameters PNGEncoder::configure()
 {
-	core::pParameters p = BasicIOThread::configure();
+	core::pParameters p = IOThread::configure();
 	return p;
 }
 
 PNGEncoder::PNGEncoder(log::Log &_log, core::pwThreadBase parent, core::Parameters& parameters) IO_THREAD_CONSTRUCTOR:
-	core::BasicIOThread(_log, parent, 1, 1,"PNGEncoder"), memSize(0)
+	core::IOThread(_log, parent, 1, 1,"PNGEncoder"), memSize(0)
 {
 	IO_THREAD_INIT("PNGEncoder")
 }

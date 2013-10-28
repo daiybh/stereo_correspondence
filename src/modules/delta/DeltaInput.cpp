@@ -23,7 +23,7 @@ using namespace yuri::log;
 
 core::pParameters DeltaInput::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
+	core::pParameters p = core::IOThread::configure();
 	p->set_description("DeltaInputcolor conversion module.");
 //	(*p)["format"]["Output format"]=std::string("RGB24");
 	p->set_max_pipes(1,1);
@@ -32,7 +32,7 @@ core::pParameters DeltaInput::configure()
 
 
 DeltaInput::DeltaInput(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,1,1,std::string("deltainput")),format(YURI_FMT_RGB24),delta_handle_(0)
+core::IOThread(log_,parent,1,1,std::string("deltainput")),format(YURI_FMT_RGB24),delta_handle_(0)
 {
 	IO_THREAD_INIT("DeltaInput")
 
@@ -124,7 +124,7 @@ bool DeltaInput::set_param(const core::Parameter& param)
 //	if (param.name =="format") {
 //		format = core::BasicPipe::get_format_from_string(param.get<std::string>());
 //	} else
-	return core::BasicIOThread::set_param(param);
+	return core::IOThread::set_param(param);
 //	return true;
 }
 

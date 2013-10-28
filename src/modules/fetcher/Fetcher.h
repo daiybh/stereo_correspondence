@@ -18,17 +18,17 @@
 #include <curl/curl.h>
 #include <sstream>
 #include <map>
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 
 namespace yuri {
 
 namespace fetcher {
 
-class Fetcher: public core::BasicIOThread {
+class Fetcher: public core::IOThread {
 public:
 	Fetcher(log::Log &_log, core::pwThreadBase parent, std::string url);
 	virtual ~Fetcher();
-	static core::pBasicIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
+	static core::pIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
 	static core::pParameters configure();
 
 	core::pBasicFrame fetch();

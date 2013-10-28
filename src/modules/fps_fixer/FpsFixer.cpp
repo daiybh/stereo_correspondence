@@ -18,7 +18,7 @@ IO_THREAD_GENERATOR(FpsFixer)
 
 core::pParameters FpsFixer::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
+	core::pParameters p = core::IOThread::configure();
 	p->set_max_pipes(1,1);
 	(*p)["fps"]["FPS"]=25;
 	(*p)["fps_nom"]["FPS nominator. ie. frame wil be output once every fps_nom/fps seconds"]=1;
@@ -27,7 +27,7 @@ core::pParameters FpsFixer::configure()
 
 
 FpsFixer::FpsFixer(log::Log &log_, core::pwThreadBase parent, core::Parameters& parameters):
-		BasicIOThread(log_,parent,1,1,"FpsFixer"),fps(25)
+		IOThread(log_,parent,1,1,"FpsFixer"),fps(25)
 {
 	IO_THREAD_INIT("FpsFixer")
 }
@@ -41,7 +41,7 @@ FpsFixer::~FpsFixer()
 
 void FpsFixer::run()
 {
-	BasicIOThread::print_id();
+	IOThread::print_id();
 	core::pBasicFrame frame;
 	time_duration time_delta = nanoseconds(static_cast<size_t>(fps_nom*1e6/fps));
 	//yuri::size_t act_index = 0;
@@ -79,7 +79,7 @@ bool FpsFixer::set_param(const core::Parameter &parameter)
 		fps=parameter.get<yuri::size_t>();
 	} else if (parameter.name == "fps_nom") {
 		fps_nom=parameter.get<yuri::size_t>();
-	} else return BasicIOThread::set_param(parameter);
+	} else return IOThread::set_param(parameter);
 	return true;
 }
 }

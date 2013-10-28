@@ -8,13 +8,13 @@
 #ifndef SIMPLETSDEMUXER_H_
 #define SIMPLETSDEMUXER_H_
 
-#include "yuri/core/BasicIOThread.h"
+#include "yuri/core/IOThread.h"
 
 namespace yuri {
 
 namespace ts_demux {
 
-class SimpleTSDemuxer: public core::BasicIOThread {
+class SimpleTSDemuxer: public core::IOThread {
 public:
 	IO_THREAD_GENERATOR_DECLARATION
 	static core::pParameters configure();

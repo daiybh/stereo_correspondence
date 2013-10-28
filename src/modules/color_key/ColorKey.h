@@ -10,7 +10,7 @@
 #ifndef COLORKEY_H_
 #define COLORKEY_H_
 
-#include "yuri/core/thread/IOFilter.h"
+#include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 
 
@@ -23,7 +23,7 @@ enum diff_types_ {
 };
 
 
-class ColorKey: public core::IOFilter
+class ColorKey: public core::SpecializedIOFilter<core::RawVideoFrame>
 {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
@@ -33,7 +33,7 @@ public:
 private:
 
 //	virtual bool step();
-	virtual core::pFrame do_simple_single_step(const core::pFrame& frame) override;
+	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
 	virtual bool set_param(const core::Parameter& param);
 	template<class kernel>
 	core::pRawVideoFrame find_key(const core::pRawVideoFrame& frame);
