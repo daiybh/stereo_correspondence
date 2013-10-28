@@ -9,12 +9,14 @@
 
 #include "YuriTcp.h"
 #include "yuri/core/socket/StreamSocketGenerator.h"
+#include "yuri/core/utils.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 //#include <linux/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <poll.h>
+#include <netdb.h>
 
 namespace yuri {
 namespace yuri_tcp {
@@ -34,6 +36,21 @@ core::socket::StreamSocket(log_)
 YuriTcp::~YuriTcp() noexcept
 {
 	::close(socket_);
+}
+
+namespace {
+unique_ptr<addrinfo, function<void(addrinfo*)>>
+get_addr_info(const std::string& server, uint16_t port)
+{
+	static const addrinfo hints = {0, AF_INET, SOCK_STREAM, 0};
+	addrinfo *info = nullptr;;
+	int ret = ::getaddrinfo(server.c_str(),
+					lexical_cast<std::string>(port).c_str(),
+	                       &hints,
+	                       &info);
+	return {info, [](addrinfo* p){freeaddrinfo(p);}};
+}
+
 }
 
 bool YuriTcp::do_bind(const std::string& /*url*/, uint16_t port)
@@ -58,11 +75,12 @@ size_t YuriTcp::do_receive_data(uint8_t* data, size_t size)
 
 bool YuriTcp::do_connect(const std::string& address, uint16_t port)
 {
-	sockaddr_in saddr;
-	saddr.sin_family = AF_INET;
-	saddr.sin_port = htons(port);
-	saddr.sin_addr.s_addr = ::inet_addr(address.c_str());
-	return ::connect(socket_, reinterpret_cast<const sockaddr*>(&saddr), sizeof(saddr)) == 0;
+	auto info = get_addr_info(address, port);
+//	sockaddr_in saddr;
+//	saddr.sin_family = AF_INET;
+//	saddr.sin_port = htons(port);
+//	saddr.sin_addr.s_addr = ::inet_addr(address.c_str());
+	return ::connect(socket_, info->ai_addr, info->ai_addrlen) == 0;
 }
 
 bool YuriTcp::do_data_available()
