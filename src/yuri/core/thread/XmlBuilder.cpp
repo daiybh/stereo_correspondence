@@ -150,7 +150,8 @@ void XmlBuilder::builder_pimpl_t::load_file(const std::string& file)
 	load_value(root, name_attrib, name, "yuri2.8");
 	TiXmlElement * node = nullptr;
 	if((node = dynamic_cast<TiXmlElement*>(root->IterateChildren(description_tag, node)))) {
-		description = node->GetText();
+		const char* text = node->GetText(); // GetText may return nullptr and basic_string::operator= doesn't accept nullptr...
+		if (text) description = text;
 	}
 	process_routing();
 }
@@ -241,7 +242,9 @@ void XmlBuilder::builder_pimpl_t::process_variables()
 		if (it != input_events.end()){
 			variables[name][desc].set_value(it->second);
 		} else {
-			variables[name][desc]=parse_expression(node->GetText());
+			const char* text = node->GetText();
+			if (!text) text = "";
+			variables[name][desc]=parse_expression(text);
 			input_events[name]=variables[name].get_value();
 		}
 	}
@@ -274,7 +277,9 @@ Parameters XmlBuilder::builder_pimpl_t::parse_parameters(const TiXmlElement* ele
 		while((node = dynamic_cast<const TiXmlElement*>(element->IterateChildren(parameter_tag, node)))) {
 			std::string name;
 			if (node->QueryValueAttribute(name_attrib, &name)!=TIXML_SUCCESS) continue;
-			params[name]=parse_expression(node->GetText());
+			const char* text = node->GetText();
+			if (!text) text = "";
+			params[name]=parse_expression(text);
 		}
 	}
 	return params;
@@ -329,7 +334,8 @@ void XmlBuilder::builder_pimpl_t::process_routing()
 {
 	TiXmlElement * node = nullptr;
 	if((node = dynamic_cast<TiXmlElement*>(root->IterateChildren(event_tag, node)))) {
-		routing_info.push_back(node->GetText());
+		const char* text = node->GetText();
+		if (text) routing_info.push_back(text);
 	}
 }
 void XmlBuilder::builder_pimpl_t::verify_node_class(const std::string& class_name)
