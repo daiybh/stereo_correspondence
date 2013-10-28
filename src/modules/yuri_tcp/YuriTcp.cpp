@@ -42,9 +42,11 @@ namespace {
 unique_ptr<addrinfo, function<void(addrinfo*)>>
 get_addr_info(const std::string& server, uint16_t port)
 {
-	static const addrinfo hints = {0, AF_INET, SOCK_STREAM, 0};
-	addrinfo *info = nullptr;;
-	int ret = ::getaddrinfo(server.c_str(),
+	static const addrinfo hints = {AI_PASSIVE, AF_UNSPEC, SOCK_STREAM, 0, 0, nullptr, nullptr, nullptr};
+	addrinfo *info = nullptr;
+	const char* addr = nullptr;
+	if (!server.empty()) addr = server.c_str();
+	/*int ret = */::getaddrinfo(addr,
 					lexical_cast<std::string>(port).c_str(),
 	                       &hints,
 	                       &info);
@@ -53,13 +55,11 @@ get_addr_info(const std::string& server, uint16_t port)
 
 }
 
-bool YuriTcp::do_bind(const std::string& /*url*/, uint16_t port)
+bool YuriTcp::do_bind(const std::string& address, uint16_t port)
 {
-	sockaddr_in saddr;
-	saddr.sin_family = AF_INET;
-	saddr.sin_port = port;
-	saddr.sin_addr.s_addr = INADDR_ANY;
-	return ::bind(socket_, reinterpret_cast<const sockaddr*>(&saddr), sizeof(saddr)) == 0;
+	auto info = get_addr_info(address, port);
+	if (!info) return false;
+	return ::bind(socket_, info->ai_addr, info->ai_addrlen) == 0;
 }
 
 size_t YuriTcp::do_send_data(const uint8_t* data, size_t data_size)
@@ -76,10 +76,7 @@ size_t YuriTcp::do_receive_data(uint8_t* data, size_t size)
 bool YuriTcp::do_connect(const std::string& address, uint16_t port)
 {
 	auto info = get_addr_info(address, port);
-//	sockaddr_in saddr;
-//	saddr.sin_family = AF_INET;
-//	saddr.sin_port = htons(port);
-//	saddr.sin_addr.s_addr = ::inet_addr(address.c_str());
+	if (!info) return false;
 	return ::connect(socket_, info->ai_addr, info->ai_addrlen) == 0;
 }
 
