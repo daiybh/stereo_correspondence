@@ -104,7 +104,7 @@ std::vector<core::pFrame> Combine::do_single_step(const std::vector<core::pFrame
 			return {};
 		}
 	}
-	core::pRawVideoFrame output = core::RawVideoFrame::create_empty(format,{width*x_, height*y_});
+	core::pRawVideoFrame output = core::RawVideoFrame::create_empty(format,{width*x_, height*y_}, true);
 	uint8_t* out = PLANE_RAW_DATA(output,0);
 	size_t sub_line_width=bpp*width/8;
 	size_t line_width = sub_line_width*x_;
