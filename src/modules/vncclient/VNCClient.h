@@ -11,18 +11,18 @@
 #ifndef VNCCLIENT_H_
 #define VNCCLIENT_H_
 
-#include "yuri/core/BasicIOThread.h"
-#include "yuri/asio/ASIOTCPSocket.h"
-
+#include "yuri/core/thread/IOThread.h"
+#include "yuri/core/socket/StreamSocket.h"
+#include "yuri/core/utils/uvector.h"
 namespace yuri {
 
 namespace vnc {
 struct _color_spec {
-	yuri::ushort_t max;
-	yuri::ubyte_t shift;
+	uint16_t max;
+	uint8_t shift;
 };
 struct _pixel_format {
-	yuri::ushort_t bpp, depth;
+	uint16_t bpp, depth;
 	bool big_endian, true_color;
 	_color_spec colors[3];
 };
@@ -30,44 +30,47 @@ enum _receiving_states {
 	awaiting_data,
 	receiving_rectangles
 };
-class VNCClient: public yuri::core::BasicIOThread {
+class VNCClient: public yuri::core::IOThread {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
 
-	VNCClient(log::Log &log_,core::pwThreadBase parent, core::Parameters &parameters)
-					IO_THREAD_CONSTRUCTOR;
-	virtual ~VNCClient();
+	VNCClient(const log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~VNCClient() noexcept;
 
-protected:
-	void run();
+private:
+	virtual void run() override;
 	bool connect();
 	bool handshake();
 	bool set_param(const core::Parameter &p);
 	bool process_data();
-	bool request_rect(yuri::ushort_t x, yuri::ushort_t y, yuri::ushort_t w, yuri::ushort_t h, bool incremental);
+	bool request_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool incremental);
 	bool enable_continuous();
 	bool set_encodings();
-	static inline yuri::uint_t get_uint(yuri::ubyte_t *start);
-	static inline yuri::ushort_t get_ushort(yuri::ubyte_t *start);
-	static inline void store_ushort(yuri::ubyte_t *start, yuri::ushort_t data);
-	static inline void store_uint(yuri::ubyte_t *start, yuri::uint_t data);
-	inline yuri::size_t get_pixel(yuri::ubyte_t *buf);
+	static inline uint32_t get_uint(uint8_t *start);
+	static inline uint16_t get_ushort(uint8_t *start);
+	static inline void store_ushort(uint8_t *start, uint16_t data);
+	static inline void store_uint(uint8_t *start, uint32_t data);
+	inline yuri::size_t get_pixel(uint8_t *buf);
 	void move_buffer(yuri::ssize_t offset);
-	std::string address;
-	yuri::ushort_t port;
-//	boost::shared_ptr<ASIOAsyncTCPSocket> socket;
-	boost::shared_ptr<asio::ASIOTCPSocket> socket;
 
-	plane_t buffer, image;
-	yuri::ubyte_t *buffer_pos, *buffer_end;
+	size_t read_data_at_least(uint8_t* data, size_t size, size_t at_least);
+	std::string address;
+	uint16_t port;
+//	boost::shared_ptr<ASIOAsyncTCPSocket> socket;
+	//boost::shared_ptr<asio::ASIOTCPSocket> socket;
+	core::socket::pStreamSocket socket_;
+
+	uvector<uint8_t> buffer, image;
+	uint8_t *buffer_pos, *buffer_end;
 	yuri::size_t buffer_size, buffer_free, buffer_valid;
-	yuri::ushort_t server_major, server_minor;
-	yuri::ushort_t width,height;
+	uint16_t server_major, server_minor;
+	uint16_t width,height;
 	_pixel_format pixel_format;
 	_receiving_states state;
 	yuri::size_t remaining_rectangles;
-	boost::posix_time::ptime last_read, now;
+//	boost::posix_time::ptime last_read, now;
+	timestamp_t last_read;
 };
 
 }

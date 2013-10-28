@@ -20,6 +20,7 @@ add_subdirectory(split_frames)
 add_subdirectory(testcard)
 add_subdirectory(yuriconvert)
 add_subdirectory(osc_receiver)
+add_subdirectory(vncclient)
 
 IF(UNIX)
 	add_subdirectory(yuri_tcp)
