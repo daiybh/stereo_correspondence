@@ -13,13 +13,13 @@ namespace decklink {
 
 bool operator==(const REFIID & first, const REFIID & second)
 {
-	const yuri::ubyte_t*r1=reinterpret_cast<const yuri::ubyte_t*>(&first);
-	const yuri::ubyte_t*r2=reinterpret_cast<const yuri::ubyte_t*>(&second);
-	for (yuri::uint_t i = 0; i < 16; ++i) if (*r1++!=*r2++) return false;
+	const uint8_t*r1=reinterpret_cast<const uint8_t*>(&first);
+	const uint8_t*r2=reinterpret_cast<const uint8_t*>(&second);
+	for (unsigned i = 0; i < 16; ++i) if (*r1++!=*r2++) return false;
 	return true;
 }
 
-DeckLink3DVideoFrame::DeckLink3DVideoFrame(yuri::usize_t width, yuri::usize_t height, BMDPixelFormat format, BMDFrameFlags flags)
+DeckLink3DVideoFrame::DeckLink3DVideoFrame(size_t width, size_t height, BMDPixelFormat format, BMDFrameFlags flags)
 :width(width),height(height),format(format),buffer(0),flags(flags),
  packing(bmdVideo3DPackingFramePacking)
 {
@@ -29,7 +29,7 @@ DeckLink3DVideoFrame::DeckLink3DVideoFrame(yuri::usize_t width, yuri::usize_t he
 	else if (format == bmdFormat10BitYUV) {
 		linesize_ = (width/6 + (width%6?1:0))*16;
 	}
-	buffer = new yuri::ubyte_t[height*linesize_];
+	buffer = new uint8_t[height*linesize_];
 
 }
 
@@ -77,12 +77,12 @@ HRESULT STDMETHODCALLTYPE DeckLink3DVideoFrame::QueryInterface(REFIID iid, void 
 	}
 	return E_NOINTERFACE;
 }
-HRESULT DeckLink3DVideoFrame::GetTimecode (/* in */ BMDTimecodeFormat format, /* out */ IDeckLinkTimecode **timecode)
+HRESULT DeckLink3DVideoFrame::GetTimecode (/* in */ BMDTimecodeFormat /*format*/, /* out */ IDeckLinkTimecode ** /*timecode*/)
 {
 	//std::cerr << "GetTimecode " << __FILE__ << ":" << __LINE__ << std::endl;
 	return S_OK;
 }
-HRESULT DeckLink3DVideoFrame::GetAncillaryData (/* out */ IDeckLinkVideoFrameAncillary **ancillary)
+HRESULT DeckLink3DVideoFrame::GetAncillaryData (/* out */ IDeckLinkVideoFrameAncillary ** /*ancillary*/)
 {
 	//std::cerr << "GetAncillaryData " << __FILE__ << ":" << __LINE__ << std::endl;
 	return S_OK;
@@ -92,7 +92,7 @@ BMDVideo3DPackingFormat DeckLink3DVideoFrame::Get3DPackingFormat ()
 	//std::cerr << "Get3DPackingFormat " << __FILE__ << ":" << __LINE__ << std::endl;
 	return packing;
 }
-HRESULT DeckLink3DVideoFrame::GetFrameForRightEye (/* out */ IDeckLinkVideoFrame* *rightEyeFrame)
+HRESULT DeckLink3DVideoFrame::GetFrameForRightEye (/* out */ IDeckLinkVideoFrame** rightEyeFrame)
 {
 	//std::cerr << "GetFrameForRightEye " << __FILE__ << ":" << __LINE__ << std::endl;
 	*rightEyeFrame = right.get();

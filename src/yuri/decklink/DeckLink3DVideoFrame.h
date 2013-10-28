@@ -8,7 +8,8 @@
 #ifndef DECKLINK3DVIDEOFRAME_H_
 #define DECKLINK3DVIDEOFRAME_H_
 #include <DeckLinkAPI.h>
-#include "yuri/core/BasicFrame.h"
+#include "yuri/core/utils/new_types.h"
+//#include "yuri/core/BasicFrame.h"
 namespace yuri {
 
 namespace decklink {
@@ -16,7 +17,7 @@ bool operator==(const REFIID & first, const REFIID & second);
 
 class DeckLink3DVideoFrame: public IDeckLinkVideoFrame, public IDeckLinkVideoFrame3DExtensions{
 public:
-	DeckLink3DVideoFrame(yuri::usize_t width, yuri::usize_t height, BMDPixelFormat format, BMDFrameFlags flags);
+	DeckLink3DVideoFrame(size_t width, size_t height, BMDPixelFormat format, BMDFrameFlags flags);
 	virtual ~DeckLink3DVideoFrame();
 	virtual ULONG STDMETHODCALLTYPE		AddRef ()									{return 1;}
 	virtual ULONG STDMETHODCALLTYPE		Release ()									{return 1;}
@@ -36,11 +37,11 @@ public:
     void set_packing_format(BMDVideo3DPackingFormat fmt);
     shared_ptr<DeckLink3DVideoFrame> get_right();
 protected:
-    yuri::usize_t width, height;
-    yuri::size_t linesize_;
+    size_t width, height;
+    size_t linesize_;
     BMDPixelFormat format;
-    yuri::ubyte_t *buffer;
-//    yuri::size_t bpp;
+    uint8_t *buffer;
+
     BMDFrameFlags flags;
     shared_ptr<DeckLink3DVideoFrame> right;
     BMDVideo3DPackingFormat packing;
