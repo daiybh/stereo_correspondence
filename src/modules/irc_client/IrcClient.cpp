@@ -10,71 +10,69 @@
 #include "IrcClient.h"
 #include "yuri/core/Module.h"
 #include "yuri/event/EventHelpers.h"
-#include <poll.h>
+#include "yuri/core/socket/StreamSocketGenerator.h"
+#include <cassert>
 
 namespace yuri {
 namespace irc_client {
 
-REGISTER("irc_client",IrcClient)
+MODULE_REGISTRATION_BEGIN("irc_client")
+	REGISTER_IOTHREAD("irc_client",IrcClient)
+MODULE_REGISTRATION_END()
 
-IO_THREAD_GENERATOR(IrcClient)
+IOTHREAD_GENERATOR(IrcClient)
 
-core::pParameters IrcClient::configure()
+core::Parameters IrcClient::configure()
 {
-	core::pParameters p = core::BasicIOThread::configure();
-	p->set_description("IrcClient");
-	p->set_max_pipes(0,0);
-	(*p)["server"]["Server hostname or IP address"]=std::string();
-	(*p)["nickname"]["Nickname to use at server"]=std::string("yuri_irc");
-	(*p)["alt_nickname"]["Alternative nickname to use at server (optional)"]=std::string();
-	(*p)["port"]["Server port"]=6667;
-	(*p)["channel"]["Channel name to join (optional)"]=std::string();
-	(*p)["target"]["Nickname or channel name, where the messages should be sent (optional)"]=std::string();
+	core::Parameters p = core::IOThread::configure();
+	p.set_description("IrcClient");
+//	p->set_max_pipes(0,0);
+	p["server"]["Server hostname or IP address"]=std::string();
+	p["nickname"]["Nickname to use at server"]=std::string("yuri_irc");
+	p["alt_nickname"]["Alternative nickname to use at server (optional)"]=std::string();
+	p["port"]["Server port"]=6667;
+	p["channel"]["Channel name to join (optional)"]=std::string();
+	p["target"]["Nickname or channel name, where the messages should be sent (optional)"]=std::string();
 	return p;
 }
 
 
-IrcClient::IrcClient(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
-core::BasicIOThread(log_,parent,0,0,std::string("irc_client")),
+IrcClient::IrcClient(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
+core::IOThread(log_,parent,0,0,std::string("irc_client")),
 event::BasicEventConsumer(log),
 event::BasicEventProducer(log),
 port_(6667),state_(state_t::not_connected)
 {
-	IO_THREAD_INIT("irc_client")
+	IOTHREAD_INIT(parameters)
 }
 
-IrcClient::~IrcClient()
+IrcClient::~IrcClient() noexcept
 {
 }
 
 void IrcClient::run()
 {
-	IO_THREAD_PRE_RUN
-	socket_.reset(new asio::ASIOTCPSocket(log,get_this_ptr()));
+//	IO_THREAD_PRE_RUN
+//	socket_.reset(new asio::ASIOTCPSocket(log,get_this_ptr()));
+	socket_ = core::StreamSocketGenerator::get_instance().generate("yuri_tcp", log);
+	socket_->bind("",0);
 	if (!socket_->connect(server_,port_)) {
 		log[log::error] << "Failed to connect to " << server_ << ":" << port_;
 		request_end();
 	}
 	send_message("NICK " + nickname_);
-	send_message("USER " + nickname_ + " " + nickname_ + " " + server_ + ": YURI");
+//	send_message("USER " + nickname_ + " " + nickname_ + " " + server_ + ": YURI");
+	send_message("USER " + nickname_ + " 0 * " + ":YURI");
 	state_ = state_t::verifying_nick;
-	std::vector<ubyte_t> buffer(4096,0);
+	std::vector<uint8_t> buffer(4096,0);
 	size_t read_bytes;
-	pollfd fds = {socket_->get_fd(), POLLIN, 0};
 
 	while(still_running()) {
 		process_events();
-		poll(&fds,1,10);
-		if (fds.revents==POLLIN)
-		/*if (socket_->data_available() == 0) {
-//			log[log::info] << "No data ";
-			sleep(10);
-		} else */{
-//			log[log::info] << "Reading";
-			read_bytes = socket_->read(&buffer[0],buffer.size());
-//			log[log::info] << "Read " << read_bytes;
+		if (socket_->wait_for_data(get_latency())) {
+			read_bytes = socket_->receive_data(buffer);
 			if (read_bytes > 0) {
-//				log[log::info] << "Read " << read_bytes << " bytes";
+				log[log::info] << "Read " << read_bytes << " bytes";
 				msg_buffer_.insert(msg_buffer_.end(),buffer.begin(),buffer.begin()+read_bytes);
 				process_buffer();
 				if (state_==state_t::invalid) request_end();
@@ -82,12 +80,12 @@ void IrcClient::run()
 		}
 	}
 	if (socket_) send_message("QUIT : Good bye, cruel world");
-	IO_THREAD_POST_RUN
+//	IO_THREAD_POST_RUN
 }
 
 void IrcClient::process_buffer()
 {
-//	log[log::info] << " Buffer is: " << msg_buffer_;
+	log[log::info] << " Buffer is: " << msg_buffer_;
 	auto idx = msg_buffer_.find_first_of("\n\r");
 	while (idx != std::string::npos) {
 		std::string msg = msg_buffer_.substr(0, idx);
@@ -99,7 +97,7 @@ void IrcClient::process_buffer()
 		switch (state_) {
 			case state_t::verifying_nick:
 					if (resp.code > 400) {
-						log[log::error] << "Failed to set nick to " + nickname_;
+						log[log::error] << "Failed to set nick to " + nickname_ + " ("+resp.src+")";
 						state_ = state_t::invalid;
 					} else if (resp.code > 0 && resp.code < 100) {
 						state_ = state_t::connected;
@@ -167,10 +165,12 @@ irc_message IrcClient::parse_response(const std::string& resp)
 void IrcClient::send_message(const std::string& msg)
 {
 	assert(socket_);
-	std::vector<ubyte_t> data(msg.begin(),msg.end());
+	log[log::info] << "MESSAGE: '"<<msg<<"'";
+	std::vector<uint8_t> data(msg.begin(),msg.end());
 	data.push_back('\r');
 	data.push_back('\n');
-	socket_->write(&data[0],data.size());
+//	socket_->send_data(&data[0],data.size());
+	socket_->send_data(data);
 }
 void IrcClient::process_incomming_message(const std::string& msg)
 {
@@ -201,19 +201,19 @@ bool IrcClient::do_process_event(const std::string& event_name, const event::pBa
 }
 bool IrcClient::set_param(const core::Parameter& param)
 {
-	if (iequals(param.name,"server")) {
+	if (iequals(param.get_name(),"server")) {
 		server_ = param.get<std::string>();
-	} else if (iequals(param.name,"nickname")) {
+	} else if (iequals(param.get_name(),"nickname")) {
 		nickname_ = param.get<std::string>();
-	} else if (iequals(param.name,"alt_nickname")) {
+	} else if (iequals(param.get_name(),"alt_nickname")) {
 		alt_nickname_ = param.get<std::string>();
-	} else if (iequals(param.name,"port")) {
-		port_ = param.get<ushort_t>();
-	} else if (iequals(param.name,"channel")) {
+	} else if (iequals(param.get_name(),"port")) {
+		port_ = param.get<uint16_t>();
+	} else if (iequals(param.get_name(),"channel")) {
 		channel_ = param.get<std::string>();
-	} else if (iequals(param.name,"target")) {
+	} else if (iequals(param.get_name(),"target")) {
 		target_ = param.get<std::string>();
-	} else return core::BasicIOThread::set_param(param);
+	} else return core::IOThread::set_param(param);
 	return true;
 }
 
