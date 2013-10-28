@@ -11,7 +11,7 @@
 #ifndef IEEE1394INPUTBASE_H_
 #define IEEE1394INPUTBASE_H_
 
-#include <yuri/core/IOThread.h>
+#include <yuri/core/thread/IOThread.h>
 #include <vector>
 #include <libiec61883/iec61883.h>
 namespace yuri {
@@ -27,8 +27,8 @@ struct ieee1394_camera_info {
 class IEEE1394SourceBase: public core::IOThread
 {
 public:
-	IEEE1394SourceBase(log::Log &log_, core::pwThreadBase parent, nodeid_t node=0, int port = 0, uint64_t guid=-1, std::string id="IEEE1394");
-	virtual ~IEEE1394SourceBase();
+	IEEE1394SourceBase(const  log::Log &log_, core::pwThreadBase parent, nodeid_t node=0, int port = 0, uint64_t guid=-1, const std::string& id="IEEE1394");
+	virtual ~IEEE1394SourceBase() noexcept;
 	virtual void run();
 	bool initialized() { return device_ready; }
 	int get_next_frame();

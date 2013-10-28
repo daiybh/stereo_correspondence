@@ -13,12 +13,12 @@
 #include <sys/poll.h>
 #include <libavc1394/rom1394.h>
 #include <cstring>
-
+#include "yuri/core/Module.h"
 namespace yuri {
 
 namespace ieee1394 {
 
-IEEE1394SourceBase::IEEE1394SourceBase(log::Log &log_, core::pwThreadBase parent, nodeid_t node0, int port, uint64_t guid, std::string id)
+IEEE1394SourceBase::IEEE1394SourceBase(const log::Log &log_, core::pwThreadBase parent, nodeid_t node0, int port, uint64_t guid, const std::string& id)
 	:IOThread(log_,parent,0,1,id),channel(0),port(port),oplug(-1),iplug(-1),bandwidth(0)
 {
 	node=node0|0xffc0;
@@ -72,26 +72,26 @@ IEEE1394SourceBase::IEEE1394SourceBase(log::Log &log_, core::pwThreadBase parent
 
 	//handle = raw1394_new_handle_on_port (0);
 	log[log::info] << "Connecting to node " << (node&0x3f) << " with GUID 0x"
-		<< std::hex << rom1394_get_guid(handle,node&0x3f)<< std::dec<< std::endl;
+		<< std::hex << rom1394_get_guid(handle,node&0x3f)<< std::dec;
 	if (rom1394_get_directory(handle, node&0x3f, &rom_dir)<0) {
 		//rom1394_free_directory(&rom_dir);
-		log[log::warning] << "Can't get node directory info! Considering it fatal and shutting down"<< std::endl;
+		log[log::warning] << "Can't get node directory info! Considering it fatal and shutting down";
 		throw(exception::Exception("Can't get node directory info!"));
 	}
 	if (rom1394_get_node_type(&rom_dir) != ROM1394_NODE_TYPE_AVC) {
 		rom1394_free_directory(&rom_dir);
 		log[log::warning] << "According to directory info, node " << (node&0x3f) <<
-			"is NOT an AVC unit!!" << std::endl;
+			"is NOT an AVC unit!!";
 		switch (rom1394_get_node_type(&rom_dir)) {
 		case ROM1394_NODE_TYPE_DC: log[log::info] << "Node " << (node&0x3f) <<
-				" is DC node" << std::endl; break;
+				" is DC node";break;
 		case ROM1394_NODE_TYPE_SBP2: log[log::info] << "Node " << (node&0x3f) <<
 		" is SBP2 node" << std::endl; break;
 		case ROM1394_NODE_TYPE_CPU: log[log::info] << "Node " << (node&0x3f) <<
-		" is CPU node" << std::endl; break;
+		" is CPU node"; break;
 		default:
 		case ROM1394_NODE_TYPE_UNKNOWN: log[log::info] << "Node " << (node&0x3f) <<
-		" is unknown node" << std::endl; break;
+		" is unknown node"; break;
 		}
 		throw(exception::Exception("Not an AVC unit!"));
 	}
@@ -105,7 +105,7 @@ IEEE1394SourceBase::IEEE1394SourceBase(log::Log &log_, core::pwThreadBase parent
 
 }
 
-IEEE1394SourceBase::~IEEE1394SourceBase()
+IEEE1394SourceBase::~IEEE1394SourceBase() noexcept
 {
 	if (channel>=0 && channel <63)
 		iec61883_cmp_disconnect (handle, node, oplug,
@@ -136,7 +136,7 @@ int IEEE1394SourceBase::get_next_frame()
 	pfd.fd = raw1394_get_fd (handle);
 	pfd.events = POLLIN | POLLPRI;
 	pfd.revents = 0;
-	if (!(poll (&pfd, 1, latency/1000) > 0 && (pfd.revents & (POLLIN|POLLPRI)))) return -1;
+	if (!(poll (&pfd, 1, get_latency().value/1000) > 0 && (pfd.revents & (POLLIN|POLLPRI)))) return -1;
 	return raw1394_loop_iterate (handle);
 }
 
