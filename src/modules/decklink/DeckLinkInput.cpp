@@ -7,40 +7,43 @@
 
 #include "DeckLinkInput.h"
 #include "yuri/core/Module.h"
+#include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/RawAudioFrame.h"
+#include "yuri/core/frame/raw_audio_frame_types.h"
+#include <cassert>
 namespace yuri {
 
 namespace decklink {
 
-REGISTER("decklink_input",DeckLinkInput)
+
+IOTHREAD_GENERATOR(DeckLinkInput)
 
 
-IO_THREAD_GENERATOR(DeckLinkInput)
-
-
-core::pParameters DeckLinkInput::configure()
+core::Parameters DeckLinkInput::configure()
 {
-	core::pParameters p = DeckLinkBase::configure();
-	p->set_description("Outputs input video to BlackMagic Design device (Eclipse, Intensity, ...)");
-	(*p)["format"]["Output format (1080p25, etc)"]="1080p25";
-	(*p)["connection"]["Output connection (HDMI, SDI, SVideo, ...). Please note that enabling one output will also enable other compatible outputs"]=std::string("HDMI");
-	(*p)["device"]["Index of device to use"]=0;
-	(*p)["format_detection"]["Try to autodetect video format."]=1;
-	(*p)["force_detection"]["Force autodetecting video format. EXPERIMENTAL"]=0;
-	(*p)["stereo"]["Capture duallink stereo."]=false;
-	(*p)["disable_ntsc"]["Disable NTSC modes."]=false;
-	(*p)["disable_pal"]["Disable PAL modes."]=false;
-	(*p)["disable_interlaced"]["Disable interlaced modes."]=false;
-	(*p)["disable_progressive"]["Disable progressive modes."]=false;
+	core::Parameters p = DeckLinkBase::configure();
+	p.set_description("Outputs input video to BlackMagic Design device (Eclipse, Intensity, ...)");
+	p["format"]["Output format (1080p25, etc)"]="1080p25";
+	p["connection"]["Output connection (HDMI, SDI, SVideo, ...). Please note that enabling one output will also enable other compatible outputs"]=std::string("HDMI");
+	p["device"]["Index of device to use"]=0;
+	p["format_detection"]["Try to autodetect video format."]=1;
+	p["force_detection"]["Force autodetecting video format. EXPERIMENTAL"]=0;
+	p["stereo"]["Capture duallink stereo."]=false;
+	p["disable_ntsc"]["Disable NTSC modes."]=false;
+	p["disable_pal"]["Disable PAL modes."]=false;
+	p["disable_interlaced"]["Disable interlaced modes."]=false;
+	p["disable_progressive"]["Disable progressive modes."]=false;
 	return p;
 }
 
-DeckLinkInput::DeckLinkInput(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
-		DeckLinkBase(log_,parent,0,1,parameters,"DeckLinkInput"),
+DeckLinkInput::DeckLinkInput(const log::Log &log_, core::pwThreadBase parent,const core::Parameters &parameters)
+		:DeckLinkBase(log_,parent,0,1,"DeckLinkInput"),
 		detect_format(true),manual_detect_format(0),manual_detect_timeout(0),
 		capture_stereo(false),disable_ntsc(false),disable_pal(true),disable_interlaced(false),
 		disable_progressive(false),audio_pipe(-1)
 {
-	IO_THREAD_INIT("Decklink Input")
+	IOTHREAD_INIT(parameters)
 	resize(0,1+(capture_stereo?1:0)+(audio_enabled?1:0));
 	if (audio_enabled) audio_pipe=capture_stereo?2:1;
 	current_format_name_ = get_mode_name(mode);
@@ -49,13 +52,14 @@ DeckLinkInput::DeckLinkInput(log::Log &log_, core::pwThreadBase parent, core::Pa
 	}
 }
 
-DeckLinkInput::~DeckLinkInput()
+DeckLinkInput::~DeckLinkInput() noexcept
 {
 	if (input) input->Release();
 	if (device) device->Release();
 }
 
-HRESULT DeckLinkInput::VideoInputFormatChanged (BMDVideoInputFormatChangedEvents notificationEvents, IDeckLinkDisplayMode *newDisplayMode, BMDDetectedVideoInputFormatFlags detectedSignalFlags)
+HRESULT DeckLinkInput::VideoInputFormatChanged (BMDVideoInputFormatChangedEvents notificationEvents,
+		IDeckLinkDisplayMode *newDisplayMode, BMDDetectedVideoInputFormatFlags /*detectedSignalFlags*/)
 {
 	log[log::info] << "VideoInputFormatChanged. " <<
 					"Format changed: " << (notificationEvents&bmdVideoInputDisplayModeChanged?"YES":"NO") << ", "
@@ -122,22 +126,24 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 		}
 
 	} else /*if (out[0] && out[1])*/ {
-		yuri::ubyte_t *data;
-		core::pBasicFrame frame;
-		yuri::format_t output_format = YURI_FMT_NONE;
-		core::pFrameInfo frame_info = yuri::make_shared<core::FrameInfo>();
-		frame_info->format = current_format_name_;
-		if (pixel_format_map.count(pixel_format)) output_format = pixel_format_map[pixel_format];
+		uint8_t *data;
+		core::pRawVideoFrame frame;
+		yuri::format_t output_format = convert_bm_to_yuri(pixel_format);
+//		core::pFrameInfo frame_info = yuri::make_shared<core::FrameInfo>();
+//		frame_info->format = current_format_name_;
+		//if (pixel_format_map.count(pixel_format)) output_format = pixel_format_map[pixel_format];
+
 		if (videoFrame->GetBytes(reinterpret_cast<void**>(&data))!=S_OK) {
 			log[log::error] << "Failed to get data from frame" << "\n";
 			return S_OK;
 		} else {
 			yuri::size_t data_size = videoFrame->GetRowBytes() * height;
 //			log[log::info] << "Allocating " << data_size << " bytes for " << height << " lines, " << videoFrame->GetRowBytes() << " bytes each" << "\n";
-			frame = allocate_frame_from_memory(data,data_size);
+			frame = core::RawVideoFrame::create_empty(output_format, {width, height}, data, data_size);
+					//allocate_frame_from_memory(data,data_size);
 //			if (output_format==YURI_FMT_YUV422) {
-//				yuri::ubyte_t *dta = PLANE_RAW_DATA(frame,0);
-//				yuri::ubyte_t *dta_end=dta+data_size;
+//				uint8_t *dta = PLANE_RAW_DATA(frame,0);
+//				uint8_t *dta_end=dta+data_size;
 //				while (dta<dta_end) {
 //					swap(*dta,*(dta+1));
 //					dta+=2;
@@ -147,12 +153,12 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 		if (audioPacket && audio_pipe>=0) {
 			yuri::size_t samples = audioPacket->GetSampleFrameCount();
 			if (samples) {
-				yuri::ubyte_t *audio_data;
+				uint8_t *audio_data;
 				if ((res=audioPacket->GetBytes(reinterpret_cast<void**>(&audio_data)))!=S_OK) {
 					log[log::error] << "Failed to get data for audio samples! (" << bmerr(res)<<")" << "\n";
 				} else {
-					core::pBasicFrame audio_frame = allocate_frame_from_memory(audio_data,samples*audio_channels*2);
-					push_audio_frame(audio_pipe,audio_frame,YURI_AUDIO_PCM_S16_LE,audio_channels,samples,0,0,0);
+					core::pRawAudioFrame audio_frame = core::RawAudioFrame::create_empty(core::raw_audio_format::signed_16bit, audio_channels, 48000, audio_data ,samples*audio_channels*2);
+//					push_audio_frame(audio_pipe,audio_frame,YURI_AUDIO_PCM_S16_LE,audio_channels,samples,0,0,0);
 				}
 			} else {
 				log[log::warning] << "Got input frame, but no samples in it" << "\n";
@@ -170,7 +176,7 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 //				ext->Release();
 				return S_OK;
 			}
-			yuri::ubyte_t *data2;
+			uint8_t *data2;
 
 			if (videoFrame->GetBytes(reinterpret_cast<void**>(&data2))!=S_OK) {
 				log[log::error] << "Failed to get data for right eye" << "\n";
@@ -179,22 +185,22 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 				return S_OK;
 			} else {
 				yuri::size_t data_size = rightframe->GetRowBytes() * height;
-				core::pBasicFrame frame2 = allocate_frame_from_memory(data2,data_size);
-//				yuri::ubyte_t *dta = PLANE_RAW_DATA(frame2,0);
-//				yuri::ubyte_t *dta_end=dta+data_size;
+				core::pRawVideoFrame frame2 = core::RawVideoFrame::create_empty(output_format, {width, height}, data2,data_size);
+//				uint8_t *dta = PLANE_RAW_DATA(frame2,0);
+//				uint8_t *dta_end=dta+data_size;
 //				while (dta<dta_end) {
 //					swap(*dta,*(dta+1));
 //					dta+=2;
 //				}
-				frame2->set_info(frame_info);
-				if (output_format!=YURI_FMT_NONE) push_video_frame(1,frame2,output_format,width,height,0,1e6*value/scale,0);
+//				frame2->set_info(frame_info);
+				if (output_format) push_frame(1,frame2);//,output_format,width,height,0,1e6*value/scale,0);
 				videoFrame->Release();
 //				ext->Release();
 			}
 
 		}
-		frame->set_info(frame_info);
-		if (output_format!=YURI_FMT_NONE) push_video_frame(0,frame,output_format,width,height,0,1e6*value/scale,0);
+//		frame->set_info(frame_info);
+		if (output_format) push_frame(0,frame);//,output_format,width,height,0,1e6*value/scale,0);
 //		push_video_frame(0,frame,YURI_FMT_YUV422,width,height);
 
 	}
@@ -239,14 +245,14 @@ void DeckLinkInput::run()
 {
 	if (!start_capture()) {
 		log[log::fatal] << "Failed to start capture. Bailing out" << "\n";
-		exitCode = YURI_EXIT_FINISHED;
+		request_end(core::yuri_exit_finished);
 		return;
 	}
-	BasicIOThread::run();
+	IOThread::run();
 }
 bool DeckLinkInput::step()
 {
-	sleep(latency);
+	sleep(get_latency());
 	return true;
 
 }
@@ -307,7 +313,7 @@ bool DeckLinkInput::verify_display_mode()
 
 {
 	assert(input);
-	yuri::lock l(schedule_mutex);
+	yuri::lock_t l(schedule_mutex);
 	IDeckLinkDisplayMode *dm;
 	BMDDisplayModeSupport support;
 	BMDVideoInputFlags input_flags = capture_stereo?bmdVideoInputDualStream3D:bmdVideoInputFlagDefault;
@@ -337,17 +343,18 @@ bool DeckLinkInput::verify_display_mode()
 
 BMDDisplayMode DeckLinkInput::select_next_format()
 {
-	BMDDisplayMode new_mode=0;
-	for (std::map<std::string, BMDDisplayMode, yuri::core::compare_insensitive>::iterator i=mode_strings.begin();
-			i!=mode_strings.end();++i) {
-		if (i->second == mode) {
-			if (++i != mode_strings.end()) new_mode=i->second;
-			else new_mode = mode_strings.begin()->second;
-			break;
-		}
-	}
-	if (!new_mode) new_mode=mode_strings.begin()->second;
-	return new_mode;
+//	BMDDisplayMode new_mode=0;
+//	for (auto i=mode_strings.begin();
+//			i!=mode_strings.end();++i) {
+//		if (i->second == mode) {
+//			if (++i != mode_strings.end()) new_mode=i->second;
+//			else new_mode = mode_strings.begin()->second;
+//			break;
+//		}
+//	}
+//	if (!new_mode) new_mode=mode_strings.begin()->second;
+//	return new_mode;
+	return get_next_format(mode);
 }
 
 bool DeckLinkInput::restart_streams()
@@ -359,19 +366,19 @@ bool DeckLinkInput::restart_streams()
 }
 bool DeckLinkInput::set_param(const core::Parameter &p)
 {
-	if (iequals(p.name, "format_detection")) {
+	if (iequals(p.get_name(), "format_detection")) {
 		detect_format=p.get<bool>();
-	} else if (iequals(p.name, "force_detection")) {
-		manual_detect_format=p.get<yuri::uint_t>();
-	} else if (iequals(p.name, "stereo")) {
+	} else if (iequals(p.get_name(), "force_detection")) {
+		manual_detect_format=p.get<unsigned>();
+	} else if (iequals(p.get_name(), "stereo")) {
 		capture_stereo=p.get<bool>();
-	} else if (iequals(p.name, "disable_ntsc")) {
+	} else if (iequals(p.get_name(), "disable_ntsc")) {
 		disable_ntsc=p.get<bool>();
-	} else if (iequals(p.name, "disable_pal")) {
+	} else if (iequals(p.get_name(), "disable_pal")) {
 		disable_pal=p.get<bool>();
-	} else if (iequals(p.name, "disable_interlaced")) {
+	} else if (iequals(p.get_name(), "disable_interlaced")) {
 		disable_interlaced=p.get<bool>();
-	} else if (iequals(p.name, "disable_progressive")) {
+	} else if (iequals(p.get_name(), "disable_progressive")) {
 		disable_progressive=p.get<bool>();
 	} else return DeckLinkBase::set_param(p);
 

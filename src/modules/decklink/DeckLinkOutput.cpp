@@ -7,39 +7,45 @@
 
 #include "DeckLinkOutput.h"
 #include "yuri/core/Module.h"
+#include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/raw_frame_params.h"
+#include "yuri/core/frame/RawAudioFrame.h"
+#include "yuri/core/frame/raw_audio_frame_types.h"
+#include "yuri/core/frame/raw_audio_frame_params.h"
 
+#include <cassert>
 namespace yuri {
 
 namespace decklink {
 
-REGISTER("decklink_output",DeckLinkOutput)
+IOTHREAD_GENERATOR(DeckLinkOutput)
 
-IO_THREAD_GENERATOR(DeckLinkOutput)
 
-core::pParameters DeckLinkOutput::configure()
+core::Parameters DeckLinkOutput::configure()
 {
-	core::pParameters p = DeckLinkBase::configure();
-	p->set_description("Outputs input video to BlackMagic Design device (Eclipse, Intensity, ...)");
-	(*p)["format"]["Output format (1080p25, etc)"]="1080p25";
-	(*p)["prebuffer"]["Number of frames to prefill in the output buffer."
+	core::Parameters p = DeckLinkBase::configure();
+	p.set_description("Outputs input video to BlackMagic Design device (Eclipse, Intensity, ...)");
+	p["format"]["Output format (1080p25, etc)"]="1080p25";
+	p["prebuffer"]["Number of frames to prefill in the output buffer."
 	                  "Minimal reasonable value is 2. "
 	                  "Setting it to higher values may increase playback fluency, but will increase latency"]=3;
-	(*p)["connection"]["Output connection (HDMI, SDI, SVideo, ...). Please note that enabling one output will also enable other compatible outputs"]=std::string("HDMI");
-	(*p)["sync"]["Use synchronous frame display."]=true;
-	(*p)["stereo"]["Output stereo image."]=false;
-	(*p)["format_detection"]["Try to detect video format."]=1;
-	(*p)["audio_channels"]["Number of audio channels to output"]=2;
+	p["connection"]["Output connection (HDMI, SDI, SVideo, ...). Please note that enabling one output will also enable other compatible outputs"]=std::string("HDMI");
+	p["sync"]["Use synchronous frame display."]=true;
+	p["stereo"]["Output stereo image."]=false;
+	p["format_detection"]["Try to detect video format."]=1;
+	p["audio_channels"]["Number of audio channels to output"]=2;
 	return p;
 }
 
 
-DeckLinkOutput::DeckLinkOutput(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
-		DeckLinkBase(log_,parent,1,0,parameters,"DeckLinkOutput"),output(0),
+DeckLinkOutput::DeckLinkOutput(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters)
+		:DeckLinkBase(log_,parent,1,0,"DeckLinkOutput"),output(0),
 		output_connection(bmdVideoConnectionHDMI),
-		/*act_oframe(0),back_oframe(0),*/frame_number(0),enabled(false),
-		buffer_num(5),prebuffer(5),sync(true),stereo_mode(false),stereo_usable(false)
+		/*act_oframe(0),back_oframe(0),*/frame_number(0),
+		buffer_num(5),prebuffer(5),enabled(false),sync(true),stereo_mode(false),stereo_usable(false)
 {
-	IO_THREAD_INIT("Decklink Output")
+	IOTHREAD_INIT(parameters)
 	if (stereo_mode) resize(2,0);
 	if (audio_enabled) resize(3,0);
 	if (!init()) {
@@ -47,7 +53,7 @@ DeckLinkOutput::DeckLinkOutput(log::Log &log_, core::pwThreadBase parent, core::
 	}
 }
 
-DeckLinkOutput::~DeckLinkOutput()
+DeckLinkOutput::~DeckLinkOutput() noexcept
 {
 
 }
@@ -81,20 +87,20 @@ void DeckLinkOutput::run()
 		log[log::error] << "Failed to start stream\n";
 		return;
 	}
-	BasicIOThread::run();
+	IOThread::run();
 	stop_stream();
 }
 
 
 bool DeckLinkOutput::set_param(const core::Parameter &p)
 {
-	if (iequals(p.name, "format_detection")) {
+	if (iequals(p.get_name(), "format_detection")) {
 		detect_format=p.get<bool>();
-	} else if (iequals(p.name, "prebuffer")) {
-		prebuffer=p.get<yuri::ushort_t>();
-	} else if (iequals(p.name, "sync")) {
+	} else if (iequals(p.get_name(), "prebuffer")) {
+		prebuffer=p.get<size_t>();
+	} else if (iequals(p.get_name(), "sync")) {
 		sync=p.get<bool>();
-	} else if (iequals(p.name, "stereo")) {
+	} else if (iequals(p.get_name(), "stereo")) {
 		stereo_mode=p.get<bool>();
 	} return DeckLinkBase::set_param(p);
 	return true;
@@ -106,7 +112,7 @@ bool DeckLinkOutput::set_param(const core::Parameter &p)
 bool DeckLinkOutput::verify_display_mode()
 {
 	assert(output);
-	yuri::lock l(schedule_mutex);
+	yuri::lock_t l(schedule_mutex);
 	IDeckLinkDisplayMode *dm;
 	BMDDisplayModeSupport support;
 	stereo_usable= false;
@@ -132,7 +138,7 @@ bool DeckLinkOutput::verify_display_mode()
 	} else {
 		log[log::warning] << "Failed to get mode name!\n";
 	}
-	yuri::uint_t linesize;
+	unsigned linesize;
 	switch (pixel_format) {
 		case bmdFormat8BitYUV: linesize=width*2;break;
 		case bmdFormat8BitARGB: linesize=width*4;break;
@@ -162,7 +168,7 @@ bool DeckLinkOutput::verify_display_mode()
 
 void DeckLinkOutput::schedule(bool force)
 {
-	yuri::lock l(schedule_mutex);
+	yuri::lock_t l(schedule_mutex);
 	//if (!act_oframe) {
 	if (!out_frames.size()) {
 		log[log::error] << "No frame to schedule!!\n";
@@ -180,7 +186,7 @@ void DeckLinkOutput::schedule(bool force)
 	log[log::debug] << "Scheduled frame " << frame_number << "\n";
 	frame_number++;
 }
-HRESULT STDMETHODCALLTYPE	DeckLinkOutput::ScheduledFrameCompleted (IDeckLinkVideoFrame* completedFrame, BMDOutputFrameCompletionResult result)
+HRESULT STDMETHODCALLTYPE	DeckLinkOutput::ScheduledFrameCompleted (IDeckLinkVideoFrame* /*completedFrame*/, BMDOutputFrameCompletionResult /*result*/)
 {
 	schedule(false);
 	return S_OK;
@@ -213,7 +219,7 @@ bool DeckLinkOutput::start_stream()
 bool DeckLinkOutput::stop_stream()
 {
 	assert(output);
-	HRESULT res;
+//	HRESULT res;
 	output->DisableAudioOutput();
 	output->DisableVideoOutput();
 	BMDTimeValue t;
@@ -234,7 +240,7 @@ bool DeckLinkOutput::stop_stream()
 bool DeckLinkOutput::enable_stream()
 {
 	if (enabled) return true;
-	for (int i=0;i<prebuffer;++i) schedule(true);
+	for (size_t i=0; i < prebuffer; ++i) schedule(true);
 	output->SetScheduledFrameCompletionCallback(this);
 	output->StartScheduledPlayback(0,scale,1.0);
 
@@ -244,8 +250,9 @@ bool DeckLinkOutput::enable_stream()
 
 bool DeckLinkOutput::step()
 {
-	core::pBasicFrame f;
-	if (!in[0]) return true;
+	using namespace core::raw_format;
+	core::pRawVideoFrame f;
+//	if (!in[0]) return true;
 	/*bool new_frame = false;
 	while (f=in[0]->pop_frame()) {
 		frame = f;
@@ -253,20 +260,20 @@ bool DeckLinkOutput::step()
 		break;
 	}
 	if (!new_frame) return true;*/
-	if (!frame) frame = in[0]->pop_frame();
+	if (!frame) frame = dynamic_pointer_cast<core::RawVideoFrame>(pop_frame(0));
 	if (stereo_usable) {
-		if (!in[1]) return true;
-		if (!frame2) frame2 = in[1]->pop_frame();
+//		if (!in[1]) return true;
+		if (!frame2) frame2 = dynamic_pointer_cast<core::RawVideoFrame>(pop_frame(1));
 	}
 	if (!frame || (stereo_usable && !frame2)) return true;
 	BMDPixelFormat pfmt = 0;
 	switch (frame->get_format()) {
-		case YURI_FMT_UYVY422:pfmt = bmdFormat8BitYUV;break;
-		case YURI_FMT_V210:pfmt = bmdFormat10BitYUV;break;
+		case uyvy422:pfmt = bmdFormat8BitYUV;break;
+		case yuv422_v210:pfmt = bmdFormat10BitYUV;break;
 		default: pfmt = 0;break;
 	}
 	if (!pfmt) {
-		log[log::error] << "Unsupported pixel format: "<<core::BasicPipe::get_format_string(frame->get_format());
+		log[log::error] << "Unsupported pixel format: "<<get_format_name(frame->get_format());
 		frame.reset();
 		frame2.reset();
 		return true;
@@ -280,9 +287,10 @@ bool DeckLinkOutput::step()
 		}
 	}
 	bool restart_needed = false;
-	core::pFrameInfo fi = frame->get_info();
-	if (detect_format && fi) {
-		BMDDisplayMode m = parse_format(fi->format);
+//	core::pFrameInfo fi = frame->get_info();
+	std::string format_name = frame->get_format_name();
+	if (detect_format && !format_name.empty()) {
+		BMDDisplayMode m = parse_format(format_name);
 		if (m==bmdModeUnknown) {
 			log[log::warning] << "Format specified in incoming frame is not supported!";
 		} else if (m!=mode) {
@@ -294,7 +302,7 @@ bool DeckLinkOutput::step()
 				frame2.reset();
 				return true;
 			}
-			log[log::info] << "Format changed to " << fi->format;
+			log[log::info] << "Format changed to " << format_name;
 			restart_needed = true;
 		}
 	}
@@ -315,34 +323,35 @@ bool DeckLinkOutput::step()
 	shared_ptr<DeckLink3DVideoFrame> pf = get_next_buffer();
 	fill_frame(frame,pf);
 	if (stereo_usable) fill_frame(frame2,pf->get_right());
-	if (audio_enabled && in[2]) {
-		core::pBasicFrame audio_frame=in[2]->pop_frame();
+	if (audio_enabled /*&& in[2]*/) {
+		using namespace core::raw_audio_format;
+		core::pRawAudioFrame audio_frame=dynamic_pointer_cast<core::RawAudioFrame>(pop_frame(2));
 		if (audio_frame) {
 			uint32_t writen;
-			std::vector<yuri::sshort_t> samples(audio_frame->get_sample_count()*audio_channels);
-			if (audio_frame->get_format() == YURI_AUDIO_PCM_S24_BE) {
-				const yuri::ubyte_t *data = PLANE_RAW_DATA(audio_frame,0);
-				yuri::size_t zeroes=0;
-				const yuri::size_t chan = audio_frame->get_channel_count();
+			uvector<int16_t> samples(audio_frame->get_sample_count()*audio_channels);
+			if (audio_frame->get_format() == signed_24bit_be) {
+				const uint8_t *data = audio_frame->data();
+//				size_t zeroes=0;
+				const size_t chan = audio_frame->get_channel_count();
 				const size_t copy_chans = std::min(chan,static_cast<size_t>(audio_channels));
 				const size_t zero_chans = audio_channels - copy_chans;
-				yuri::size_t skip =(chan-copy_chans)*3;
-				yuri::sint_t sample;
-				std::vector<yuri::sshort_t>::iterator sample_iter=samples.begin();
-				for (int i=0;i<audio_frame->get_sample_count();++i) {
-					for (int ch=0;ch<copy_chans;++ch) {
+				size_t skip =(chan-copy_chans)*3;
+				int16_t sample;
+				auto sample_iter=samples.begin();
+				for (size_t i=0;i<audio_frame->get_sample_count();++i) {
+					for (size_t ch=0;ch<copy_chans;++ch) {
 						sample = (data[0]<<16)|(data[1]<<8)|data[2];
 						*sample_iter++=sample>>8;
 						data+=3;
 					}
-					for (int ch=0;ch<zero_chans;++ch) {
+					for (size_t ch=0;ch<zero_chans;++ch) {
 						*sample_iter++=0;
 					}
 					data+=skip;
 				}
 //				log[log::info] << "Zeroes " << zeroes << "/" <<audio_frame->get_sample_count()<<endl;
 			} else {
-				log[log::warning] << "Unsupported input format: " << core::BasicPipe::get_format_string(audio_frame->get_format()) << "\n";
+				log[log::warning] << "Unsupported input format: " << core::raw_audio_format::get_format_name(audio_frame->get_format());
 			}
 			if (samples.size()) {
 				output->WriteAudioSamplesSync(&samples[0],audio_frame->get_sample_count(),&writen);
@@ -364,7 +373,7 @@ bool DeckLinkOutput::step()
 }
 shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::get_active_buffer()
 {
-	yuri::lock l(schedule_mutex);
+	yuri::lock_t l(schedule_mutex);
 	return do_get_active_buffer();
 }
 shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::do_get_active_buffer()
@@ -375,7 +384,7 @@ shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::do_get_active_buffer()
 }
 shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::get_next_buffer()
 {
-	yuri::lock l(schedule_mutex);
+	yuri::lock_t l(schedule_mutex);
 	return do_get_next_buffer();
 }
 shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::do_get_next_buffer()
@@ -385,7 +394,7 @@ shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::do_get_next_buffer()
 }
 void DeckLinkOutput::rotate_buffers()
 {
-	yuri::lock l(schedule_mutex);
+	yuri::lock_t l(schedule_mutex);
 	do_rotate_buffers();
 }
 void DeckLinkOutput::do_rotate_buffers()
@@ -394,18 +403,25 @@ void DeckLinkOutput::do_rotate_buffers()
 	out_frames.pop_front();
 	out_frames.push_back(pf);
 }
-bool DeckLinkOutput::fill_frame(core::pBasicFrame source, shared_ptr<DeckLink3DVideoFrame> output)
+bool DeckLinkOutput::fill_frame(core::pRawVideoFrame source, shared_ptr<DeckLink3DVideoFrame> output)
 {
 	assert(source);
-	yuri::uint_t line_width = 0, copy_width, target_width,copy_lines;
-	FormatInfo_t fi = core::BasicPipe::get_format_info(source->get_format());
-	if (fi) {
-		line_width=source->get_width()*(fi->bpp >> 3);
+	unsigned line_width = 0, copy_width, target_width,copy_lines;
+	resolution_t res = source->get_resolution();
+//	FormatInfo_t fi = core::BasicPipe::get_format_info(source->get_format());
+//	if (fi) {
+//		line_width=source->get_width()*(fi->bpp >> 3);
+//	}
+	line_width = PLANE_DATA(source,0).get_line_size();
+	size_t bpp = core::raw_format::get_fmt_bpp(source->get_format(), 0);
+	if (!line_width) {
+		line_width = res.width * bpp / 8;
 	}
+//	const auto& fi = core::raw_format::get_format_info(source->get_format());
 
-	target_width=width*(fi->bpp >> 3);	
-	if (source->get_format() == YURI_FMT_V210) {
-		const size_t w = source->get_width();
+	target_width=width*(bpp >> 3);
+	if (source->get_format() == core::raw_format::yuv422_v210) {
+		const size_t w = res.width;
 		yuri::size_t in_line_width6 = w/6;// + (w%6?1:0);
 		if (w==1280) in_line_width6 = 216;
 		yuri::size_t line_width6 = width/6 + (width%6?1:0);
@@ -420,17 +436,17 @@ bool DeckLinkOutput::fill_frame(core::pBasicFrame source, shared_ptr<DeckLink3DV
 	copy_width=std::min(line_width,target_width);
 	copy_lines=std::min(source->get_height(),static_cast<size_t>(height));
 	log[log::debug] << "Copying " << copy_lines << " lines of " << copy_width << " bytes (of " << line_width << " total bytes)\n";
-	if (line_width*copy_lines>PLANE_SIZE(source,0)) {
+	if (line_width*copy_lines > PLANE_SIZE(source,0)) {
 		log[log::warning] << "not enough data to copy!!!";
 		return false;
 	}
-	yuri::ubyte_t *data = PLANE_RAW_DATA(source,0);
-	yuri::ubyte_t *data2;
+	uint8_t *data = PLANE_RAW_DATA(source,0);
+	uint8_t *data2;
 
 	//back_oframe->GetBytes(reinterpret_cast<void**>(&data2));
 	output->GetBytes(reinterpret_cast<void**>(&data2));
 	assert(data2);
-	for (int h=0;h<copy_lines;++h) {
+	for (size_t h=0;h<copy_lines;++h) {
 		//memcpy(data2,data,copy_width);
 		std::copy_n(data,copy_width,data2);
 		data+=line_width;

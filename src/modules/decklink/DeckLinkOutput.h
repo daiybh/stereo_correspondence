@@ -10,18 +10,19 @@
 
 #include "yuri/decklink/DeckLinkBase.h"
 #include "yuri/decklink/DeckLink3DVideoFrame.h"
-
+#include "yuri/core/forward.h"
+#include <deque>
 namespace yuri {
 
 namespace decklink {
 
 class DeckLinkOutput:public DeckLinkBase, public IDeckLinkVideoOutputCallback  {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
 
-	DeckLinkOutput(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters)  IO_THREAD_CONSTRUCTOR;
-	virtual ~DeckLinkOutput();
+	DeckLinkOutput(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~DeckLinkOutput() noexcept;
 	void run();
 protected:
 	bool init();
@@ -39,33 +40,33 @@ protected:
 	inline void rotate_buffers();
 protected:
 	// Methods to satisfy IUnknows interface
-	virtual HRESULT STDMETHODCALLTYPE	QueryInterface (REFIID iid, LPVOID *ppv)	{return E_NOINTERFACE;}
+	virtual HRESULT STDMETHODCALLTYPE	QueryInterface (REFIID /*iid*/, LPVOID */*ppv*/)	{return E_NOINTERFACE;}
 	virtual ULONG STDMETHODCALLTYPE		AddRef ()									{return 1;}
 	virtual ULONG STDMETHODCALLTYPE		Release ()									{return 1;}
 
 	void schedule(bool force);
 	virtual HRESULT STDMETHODCALLTYPE	ScheduledFrameCompleted (IDeckLinkVideoFrame* completedFrame, BMDOutputFrameCompletionResult result);
 	virtual HRESULT STDMETHODCALLTYPE	ScheduledPlaybackHasStopped ();
-	bool fill_frame(core::pBasicFrame source, shared_ptr<DeckLink3DVideoFrame> output);
+	bool fill_frame(core::pRawVideoFrame source, shared_ptr<DeckLink3DVideoFrame> output);
 protected:
 	IDeckLinkOutput* output;
-	yuri::ushort_t device_index;
+	size_t device_index;
 	BMDVideoConnection output_connection;
-	yuri::uint_t width,height;
+	unsigned width,height;
 	BMDTimeValue value;
 	BMDTimeScale scale;
 	mutex schedule_mutex;
-	core::pBasicFrame frame, frame2;
+	core::pRawVideoFrame frame, frame2;
 	//IDeckLinkMutableVideoFrame *act_oframe, *back_oframe;
 	std::deque<shared_ptr<DeckLink3DVideoFrame> > out_frames;
 	yuri::size_t frame_number;
 	yuri::size_t buffer_num;
-	yuri::ushort_t prebuffer;
+	size_t prebuffer;
 	bool enabled;
 	bool sync;
 	bool stereo_mode, stereo_usable;
 	bool detect_format;
-	time_value last_time;
+	timestamp_t last_time;
 };
 
 }

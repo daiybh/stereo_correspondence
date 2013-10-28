@@ -1,9 +1,12 @@
 # Set name of the module
-SET (MODULE decklink_input)
+SET (MODULE decklink)
 
 # Set all source files module uses
 SET (SRC DeckLinkInput.cpp
-		 DeckLinkInput.h)
+		 DeckLinkInput.h
+		 DeckLinkOutput.cpp
+		 DeckLinkOutput.h 
+		 register.cpp)
 
 
 

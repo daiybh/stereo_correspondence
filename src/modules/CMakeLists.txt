@@ -35,6 +35,10 @@ IF(NOT YURI_DISABLE_LIBAV)
 	pkg_check_modules(libswscale libswscale)
 ENDIF()
 
+IF (CORE_DECKLINK)
+	find_package(DECKLINK)
+ENDIF()
+
 
 IF(HAVE_VIDEODEV2_H)
 	add_subdirectory(v4l2)
@@ -55,6 +59,10 @@ find_package(JPEG)
 IF(JPEG_FOUND)
 	add_subdirectory(jpegdecoder)
 #	add_subdirectory(jpegencoder)
+ENDIF()
+
+IF(CORE_DECKLINK AND DECKLINK_FOUND)
+	add_subdirectory(decklink)
 ENDIF()
 
 #### UV #####
@@ -158,9 +166,6 @@ ENDIF()
 pkg_check_modules(OpenCV opencv>=2.3.0)
 find_package(OPENNI2)
 
-IF (CORE_DECKLINK)
-	find_package(DECKLINK)
-ENDIF()
 find_package( X11 )
 
 find_path(VIDEOMASTER_INCLUDE_DIR VideoMasterHD_Sdi.h
@@ -233,11 +238,6 @@ ENDIF()
 
 IF(${OPENNI2_FOUND})
 	add_subdirectory(openni)
-ENDIF()
-
-IF(CORE_DECKLINK AND DECKLINK_FOUND)
-	add_subdirectory(decklink_input)
-	add_subdirectory(decklink_output)
 ENDIF()
 
 IF(X11_FOUND)
