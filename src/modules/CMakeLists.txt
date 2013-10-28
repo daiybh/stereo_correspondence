@@ -21,6 +21,9 @@ add_subdirectory(testcard)
 add_subdirectory(yuriconvert)
 add_subdirectory(osc_receiver)
 
+IF(UNIX)
+	add_subdirectory(yuri_tcp)
+ENDIF()
 
 CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
 
