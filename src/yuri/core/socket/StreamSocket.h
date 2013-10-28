@@ -73,7 +73,8 @@ public:
 	bool data_available();
 
 	bool wait_for_data(duration_t duration);
-
+protected:
+	log::Log		log;
 private:
 	virtual size_t do_send_data(const uint8_t* data, size_t data_size) = 0;
 	virtual size_t do_receive_data(uint8_t* data, size_t size) = 0;
@@ -82,7 +83,7 @@ private:
 	virtual bool do_data_available() = 0;
 	virtual bool do_wait_for_data(duration_t duration) = 0;
 
-	log::Log		log;
+
 };
 
 }
