@@ -92,7 +92,10 @@ FixedMemoryAllocator::memory_block_t FixedMemoryAllocator::get_block(yuri::size_
 	uint8_t * tmp = memory_pool[size].back();
 	memory_block_t block = std::make_pair(tmp,Deleter(size,tmp));
 	memory_pool[size].pop_back();
-//	std::cout << "Serving page of " << size << ". have " << memory_pool[size].size() << " in cache" << "\n";
+//	std::cout << "Serving page "<< static_cast<void*>(tmp) << " of " << size << ". have " << memory_pool[size].size() << " in cache" << std::endl;
+//	std::cout << "Using vector at " << static_cast<void*>(&memory_pool[size]) << ", with data at " << static_cast<void*>(&(memory_pool[size][0])) <<", vector size " << sizeof(std::vector<uint8_t*>)<< std::endl;
+//	const auto& it = memory_pool.find(size);
+//	std::cout << "Memory pool at "  << reinterpret_cast<const void*>(&memory_pool) << ", it: "  << reinterpret_cast<const void*>(&it)<< ": "  << reinterpret_cast<const void*>(&(it->first))<<"/" << reinterpret_cast<const void*>(&(it->second))<<std::endl;
 	return block;
 }
 /** \brief Returns block to the pool.
@@ -109,7 +112,7 @@ bool FixedMemoryAllocator::return_memory(yuri::size_t size, uint8_t * mem)
 	lock_t l(mem_lock);
 	if (!memory_pool.count(size)) memory_pool[size]=std::vector<uint8_t*>();
 	memory_pool[size].push_back(mem);
-//	std::cout << "Returning page of " << size << ". have " << memory_pool[size].size() << " in cache" << "\n";
+//	std::cout << "Returning page "<< static_cast<void*>(mem) << " of " << size << ". have " << memory_pool[size].size() << " in cache" << std::endl;
 	return true;
 }
 /**\brief Removes blocks from the memory pool
@@ -188,6 +191,12 @@ bool FixedMemoryAllocator::step()
 {
 	return true;
 }
+void FixedMemoryAllocator::clear_all()
+{
+	lock_t l(mem_lock);
+	memory_pool.clear();
+}
+
 /** \brief Returns specified block of memory to the memory pool.
  *
  * \param mem pointer to the memory block to be deleted.

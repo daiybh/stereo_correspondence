@@ -46,6 +46,7 @@ public:
 	static bool allocate_blocks(yuri::size_t size, yuri::size_t count);
 	static bool remove_blocks(yuri::size_t size, yuri::size_t count=0);
 	static size_t preallocated_blocks(size_t size);
+	static void clear_all();
 private:
 
 	bool step();
