@@ -463,7 +463,7 @@ int main(int argc, char**argv)
 	// Otherwise it would be destroyed among global variables and this could lead to segfaults.
 	builder.reset();
 	l[log::info] << "Application successfully destroyed";
-	yuri::core::FixedMemoryAllocator::clear_all();
-	l[log::info] << "Memory pool cleared";
+	auto mp = yuri::core::FixedMemoryAllocator::clear_all();
+	l[log::info] << "Memory pool cleared ("<< mp.first << " blocks, " << mp.second << " bytes)";
 	return 0;
 }
