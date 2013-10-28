@@ -180,7 +180,7 @@ core::pFrame Pad::do_special_single_step(const core::pRawVideoFrame& frame)
 				<< blank_lines_top << " pixels on the top and " << blank_lines_bottom << " pixels on the bottom";
 
 	//core::pBasicFrame output = allocate_empty_frame(format, width_, height_);
-	core::pRawVideoFrame output		= core::RawVideoFrame::create_empty(format, resolution_);
+	core::pRawVideoFrame output		= core::RawVideoFrame::create_empty(format, resolution_, true);
 
 	const auto data_in_start		= PLANE_DATA(frame,0).begin()+skip_lines_top*line_size_in+skip_cols_left*Bpp;
 //	const auto data_in_end			= PLANE_DATA(frame,0).end();
