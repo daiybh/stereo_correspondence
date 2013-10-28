@@ -82,6 +82,12 @@ struct raw_format_t {
 
 inline const std::string& get_format_name(format_t format) { return get_format_info(format).name; }
 
+inline size_t get_fmt_bpp(format_t fmt, size_t plane) {
+	const auto& fi = get_format_info(fmt);
+	const auto& bpp = fi.planes[plane].bit_depth;
+	return bpp.first / bpp.second;
+}
+
 }
 }
 }
