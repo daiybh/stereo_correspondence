@@ -35,7 +35,7 @@ pRawAudioFrame RawAudioFrame::create_empty(format_t format, size_t channel_count
 
 void RawAudioFrame::set_data(uvector<uint8_t>&& data)
 {
-	if (data.size() % (sample_size/8)) throw std::runtime_error("Wring data size!!!!!");
+	if (data.size() % (sample_size/8)) throw std::runtime_error("Wrong data size!!!!!");
 	data_ = std::move(data);
 }
 

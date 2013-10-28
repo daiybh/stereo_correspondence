@@ -36,7 +36,7 @@ namespace core
 		return make_shared<cls>(log,parent,parameters); \
 	} \
 	catch (std::exception &e) { \
-		throw yuri::exception::InitializationFailed(std::string(#cls) + "constuctor failed: " + e.what()); \
+		throw yuri::exception::InitializationFailed(std::string(#cls) + " constructor failed: " + e.what()); \
 	} \
 }
 #define IOTHREAD_INIT(parameters) \

@@ -1,5 +1,5 @@
 /*!
- * @file 		BasicIOThread.cpp
+ * @file 		IOThread.cpp
  * @author 		Zdenek Travnicek
  * @date 		30.10.2010
  * @date		16.2.2013
@@ -40,13 +40,13 @@ using std::make_shared;
 using std::mutex;
 using std::unique_ptr;
 
-typedef std::unique_lock<std::mutex> lock;
+typedef std::unique_lock<std::mutex> lock_t;
 #ifndef YURI_ANDROID
 using std::timed_mutex;
 typedef std::unique_lock<std::timed_mutex> timed_lock;
 #else
 typedef std::mutex timed_mutex;
-typedef lock timed_lock;
+typedef lock_t timed_lock;
 #endif
 using std::dynamic_pointer_cast;
 using std::static_pointer_cast;

@@ -45,7 +45,9 @@ SET(YURI_SRC ${YURI_SRC}
 	
 	core/socket/socket_errors.h
 	core/socket/DatagramSocket.cpp core/socket/DatagramSocket.h
+	core/socket/StreamSocket.cpp core/socket/StreamSocket.h
 	core/socket/DatagramSocketGenerator.h
+	core/socket/StreamSocketGenerator.h
 	
 
 #	core/BasicFrame.cpp
