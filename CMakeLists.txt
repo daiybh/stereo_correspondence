@@ -43,15 +43,16 @@ SET(SO_VERSION 2.8.0)
 #################################################################
 # Setup names for the core library and helpers
 #################################################################
-SET(LIBNAME yuri_core)
-SET(LIBNAME_HELPER_LIBAV yuri_helper_av)
-SET(LIBNAME_HELPER_CUDA yuri_helper_cuda)
-SET(LIBNAME_HELPER_X11 yuri_helper_x11)
-SET(LIBNAME_HELPER_IEEE1394 yuri_helper_ieee1394)
-SET(LIBNAME_HELPER_ASIO yuri_helper_asio)
-SET(LIBNAME_HELPER_DECKLINK yuri_helper_decklink)
+SET(LIBNAME_PREFIX 			yuri${YURI_CORE_VERSION})
+SET(LIBNAME 				${LIBNAME_PREFIX}_core)
+SET(LIBNAME_HELPER_LIBAV 	${LIBNAME_PREFIX}_helper_av)
+SET(LIBNAME_HELPER_CUDA 	${LIBNAME_PREFIX}_helper_cuda)
+SET(LIBNAME_HELPER_X11 		${LIBNAME_PREFIX}_helper_x11)
+SET(LIBNAME_HELPER_IEEE1394 ${LIBNAME_PREFIX}_helper_ieee1394)
+SET(LIBNAME_HELPER_ASIO 	${LIBNAME_PREFIX}_helper_asio)
+SET(LIBNAME_HELPER_DECKLINK ${LIBNAME_PREFIX}_helper_decklink)
 
-SET(LIBNAME_HELPER_UV yuri2.8_helper_uv)
+SET(LIBNAME_HELPER_UV 		${LIBNAME_PREFIX}_helper_uv)
 
 #################################################################
 # Set prefix for modules
