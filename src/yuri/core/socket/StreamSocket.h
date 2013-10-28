@@ -12,6 +12,7 @@
 #include "yuri/log/Log.h"
 #include "yuri/core/utils/new_types.h"
 #include "yuri/core/utils/time_types.h"
+#include "yuri/core/utils/uvector.h"
 #include <string>
 #include <vector>
 
@@ -48,6 +49,23 @@ public:
 	}
 
 	size_t receive_data(uint8_t* data, size_t size);
+
+
+	template<class T>
+	size_t receive_data(std::vector<T>& data)
+	{
+		return receive_data(reinterpret_cast<uint8_t*>(data.data()), data.size()*sizeof(T))/sizeof(T);
+	}
+	template<class T>
+	size_t receive_data(uvector<T>& data)
+	{
+		return receive_data(reinterpret_cast<uint8_t*>(data.data()), data.size()*sizeof(T))/sizeof(T);
+	}
+	template<class T, size_t N>
+	size_t receive_data(std::array<T, N>& data)
+	{
+		return receive_data(reinterpret_cast<uint8_t*>(data.data()), N*sizeof(T))/sizeof(T);
+	}
 	/*!
 	 * Checks whether there are any data waiting to be read
 	 * @return true if subsequent call to receive_datagram() will succeed.
