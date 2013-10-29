@@ -154,7 +154,7 @@ V4l2Source::V4l2Source(log::Log &log_,core::pwThreadBase parent, const core::Par
 	}
 }
 
-V4l2Source::~V4l2Source() {
+V4l2Source::~V4l2Source() noexcept{
 	if (fd>0) close(fd);
 	if (buffers) {
 		if (method==METHOD_READ) for (unsigned int i=0;i<no_buffers;++i) delete [] (uint8_t*)buffers[0].start;

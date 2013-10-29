@@ -51,7 +51,7 @@ public:
 			METHOD_READ
 		};
 	V4l2Source(log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters);
-	virtual ~V4l2Source();
+	virtual ~V4l2Source() noexcept;
 	virtual void run();
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
