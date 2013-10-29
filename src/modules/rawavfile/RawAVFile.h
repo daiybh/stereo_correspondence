@@ -7,25 +7,30 @@
 
 #ifndef AVDEMUXER_H_
 #define AVDEMUXER_H_
-#include "yuri/libav/AVCodecBase.h"
+#include "yuri/libav/libav.h"
+#include "yuri/core/thread/IOFilter.h"
+
 extern "C" {
 	#include <libavformat/avformat.h>
 }
+
 #include <vector>
-//#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace yuri {
-namespace video {
+namespace rawavfile {
 
-class RawAVFile: public core::IOThread, public AVCodecBase {
+class RawAVFile: public core::IOThread {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
-	virtual ~RawAVFile();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+	RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~RawAVFile() noexcept;
 	virtual bool 		set_param(const core::Parameter &param);
 private:
-	RawAVFile(log::Log &_log, core::pwThreadBase parent, core::Parameters &parameters) IO_THREAD_CONSTRUCTOR;
+
 	virtual void 		run();
+
+
 	AVFormatContext*	fmtctx;
 	std::vector<AVCodec*>
 						video_codecs_;
@@ -45,9 +50,9 @@ private:
 	format_t 			video_format_out_;
 	bool				decode_;
 	double 				fps_;
-	std::vector<time_value>
+	std::vector<timestamp_t>
 						next_times_;
-	std::vector<core::pBasicFrame>
+	std::vector<core::pFrame>
 						frames_;
 	size_t 				max_video_streams_;
 	size_t 				max_audio_streams_;

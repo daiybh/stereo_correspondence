@@ -71,6 +71,13 @@ IF(${CORE_IEEE1394})
 	add_subdirectory(hdvsource)
 ENDIF()
 
+pkg_check_modules(libavcodec libavcodec)
+pkg_check_modules(libavformat libavformat)
+
+IF(libavcodec_FOUND AND libavformat_FOUND)
+	add_subdirectory(rawavfile)
+ENDIF()
+
 #### UV #####
 #IF(NOT YURI_DISABLE_ULTRAGRID)
 	# This should be replaced by a proper detection!
@@ -110,7 +117,7 @@ IF(CORE_UV)
 		add_subdirectory(uv_alsa)
 	ENDIF()
 	
-	pkg_check_modules(libavcodec libavcodec)
+	
 	IF(libavcodec_FOUND)
 		add_subdirectory(uv_libavcodec)
 	ENDIF()

@@ -7,34 +7,59 @@
 
 #include "RawAVFile.h"
 #include "yuri/core/Module.h"
-
+#include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/raw_frame_params.h"
+#include "yuri/core/frame/CompressedVideoFrame.h"
+#include "yuri/core/frame/compressed_frame_types.h"
+#include "yuri/core/frame/compressed_frame_params.h"
+#include <cassert>
 namespace yuri {
-namespace video {
+namespace rawavfile {
 
-REGISTER("rawavsource",RawAVFile)
-IO_THREAD_GENERATOR(RawAVFile)
+IOTHREAD_GENERATOR(RawAVFile)
 
-core::pParameters RawAVFile::configure()
+MODULE_REGISTRATION_BEGIN("rawavfile")
+	REGISTER_IOTHREAD("rawavsource",RawAVFile)
+MODULE_REGISTRATION_END()
+
+
+namespace {
+	const std::string unknown_format = "Unknown";
+	const std::string& get_format_name_no_throw(format_t fmt) {
+		try {
+			return core::raw_format::get_format_name(fmt);
+		}
+		catch(std::exception&){}
+		try {
+			return core::compressed_frame::get_format_name(fmt);
+		}
+		catch(std::exception&){}
+		return unknown_format;
+	}
+}
+
+core::Parameters RawAVFile::configure()
 {
-	core::pParameters p = IOThread::configure();
-	(*p)["block"]["Threat output pipes as blocking. Specify as max number of frames in output pipe."]=0;
-	(*p)["filename"]["File to open"]="";
-	(*p)["decode"]["Decode the stream and push out raw video"]=true;
-	(*p)["format"]["Format to decode to"]="YUV422";
-	(*p)["fps"]["Override framerate. Specify 0 to use original, or negative value to maximal speed."]=0;
-	(*p)["max_video"]["Maximal number of video streams to process"]=1;
-	(*p)["max_audio"]["Maximal number of audio streams to process"]=1;
+	core::Parameters p = IOThread::configure();
+	p["block"]["Threat output pipes as blocking. Specify as max number of frames in output pipe."]=0;
+	p["filename"]["File to open"]="";
+	p["decode"]["Decode the stream and push out raw video"]=true;
+	p["format"]["Format to decode to"]="YUV422";
+	p["fps"]["Override framerate. Specify 0 to use original, or negative value to maximal speed."]=0;
+	p["max_video"]["Maximal number of video streams to process"]=1;
+	p["max_audio"]["Maximal number of audio streams to process"]=1;
 	return p;
 }
 
 // TODO: number of output streams should be -1 and custom connect_out should be implemented.
-RawAVFile::RawAVFile(log::Log &_log, core::pwThreadBase parent, core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
-		IOThread(_log,parent,0,1024,"RawAVSource"),AVCodecBase(BasicIOThread::log),
-		fmtctx(0),block(0),video_format_out_(YURI_FMT_NONE),
-		decode_(true),fps_(0.0),max_video_streams_(1),max_audio_streams_(1)
+RawAVFile::RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core::Parameters &parameters)
+	:IOThread(_log,parent,0,1024,"RawAVSource"),
+	fmtctx(nullptr),block(0),video_format_out_(0),
+	decode_(true),fps_(0.0),max_video_streams_(1),max_audio_streams_(1)
 {
-	IO_THREAD_INIT("rawavsource")
-	latency = 10;
+	IOTHREAD_INIT(parameters)
+	set_latency (10_us);
 	resize(0,max_video_streams_+max_audio_streams_);
 	av_register_all();
 	if (filename.empty()) throw exception::InitializationFailed("No filename specified!");
@@ -69,15 +94,15 @@ RawAVFile::RawAVFile(log::Log &_log, core::pwThreadBase parent, core::Parameters
 //	}
 	video_formats_out_.resize(video_streams_.size(),video_format_out_);
 	video_codecs_.resize(video_streams_.size(),0);
-	video_formats_.resize(video_streams_.size(),YURI_FMT_NONE);
+	video_formats_.resize(video_streams_.size(),0);
 	frames_.resize(video_streams_.size());
 	if (!decode_) {
 		for (size_t i=0;i<video_streams_.size();++i) {
-			video_formats_[i] = yuri_format_from_avcodec(video_streams_[i]->codec->codec_id);
-			if (video_formats_[i] == YURI_FMT_NONE) {
+			video_formats_[i] = libav::yuri_format_from_avcodec(video_streams_[i]->codec->codec_id);
+			if (video_formats_[i] == 0) {
 				throw exception::InitializationFailed("Unknown format");
 			}
-			log[log::info] << "Found video stream with format " << core::BasicPipe::get_format_string(video_formats_[i]) <<
+			log[log::info] << "Found video stream with format " << get_format_name_no_throw(video_formats_[i]) <<
 			" and resolution " << video_streams_[i]->codec->width << "x" << video_streams_[i]->codec->height;
 		}
 	} else {
@@ -88,18 +113,18 @@ RawAVFile::RawAVFile(log::Log &_log, core::pwThreadBase parent, core::Parameters
 			}
 			if(video_codecs_[i]->capabilities & CODEC_CAP_TRUNCATED)
 				video_streams_[i]->codec->flags|=CODEC_FLAG_TRUNCATED;
-			if (video_formats_out_[i] != YURI_FMT_NONE) {
-				video_streams_[i]->codec->pix_fmt = av_pixelformat_from_yuri(video_formats_out_[i]);
+			if (video_formats_out_[i] != 0) {
+				video_streams_[i]->codec->pix_fmt = libav::avpixelformat_from_yuri(video_formats_out_[i]);
 			}
 
 			if (avcodec_open2(video_streams_[i]->codec,video_codecs_[i],0) < 0) {
 				throw exception::InitializationFailed("Failed to open codec!");
 			}
-			video_formats_[i] = yuri_format_from_avcodec(video_streams_[i]->codec->codec_id);
-			video_formats_out_[i] = yuri_pixelformat_from_av(video_streams_[i]->codec->pix_fmt);
-			log[log::info] << "Found video stream with format " << core::BasicPipe::get_format_string(video_formats_[i]) <<
+			video_formats_[i] = libav::yuri_format_from_avcodec(video_streams_[i]->codec->codec_id);
+			video_formats_out_[i] = libav::yuri_pixelformat_from_av(video_streams_[i]->codec->pix_fmt);
+			log[log::info] << "Found video stream with format " << get_format_name_no_throw(video_formats_[i]) <<
 				" and resolution " << video_streams_[i]->codec->width << "x" << video_streams_[i]->codec->height <<
-				". Decoding to " << core::BasicPipe::get_format_string(video_formats_out_[i]);
+				". Decoding to " << get_format_name_no_throw(video_formats_out_[i]);
 		}
 	}
 
@@ -114,20 +139,25 @@ RawAVFile::~RawAVFile()
 void RawAVFile::run()
 {
 //	using namespace boost::posix_time;
-	IO_THREAD_PRE_RUN
+//	IO_THREAD_PRE_RUN
 	AVPacket packet;
 	av_init_packet(&packet);
 	AVFrame *av_frame = avcodec_alloc_frame();
-	next_times_.resize(video_streams_.size(),std::chrono::steady_clock::now());
-	std::vector<time_duration> time_deltas(video_streams_.size());
+	next_times_.resize(video_streams_.size(),timestamp_t{});
+	std::vector<duration_t> time_deltas(video_streams_.size());
+
 	for (size_t i=0;i<video_streams_.size();++i) {
-		if (fps_>0) time_deltas[i] = nanoseconds(static_cast<nanoseconds::rep>(1e9/fps_));
+		if (fps_>0) time_deltas[i] = 1_s/fps_;
 		else if (fps_ == 0.0) {
-			time_deltas[i] = nanoseconds(static_cast<nanoseconds::rep>(video_streams_[i]->r_frame_rate.den*1e9/video_streams_[i]->r_frame_rate.num));
+			time_deltas[i] = 1_s*video_streams_[i]->r_frame_rate.den/video_streams_[i]->r_frame_rate.num;
+			log[log::info] << "Delta " << i << " " << time_deltas[i];
 		}
 	}
+
+
 	while (still_running()) {
-		if (block) {
+		// TODO reimplement blocking!!
+		/*if (block) {
 			bool block_all = true;
 			for (size_t i=0;i<video_streams_.size();++i) {
 				if (out[i] && out[i]->get_size()<block) {
@@ -139,20 +169,22 @@ void RawAVFile::run()
 				sleep(latency);
 				continue;
 			}
-		}
+		}*/
 		bool ready = false;
 		for (size_t i=0;i<video_streams_.size();++i) {
 			if (frames_[i]) {
 				if (fps_>=0) {
-					time_value curr_time = std::chrono::steady_clock::now();
+					timestamp_t curr_time;//= std::chrono::steady_clock::now();
 					if (curr_time < next_times_[i]) {
+//						log[log::info] << "Not yet... " << i << ", remaining " <<  (next_times_[i] - curr_time);
 						continue;
 					} else {
 						next_times_[i] = next_times_[i]+time_deltas[i];
 						ready = true;
 					}
 				}
-				push_raw_video_frame(i,frames_[i]);
+//				log[log::info] << "Pushing... " << i;
+				push_frame(i,frames_[i]);
 				frames_[i].reset();
 				ready=true;
 //				continue;
@@ -161,12 +193,12 @@ void RawAVFile::run()
 			}
 		}
 		if (!ready) {
-			sleep(latency);
+			sleep(get_latency());
 			continue;
 		}
 		if (av_read_frame(fmtctx,&packet)<0) {
 			log[log::error] << "Failed to read next packet";
-			request_end(YURI_EXIT_FINISHED);
+			request_end(core::yuri_exit_finished);
 			break;
 		}
 		size_t idx=max_video_streams_+1;
@@ -178,15 +210,26 @@ void RawAVFile::run()
 		}
 		if (idx>max_video_streams_) continue;
 		if (!decode_) {
-			frames_[idx] = allocate_frame_from_memory(packet.data, packet.size);
-			log[log::debug] << "Pushing packet with size: " << PLANE_SIZE(frames_[idx],0);
-			size_t dur = packet.duration*video_streams_[idx]->r_frame_rate.den*1e6/video_streams_[idx]->r_frame_rate.num;
-			if (!dur) dur = video_streams_[idx]->r_frame_rate.den*1e6/video_streams_[idx]->r_frame_rate.num;
-			size_t pts = 1e3*packet.pts*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
-			size_t dts = 1e3*packet.dts*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
-			frames_[idx]->set_parameters(video_formats_[idx], video_streams_[idx]->codec->width, video_streams_[idx]->codec->height);
-			frames_[idx]->set_time(dur, pts, dts);
-			log[log::debug] << "Found packet! (pts: " << pts << ", dts: " << dts << ", dur: " << dur;
+			core::pCompressedVideoFrame f = core::CompressedVideoFrame::create_empty(video_formats_[idx],
+					resolution_t{static_cast<dimension_t>(video_streams_[idx]->codec->width), static_cast<dimension_t>(video_streams_[idx]->codec->height)},
+					packet.data,
+					packet.size	);
+//			frames_[idx] = allocate_frame_from_memory(packet.data, packet.size);
+			frames_[idx] = f;
+			log[log::debug] << "Pushing packet with size: " << f->size();
+			duration_t dur = 1_s * packet.duration*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
+			if (!dur.value) dur = 1_s * video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
+
+//			size_t pts = 1e3*packet.pts*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
+//			size_t dts = 1e3*packet.dts*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
+
+
+//			frames_[idx]->set_parameters(video_formats_[idx], video_streams_[idx]->codec->width, video_streams_[idx]->codec->height);
+//			frames_[idx]->set_time(dur, pts, dts);
+			f->set_duration(dur);
+
+
+			log[log::debug] << "Found packet!"/* (pts: " << pts << ", dts: " << dts <<*/ ", dur: " << dur;
 			log[log::debug] << "num/den:" << video_streams_[idx]->r_frame_rate.num << "/" << video_streams_[idx]->r_frame_rate.den;
 			log[log::debug] << "orig pts: " << packet.pts << ", dts: " << packet.dts << ", dur: " << packet.duration;
 		} else {
@@ -202,29 +245,34 @@ void RawAVFile::run()
 				log[log::warning] << "Used only " << decoded_size << " bytes out of " << packet.size;
 			}
 			//assert(format_out_);
-			format_t fmt = yuri_pixelformat_from_av(static_cast<PixelFormat>(av_frame->format));
+			format_t fmt = libav::yuri_pixelformat_from_av(static_cast<PixelFormat>(av_frame->format));
 			if (format_out_ != fmt) {
-				log[log::warning] << "Unexpected frame format! Expected '" << core::BasicPipe::get_format_string(format_out_)
-				<< "', but got '" << core::BasicPipe::get_format_string(fmt) << "'";
+				log[log::warning] << "Unexpected frame format! Expected '" << get_format_name_no_throw(format_out_)
+				<< "', but got '" << get_format_name_no_throw(fmt) << "'";
 				format_out_ = fmt;
 			}
-			if (format_out_ == YURI_FMT_NONE) continue;
-			frames_[idx] = allocate_empty_frame(format_out_,width, height, true);
-			FormatInfo_t fi = core::BasicPipe::get_format_info(format_out_);
+//			log[log::info] << __func__ << " @"<<__FILE__<<":"<<__LINE__ << ", format: " << format_out_ << ", fmt: " << fmt << ", orig: " << av_frame->format;
+			if (format_out_ == 0) continue;
+//			log[log::info] << __func__ << " @"<<__FILE__<<":"<<__LINE__;
+			core::pRawVideoFrame f = core::RawVideoFrame::create_empty(format_out_, {static_cast<dimension_t>(width), static_cast<dimension_t>(height)}, true);
+			frames_[idx] = f;
+//			frames_[idx] = allocate_empty_frame(format_out_,width, height, true);
+//			FormatInfo_t fi = core::BasicPipe::get_format_info(format_out_);
+			const auto& fi = core::raw_format::get_format_info(format_out_);
 			for (size_t i=0;i<4;++i) {
 				if ((av_frame->linesize[i] == 0) || (!av_frame->data[i])) break;
-				if (i >= frames_[idx]->get_planes_count()) {
+				if (i >= f->get_planes_count()) {
 					log[log::warning] << "BUG? Inconsistent number of planes";
 					break;
 				}
-				size_t line_size = width/fi->plane_x_subs[i];
-				size_t lines = height/fi->plane_y_subs[i];
+				size_t line_size = width/fi.planes[i].sub_x;
+				size_t lines = height/fi.planes[i].sub_y;
 				assert(line_size <= static_cast<yuri::size_t>(av_frame->linesize[i]));
 				//assert(av_frame->linesize[i]*height <= PLANE_SIZE(frame,i));
 				for (size_t l=0;l<lines;++l) {
 					std::copy(av_frame->data[i]+l*av_frame->linesize[i],
 								av_frame->data[i]+l*av_frame->linesize[i]+line_size,
-								PLANE_RAW_DATA(frames_[idx],i)+l*line_size);
+								PLANE_RAW_DATA(f,i)+l*line_size);
 				}
 			}
 			//push_raw_video_frame(0,frame);
@@ -232,24 +280,24 @@ void RawAVFile::run()
 	}
 	av_free(av_frame);
 	av_free_packet(&packet);
-	IO_THREAD_POST_RUN
+//	IO_THREAD_POST_RUN
 }
 
 bool RawAVFile::set_param(const core::Parameter &parameter)
 {
-	if (parameter.name == "block") {
+	if (parameter.get_name() == "block") {
 		block=parameter.get<yuri::size_t>();
-	} else if (parameter.name == "filename") {
+	} else if (parameter.get_name() == "filename") {
 		filename=parameter.get<std::string>();
-	} else if (parameter.name == "decode") {
+	} else if (parameter.get_name() == "decode") {
 		decode_=parameter.get<bool>();
-	} else if (parameter.name == "format") {
-		video_format_out_=core::BasicPipe::get_format_from_string(parameter.get<std::string>());
-	} else if (parameter.name == "fps") {
+	} else if (parameter.get_name() == "format") {
+		video_format_out_=core::raw_format::parse_format(parameter.get<std::string>());
+	} else if (parameter.get_name() == "fps") {
 		fps_ = parameter.get<double>();
-	} else if (parameter.name == "max_video") {
+	} else if (parameter.get_name() == "max_video") {
 		max_video_streams_ = parameter.get<size_t>();
-	} else if (parameter.name == "max_audio") {
+	} else if (parameter.get_name() == "max_audio") {
 		max_audio_streams_ = parameter.get<double>();
 	} else {
 		return IOThread::set_param(parameter);
@@ -260,3 +308,4 @@ bool RawAVFile::set_param(const core::Parameter &parameter)
 
 } /* namespace video */
 } /* namespace yuri */
+
