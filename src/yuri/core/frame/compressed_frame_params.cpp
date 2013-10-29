@@ -26,6 +26,7 @@ namespace {
 			{dxt5,  {dxt5,  "DXT5", {"DXT5"}, {}}},
 			{dv, 	{dv,	"DV", {"DV"}, {"video/dv"} }},
 			{mpeg2,	{mpeg2,	"MPEG 2", {"MPEG2","MPG2","HDV"}, {"video/mpeg2"} }},
+			{mpeg2ts,{mpeg2ts,"MPEG 2 Transport Stream", {"MPEG2TS","MPGTS","TS"}, {}}},
 	};
 
 	bool do_add_format(const compressed_frame_info_t& info)
