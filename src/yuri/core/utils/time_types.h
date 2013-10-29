@@ -87,6 +87,14 @@ inline duration_t operator-(const timestamp_t& t1, const timestamp_t& t2)
 {
 	return duration_t(t1.value - t2.value);
 }
+inline timestamp_t operator+(const timestamp_t& t, const duration_t& d)
+{
+	return timestamp_t(t.value + timestamp_t::duration(d));
+}
+inline timestamp_t operator+(const duration_t& d, const timestamp_t& t)
+{
+	return timestamp_t(t.value  + timestamp_t::duration(d));
+}
 inline constexpr duration_t operator-(const duration_t& a)
 {
 	return duration_t(-a.value);
