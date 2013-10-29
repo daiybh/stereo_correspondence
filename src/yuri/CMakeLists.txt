@@ -16,7 +16,7 @@ IF(NOT YURI_DISABLE_X11)
 	find_package( OpenGL )
 ENDIF()
 IF(NOT YURI_DISABLE_LIBAV)
-	pkg_check_modules(libav libavcodec)
+	pkg_check_modules(libavcodec libavcodec)
 ENDIF()
 IF(NOT YURI_DISABLE_CUDA)
 	find_package( CUDA)
@@ -62,15 +62,15 @@ SET (YURI_INCLUDE ${YURI_INCLUDE} ${Boost_INCLUDE_DIRS} )
 #################################################################
 # Set up dependencies for helper libraries
 #################################################################
-SET (YURI_HELPER_LIBAV_LINK ${YURI_HELPER_LINK} ${libav_LIBRARY_DIRS})
+SET (YURI_HELPER_LIBAV_LINK ${YURI_HELPER_LINK} ${libavcodec_LIBRARY_DIRS})
 SET (YURI_HELPER_X11_LINK ${YURI_HELPER_LINK} ${X11_LIBRARY_DIRS})
 		
 SET (YURI_HELPER_LIBAV_LIBS ${YURI_HELPER_LIBAV_LIBS} 
-		${LIBNAME} ${libav_LIBRARIES})
+		${LIBNAME} ${libavcodec_LIBRARIES})
 SET (YURI_HELPER_X11_LIBS ${YURI_HELPER_X11_LIBS} 
 		${LIBNAME} ${X11_LIBRARIES}	${OPENGL_gl_LIBRARY})
 
-SET (YURI_HELPER_LIBAV_INCLUDE  ${YURI_HELPER_LIBAV_INCLUDE}  ${libav_INCLUDE_DIRS})
+SET (YURI_HELPER_LIBAV_INCLUDE  ${YURI_HELPER_LIBAV_INCLUDE}  ${libavcodec_INCLUDE_DIRS})
 SET (YURI_HELPER_X11_INCLUDE ${YURI_HELPER_X11_INCLUDE} ${X11_INCLUDE_DIRS} )
 
 IF(NOT YURI_DISABLE_CUDA AND CUDA_FOUND)
@@ -115,7 +115,7 @@ add_subdirectory(event)
 #################################################################
 # Collect sources for helper libraries
 #################################################################
-IF(NOT YURI_DISABLE_LIBAV AND libav_FOUND)
+IF(NOT YURI_DISABLE_LIBAV AND libavcodec_FOUND)
 	add_subdirectory(libav)
 	SET(CORE_LIBAV TRUE PARENT_SCOPE)
 	SET(CORE_LIBAV TRUE)
