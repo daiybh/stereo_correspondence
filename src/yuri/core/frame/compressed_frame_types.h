@@ -24,6 +24,8 @@ const format_t vp8			= 0x10007;
 const format_t dv			= 0x10008;
 const format_t mpeg2		= 0x10009;
 const format_t mpeg2ts		= 0x1000a;
+const format_t huffyuv		= 0x1000b;
+const format_t mpeg1		= 0x1000c;
 
 const format_t user_start 	= 0x11000;
 
