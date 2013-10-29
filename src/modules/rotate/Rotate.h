@@ -17,7 +17,7 @@ class Rotate: public core::SpecializedIOFilter<core::RawVideoFrame>
 {
 public:
 	Rotate(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
-	virtual ~Rotate();
+	virtual ~Rotate() noexcept;
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
 private:

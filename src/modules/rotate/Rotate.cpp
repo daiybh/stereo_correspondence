@@ -34,7 +34,7 @@ core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent, std::string("rotate"
 	IOTHREAD_INIT(parameters)
 }
 
-Rotate::~Rotate()
+Rotate::~Rotate() noexcept
 {
 }
 
