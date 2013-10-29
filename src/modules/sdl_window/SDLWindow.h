@@ -22,7 +22,7 @@ public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
 	SDLWindow(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
-	virtual ~SDLWindow();
+	virtual ~SDLWindow() noexcept;
 private:
 	
 	virtual void run() override;

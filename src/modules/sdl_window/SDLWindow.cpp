@@ -72,7 +72,7 @@ sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")")
 
 }
 
-SDLWindow::~SDLWindow()
+SDLWindow::~SDLWindow() noexcept
 {
 	SDL_Quit();
 }
