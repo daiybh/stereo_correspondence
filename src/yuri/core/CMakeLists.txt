@@ -25,6 +25,7 @@ SET(YURI_SRC ${YURI_SRC}
 	core/utils/BasicGenerator.h
 	core/utils/ModuleLoader.cpp core/utils/ModuleLoader.h
 	core/utils/DirectoryBrowser.cpp core/utils/DirectoryBrowser.h
+	core/utils/MultiRegister.h
 	
 	core/thread/XmlBuilder.cpp
 	core/thread/XmlBuilder.h
@@ -38,7 +39,6 @@ SET(YURI_SRC ${YURI_SRC}
 	core/thread/ThreadChild.cpp core/thread/ThreadChild.h
 	core/thread/ThreadSpawn.cpp core/thread/ThreadSpawn.h
 	core/thread/FixedMemoryAllocator.cpp core/thread/FixedMemoryAllocator.h
-
 
 	core/parameter/Parameters.cpp core/parameter/Parameters.h
 	core/parameter/Parameter.h
