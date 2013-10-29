@@ -68,7 +68,7 @@ ENDIF()
 
 IF(${CORE_IEEE1394})
 	add_subdirectory(dvsource)
-	#add_subdirectory(hdvsource)
+	add_subdirectory(hdvsource)
 ENDIF()
 
 #### UV #####

@@ -12,6 +12,7 @@
 #define HDVSOURCE_H_
 
 #include "yuri/ieee1394/IEEE1394SourceBase.h"
+#include "yuri/core/frame/CompressedVideoFrame.h"
 
 namespace yuri {
 
@@ -21,11 +22,11 @@ class HDVSource:
 	public IEEE1394SourceBase
 {
 public:
-	static core::pIOThread generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters);
-	static core::pParameters configure();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
 
-	HDVSource(log::Log &log_,core::pwThreadBase parent, nodeid_t node=0, int port = 0, int64_t guid=-1);
-	virtual ~HDVSource();
+	HDVSource(const log::Log &log_,core::pwThreadBase parent, nodeid_t node=0, int port = 0, int64_t guid=-1);
+	virtual ~HDVSource() noexcept;
 	//virtual void run();
 	void setOutputBufferSize(long size);
 protected:
@@ -35,12 +36,12 @@ protected:
 	int process_frame(unsigned char *data, int len, unsigned int dropped);
 
 	void do_sendOutputBuffer();
-	void do_send_data(yuri::ubyte_t*, yuri::size_t size);
+	void do_send_data(const uint8_t*, yuri::size_t size);
 	iec61883_mpeg2_t mpeg_frame;
 	std::map<int,int> counters;
 	long total_packets, total_missing;
 	long buffer_size, buffer_position;
-	std::vector<yuri::ubyte_t> output_buffer;
+	std::vector<uint8_t> output_buffer;
 	bool enable_checks;
 	yuri::mutex buffer_lock;
 };
