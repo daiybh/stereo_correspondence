@@ -21,6 +21,8 @@ const format_t h264			= 0x10004;
 const format_t dxt1			= 0x10005;
 const format_t dxt5			= 0x10006;
 const format_t vp8			= 0x10007;
+const format_t dv			= 0x10008;
+const format_t mpeg2		= 0x10009;
 
 const format_t user_start 	= 0x11000;
 

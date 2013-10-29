@@ -20,11 +20,12 @@ namespace {
 			{jpeg, 	{jpeg,	"JPEG", {"JPG","JPEG"}, {"image/jpeg"} }},
 			{mjpg, 	{mjpg,	"Motion JPEG", {"MJPG","MJPEG"}, {"video/mjpeg"} }},
 			{png, 	{png,	"PNG", {"PNG"}, {"image/png"} }},
-			{h264, 	{h264,	"H.264", {"H264"}, {"image/h264"} }},
-			{vp8, 	{vp8,	"VP8", {"VP8"}, {"image/vp8"} }},
+			{h264, 	{h264,	"H.264", {"H264"}, {"video/h264"} }},
+			{vp8, 	{vp8,	"VP8", {"VP8"}, {"video/vp8"} }},
 			{dxt1,  {dxt1,  "DXT1", {"DXT1"}, {}}},
 			{dxt5,  {dxt5,  "DXT5", {"DXT5"}, {}}},
-
+			{dv, 	{dv,	"DV", {"DV"}, {"video/dv"} }},
+			{mpeg2,	{mpeg2,	"MPEG 2", {"MPEG2","MPG2","HDV"}, {"video/mpeg2"} }},
 	};
 
 	bool do_add_format(const compressed_frame_info_t& info)
