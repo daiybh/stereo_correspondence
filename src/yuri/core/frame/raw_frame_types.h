@@ -91,9 +91,9 @@ const format_t abgr32p		= 0x406;	// ABGR 8:8:8:8 (planar)
 const format_t abgr64p		= 0x407;	// ABGR 16:16:16:16 (planar)
 
 
-const format_t yuv444p		= 0x400;	// YUV 4:4:4 (planar)
-const format_t yuv422p		= 0x401;	// YUV 4:2:2 (planar)
-const format_t yuv420p		= 0x402;	// YUV 4:2:0 (planar)
+const format_t yuv444p		= 0x500;	// YUV 4:4:4 (planar)
+const format_t yuv422p		= 0x501;	// YUV 4:2:2 (planar)
+const format_t yuv420p		= 0x502;	// YUV 4:2:0 (planar)
 
 
 const format_t user_start	= 0x1000;
