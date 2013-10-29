@@ -12,7 +12,7 @@
 #define DVSOURCE_H_
 
 #include "yuri/ieee1394/IEEE1394SourceBase.h"
-
+#include "yuri/core/frame/CompressedVideoFrame.h"
 
 namespace yuri {
 
@@ -20,17 +20,18 @@ namespace ieee1394 {
 
 class DVSource: public IEEE1394SourceBase {
 public:
-	DVSource(log::Log &log_,core::pwThreadBase parent, nodeid_t node=0, int port = 0, int64_t guid=-1);
-	virtual ~DVSource();
+	DVSource(const log::Log &log_,core::pwThreadBase parent, nodeid_t node=0, int port = 0, int64_t guid=-1);
+	virtual ~DVSource() noexcept;
 
-	static core::pIOThread generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters);
-	static core::pParameters configure();
+//	static core::pIOThread generate(log::Log &_log,core::pwThreadBase parent,core::Parameters& parameters);
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
 protected:
 	virtual bool start_receiving();
 	virtual bool stop_receiving();
 	static int receive_frame (unsigned char *data, int len, int complete, void *callback_data);
 	int process_frame(unsigned char *data, int length, int complete);
-	bool analyze_frame(core::pBasicFrame frame);
+	bool analyze_frame(core::pCompressedVideoFrame& frame);
 
 protected:
 	iec61883_dv_fb_t frame;

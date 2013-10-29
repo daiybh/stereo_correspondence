@@ -66,6 +66,11 @@ IF(CORE_DECKLINK AND DECKLINK_FOUND)
 	add_subdirectory(decklink)
 ENDIF()
 
+IF(${CORE_IEEE1394})
+	add_subdirectory(dvsource)
+	#add_subdirectory(hdvsource)
+ENDIF()
+
 #### UV #####
 #IF(NOT YURI_DISABLE_ULTRAGRID)
 	# This should be replaced by a proper detection!
@@ -214,11 +219,6 @@ ENDIF()
 
 IF(${SAGE_FOUND})
 	add_subdirectory(sage)
-ENDIF()
-
-IF(${CORE_IEEE1394})
-	add_subdirectory(dvsource)
-	add_subdirectory(hdvsource)
 ENDIF()
 
 IF(${CORE_ASIO})
