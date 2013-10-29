@@ -40,6 +40,9 @@ SET(YURI_SRC ${YURI_SRC}
 	core/thread/ThreadSpawn.cpp core/thread/ThreadSpawn.h
 	core/thread/FixedMemoryAllocator.cpp core/thread/FixedMemoryAllocator.h
 
+	core/thread/ConverterThread.cpp core/thread/ConverterThread.h
+	core/thread/ConverterRegister.h
+	
 	core/parameter/Parameters.cpp core/parameter/Parameters.h
 	core/parameter/Parameter.h
 	
