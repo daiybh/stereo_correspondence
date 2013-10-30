@@ -28,6 +28,7 @@
 #include "yuri/event/BasicEventConversions.h"
 #include "yuri/core/pipe/PipeGenerator.h"
 #include "yuri/core/thread/FixedMemoryAllocator.h"
+#include "yuri/core/thread/ConverterGenerator.h"
 #ifdef HAVE_BOOST_PROGRAM_OPTIONS
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -72,6 +73,21 @@ void usage(const po::options_description& options)
 }
 #endif
 //
+
+namespace {
+	const std::string unknown_format = "Unknown";
+	const std::string& get_format_name_no_throw(yuri::format_t fmt) {
+		try {
+			return yuri::core::raw_format::get_format_name(fmt);
+		}
+		catch(std::exception&){}
+		try {
+			return yuri::core::compressed_frame::get_format_name(fmt);
+		}
+		catch(std::exception&){}
+		return unknown_format;
+	}
+}
 void list_params(yuri::log::Log& l_, const yuri::core::Parameters& params)
 {
 	using namespace yuri;
@@ -273,6 +289,21 @@ void list_pipes(yuri::log::Log& l_)
 		}
 	}
 }
+void list_converters(yuri::log::Log& l_)
+{
+	using namespace yuri;
+	const auto& conv = core::ConverterRegister::get_instance();
+	const auto& keys = conv.list_keys();
+	for (const auto& k: keys) {
+		l_[log::info] << get_format_name_no_throw(k.first) << " -> " << get_format_name_no_throw(k.second);
+		const auto& details = conv.find_value(k);
+		for (const auto& d: details) {
+			l_[log::info] << "\t\t" << d.first << ", priority: " << d.second;
+		}
+
+
+	}
+}
 //void list_converters(Log l_)
 //{
 //	for (const auto& conv: core::RegisteredClass::get_all_converters()) {
@@ -359,6 +390,7 @@ int main(int argc, char**argv)
 		else if (iequals(list_what,"datagram_sockets") || iequals(list_what,"datagram")) list_dgram_sockets(l_);
 		else if (iequals(list_what,"stream_sockets") || iequals(list_what,"stream")) list_stream_sockets(l_);
 		else if (iequals(list_what,"functions")) list_functions(l_);
+		else if (iequals(list_what,"converters")) list_converters(l_);
 		else if (iequals(list_what,"pipes")) list_pipes(l_);
 		else list_registered(l_);
 		return 0;
@@ -384,6 +416,7 @@ int main(int argc, char**argv)
 				else if (iequals(list_what,"datagram_sockets") || iequals(list_what,"datagram")) list_dgram_sockets(l_);
 				else if (iequals(list_what,"stream_sockets") || iequals(list_what,"stream")) list_stream_sockets(l_);
 				else if (iequals(list_what,"functions")) list_functions(l_);
+				else if (iequals(list_what,"converters")) list_converters(l_);
 				else if (iequals(list_what,"pipes")) list_pipes(l_);
 				else list_registered(l_);
 			}
