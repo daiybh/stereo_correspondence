@@ -35,7 +35,7 @@ typedef std::pair<std::string, size_t> value_type;
 
 namespace std {
 template<>
-class std::hash<yuri::core::converter_key> {
+class hash<yuri::core::converter_key> {
 public:
 	size_t operator()(const yuri::core::converter_key& key) const {
 		return std::hash<yuri::format_t>()(key.first) ^ std::hash<yuri::format_t>()(key.second);
