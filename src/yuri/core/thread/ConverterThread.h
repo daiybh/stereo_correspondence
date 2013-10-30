@@ -19,8 +19,16 @@ public:
 	core::pFrame convert_frame(core::pFrame input_frame, format_t target_format) {
 		return do_convert_frame(input_frame, target_format);
 	}
+	bool initialize_converter(format_t target_format) {
+		return do_initialize_converter(target_format);
+	}
+	bool converter_is_stateless() const {
+		return do_converter_is_stateless();
+	}
 private:
 	virtual core::pFrame do_convert_frame(core::pFrame input_frame, format_t target_format) = 0;
+	virtual bool do_initialize_converter(format_t /*target_format*/) { return true; }
+	virtual bool do_converter_is_stateless() const { return true; }
 };
 
 }
