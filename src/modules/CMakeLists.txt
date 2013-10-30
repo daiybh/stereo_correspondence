@@ -6,6 +6,7 @@ link_directories (${Boost_LIBRARY_DIRS})
 
 add_subdirectory(color_key)
 add_subdirectory(combine)
+add_subdirectory(convert_planes)
 add_subdirectory(diff)
 add_subdirectory(dup)
 add_subdirectory(event_info)
