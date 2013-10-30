@@ -13,6 +13,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/raw_frame_params.h"
+#include "yuri/core/thread/ConverterGenerator.h"
 #include <cassert>
 namespace yuri {
 
@@ -22,6 +23,54 @@ IOTHREAD_GENERATOR(YuriConvertor)
 
 MODULE_REGISTRATION_BEGIN("yuri_convert")
 		REGISTER_IOTHREAD("yuri_convert",YuriConvertor)
+		REGISTER_CONVERTER(core::raw_format::rgb24, 	core::raw_format::rgba32, "yuri_convert", 10)
+
+		REGISTER_CONVERTER(core::raw_format::bgr24,  	core::raw_format::abgr32, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::rgb24, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::abgr32,  	core::raw_format::bgr24, "yuri_convert", 10)
+
+		REGISTER_CONVERTER(core::raw_format::abgr32,  	core::raw_format::rgba32, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::abgr32, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::bgr24,  	core::raw_format::rgb24, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::rgb24,  	core::raw_format::bgr24, "yuri_convert", 10)
+
+		REGISTER_CONVERTER(core::raw_format::abgr32,  	core::raw_format::rgb24, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::bgr24, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::bgr24,  	core::raw_format::rgba32, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::rgb24,  	core::raw_format::abgr32, "yuri_convert", 10)
+
+
+		REGISTER_CONVERTER(core::raw_format::yuyv422,  	core::raw_format::uyvy422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::uyvy422,  	core::raw_format::yuyv422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::yvyu422, 	core::raw_format::vyuy422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::vyuy422, 	core::raw_format::yvyu422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::uyvy422, 	core::raw_format::vyuy422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::vyuy422,  	core::raw_format::uyvy422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::yuyv422,  	core::raw_format::yvyu422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::yvyu422, 	core::raw_format::yuyv422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::uyvy422, 	core::raw_format::yvyu422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::vyuy422,  	core::raw_format::yuyv422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::yuyv422, 	core::raw_format::vyuy422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::yvyu422, 	core::raw_format::uyvy422, "yuri_convert", 10)
+
+		REGISTER_CONVERTER(core::raw_format::yuyv422,  	core::raw_format::yuv444, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::yuv444,  	core::raw_format::yuyv422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::uyvy422,  	core::raw_format::yuv444, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::yuv444,  	core::raw_format::uyvy422, "yuri_convert", 10)
+
+		REGISTER_CONVERTER(core::raw_format::rgb24,  	core::raw_format::yuv444, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::yuv444, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::bgr24,  	core::raw_format::yuv444, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::abgr32,  	core::raw_format::yuv444, "yuri_convert", 10)
+
+		REGISTER_CONVERTER(core::raw_format::rgb24,  	core::raw_format::yuyv422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::yuyv422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::bgr24,  	core::raw_format::yuyv422, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::abgr32,  	core::raw_format::yuyv422, "yuri_convert", 10)
+
+		REGISTER_CONVERTER(core::raw_format::yuv444, 	core::raw_format::rgb24, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::yuyv422, 	core::raw_format::rgb24, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::uyvy422, 	core::raw_format::rgb24, "yuri_convert", 10)
 MODULE_REGISTRATION_END()
 
 
@@ -150,27 +199,25 @@ YuriConvertor::YuriConvertor(log::Log &log_, core::pwThreadBase parent, const co
 YuriConvertor::~YuriConvertor() noexcept{
 }
 
-core::pFrame YuriConvertor::do_special_single_step(const core::pRawVideoFrame& frame)
-//bool YuriConvertor::step()
+core::pFrame YuriConvertor::do_convert_frame(core::pFrame input_frame, format_t target_format)
 {
-//	if (!in[0] || in[0]->is_empty()) return true;
-//	core::pRawVideoFrame frame = in[0]->pop_frame();
 	core::pRawVideoFrame outframe;
+	core::pRawVideoFrame frame= dynamic_pointer_cast<core::RawVideoFrame>(input_frame);
 	if (!frame) return outframe;
 
 	format_t in_fmt = frame->get_format();
-	format_pair_t conv_pair = std::make_pair(in_fmt, format_);
+	format_pair_t conv_pair = std::make_pair(in_fmt, target_format);
 	converter_t converter;
 
 	if (converters.count(conv_pair)) converter = converters[conv_pair];
 	if (converter) {
 		outframe = converter(frame, *this);
-	} else if (in_fmt == format_) {
+	} else if (in_fmt == target_format) {
 		outframe = frame;
 	} else {
 
 		log[log::debug] << "Unknown format combination " << core::raw_format::get_format_name(frame->get_format()) << " -> "
-				<< core::raw_format::get_format_name(format_) << "\n";
+				<< core::raw_format::get_format_name(target_format) << "\n";
 		return outframe;
 	}
 
@@ -180,6 +227,14 @@ core::pFrame YuriConvertor::do_special_single_step(const core::pRawVideoFrame& f
 		//if (outframe->get_pts() == 0) outframe->set_time(frame->get_pts(), frame->get_dts(), frame->get_duration());
 	}
 	return outframe;
+}
+
+core::pFrame YuriConvertor::do_special_single_step(const core::pRawVideoFrame& frame)
+//bool YuriConvertor::step()
+{
+//	if (!in[0] || in[0]->is_empty()) return true;
+//	core::pRawVideoFrame frame = in[0]->pop_frame();
+	return convert_frame(frame, format_);
 }
 
 
