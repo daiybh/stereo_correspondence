@@ -26,7 +26,7 @@ enum colorimetry_t {
 
 /// @bug Conversion from limited range YUV to RGB does not work properly
 
-class YuriConvertor: public core::SpecializedIOFilter<core::RawVideoFrame>, core::ConverterThread {
+class YuriConvertor: public core::SpecializedIOFilter<core::RawVideoFrame>, public core::ConverterThread {
 public:
 	YuriConvertor(log::Log &log_, core::pwThreadBase parent, const core::Parameters& parameters);
 	virtual ~YuriConvertor() noexcept;
