@@ -43,6 +43,7 @@ SET(YURI_SRC ${YURI_SRC}
 	core/thread/ConverterThread.cpp core/thread/ConverterThread.h
 	core/thread/ConvertUtils.cpp core/thread/ConvertUtils.h
 	core/thread/ConverterRegister.h
+	core/thread/Convert.cpp core/thread/Convert.h
 	
 	core/parameter/Parameters.cpp core/parameter/Parameters.h
 	core/parameter/Parameter.h
