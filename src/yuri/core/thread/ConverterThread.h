@@ -11,6 +11,8 @@
 #include "yuri/core/frame/Frame.h"
 namespace yuri {
 namespace core {
+class ConverterThread;
+typedef shared_ptr<ConverterThread> pConverterThread;
 
 class ConverterThread {
 public:
