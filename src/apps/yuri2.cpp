@@ -28,7 +28,7 @@
 #include "yuri/event/BasicEventConversions.h"
 #include "yuri/core/pipe/PipeGenerator.h"
 #include "yuri/core/thread/FixedMemoryAllocator.h"
-#include "yuri/core/thread/ConverterGenerator.h"
+#include "yuri/core/thread/ConverterRegister.h"
 #ifdef HAVE_BOOST_PROGRAM_OPTIONS
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;

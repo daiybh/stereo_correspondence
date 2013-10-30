@@ -13,7 +13,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/raw_frame_params.h"
-#include "yuri/core/thread/ConverterGenerator.h"
+#include "yuri/core/thread/ConverterRegister.h"
 #include <cassert>
 namespace yuri {
 
