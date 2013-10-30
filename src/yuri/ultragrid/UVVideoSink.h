@@ -9,8 +9,10 @@
 #define UVSINK_H_
 
 #include "yuri/core/thread/IOFilter.h"
+#include "yuri/core/thread/Convert.h"
 #include "types.h"
-#include <unordered_set>
+//#include <unordered_set>
+
 namespace yuri {
 namespace ultragrid {
 namespace detail {
@@ -66,9 +68,11 @@ private:
 	virtual core::pFrame do_simple_single_step(const core::pFrame& frame) override;
 	virtual void child_ends_hook(core::pwThreadBase child, int code, size_t remaining_child_count) override;
 
+	shared_ptr<core::Convert> converter_;
 	video_desc last_desc_;
 	detail::uv_display_params sink_params_;
-	std::unordered_set<format_t> supported_formats_;
+	std::vector<format_t> supported_formats_; // Using vector to preserve the order, in which they were retrieved.
+
 };
 
 
