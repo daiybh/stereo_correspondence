@@ -35,6 +35,7 @@ IF(NOT YURI_DISABLE_LIBAV)
 	pkg_check_modules(libavformat libavformat) 
 	pkg_check_modules(libavutil libavutil)
 	pkg_check_modules(libswscale libswscale)
+	pkg_check_modules(libavcodec libavcodec)
 ENDIF()
 
 IF (CORE_DECKLINK)
@@ -72,10 +73,8 @@ IF(${CORE_IEEE1394})
 	add_subdirectory(hdvsource)
 ENDIF()
 
-pkg_check_modules(libavcodec libavcodec)
-pkg_check_modules(libavformat libavformat)
 
-IF(libavcodec_FOUND AND libavformat_FOUND)
+IF(CORE_LIBAV AND libavcodec_FOUND AND libavformat_FOUND)
 	add_subdirectory(rawavfile)
 ENDIF()
 
