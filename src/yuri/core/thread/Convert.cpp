@@ -143,7 +143,7 @@ bool Convert::set_param(const core::Parameter& param)
 {
 	if (param.get_name() == "format") {
 		format_ = raw_format::parse_format(param.get<std::string>());
-	} else return core::IOThread::set_param(param);
+	} else return core::IOFilter::set_param(param);
 	return true;
 }
 
