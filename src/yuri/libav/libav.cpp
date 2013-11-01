@@ -42,6 +42,7 @@ std::unordered_map<format_t, PixelFormat> yuri_pixel_map = {
 		{yuv422p,					PIX_FMT_YUV422P},
 		{yuv444p,					PIX_FMT_YUV444P},
 		{uyvy422,					PIX_FMT_UYVY422},
+		{yuv411p,					PIX_FMT_YUV411P},
 };
 
 }
