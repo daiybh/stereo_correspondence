@@ -134,7 +134,7 @@ Iter get_hext_header(Iter start, Iter end) {
 	if (!header_type) return end;
 	if (header_type == 0xd8 || header_type == 0xd9) return start+2; // Start/end of image
 	size_t offset = get_header_size(start);
-	if (std::distance(start, end) < offset) return end;
+	if (std::distance(start, end) < static_cast<std::ptrdiff_t>(offset)) return end;
 	return start+offset+2;
 }
 
