@@ -60,8 +60,9 @@ ENDIF()
 
 find_package(JPEG)
 IF(JPEG_FOUND)
-	add_subdirectory(jpegdecoder)
+#	add_subdirectory(jpegdecoder)
 #	add_subdirectory(jpegencoder)
+	add_subdirectory(jpeg)
 ENDIF()
 
 IF(CORE_DECKLINK AND DECKLINK_FOUND)
