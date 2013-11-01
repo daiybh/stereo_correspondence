@@ -14,7 +14,8 @@
 #include "yuri/core/thread/ConverterThread.h"
 namespace yuri {
 namespace core {
-
+class Convert;
+typedef shared_ptr<Convert> pConvert;
 class Convert: public core::IOFilter, public core::ConverterThread
 {
 public:
@@ -23,7 +24,7 @@ public:
 	Convert(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~Convert() noexcept;
 
-
+	pFrame convert_to_any(const pFrame& frame, const std::vector<format_t>& fmts);
 
 private:
 	pFrame 	do_convert_frame(pFrame frame_in, format_t target_format);

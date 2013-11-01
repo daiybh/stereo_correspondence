@@ -128,10 +128,24 @@ pFrame Convert::do_convert_frame(pFrame frame_in, format_t target_format)
 	for (const auto& step: path) {
 //		log[log::info] << "Stepping to " << step.name;
 		result = pimpl_->convert_step(result, step);
-		if (!result) return {};
+		if (!result) {
+			log[log::info] << "Failed!";
+			return {};
+		}
 	}
 //	log[log::info] << "COnversion ok";
 	return result;
+}
+pFrame Convert::convert_to_any(const pFrame& frame, const std::vector<format_t>& fmts)
+{
+	if (!frame) return {};
+	format_t fmt = frame->get_format();
+	if (find(fmts.begin(), fmts.end(), fmt) != fmts.end()) return frame;
+	for (const auto& f: fmts) {
+		pFrame frame_out = convert_frame(frame, f);
+		if (frame_out) return frame_out;
+	}
+	return {};
 }
 
 pFrame Convert::do_simple_single_step(const pFrame& frame)
