@@ -120,7 +120,7 @@ pFrame Convert::do_convert_frame(pFrame frame_in, format_t target_format)
 	if (source_format == target_format) return frame_in;
 	auto path = find_conversion(source_format, target_format);
 	if (path.second == 0 || path.first.empty()) {
-		log[log::warning] << "Conversion not supported";
+//		log[log::warning] << "Conversion not supported";
 		return {};
 	}
 //	log[log::info] << "Path length: " << path.size();
@@ -147,7 +147,25 @@ pFrame Convert::convert_to_any(const pFrame& frame, const std::vector<format_t>&
 	}
 	return {};
 }
-
+pFrame Convert::convert_to_cheapest(const pFrame& frame, const std::vector<format_t>& fmts)
+{
+	if (!frame || fmts.empty()) return {};
+	format_t fmt = frame->get_format();
+	if (find(fmts.begin(), fmts.end(), fmt) != fmts.end()) return frame;
+	std::vector<std::pair<format_t, size_t>> costs;
+	for (const auto& f: fmts) {
+		auto path = find_conversion(fmt, f);
+		costs.emplace_back(std::make_pair(f, path.second));
+	}
+	std::sort(costs.begin(), costs.end(),
+	   [](const std::pair<format_t, size_t>&a, const std::pair<format_t, size_t>& b)
+	   {return a.second < b.second;});
+	for (const auto&f: costs) {
+		pFrame frame_out = convert_frame(frame, f.first);
+		if (frame_out) return frame_out;
+	}
+	return {};
+}
 pFrame Convert::do_simple_single_step(const pFrame& frame)
 {
 	return convert_frame(frame, format_);

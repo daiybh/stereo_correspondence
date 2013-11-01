@@ -25,6 +25,7 @@ public:
 	virtual ~Convert() noexcept;
 
 	pFrame convert_to_any(const pFrame& frame, const std::vector<format_t>& fmts);
+	pFrame convert_to_cheapest(const pFrame& frame, const std::vector<format_t>& fmts);
 
 private:
 	pFrame 	do_convert_frame(pFrame frame_in, format_t target_format);
