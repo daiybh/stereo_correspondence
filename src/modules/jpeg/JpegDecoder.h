@@ -25,6 +25,8 @@ public:
 	static core::Parameters configure();
 	JpegDecoder(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~JpegDecoder() noexcept;
+
+	void abort_decompression();
 private:
 	
 	virtual core::pFrame do_special_single_step(const core::pCompressedVideoFrame& frame) override;
@@ -32,6 +34,7 @@ private:
 	virtual core::pFrame do_convert_frame(core::pFrame input_frame, format_t target_format) override;
 
 	bool aborted_;
+	bool fast_;
 	format_t output_format_;
 };
 

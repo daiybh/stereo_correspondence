@@ -2,7 +2,9 @@
 SET (MODULE jpeg_module)
 
 # Set all source files module uses
-SET (SRC JpegDecoder.cpp
+SET (SRC jpeg_common.cpp
+		 jpeg_common.h 
+		 JpegDecoder.cpp
 		 JpegDecoder.h
 		 JpegEncoder.cpp
 		 JpegEncoder.h

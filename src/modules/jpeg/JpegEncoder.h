@@ -28,6 +28,6 @@ private:
 	virtual bool set_param(const core::Parameter& param);
 };
 
-} /* namespace jpeg2 */
+} /* namespace jpeg */
 } /* namespace yuri */
 #endif /* JPEGENCODER_H_ */
