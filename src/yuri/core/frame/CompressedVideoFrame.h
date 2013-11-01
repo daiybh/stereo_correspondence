@@ -31,6 +31,7 @@ public:
 								const_reference;
 
 	CompressedVideoFrame(format_t format, resolution_t resolution);
+	CompressedVideoFrame(format_t format, resolution_t resolution, size_t size);
 	CompressedVideoFrame(format_t format, resolution_t resolution, const uint8_t* data, size_t size);
 	template<class Deleter>
 	CompressedVideoFrame(format_t format, resolution_t resolution, const uint8_t* data, size_t size, Deleter deleter);
