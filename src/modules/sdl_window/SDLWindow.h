@@ -12,6 +12,7 @@
 
 #include "yuri/core/thread/IOThread.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/thread/Convert.h"
 #include "SDL.h"
 namespace yuri {
 namespace sdl_window {
@@ -31,6 +32,7 @@ private:
 	void process_sdl_events();
 	void sdl_resize(resolution_t);
 	bool prepare_rgb_overlay(const core::pRawVideoFrame& frame);
+	core::pConvert	convert_;
 	resolution_t	resolution_;
 	bool			fullscreen_;
 	bool			default_keys_;

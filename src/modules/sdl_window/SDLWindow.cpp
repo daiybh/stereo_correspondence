@@ -29,6 +29,22 @@ Uint32 map_yuv_yuri_to_sdl(format_t fmt) {
 	if (it == yuri_to_sdl_yuv.end()) return 0;
 	return it->second;
 }
+
+std::vector<format_t> supported_formats = {
+	core::raw_format::yuyv422,
+	core::raw_format::yvyu422,
+	core::raw_format::uyvy422,
+	core::raw_format::rgb24,
+	core::raw_format::bgr24,
+	core::raw_format::rgb15,
+	core::raw_format::bgr15,
+	core::raw_format::rgb16,
+	core::raw_format::bgr16,
+	core::raw_format::argb32,
+	core::raw_format::rgba32,
+	core::raw_format::abgr32,
+	core::raw_format::bgra32
+};
 }
 
 
@@ -78,6 +94,7 @@ SDLWindow::~SDLWindow() noexcept
 }
 void SDLWindow::run()
 {
+	convert_.reset(new core::Convert(log, get_this_ptr(), core::Convert::configure()));
 	IOThread::run();
 	overlay_.reset();
 	rgb_surface_.reset();
@@ -86,7 +103,8 @@ bool SDLWindow::step()
 {
 	process_sdl_events();
 	core::pFrame gframe = pop_frame(0);
-	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(gframe);
+	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(
+		convert_->convert_to_cheapest(gframe, supported_formats));
 	if (!frame) return true;
 	const resolution_t res = frame->get_resolution();
 	const dimension_t src_linesize  = PLANE_DATA(frame,0).get_line_size();
