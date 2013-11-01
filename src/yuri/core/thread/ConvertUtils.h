@@ -22,7 +22,13 @@ struct convert_node_t {
 typedef std::vector<convert::convert_node_t> path_list;
 }
 
-convert::path_list find_conversion(format_t, format_t);
+/*!
+ * Finds shortest way from @em source format to @em target format
+ * @param source Input format
+ * @param target Output format
+ * @return pair containing the shortest path and it's cost
+ */
+std::pair<convert::path_list, size_t> find_conversion(format_t source, format_t target);
 
 
 

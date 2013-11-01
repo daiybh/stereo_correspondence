@@ -119,13 +119,13 @@ pFrame Convert::do_convert_frame(pFrame frame_in, format_t target_format)
 	format_t source_format = frame_in->get_format();
 	if (source_format == target_format) return frame_in;
 	auto path = find_conversion(source_format, target_format);
-	if (path.empty()) {
+	if (path.second == 0 || path.first.empty()) {
 		log[log::warning] << "Conversion not supported";
 		return {};
 	}
 //	log[log::info] << "Path length: " << path.size();
 	pFrame result = frame_in;
-	for (const auto& step: path) {
+	for (const auto& step: path.first) {
 //		log[log::info] << "Stepping to " << step.name;
 		result = pimpl_->convert_step(result, step);
 		if (!result) {

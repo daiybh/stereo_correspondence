@@ -16,13 +16,13 @@ namespace core {
 namespace {
 
 mutex	path_cache_mutex;
-std::unordered_map<converter_key, convert::path_list> path_cache;
+std::unordered_map<converter_key, std::pair<convert::path_list, size_t>> path_cache;
 
 
 }
 
 // Searches all convertors using Dijkstra algorithm
-convert::path_list find_conversion(format_t format_in, format_t format_out)
+std::pair<convert::path_list, size_t> find_conversion(format_t format_in, format_t format_out)
 {
 	converter_key search_key{format_in, format_out};
 	if (format_in == format_out) return {};
@@ -107,11 +107,11 @@ convert::path_list find_conversion(format_t format_in, format_t format_out)
 		lock_t _(path_cache_mutex);
 		auto pit = path_cache.find(search_key);
 		if (pit != path_cache.end()) {
-			path_cache[search_key]=paths[format_out];
+			path_cache[search_key]={paths[format_out], costs[format_out]};
 		}
 	}
 //	std::cout << "Final cost " << costs[format_out] << "\n";
-	return paths[format_out];
+	return {paths[format_out], costs[format_out]};
 }
 
 
