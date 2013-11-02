@@ -10,12 +10,15 @@
 #ifndef JPEGENCODER_H_
 #define JPEGENCODER_H_
 
-#include "yuri/core/thread/IOThread.h"
-
+#include "yuri/core/thread/SpecializedIOFilter.h"
+#include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/thread/ConverterThread.h"
+#include "yuri/core/thread/Convert.h"
+#include "yuri/core/frame/raw_frame_types.h"
 namespace yuri {
 namespace jpeg {
 
-class JpegEncoder: public core::IOThread
+class JpegEncoder: public core::SpecializedIOFilter<core::RawVideoFrame>, public core::ConverterThread
 {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
@@ -24,8 +27,12 @@ public:
 	virtual ~JpegEncoder() noexcept;
 private:
 	
-	virtual bool step();
+	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
+	virtual core::pFrame do_convert_frame(core::pFrame input_frame, format_t target_format) override;
 	virtual bool set_param(const core::Parameter& param);
+
+	size_t quality_;
+	core::pConvert converter_;
 };
 
 } /* namespace jpeg */
