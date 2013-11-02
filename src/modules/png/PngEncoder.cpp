@@ -50,7 +50,9 @@ void report_warning(png_structp png_ptr, png_const_charp msg)
 	log::Log& log = *reinterpret_cast<log::Log*>(png_get_error_ptr(png_ptr));
 	log[log::warning] << msg;
 }
-
+using namespace core::raw_format;
+const std::vector<format_t> supported_formats = {
+y8, y16, rgb24, rgb48, bgr24, bgr48, rgba32, rgba64, bgra32, bgra64};
 }
 PngEncoder::PngEncoder(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("png_encoder"))
@@ -62,8 +64,11 @@ PngEncoder::~PngEncoder() noexcept
 {
 }
 
-core::pFrame PngEncoder::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame PngEncoder::do_special_single_step(const core::pRawVideoFrame& framex)
 {
+	if (!converter_) converter_.reset(new core::Convert(log, get_this_ptr(), core::Convert::configure()));
+	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(converter_->convert_to_cheapest(framex, supported_formats));
+	if (!frame) return {};
 	format_t input_format = frame->get_format();
 	using namespace core::raw_format;
 	bool bgr = false;
