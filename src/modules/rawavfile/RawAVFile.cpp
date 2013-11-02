@@ -142,6 +142,7 @@ void RawAVFile::run()
 //	IO_THREAD_PRE_RUN
 	AVPacket packet;
 	av_init_packet(&packet);
+	bool keep_packet = false;
 	AVFrame *av_frame = avcodec_alloc_frame();
 	next_times_.resize(video_streams_.size(),timestamp_t{});
 	std::vector<duration_t> time_deltas(video_streams_.size());
@@ -196,7 +197,7 @@ void RawAVFile::run()
 			sleep(get_latency());
 			continue;
 		}
-		if (av_read_frame(fmtctx,&packet)<0) {
+		if (!keep_packet && av_read_frame(fmtctx,&packet)<0) {
 			log[log::error] << "Failed to read next packet";
 			request_end(core::yuri_exit_finished);
 			break;
@@ -236,16 +237,26 @@ void RawAVFile::run()
 			int whole_frame = 0;
 			const int height = video_streams_[idx]->codec->height;
 			const int width= video_streams_[idx]->codec->width;
+			keep_packet = false;
 			int decoded_size = avcodec_decode_video2(video_streams_[idx]->codec,av_frame, &whole_frame,&packet);
+			if (!whole_frame) {
+//				log[log::warning] << "No frame this time...";
+				continue;
+			}
 			if (decoded_size < 0) {
 				log[log::warning] << "Failed to decode frame";
 				continue;
 			}
+
 			if (decoded_size != packet.size) {
-				log[log::warning] << "Used only " << decoded_size << " bytes out of " << packet.size;
+				keep_packet = true;
+				log[log::debug] << "Used only " << decoded_size << " bytes out of " << packet.size;
 			}
+
 			//assert(format_out_);
 			format_t fmt = libav::yuri_pixelformat_from_av(static_cast<PixelFormat>(av_frame->format));
+			if (fmt == 0) continue;
+
 			if (format_out_ != fmt) {
 				log[log::warning] << "Unexpected frame format! Expected '" << get_format_name_no_throw(format_out_)
 				<< "', but got '" << get_format_name_no_throw(fmt) << "'";
@@ -265,8 +276,10 @@ void RawAVFile::run()
 					log[log::warning] << "BUG? Inconsistent number of planes";
 					break;
 				}
+
 				size_t line_size = width/fi.planes[i].sub_x;
 				size_t lines = height/fi.planes[i].sub_y;
+//				log[log::info] << "Filling plane " << i << ", line size: " << line_size << ", lines: "<<lines;
 				assert(line_size <= static_cast<yuri::size_t>(av_frame->linesize[i]));
 				//assert(av_frame->linesize[i]*height <= PLANE_SIZE(frame,i));
 				for (size_t l=0;l<lines;++l) {
