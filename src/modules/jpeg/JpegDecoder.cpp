@@ -42,7 +42,7 @@ void error_exit(jpeg_common_struct* /*cinfo*/)
 
 JpegDecoder::JpegDecoder(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters)
 :core::SpecializedIOFilter<core::CompressedVideoFrame>(log_, parent, std::string("jpeg_decoder")),
- aborted_(false),fast_(false),output_format_(core::raw_format::rgb24)
+ fast_(false),output_format_(core::raw_format::rgb24)
 {
 	IOTHREAD_INIT(parameters)
 }
@@ -51,10 +51,6 @@ JpegDecoder::~JpegDecoder() noexcept
 {
 }
 
-void JpegDecoder::abort_decompression()
-{
-	aborted_=true;
-}
 core::pFrame JpegDecoder::do_convert_frame(core::pFrame input_frame, format_t target_format)
 {
 	// TODO SET FORMAT
@@ -92,7 +88,6 @@ core::pFrame JpegDecoder::do_special_single_step(const core::pCompressedVideoFra
 
 		jpeg_mem_src(cinfo, frame->data(), frame->size());
 
-		aborted_ = false;
 
 		if (jpeg_read_header(cinfo,true)!=JPEG_HEADER_OK) {
 			log[log::warning] << "Unrecognized file header!!";
@@ -146,11 +141,7 @@ core::pFrame JpegDecoder::do_special_single_step(const core::pCompressedVideoFra
 	//			processed = jpeg_read_raw_data(&cinfo, img, height-cinfo.output_scanline);
 	//			log[log::info] << "processed " << processed;
 	//		}
-			if (aborted_) {
-				log[log::warning] << "Decoding aborted";
-				jpeg_abort(reinterpret_cast<j_common_ptr>(cinfo));
-				return {};
-			}
+
 			if (!processed) {
 				log[log::error] << "No lines processed ... corrupted file?";
 				return {};
