@@ -80,6 +80,11 @@ IF(CORE_LIBAV AND libavcodec_FOUND AND libavformat_FOUND)
 	add_subdirectory(rawavfile)
 ENDIF()
 
+find_package(PNG)
+IF(PNG_FOUND)
+	add_subdirectory(png)
+ENDIF()
+
 #### UV #####
 #IF(NOT YURI_DISABLE_ULTRAGRID)
 	# This should be replaced by a proper detection!
@@ -165,7 +170,6 @@ add_subdirectory(fade)
 # for optional modules, respecting YURI_DISABLE_*
 #################################################################
 
-find_package(PNG)
 find_package(CURL)
 find_package(ImageMagick COMPONENTS Magick++)
 IF(NOT YURI_DISABLE_SAGE)
@@ -193,11 +197,6 @@ find_path(VIDEOMASTER_INCLUDE_DIR VideoMasterHD_Sdi.h
 # Add optional modules based on results of the detection
 #################################################################
 
-
-IF(PNG_FOUND)
-	add_subdirectory(pngencoder)
-	add_subdirectory(pngdecoder)
-ENDIF()
 
 IF(CURL_FOUND)
 	add_subdirectory(fetcher)
