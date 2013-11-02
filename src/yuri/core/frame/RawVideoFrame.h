@@ -34,10 +34,10 @@ public:
 	typedef typename vector_type::const_reference
 								const_reference;
 
-	static pRawVideoFrame create_empty(format_t, resolution_t, bool fixed = false, interlace_t interlace = interlace_t::progressive, field_order_t field_order = field_order_t::none);
-	static pRawVideoFrame create_empty(format_t, resolution_t, const uint8_t* data, size_t size, bool fixed= false, interlace_t interlace = interlace_t::progressive, field_order_t field_order = field_order_t::none);
+	static pRawVideoFrame create_empty(format_t, resolution_t, bool fixed = true, interlace_t interlace = interlace_t::progressive, field_order_t field_order = field_order_t::none);
+	static pRawVideoFrame create_empty(format_t, resolution_t, const uint8_t* data, size_t size, bool fixed= true, interlace_t interlace = interlace_t::progressive, field_order_t field_order = field_order_t::none);
 	template<class Iter>
-	static pRawVideoFrame create_empty(format_t frame, resolution_t resolution, Iter start, Iter end, bool fixed = false, interlace_t interlace = interlace_t::progressive, field_order_t field_order = field_order_t::none);
+	static pRawVideoFrame create_empty(format_t frame, resolution_t resolution, Iter start, Iter end, bool fixed = true, interlace_t interlace = interlace_t::progressive, field_order_t field_order = field_order_t::none);
 	template<class Deleter>
 	static pRawVideoFrame create_empty(format_t frame, resolution_t resolution, const uint8_t* data, size_t size, Deleter deleter, interlace_t interlace = interlace_t::progressive, field_order_t field_order = field_order_t::none);
 
