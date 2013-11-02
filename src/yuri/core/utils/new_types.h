@@ -46,6 +46,11 @@ struct range_t {
 	ssize_t				max_value;
 };
 
+struct coordinates_t {
+	position_t	x;
+	position_t	y;
+};
+
 struct resolution_t {
 	dimension_t	width;
 	dimension_t	height;
@@ -85,6 +90,37 @@ inline bool operator!=(const resolution_t& a, const resolution_t& b)
 	return !(a==b);
 }
 
+constexpr inline resolution_t operator-(const resolution_t& a, const resolution_t& b)
+{
+	return {a.width - b.width, a.height - b.height};
+}
+constexpr inline resolution_t operator+(const resolution_t& a, const resolution_t& b)
+{
+	return {a.width + b.width, a.height + b.height};
+}
+constexpr inline coordinates_t operator-(const coordinates_t& a, const coordinates_t& b)
+{
+	return {a.x - b.x, a.y- b.y};
+}
+constexpr inline coordinates_t operator+(const coordinates_t& a, const coordinates_t& b)
+{
+	return {a.x + b.x, a.y + b.y};
+}
+
+
+constexpr inline coordinates_t operator+(const resolution_t& a, const coordinates_t& b)
+{
+	return {static_cast<position_t>(a.width) + b.x, static_cast<position_t>(a.height) + b.y};
+}
+constexpr inline coordinates_t operator+(const coordinates_t& b, const resolution_t& a)
+{
+	return {static_cast<position_t>(a.width) + b.x, static_cast<position_t>(a.height) + b.y};
+}
+constexpr inline coordinates_t operator-(const coordinates_t& a, const resolution_t& b)
+{
+	return {a.x - static_cast<position_t>(b.width), a.y - static_cast<position_t>(b.height)};
+}
+
 template<class Stream>
 Stream& operator<<(Stream& os, const resolution_t& res)
 {
@@ -102,7 +138,23 @@ Stream& operator>>(Stream& is, resolution_t& res)
 	if (!is.fail()) res = r;
 	return is;
 }
+template<class Stream>
+Stream& operator<<(Stream& os, const coordinates_t& res)
+{
+	os << res.x<< "x" << res.y ;
+	return os;
+}
 
+template<class Stream>
+Stream& operator>>(Stream& is, coordinates_t& res)
+{
+	coordinates_t r;
+	char c;
+	is >> r.x >> c >> r.y;
+	if (c != 'x' && c != 'X' && c!=',') is.setstate(std::ios::failbit);
+	if (!is.fail()) res = r;
+	return is;
+}
 template<class Stream>
 Stream& operator<<(Stream& os, const geometry_t& geo)
 {
