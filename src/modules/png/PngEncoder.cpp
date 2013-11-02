@@ -39,6 +39,17 @@ void flush_data(png_structp)
 {
 
 }
+void report_error(png_structp png_ptr, png_const_charp msg)
+{
+	log::Log& log = *reinterpret_cast<log::Log*>(png_get_error_ptr(png_ptr));
+	log[log::error] << msg;
+	throw std::runtime_error(std::string("Failed to encode PNG file: ")+msg);
+}
+void report_warning(png_structp png_ptr, png_const_charp msg)
+{
+	log::Log& log = *reinterpret_cast<log::Log*>(png_get_error_ptr(png_ptr));
+	log[log::warning] << msg;
+}
 
 }
 PngEncoder::PngEncoder(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
@@ -86,7 +97,7 @@ core::pFrame PngEncoder::do_special_single_step(const core::pRawVideoFrame& fram
 	}
 
 	png_infop info_ptr = nullptr;
-	unique_ptr<png_struct, function<void(png_structp)>> png_ptrx (png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr),
+	unique_ptr<png_struct, function<void(png_structp)>> png_ptrx (png_create_write_struct(PNG_LIBPNG_VER_STRING, &log, report_error, report_warning),
 			[&info_ptr](png_structp p){
 				if (p) png_destroy_write_struct(&p, &info_ptr);
 			});
@@ -102,36 +113,40 @@ core::pFrame PngEncoder::do_special_single_step(const core::pRawVideoFrame& fram
 		return {};
 	}
 
-	uvector<uint8_t> data;
-	data.reserve(10485760);
-	png_set_write_fn(png_ptr, &data, write_data, flush_data);
+	try {
+		uvector<uint8_t> data;
+		data.reserve(10485760);
+		png_set_write_fn(png_ptr, &data, write_data, flush_data);
 
-	resolution_t res = frame->get_resolution();
-	png_set_IHDR(png_ptr, info_ptr, res.width, res.height, depth, png_format,
-			PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
-			PNG_FILTER_TYPE_DEFAULT);
-	if (bgr) png_set_bgr(png_ptr);
+		resolution_t res = frame->get_resolution();
+		png_set_IHDR(png_ptr, info_ptr, res.width, res.height, depth, png_format,
+				PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
+				PNG_FILTER_TYPE_DEFAULT);
+		if (bgr) png_set_bgr(png_ptr);
 
-	png_write_info(png_ptr, info_ptr);
-	std::vector<png_bytep> rows(res.height);
-	size_t linesize = res.width * bpp / 8;
-	png_bytep out_data = PLANE_RAW_DATA(frame,0);
-	for (dimension_t i = 0; i < res.height; ++i) {
-		rows[i] = out_data;
-		out_data += linesize;
+		png_write_info(png_ptr, info_ptr);
+		std::vector<png_bytep> rows(res.height);
+		size_t linesize = res.width * bpp / 8;
+		png_bytep out_data = PLANE_RAW_DATA(frame,0);
+		for (dimension_t i = 0; i < res.height; ++i) {
+			rows[i] = out_data;
+			out_data += linesize;
+		}
+		if (std::distance(PLANE_RAW_DATA(frame,0),out_data) > static_cast<ptrdiff_t>(PLANE_SIZE(frame,0))) {
+			log[log::error] << "Providing libpng with " << std::distance(PLANE_RAW_DATA(frame,0),out_data) << " bytes, when only " <<  PLANE_SIZE(frame,0) << "was available...";
+			return {};
+		}
+		png_write_image(png_ptr, rows.data());
+		png_write_end(png_ptr, info_ptr);
+
+		// TODO: This copies the data, it would be better to provide a way to just move them in...
+		core::pCompressedVideoFrame frame_out = core::CompressedVideoFrame::create_empty(
+				core::compressed_frame::png, res, data.data(), data.size());
+
+		return frame_out;
 	}
-	if (std::distance(PLANE_RAW_DATA(frame,0),out_data) > PLANE_SIZE(frame,0)) {
-		log[log::error] << "Providing libpng with " << std::distance(PLANE_RAW_DATA(frame,0),out_data) << " bytes, when only " <<  PLANE_SIZE(frame,0) << "was available...";
-		return {};
-	}
-	png_write_image(png_ptr, rows.data());
-	png_write_end(png_ptr, info_ptr);
-
-	// TODO: This copies the data, it would be better to provide a way to just move them in...
-	core::pCompressedVideoFrame frame_out = core::CompressedVideoFrame::create_empty(
-			core::compressed_frame::png, res, data.data(), data.size());
-
-	return frame_out;
+	catch (std::runtime_error&) {}
+	return {};
 }
 core::pFrame PngEncoder::do_convert_frame(core::pFrame input_frame, format_t target_format)
 {
