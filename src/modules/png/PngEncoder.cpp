@@ -13,6 +13,7 @@
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
+#include "yuri/core/utils/Timer.h"
 #include <png.h>
 
 namespace yuri {
@@ -67,6 +68,7 @@ PngEncoder::~PngEncoder() noexcept
 core::pFrame PngEncoder::do_special_single_step(const core::pRawVideoFrame& framex)
 {
 	if (!converter_) converter_.reset(new core::Convert(log, get_this_ptr(), core::Convert::configure()));
+	Timer t;
 	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(converter_->convert_to_cheapest(framex, supported_formats));
 	if (!frame) return {};
 	format_t input_format = frame->get_format();
@@ -147,7 +149,7 @@ core::pFrame PngEncoder::do_special_single_step(const core::pRawVideoFrame& fram
 		// TODO: This copies the data, it would be better to provide a way to just move them in...
 		core::pCompressedVideoFrame frame_out = core::CompressedVideoFrame::create_empty(
 				core::compressed_frame::png, res, data.data(), data.size());
-
+		log[log::verbose_debug] << "PNG encoding took " << t.get_duration();
 		return frame_out;
 	}
 	catch (std::runtime_error&) {}
