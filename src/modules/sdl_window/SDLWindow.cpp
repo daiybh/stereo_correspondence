@@ -56,7 +56,7 @@ MODULE_REGISTRATION_END()
 
 core::Parameters SDLWindow::configure()
 {
-	core::Parameters p = core::IOThread::configure();
+	core::Parameters p = core::SpecializedIOFilter<core::VideoFrame>::configure();
 	p.set_description("SDLWindow");
 	p["resolution"]["Resolution of output window"]=resolution_t{800,600};
 	p["fullscreen"]["Start in fullscreen"]=false;
@@ -68,7 +68,7 @@ core::Parameters SDLWindow::configure()
 
 
 SDLWindow::SDLWindow(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,0,std::string("sdl_window")),
+core::SpecializedIOFilter<core::VideoFrame>(log_,parent,std::string("sdl_window")),
 resolution_({800,600}),fullscreen_(false),default_keys_(true),use_gl_(false),
 sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")")
 {
@@ -85,7 +85,7 @@ sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")")
 		throw exception::InitializationFailed("Failed to set video mode");
 	}
 	SDL_WM_SetCaption(title_.c_str(), "yuri2");
-
+	set_supported_formats(supported_formats);
 }
 
 SDLWindow::~SDLWindow() noexcept
@@ -94,18 +94,15 @@ SDLWindow::~SDLWindow() noexcept
 }
 void SDLWindow::run()
 {
-	convert_.reset(new core::Convert(log, get_this_ptr(), core::Convert::configure()));
 	IOThread::run();
 	overlay_.reset();
 	rgb_surface_.reset();
 }
-bool SDLWindow::step()
+core::pFrame SDLWindow::do_special_single_step(const core::pVideoFrame& gframe)
 {
 	process_sdl_events();
-	core::pFrame gframe = pop_frame(0);
-	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(
-		convert_->convert_to_cheapest(gframe, supported_formats));
-	if (!frame) return true;
+	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(gframe);
+	if (!frame) return {};
 	const resolution_t res = frame->get_resolution();
 	const dimension_t src_linesize  = PLANE_DATA(frame,0).get_line_size();
 	auto it = PLANE_DATA(frame,0).begin();
@@ -121,7 +118,7 @@ bool SDLWindow::step()
 		}
 		if (!overlay_) {
 			log[log::error] << "Failed to allocate overlay";
-			return false;
+			return {};
 		}
 		const dimension_t target_linesize  = static_cast<dimension_t>(overlay_->pitches[0]);
 		const dimension_t copy_linesize = std::min(src_linesize, target_linesize);
@@ -156,7 +153,7 @@ bool SDLWindow::step()
 		log[log::warning] << "Unsupported format '" << fi.name << "'";
 	}
 
-	return true;
+	return {};
 }
 bool SDLWindow::set_param(const core::Parameter& param)
 {
@@ -171,7 +168,7 @@ bool SDLWindow::set_param(const core::Parameter& param)
 	} else if (iequals(param.get_name(), "window_title")) {
 		std::string new_title = param.get<std::string>();
 		if (!new_title.empty()) title_=std::move(new_title);
-	} else return core::IOThread::set_param(param);
+	} else return core::SpecializedIOFilter<core::VideoFrame>::set_param(param);
 	return true;
 }
 void SDLWindow::process_sdl_events()

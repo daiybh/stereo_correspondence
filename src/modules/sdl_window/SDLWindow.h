@@ -10,14 +10,13 @@
 #ifndef SDLWINDOW_H_
 #define SDLWINDOW_H_
 
-#include "yuri/core/thread/IOThread.h"
-#include "yuri/core/frame/RawVideoFrame.h"
-#include "yuri/core/thread/Convert.h"
+#include "yuri/core/thread/SpecializedIOFilter.h"
+#include "yuri/core/frame/VideoFrame.h"
 #include "SDL.h"
 namespace yuri {
 namespace sdl_window {
 
-class SDLWindow: public core::IOThread
+class SDLWindow: public core::SpecializedIOFilter<core::VideoFrame>
 {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
@@ -27,12 +26,12 @@ public:
 private:
 	
 	virtual void run() override;
-	virtual bool step() override;
+	//virtual bool step() override;
+	virtual core::pFrame do_special_single_step(const core::pVideoFrame& frame) override;
 	virtual bool set_param(const core::Parameter& param);
 	void process_sdl_events();
 	void sdl_resize(resolution_t);
 	bool prepare_rgb_overlay(const core::pRawVideoFrame& frame);
-	core::pConvert	convert_;
 	resolution_t	resolution_;
 	bool			fullscreen_;
 	bool			default_keys_;
