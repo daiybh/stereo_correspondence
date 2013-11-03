@@ -9,6 +9,7 @@
 #define BASICIOFILTER_H_
 
 #include "MultiIOFilter.h"
+
 namespace yuri {
 namespace core {
 
@@ -23,10 +24,15 @@ public:
 
 	pFrame					simple_single_step(const pFrame& frame);
 
+	void					set_supported_formats(const std::vector<format_t>& formats);
+	const std::vector<format_t>& get_supported_formats() { return supported_formats_; }
+	void					set_supported_priority(bool);
 private:
 	virtual pFrame			do_simple_single_step(const pFrame& frame) = 0;
 	virtual std::vector<pFrame> do_single_step(const std::vector<pFrame>& frames);
-
+	std::vector<format_t>	supported_formats_;
+	pConvert				converter_;
+	bool 					priority_supported_;
 };
 
 

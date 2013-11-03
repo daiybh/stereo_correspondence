@@ -42,6 +42,9 @@ namespace core
 
 	 class CompressedVideoFrame;
 	 typedef yuri::shared_ptr<class CompressedVideoFrame> pCompressedVideoFrame;
+
+	 class Convert;
+	 typedef yuri::shared_ptr<class Convert> pConvert;
 }
 
 
