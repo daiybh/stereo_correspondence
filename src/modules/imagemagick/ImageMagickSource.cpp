@@ -10,18 +10,13 @@
 #include "ImageMagickSource.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/thread/ConverterRegister.h"
 #include "Magick++.h"
 #include <map>
 namespace yuri {
 namespace imagemagick_module {
-
-
-MODULE_REGISTRATION_BEGIN("imagemagick_source")
-		REGISTER_IOTHREAD("imagemagick_source",ImageMagickSource)
-MODULE_REGISTRATION_END()
-
-IOTHREAD_GENERATOR(ImageMagickSource)
 
 namespace {
 std::map<format_t, std::pair<std::string, Magick::StorageType> > yuri_to_magick_format = {
@@ -29,7 +24,29 @@ std::map<format_t, std::pair<std::string, Magick::StorageType> > yuri_to_magick_
 {core::raw_format::rgba32,	{"RGBA",Magick::CharPixel}},
 {core::raw_format::bgr24,	{"BGR",	Magick::CharPixel}}
 };
+
+std::vector<format_t> supported_inputs {
+	core::compressed_frame::jpeg,
+	core::compressed_frame::png,
+	core::compressed_frame::unidentified,
+};
 }
+
+
+MODULE_REGISTRATION_BEGIN("imagemagick_source")
+		REGISTER_IOTHREAD("imagemagick_source",ImageMagickSource)
+		// Making the conversions really expensive, at Magick++ seems pretty slow...
+		for (auto a: supported_inputs) {
+			for (auto b: yuri_to_magick_format) {
+				REGISTER_CONVERTER(a, b.first, "imagemagick_source", 150);
+			}
+		}
+
+MODULE_REGISTRATION_END()
+
+IOTHREAD_GENERATOR(ImageMagickSource)
+
+
 
 core::Parameters ImageMagickSource::configure()
 {
@@ -50,7 +67,15 @@ format_(core::raw_format::rgb24)
 ImageMagickSource::~ImageMagickSource() noexcept
 {
 }
-
+core::pFrame ImageMagickSource::do_convert_frame(core::pFrame input_frame, format_t target_format)
+{
+	auto it = yuri_to_magick_format.find(target_format);
+	if (it == yuri_to_magick_format.end()) return {};
+	format_ = target_format;
+	core::pCompressedVideoFrame frame = dynamic_pointer_cast<core::CompressedVideoFrame>(input_frame);
+	if (frame) return do_special_single_step(frame);
+	return {};
+}
 core::pFrame ImageMagickSource::do_special_single_step(const core::pCompressedVideoFrame& frame)
 {
 	try {
