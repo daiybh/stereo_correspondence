@@ -82,27 +82,23 @@ const std::vector<format_t> supported_formats = {
 }
 
 Mosaic::Mosaic(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::SpecializedIOFilter<core::VideoFrame>(log_,parent,std::string("mosaic")),
+core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("mosaic")),
 BasicEventConsumer(log),
 radius_(300),tile_size_(50),center_{100,100}
 {
 	IOTHREAD_INIT(parameters)
+	set_supported_formats(supported_formats);
 }
 
 Mosaic::~Mosaic() noexcept
 {
 }
 
-core::pFrame Mosaic::do_special_single_step(const core::pVideoFrame& framex)
+core::pFrame Mosaic::do_special_single_step(const core::pRawVideoFrame & frame)
 {
 	process_events();
-	if (!converter_) converter_.reset(new core::Convert(log, get_this_ptr(), core::Convert::configure()));
 	using namespace core::raw_format;
-	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(converter_->convert_to_cheapest(framex, supported_formats));
-	if (!frame) {
-		log[log::warning] << "Conversion failed";
-		return {};
-	}
+
 	resolution_t image_size = frame->get_resolution();
 	coordinates_t img = {static_cast<position_t>(image_size.width), static_cast<position_t>(image_size.height)};
 	coordinates_t lu_corner = center_ - coordinates_t{radius_, radius_};
@@ -154,7 +150,7 @@ bool Mosaic::set_param(const core::Parameter& param)
 		radius_ = param.get<position_t>();
 	} else if (param.get_name() == "tile_size") {
 		tile_size_ = param.get<position_t>();
-	} else return core::SpecializedIOFilter<core::VideoFrame>::set_param(param);
+	} else return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
 	return true;
 }
 bool Mosaic::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
