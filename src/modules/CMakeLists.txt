@@ -91,6 +91,11 @@ IF(X11_FOUND)
 	add_subdirectory(screen_grab)
 ENDIF()
 
+find_package(ImageMagick COMPONENTS Magick++)
+IF(${ImageMagick_Magick++_FOUND})
+	add_subdirectory(imagemagick)
+ENDIF()
+
 #### UV #####
 #IF(NOT YURI_DISABLE_ULTRAGRID)
 	# This should be replaced by a proper detection!
@@ -166,18 +171,13 @@ add_subdirectory(ts_demuxer)
 
 add_subdirectory(repack_audio)
 
-
-
-add_subdirectory(fade)
-
-
 #################################################################
 # Let's check for libraries required 
 # for optional modules, respecting YURI_DISABLE_*
 #################################################################
 
 find_package(CURL)
-find_package(ImageMagick COMPONENTS Magick++)
+
 IF(NOT YURI_DISABLE_SAGE)
 	find_package(SAGE)
 ENDIF()
@@ -237,15 +237,10 @@ IF(${SAGE_FOUND})
 ENDIF()
 
 IF(${CORE_ASIO})
-	add_subdirectory(vncclient)
 	add_subdirectory(tsrtp_receiver)
 	add_subdirectory(tsrtp_streamer)
-	add_subdirectory(irc_client)
 ENDIF()
 
-IF(${ImageMagick_Magick++_FOUND})
-	add_subdirectory(imagemagick)
-ENDIF()
 
 IF(${OpenCV_FOUND})
 	add_subdirectory(opencv)

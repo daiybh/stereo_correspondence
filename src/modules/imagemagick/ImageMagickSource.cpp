@@ -9,83 +9,77 @@
 
 #include "ImageMagickSource.h"
 #include "yuri/core/Module.h"
+#include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 #include "Magick++.h"
 #include <map>
-#include <boost/assign.hpp>
 namespace yuri {
 namespace imagemagick_module {
 
-REGISTER("imagemagick_source",ImageMagickSource)
 
-IO_THREAD_GENERATOR(ImageMagickSource)
+MODULE_REGISTRATION_BEGIN("imagemagick_source")
+		REGISTER_IOTHREAD("imagemagick_source",ImageMagickSource)
+MODULE_REGISTRATION_END()
 
+IOTHREAD_GENERATOR(ImageMagickSource)
 
 namespace {
-std::map<yuri::format_t, std::pair<std::string, Magick::StorageType> > yuri_to_magick_format = boost::assign::map_list_of<yuri::format_t, std::pair<std::string, Magick::StorageType> >
-(YURI_FMT_RGB24,std::make_pair("RGB",Magick::CharPixel))
-(YURI_FMT_RGB32,std::make_pair("RGBA",Magick::CharPixel))
-(YURI_FMT_BGR,std::make_pair("BGR",Magick::CharPixel));
+std::map<format_t, std::pair<std::string, Magick::StorageType> > yuri_to_magick_format = {
+{core::raw_format::rgb24,	{"RGB",	Magick::CharPixel}},
+{core::raw_format::rgba32,	{"RGBA",Magick::CharPixel}},
+{core::raw_format::bgr24,	{"BGR",	Magick::CharPixel}}
+};
 }
 
-core::pParameters ImageMagickSource::configure()
+core::Parameters ImageMagickSource::configure()
 {
-	core::pParameters p = IOThread::configure();
-	p->set_description("Image loader based on ImageMagick.");
-	(*p)["format"]["Set output format"]="RGB";
-	p->set_max_pipes(1,1);
+	core::Parameters p = core::SpecializedIOFilter<core::CompressedVideoFrame>::configure();
+	p.set_description("Image loader based on ImageMagick.");
+	p["format"]["Set output format"]="RGB";
 	return p;
 }
 
 
-ImageMagickSource::ImageMagickSource(log::Log &log_,core::pwThreadBase parent,core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("ImageMagickSource"))
+ImageMagickSource::ImageMagickSource(const log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters):
+core::SpecializedIOFilter<core::CompressedVideoFrame>(log_,parent,std::string("ImageMagickSource")),
+format_(core::raw_format::rgb24)
 {
-	IO_THREAD_INIT("ImageMagickSource")
+	IOTHREAD_INIT(parameters)
 }
 
-ImageMagickSource::~ImageMagickSource()
+ImageMagickSource::~ImageMagickSource() noexcept
 {
 }
 
-bool ImageMagickSource::step()
+core::pFrame ImageMagickSource::do_special_single_step(const core::pCompressedVideoFrame& frame)
 {
-	core::pBasicFrame frame = in[0]->pop_frame();
-	if (!frame) return true;
-	yuri::format_t fmt = frame->get_format();
-	if (core::BasicPipe::get_format_group(fmt)!=YURI_TYPE_VIDEO) {
-		return true;
-	}
-	if (frame->get_planes_count()>1) {
-		log[log::warning] << "Input frame has more than 1 plane, ignoring them\n";
-	}
 	try {
-		Magick::Blob blob(PLANE_RAW_DATA(frame,0),PLANE_SIZE(frame,0));
+		Magick::Blob blob(frame->data(),frame->size());
 		Magick::Image image(blob);
-		if (!still_running()) return false;
+		if (!still_running()) return {};
 		image.modifyImage();
-		yuri::size_t width = image.columns();
-		yuri::size_t height = image.rows();
-		log[log::debug] << "Loaded image " << width << "x" <<height <<"\n";
-		if (!still_running()) return false;
-		core::pBasicFrame out_frame = allocate_empty_frame(format,width,height);
-		std::pair<std::string, Magick::StorageType> img_type = yuri_to_magick_format[format];
-		image.write(0,0,width,height,img_type.first,img_type.second,PLANE_RAW_DATA(out_frame,0));
-		push_raw_video_frame(0,out_frame);
+		resolution_t resolution = { image.columns(), image.rows()};
+		log[log::debug] << "Loaded image " << resolution.width << "x" << resolution.height;
+		if (!still_running()) return {};
+		core::pRawVideoFrame out_frame = core::RawVideoFrame::create_empty(format_,resolution);
+		auto img_type = yuri_to_magick_format[format_];
+		image.write(0,0,resolution.width,resolution.height,img_type.first,img_type.second,PLANE_RAW_DATA(out_frame,0));
+		return {out_frame};
 	}
 	catch (std::exception& e) {
-		log[log::error] << "Exception during decoding: " << e.what() << "\n";
+		log[log::error] << "Exception during decoding: " << e.what();
 	}
-	return true;
+	return {};
 }
 bool ImageMagickSource::set_param(const core::Parameter& param)
 {
-	if (param.name == "format") {
-		format = core::BasicPipe::get_format_from_string(param.get<std::string>());
-		if (yuri_to_magick_format.find(format)==yuri_to_magick_format.end()) {
-			log[log::warning] << "Specified format is not currently supported. Falling back to RGB\n";
-			format = YURI_FMT_RGB24;
+	if (param.get_name() == "format") {
+		format_ = core::raw_format::parse_format(param.get<std::string>());
+		if (yuri_to_magick_format.find(format_)==yuri_to_magick_format.end()) {
+			log[log::warning] << "Specified format is not currently supported. Falling back to RGB";
+			format_ = core::raw_format::rgb24;
 		}
-	} else return IOThread::set_param(param);
+	} else return core::SpecializedIOFilter<core::CompressedVideoFrame>::set_param(param);
 	return true;
 }
 

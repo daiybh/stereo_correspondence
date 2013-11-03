@@ -10,22 +10,23 @@
 #ifndef DUMMYMODULE_H_
 #define DUMMYMODULE_H_
 
-#include "yuri/core/IOThread.h"
-
+#include "yuri/core/thread/SpecializedIOFilter.h"
+#include "yuri/core/frame/CompressedVideoFrame.h"
 namespace yuri {
 namespace imagemagick_module {
 
-class ImageMagickSource: public yuri::core::IOThread
+class ImageMagickSource: public core::SpecializedIOFilter<core::CompressedVideoFrame>
 {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
-	virtual ~ImageMagickSource();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+	virtual ~ImageMagickSource() noexcept;
+	ImageMagickSource(const log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters);
 private:
-	ImageMagickSource(log::Log &log_,core::pwThreadBase parent,core::Parameters &parameters);
-	virtual bool step();
+
+	virtual core::pFrame do_special_single_step(const core::pCompressedVideoFrame& frame) override;
 	virtual bool set_param(const core::Parameter& param);
-	yuri::format_t format;
+	yuri::format_t format_;
 };
 
 } /* namespace dummy_module */
