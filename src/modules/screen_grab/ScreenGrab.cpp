@@ -142,52 +142,63 @@ ScreenGrab::~ScreenGrab() noexcept
 	//push_raw_frame(0,frame);
 	return true;
 }*/
-
+namespace {
+int error_handler(Display *, XErrorEvent *)
+{
+	throw std::runtime_error("Gwahahaha");
+}
+}
 void ScreenGrab::run()
 {
+	XSetErrorHandler(error_handler);
 //	IO_THREAD_PRE_RUN
 	while(still_running()) {
 		if (!grab()) break;
 	}
+	XSetErrorHandler(nullptr);
+	dpy.reset();
 //	IO_THREAD_POST_RUN
 }
-namespace {
 
-}
 bool ScreenGrab::grab()
 {
-	XWindowAttributes attr;
-	XGetWindowAttributes(dpy.get(),win,&attr);
-	log[log::debug] << "Found window " << attr.width << "x" << attr.height;
-	if (x > attr.width && y > attr.height) {
-		log[log::warning] << "Offset out of range of the image";
-		return true;
-	}
-	const int w = (width>0)?std::min(attr.width-x,width):attr.width-x;
-	const int h = (height>0)?std::min(attr.height-y,height):attr.height-y;
-
-	shared_ptr<XImage> img (XGetImage(dpy.get(),win,x,y,w,h,AllPlanes,ZPixmap),ImageDeleter());
-	if (!img) {
-		log[log::warning] << "Failed to get image from the window";
-		return true;
-	}
-	log[log::debug] << "Image has depth " << img->depth << ", bpl: " << img->bytes_per_line << ", bpp: " << img->bits_per_pixel;
-	format_t fmt = 0;
-	switch (img->bits_per_pixel) {
-		case 32: fmt = core::raw_format::bgra32; break;
-		case 24: fmt = core::raw_format::bgr24; break;
-	}
-	if (fmt!=0) {
-		resolution_t res = {static_cast<dimension_t>(w), static_cast<dimension_t>(h)};
-		core::pRawVideoFrame frame = core::RawVideoFrame::create_empty(fmt, res, true);
-		const uint8_t* data = reinterpret_cast<uint8_t*>(img->data);
-		uint8_t *out = PLANE_RAW_DATA(frame,0);
-		const size_t copy_bytes = w*img->bits_per_pixel/8;
-		for (int line=0;line<h;++line) {
-			std::copy(data+img->bytes_per_line*line,data+img->bytes_per_line*line+copy_bytes,out);
-			out+=copy_bytes;
+	try {
+		XWindowAttributes attr;
+		XGetWindowAttributes(dpy.get(),win,&attr);
+		log[log::debug] << "Found window " << attr.width << "x" << attr.height;
+		if (x > attr.width && y > attr.height) {
+			log[log::warning] << "Offset out of range of the image";
+			return true;
 		}
-		push_frame(0,frame);
+		const int w = (width>0)?std::min(attr.width-x,width):attr.width-x;
+		const int h = (height>0)?std::min(attr.height-y,height):attr.height-y;
+
+		shared_ptr<XImage> img (XGetImage(dpy.get(),win,x,y,w,h,AllPlanes,ZPixmap),ImageDeleter());
+		if (!img) {
+			log[log::warning] << "Failed to get image from the window";
+			return true;
+		}
+		log[log::debug] << "Image has depth " << img->depth << ", bpl: " << img->bytes_per_line << ", bpp: " << img->bits_per_pixel;
+		format_t fmt = 0;
+		switch (img->bits_per_pixel) {
+			case 32: fmt = core::raw_format::bgra32; break;
+			case 24: fmt = core::raw_format::bgr24; break;
+		}
+		if (fmt!=0) {
+			resolution_t res = {static_cast<dimension_t>(w), static_cast<dimension_t>(h)};
+			core::pRawVideoFrame frame = core::RawVideoFrame::create_empty(fmt, res, true);
+			const uint8_t* data = reinterpret_cast<uint8_t*>(img->data);
+			uint8_t *out = PLANE_RAW_DATA(frame,0);
+			const size_t copy_bytes = w*img->bits_per_pixel/8;
+			for (int line=0;line<h;++line) {
+				std::copy(data+img->bytes_per_line*line,data+img->bytes_per_line*line+copy_bytes,out);
+				out+=copy_bytes;
+			}
+			push_frame(0,frame);
+		}
+		return true;
+	} catch(std::runtime_error&){
+		log[log::error] << "Failed to grab window! It's probably not mapped...";
 	}
 	return true;
 }
