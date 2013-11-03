@@ -8,8 +8,8 @@
 #ifndef UVSINK_H_
 #define UVSINK_H_
 
-#include "yuri/core/thread/IOFilter.h"
-#include "yuri/core/thread/Convert.h"
+#include "yuri/core/thread/SpecializedIOFilter.h"
+#include "yuri/core/frame/VideoFrame.h"
 #include "types.h"
 //#include <unordered_set>
 
@@ -50,7 +50,7 @@ struct uv_display_params {
 	&display_ ## name ## _get_property, \
 }
 
-class UVVideoSink: public core::IOFilter
+class UVVideoSink: public core::SpecializedIOFilter<core::VideoFrame>
 {
 public:
 	//static core::Parameters configure();
@@ -65,13 +65,11 @@ protected:
 private:
 
 	void run() override;
-	virtual core::pFrame do_simple_single_step(const core::pFrame& frame) override;
+	virtual core::pFrame do_special_single_step(const core::pVideoFrame& frame) override;
 	virtual void child_ends_hook(core::pwThreadBase child, int code, size_t remaining_child_count) override;
 
-	core::pConvert converter_;
 	video_desc last_desc_;
 	detail::uv_display_params sink_params_;
-	std::vector<format_t> supported_formats_; // Using vector to preserve the order, in which they were retrieved.
 
 };
 

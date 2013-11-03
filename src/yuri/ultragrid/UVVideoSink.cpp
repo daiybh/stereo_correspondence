@@ -44,7 +44,7 @@ private:
 
 
 UVVideoSink::UVVideoSink(const log::Log &log_, core::pwThreadBase parent, const std::string& name, detail::uv_display_params sink_params)
-:IOFilter(log_,parent,name),
+:core::SpecializedIOFilter<core::VideoFrame>(log_,parent,name),
  device_(nullptr),
  last_desc_{1,1,VIDEO_CODEC_NONE,1,PROGRESSIVE, 1},
  sink_params_(sink_params)
@@ -64,6 +64,7 @@ UVVideoSink::~UVVideoSink() noexcept
 void UVVideoSink::run()
 {
 	if (sink_params_.get_property_func) {
+		std::vector<format_t> supported_formats;
 		log[log::info] << "Querying supported formats";
 		std::vector<codec_t> scodecs(100);
 		size_t len = scodecs.size()* sizeof(codec_t);
@@ -77,19 +78,20 @@ void UVVideoSink::run()
 				}
 				if (yfmt) {
 //					supported_formats_.insert(yfmt);
-					supported_formats_.push_back(yfmt);
+					supported_formats.push_back(yfmt);
 				} else {
 					log[log::info] << "Unsupported codec " << c ;
 				}
 			}
 		}
+		set_supported_formats(supported_formats);
+		set_supported_priority(true);
 	}
 
 	if (sink_params_.run_func) {
 		core::pThreadBase helper = make_shared<UVSinkHelper>(log,get_this_ptr(),[this](){sink_params_.run_func(device_);});
 		spawn_thread(helper);
 	}
-	converter_.reset(new core::Convert(log, get_this_ptr(), core::Convert::configure()));
 	IOThread::run();
 }
 void UVVideoSink::child_ends_hook(core::pwThreadBase /*child*/, int /*code*/, size_t /*remaining_child_count*/)
@@ -97,36 +99,28 @@ void UVVideoSink::child_ends_hook(core::pwThreadBase /*child*/, int /*code*/, si
 	request_end(core::yuri_exit_interrupted);
 }
 
-core::pFrame UVVideoSink::do_simple_single_step(const core::pFrame& framex)
+core::pFrame UVVideoSink::do_special_single_step(const core::pVideoFrame& frame)
 {
-	core::pFrame source_format = framex;
-	if (!supported_formats_.empty()) {
-		source_format = converter_->convert_to_any(framex, supported_formats_);
-	}
-	if (!source_format) return {};
-	format_t yfmt = source_format->get_format();
+	if (!frame) return {};
+	format_t yfmt = frame->get_format();
 	codec_t uv_fmt = ultragrid::yuri_to_uv(yfmt);
 	if (!uv_fmt) return {};
-	core::pVideoFrame frame = dynamic_pointer_cast<core::VideoFrame>(source_format);
+//	core::pVideoFrame frame = dynamic_pointer_cast<core::VideoFrame>(source_format);
 
-	if (frame) {
-		codec_t uv_fmt = ultragrid::yuri_to_uv(frame->get_format());
-		if (!uv_fmt) return {};
-		resolution_t res = frame->get_resolution();
-		video_desc desc {static_cast<unsigned int>(res.width), static_cast<unsigned int>(res.height), uv_fmt, 1, PROGRESSIVE, 1};
-		if (desc != last_desc_) {
-			if (sink_params_.reconfigure_func) sink_params_.reconfigure_func(device_, desc);
-			last_desc_ = desc;
-		}
+	resolution_t res = frame->get_resolution();
+	video_desc desc {static_cast<unsigned int>(res.width), static_cast<unsigned int>(res.height), uv_fmt, 1, PROGRESSIVE, 1};
+	if (desc != last_desc_) {
+		if (sink_params_.reconfigure_func) sink_params_.reconfigure_func(device_, desc);
+		last_desc_ = desc;
+	}
 
 
-		unique_ptr<video_frame, function<void(video_frame*)>> uv_frame (
-				sink_params_.getf_func(device_),
-				[this](video_frame* uvf)mutable{sink_params_.putf_func(this->device_, uvf, false);});
+	unique_ptr<video_frame, function<void(video_frame*)>> uv_frame (
+			sink_params_.getf_func(device_),
+			[this](video_frame* uvf)mutable{sink_params_.putf_func(this->device_, uvf, false);});
 
-		if (!ultragrid::copy_to_uv_frame(frame, uv_frame.get())) {
-			log[log::warning ] << "Failed to convert frame";
-		}
+	if (!ultragrid::copy_to_uv_frame(frame, uv_frame.get())) {
+		log[log::warning ] << "Failed to convert frame";
 	}
 	return {};
 }
