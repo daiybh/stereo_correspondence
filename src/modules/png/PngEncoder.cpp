@@ -59,18 +59,16 @@ PngEncoder::PngEncoder(const log::Log &log_, core::pwThreadBase parent, const co
 core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("png_encoder"))
 {
 	IOTHREAD_INIT(parameters)
+	set_supported_formats(supported_formats);
 }
 
 PngEncoder::~PngEncoder() noexcept
 {
 }
 
-core::pFrame PngEncoder::do_special_single_step(const core::pRawVideoFrame& framex)
+core::pFrame PngEncoder::do_special_single_step(const core::pRawVideoFrame& frame)
 {
-	if (!converter_) converter_.reset(new core::Convert(log, get_this_ptr(), core::Convert::configure()));
 	Timer t;
-	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(converter_->convert_to_cheapest(framex, supported_formats));
-	if (!frame) return {};
 	format_t input_format = frame->get_format();
 	using namespace core::raw_format;
 	bool bgr = false;
