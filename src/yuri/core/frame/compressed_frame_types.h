@@ -14,6 +14,7 @@ namespace compressed_frame {
 
 const format_t unknown		= 0;
 
+const format_t unidentified	= 0x10000;
 const format_t jpeg			= 0x10001;
 const format_t mjpg			= 0x10002;
 const format_t png			= 0x10003;

@@ -17,6 +17,7 @@ namespace {
 	mutex	format_info_map_mutex;
 	format_t last_user_format = user_start;
 	comp_format_info_map_t format_info_map = {
+			{unidentified, 	{unidentified,	"Undentified compressed format", {"NONE","UNKNOWN"}, {} }},
 			{jpeg, 	{jpeg,	"JPEG", {"JPG","JPEG"}, {"image/jpeg"} }},
 			{mjpg, 	{mjpg,	"Motion JPEG", {"MJPG","MJPEG"}, {"video/mjpeg"} }},
 			{png, 	{png,	"PNG", {"PNG"}, {"image/png"} }},
