@@ -32,7 +32,6 @@ private:
 	virtual bool set_param(const core::Parameter& param);
 
 	size_t quality_;
-	core::pConvert converter_;
 };
 
 } /* namespace jpeg */

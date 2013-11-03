@@ -48,18 +48,15 @@ core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("jpeg_enc
 quality_(90)
 {
 	IOTHREAD_INIT(parameters)
+	set_supported_formats(supported_formats);
 }
 
 JpegEncoder::~JpegEncoder() noexcept
 {
 }
 
-core::pFrame JpegEncoder::do_special_single_step(const core::pRawVideoFrame& framex)
+core::pFrame JpegEncoder::do_special_single_step(const core::pRawVideoFrame& frame)
 {
-	if (!converter_) { converter_.reset(new core::Convert(log, get_this_ptr(), core::Convert::configure())); }
-	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(converter_->convert_to_cheapest(framex, supported_formats));
-	if (!frame) return {};
-
 	unique_ptr<jpeg_compress_struct, function<void(jpeg_compress_struct*)>> cinfox(
 			new jpeg_compress_struct, [](jpeg_compress_struct* ptr)
 			{
