@@ -86,6 +86,11 @@ IF(PNG_FOUND)
 	add_subdirectory(png)
 ENDIF()
 
+find_package(X11)
+IF(X11_FOUND)
+	add_subdirectory(screen_grab)
+ENDIF()
+
 #### UV #####
 #IF(NOT YURI_DISABLE_ULTRAGRID)
 	# This should be replaced by a proper detection!
@@ -101,7 +106,7 @@ IF(CORE_UV)
 	
 	
 	
-	find_package(X11)
+	
 	if (X11_FOUND)
 		add_subdirectory(uv_screen)
 	ENDIF()
@@ -251,9 +256,6 @@ IF(${OPENNI2_FOUND})
 	add_subdirectory(openni)
 ENDIF()
 
-IF(X11_FOUND)
-	add_subdirectory(screen_grab)
-ENDIF()
 
 IF (Boost_REGEX_FOUND)
 	add_subdirectory(rawfilesource)

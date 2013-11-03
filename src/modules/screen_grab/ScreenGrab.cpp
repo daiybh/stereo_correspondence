@@ -6,29 +6,35 @@
  */
 #include "ScreenGrab.h"
 #include "yuri/core/Module.h"
+#include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 #include "X11/Xutil.h"
 #include "X11/Xatom.h"
 #include <string>
 namespace yuri {
 namespace screen {
 
-REGISTER("screen",ScreenGrab)
-IO_THREAD_GENERATOR(ScreenGrab)
 
-core::pParameters ScreenGrab::configure()
+IOTHREAD_GENERATOR(ScreenGrab)
+
+MODULE_REGISTRATION_BEGIN("screen")
+		REGISTER_IOTHREAD("screen",ScreenGrab)
+MODULE_REGISTRATION_END()
+
+core::Parameters ScreenGrab::configure()
 {
-	core::pParameters p = core::IOThread::configure();
-	p->set_description("ScreenGrab module.");
-	(*p)["display"]["X display"]=std::string();
-	(*p)["fps"]["Frames per second"]=10.0;
-	(*p)["x"]["X offset of the grabbed image"]=0;
-	(*p)["y"]["Y offset of the grabbed image"]=0;
-	(*p)["width"]["Width of the grabbed image (set to -1 to grab full image)"]=-1;
-	(*p)["height"]["Height of the grabbed image (set to -1 to grab full image)"]=-1;
-	(*p)["win_name"]["Window name (set to empty string to grab whole screen)"]=std::string();
-	(*p)["pid"]["PID of application that created the window (set to 0 to grab whole screen)"]=0;
-	(*p)["win_id"]["Window ID (set to 0 to grab whole screen)"]=0;
-	p->set_max_pipes(1,1);
+	core::Parameters p = core::IOThread::configure();
+	p.set_description("ScreenGrab module.");
+	p["display"]["X display"]=std::string();
+	p["fps"]["Frames per second"]=10.0;
+	p["x"]["X offset of the grabbed image"]=0;
+	p["y"]["Y offset of the grabbed image"]=0;
+	p["width"]["Width of the grabbed image (set to -1 to grab full image)"]=-1;
+	p["height"]["Height of the grabbed image (set to -1 to grab full image)"]=-1;
+	p["win_name"]["Window name (set to empty string to grab whole screen)"]=std::string();
+	p["pid"]["PID of application that created the window (set to 0 to grab whole screen)"]=0;
+	p["win_id"]["Window ID (set to 0 to grab whole screen)"]=0;
+//	p->set_max_pipes(1,1);
 	return p;
 }
 namespace {
@@ -70,7 +76,7 @@ size_t get_win_pid(Display* dpy, Window win)
 	return pid;
 }
 // Dummy method just to be able to use find)child bellow
-Window get_win_id(Display* dpy, Window win) {
+Window get_win_id(Display* /*dpy*/, Window win) {
 	return win;
 }
 template<typename T, typename F>
@@ -92,11 +98,11 @@ Window find_child(Display* dpy, Window top, T val, F func)
 }
 }
 
-ScreenGrab::ScreenGrab(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
+ScreenGrab::ScreenGrab(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOThread(log_,parent,1,1,std::string("screen_grab")),win(0),x(0),y(0),
 width(-1),height(-1),pid(0),win_id_(0)
 {
-	IO_THREAD_INIT("ScreenGrab")
+	IOTHREAD_INIT(parameters)
 	XInitThreads();
 	dpy.reset(XOpenDisplay(display.c_str()),DisplayDeleter());
 	if (!dpy) {
@@ -124,7 +130,7 @@ width(-1),height(-1),pid(0),win_id_(0)
 
 }
 
-ScreenGrab::~ScreenGrab()
+ScreenGrab::~ScreenGrab() noexcept
 {
 }
 
@@ -139,12 +145,11 @@ ScreenGrab::~ScreenGrab()
 
 void ScreenGrab::run()
 {
-	IO_THREAD_PRE_RUN
+//	IO_THREAD_PRE_RUN
 	while(still_running()) {
 		if (!grab()) break;
 	}
-
-	IO_THREAD_POST_RUN
+//	IO_THREAD_POST_RUN
 }
 namespace {
 
@@ -167,44 +172,45 @@ bool ScreenGrab::grab()
 		return true;
 	}
 	log[log::debug] << "Image has depth " << img->depth << ", bpl: " << img->bytes_per_line << ", bpp: " << img->bits_per_pixel;
-	format_t fmt = YURI_FMT_NONE;
+	format_t fmt = 0;
 	switch (img->bits_per_pixel) {
-		case 32: fmt = YURI_FMT_BGRA; break;
-		case 24: fmt = YURI_FMT_BGR; break;
+		case 32: fmt = core::raw_format::bgra32; break;
+		case 24: fmt = core::raw_format::bgr24; break;
 	}
-	if (fmt!=YURI_FMT_NONE) {
-		core::pBasicFrame frame = allocate_empty_frame(fmt, w,h, true);
-		const ubyte_t* data = reinterpret_cast<ubyte_t*>(img->data);
-		ubyte_t *out = PLANE_RAW_DATA(frame,0);
+	if (fmt!=0) {
+		resolution_t res = {static_cast<dimension_t>(w), static_cast<dimension_t>(h)};
+		core::pRawVideoFrame frame = core::RawVideoFrame::create_empty(fmt, res, true);
+		const uint8_t* data = reinterpret_cast<uint8_t*>(img->data);
+		uint8_t *out = PLANE_RAW_DATA(frame,0);
 		const size_t copy_bytes = w*img->bits_per_pixel/8;
 		for (int line=0;line<h;++line) {
 			std::copy(data+img->bytes_per_line*line,data+img->bytes_per_line*line+copy_bytes,out);
 			out+=copy_bytes;
 		}
-		push_raw_video_frame(0,frame);
+		push_frame(0,frame);
 	}
 	return true;
 }
 
 bool ScreenGrab::set_param(const core::Parameter &param)
 {
-	if (param.name == "display") {
+	if (param.get_name() == "display") {
 		display = param.get<std::string>();
-	} else if (param.name == "fps") {
+	} else if (param.get_name() == "fps") {
 		fps = param.get<double>();
-	} else if (param.name == "x") {
+	} else if (param.get_name() == "x") {
 		x = param.get<ssize_t>();
-	} else if (param.name == "y") {
+	} else if (param.get_name() == "y") {
 		y = param.get<ssize_t>();
-	} else if (param.name == "width") {
+	} else if (param.get_name() == "width") {
 		width = param.get<ssize_t>();
-	} else if (param.name == "height") {
+	} else if (param.get_name() == "height") {
 		height = param.get<ssize_t>();
-	} else if (param.name == "win_name") {
+	} else if (param.get_name() == "win_name") {
 		win_name = param.get<std::string>();
-	} else if (param.name == "pid") {
+	} else if (param.get_name() == "pid") {
 		pid = param.get<size_t>();
-	} else if (param.name == "win_id") {
+	} else if (param.get_name() == "win_id") {
 		win_id_ = param.get<Window>();
 	} else return core::IOThread::set_param(param);
 	return true;

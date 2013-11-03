@@ -8,21 +8,26 @@
 #ifndef SCREENGRAB_H_
 #define SCREENGRAB_H_
 
-#include "yuri/core/IOThread.h"
+#include "yuri/core/thread/IOThread.h"
 #include "X11/Xlib.h"
 namespace yuri {
 namespace screen {
 
 class ScreenGrab: public core::IOThread
 {
+public:
+	virtual ~ScreenGrab() noexcept;
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+	ScreenGrab(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 private:
-	ScreenGrab(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
+
 	virtual void run();
 	virtual bool set_param(const core::Parameter &param);
 	bool grab();
 	std::string display;
 	double fps;
-	yuri::shared_ptr<Display> dpy;
+	shared_ptr<Display> dpy;
 	Window win;
 	ssize_t x;
 	ssize_t y;
@@ -31,10 +36,7 @@ private:
 	std::string win_name;
 	size_t pid;
 	Window win_id_;
-public:
-	virtual ~ScreenGrab();
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
+
 };
 
 } /* namespace screen */
