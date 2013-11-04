@@ -113,7 +113,7 @@ core::Parameters V4l2Source::configure()
 	p["input"]["Input number to tune"]=0;
 	p["illumination"]["Enable illumination (if present)"]=true;
 	p["combine"]["Combine frames (if camera sends them in chunks)."]=false;
-	p["fps"]["Number of frames per secod requested. The closes LOWER supported value will be selected."]=0;
+	p["fps"]["Number of frames per secod requested. The closes LOWER supported value will be selected."]=30;
 	return p;
 }
 
