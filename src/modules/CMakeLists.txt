@@ -96,6 +96,12 @@ IF(${ImageMagick_Magick++_FOUND})
 	add_subdirectory(imagemagick)
 ENDIF()
 
+pkg_check_modules(OpenCV opencv>=2.3.0)
+IF(${OpenCV_FOUND})
+	add_subdirectory(opencv)
+	#add_subdirectory(opencv_calib)
+ENDIF()
+
 #### UV #####
 #IF(NOT YURI_DISABLE_ULTRAGRID)
 	# This should be replaced by a proper detection!
@@ -189,7 +195,7 @@ IF(${CORE_IEEE1394})
 	pkg_check_modules(ieee1394 libiec61883)
 ENDIF()
 
-pkg_check_modules(OpenCV opencv>=2.3.0)
+
 find_package(OPENNI2)
 
 find_package( X11 )
@@ -241,11 +247,6 @@ IF(${CORE_ASIO})
 	add_subdirectory(tsrtp_streamer)
 ENDIF()
 
-
-IF(${OpenCV_FOUND})
-	add_subdirectory(opencv)
-	add_subdirectory(opencv_calib)
-ENDIF()
 
 IF(${OPENNI2_FOUND})
 	add_subdirectory(openni)
