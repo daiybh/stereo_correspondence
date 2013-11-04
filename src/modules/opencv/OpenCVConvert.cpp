@@ -63,12 +63,12 @@ core::pFrame OpenCVConvert::do_special_single_step(const core::pRawVideoFrame& f
 		return {};
 	}
 	int in_base = -1;
-	switch (in_fi.planes[0].component_bit_depths.size()) {
+	switch (in_fi.planes[0].component_bit_depths[0]) {
 		case 8: in_base = CV_8UC1;break;
 		case 16: in_base = CV_16UC1; break;
 	}
 	int out_base = -1;
-	switch (out_fi.planes[0].component_bit_depths.size()) {
+	switch (out_fi.planes[0].component_bit_depths[0]) {
 		case 8: out_base = CV_8UC1;break;
 		case 16: out_base = CV_16UC1; break;
 	}
@@ -88,7 +88,7 @@ core::pFrame OpenCVConvert::do_convert_frame(core::pFrame input_frame, format_t 
 {
 	if (!input_frame) return {};
 	auto it = convert_format_map.find({input_frame->get_format(), target_format});
-	if (it != convert_format_map.end()) return {};
+	if (it == convert_format_map.end()) return {};
 	format_ = target_format;
 	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame> (input_frame);
 	if (frame) return do_special_single_step(frame);
