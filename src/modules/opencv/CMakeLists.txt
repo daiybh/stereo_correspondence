@@ -4,6 +4,8 @@ SET (MODULE opencv)
 # Set all source files module uses
 SET (SRC OpenCVConvert.cpp
 		 OpenCVConvert.h
+		 OpenCVFaceDetect.cpp
+		 OpenCVFaceDetect.h
 		 register.cpp)
 
 

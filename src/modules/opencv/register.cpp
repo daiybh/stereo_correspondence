@@ -6,6 +6,7 @@
  */
 
 #include "OpenCVConvert.h"
+#include "OpenCVFaceDetect.h"
 #include "yuri/core/thread/IOThreadGenerator.h"
 #include "yuri/core/thread/ConverterRegister.h"
 namespace yuri {
@@ -18,6 +19,8 @@ MODULE_REGISTRATION_BEGIN("opencv")
 		for (auto x: convert_format_map) {
 			REGISTER_CONVERTER(x.first.first, x.first.second, "opencv_convert", 8);
 		}
+
+		REGISTER_IOTHREAD("opencv_face_detection",OpenCVFaceDetect)
 MODULE_REGISTRATION_END()
 
 }
