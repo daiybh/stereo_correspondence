@@ -11,7 +11,6 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/raw_frame_params.h"
-#include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/version.h"
 #include <unordered_map>
 namespace yuri {
@@ -56,7 +55,7 @@ MODULE_REGISTRATION_END()
 
 core::Parameters SDLWindow::configure()
 {
-	core::Parameters p = core::SpecializedIOFilter<core::VideoFrame>::configure();
+	core::Parameters p = core::SpecializedIOFilter<core::RawVideoFrame>::configure();
 	p.set_description("SDLWindow");
 	p["resolution"]["Resolution of output window"]=resolution_t{800,600};
 	p["fullscreen"]["Start in fullscreen"]=false;
@@ -68,7 +67,7 @@ core::Parameters SDLWindow::configure()
 
 
 SDLWindow::SDLWindow(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::SpecializedIOFilter<core::VideoFrame>(log_,parent,std::string("sdl_window")),
+core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("sdl_window")),
 resolution_({800,600}),fullscreen_(false),default_keys_(true),use_gl_(false),
 sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")")
 {
@@ -98,11 +97,9 @@ void SDLWindow::run()
 	overlay_.reset();
 	rgb_surface_.reset();
 }
-core::pFrame SDLWindow::do_special_single_step(const core::pVideoFrame& gframe)
+core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame)
 {
 	process_sdl_events();
-	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(gframe);
-	if (!frame) return {};
 	const resolution_t res = frame->get_resolution();
 	const dimension_t src_linesize  = PLANE_DATA(frame,0).get_line_size();
 	auto it = PLANE_DATA(frame,0).begin();
@@ -168,7 +165,7 @@ bool SDLWindow::set_param(const core::Parameter& param)
 	} else if (iequals(param.get_name(), "window_title")) {
 		std::string new_title = param.get<std::string>();
 		if (!new_title.empty()) title_=std::move(new_title);
-	} else return core::SpecializedIOFilter<core::VideoFrame>::set_param(param);
+	} else return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
 	return true;
 }
 void SDLWindow::process_sdl_events()

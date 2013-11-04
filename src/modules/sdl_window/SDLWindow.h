@@ -11,12 +11,12 @@
 #define SDLWINDOW_H_
 
 #include "yuri/core/thread/SpecializedIOFilter.h"
-#include "yuri/core/frame/VideoFrame.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 #include "SDL.h"
 namespace yuri {
 namespace sdl_window {
 
-class SDLWindow: public core::SpecializedIOFilter<core::VideoFrame>
+class SDLWindow: public core::SpecializedIOFilter<core::RawVideoFrame>
 {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
@@ -27,7 +27,7 @@ private:
 	
 	virtual void run() override;
 	//virtual bool step() override;
-	virtual core::pFrame do_special_single_step(const core::pVideoFrame& frame) override;
+	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
 	virtual bool set_param(const core::Parameter& param);
 	void process_sdl_events();
 	void sdl_resize(resolution_t);
