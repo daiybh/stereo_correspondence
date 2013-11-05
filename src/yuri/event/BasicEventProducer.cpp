@@ -86,16 +86,18 @@ bool BasicEventProducer::emit_event(const std::string& event_name, pBasicEvent e
 	}
 	if (!consumers_.count(event_name)) return true;
 	auto range = consumers_.equal_range(event_name);
+	std::vector<decltype(consumers_.begin())> expired_iterators;
 	for (auto it = range.first; it != range.second; ++it) {
 		auto& target = it->second;
 		auto consumer = target.first.lock();
 		if (!consumer) {
 			// Basic clean up. The consumer ptr has already expired, so it can be removed from consumers_
-			consumers_.erase(it);
+			expired_iterators.push_back(it);
 		} else {
 			consumer->receive_event(target.second, event);
 		}
 	}
+	for (auto it: expired_iterators) { consumers_.erase(it); }
 	return true;
 }
 std::vector<event_info_t> BasicEventProducer::list_events()
