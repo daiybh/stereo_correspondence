@@ -76,7 +76,7 @@ core::pFrame OpenCVFaceDetect::do_special_single_step(const core::pRawVideoFrame
 		emit_event("faces", e);
 	}
 
-	return {};
+	return frame;
 
 }
 bool OpenCVFaceDetect::set_param(const core::Parameter& param)
