@@ -10,7 +10,7 @@
 #include "OpenCVFaceDetect.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_types.h"
-
+ #include "opencv2/imgproc/imgproc.hpp"
 namespace yuri {
 namespace opencv {
 
@@ -25,7 +25,13 @@ core::Parameters OpenCVFaceDetect::configure()
 	return p;
 }
 
+namespace {
+const std::string width_event { "width" };
+const std::string height_event { "height" };
+const std::string x_event { "x" };
+const std::string y_event { "y" };
 
+}
 OpenCVFaceDetect::OpenCVFaceDetect(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("opencv_facedetection")),
 event::BasicEventProducer(log),
@@ -50,13 +56,24 @@ core::pFrame OpenCVFaceDetect::do_special_single_step(const core::pRawVideoFrame
 		log[log::warning] << "No faces found!";
 	} else {
 		log[log::info] << "Found " << faces.size() << " faces";
+		std::vector<event::pBasicEvent> face_events;
 		for (auto x: faces) {
 			log[log::info] << x.width << "x" << x.height << "+" << x.x << "+" << x.y;
+//			std::vector<shared_ptr<event::EventInt> > vec {x.x + x.width/2, x.y + x.height/2, x.width/2};
+			std::vector<event::pBasicEvent> vec
+							{make_shared<event::EventInt>(x.x + x.width/2),
+							make_shared<event::EventInt>(x.y + x.height/2),
+							make_shared<event::EventInt>(x.width/2)};
+			face_events.push_back(make_shared<event::EventVector>(vec));
 		}
-		emit_event("x", make_shared<event::EventInt>(faces[0].x+faces[0].width/2));
-		emit_event("y", make_shared<event::EventInt>(faces[0].y+faces[0].height/2));
-		emit_event("width", make_shared<event::EventInt>(faces[0].width));
-		emit_event("height", make_shared<event::EventInt>(faces[0].height));
+		emit_event(x_event, faces[0].x+faces[0].width/2, 0, res.width);
+		emit_event(y_event, faces[0].y+faces[0].height/2, 0, res.height);
+
+		emit_event(height_event, faces[0].height/2);
+		emit_event(width_event , faces[0].width/2);
+
+		auto e = make_shared<event::EventVector>(face_events);
+		emit_event("faces", e);
 	}
 
 	return {};
