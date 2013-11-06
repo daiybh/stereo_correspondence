@@ -72,6 +72,57 @@ void apply_mosaic(const uint8_t* data_in, uint8_t* data_out, size_t linesize, co
 		}
 	}
 }
+void process_mosaic(const uint8_t* data_in, uint8_t* data_out, size_t linesize, size_t bpp, coordinates_t img, coordinates_t center, position_t radius, position_t tile_size)
+{
+	//	log[log::info] << "Number of tiles " << tile_count;
+
+	coordinates_t lu_corner = center - coordinates_t{radius, radius};
+	size_t tile_count = tile_size?(2*radius / tile_size):0;
+	for (size_t x = 0; x < tile_count+1; ++x) {
+		for (size_t y = 0; y < tile_count+1; ++y) {
+			coordinates_t corner = lu_corner + coordinates_t{static_cast<position_t>(x*tile_size), static_cast<position_t>(y*tile_size)};
+
+			if (corner.x > img.x) continue;
+			if (corner.y > img.y) continue;
+			if (corner.x + tile_size < 0) continue;
+			if (corner.y + tile_size < 0) continue;
+			coordinates_t dest_lu {std::max(corner.x, 0L), std::max(corner.y, 0L)};
+			coordinates_t dest_rb {std::min<position_t>(corner.x+ tile_size, img.x), std::min<position_t>(corner.y + tile_size, img.y)};
+
+			switch (bpp) {
+				case 1:	apply_mosaic<1>(data_in, data_out, linesize, dest_lu, dest_rb, [&](const coordinates_t& c)
+							{return get_distance(center, c) > radius;}); break;
+				case 2:	apply_mosaic<2>(data_in, data_out, linesize, dest_lu, dest_rb, [&](const coordinates_t& c)
+							{return get_distance(center, c) > radius;}); break;
+				case 3:	apply_mosaic<3>(data_in, data_out, linesize, dest_lu, dest_rb, [&](const coordinates_t& c)
+							{return get_distance(center, c) > radius;}); break;
+				case 4:	apply_mosaic<4>(data_in, data_out, linesize, dest_lu, dest_rb, [&](const coordinates_t& c)
+							{return get_distance(center, c) > radius;}); break;
+			}
+
+		}
+	}
+}
+
+mosaic_detail_t parse_mosaic_info(const event::EventVector& event)
+{
+	if (event.size() < 2) throw std::runtime_error("Wrong vector size");
+	if (event.size() == 3) {
+		return mosaic_detail_t {
+			event::lex_cast_value<position_t>(event[2]),
+			16,
+			{event::lex_cast_value<position_t>(event[0]),
+			event::lex_cast_value<position_t>(event[1])},
+		};
+	}
+	return mosaic_detail_t {
+		event::lex_cast_value<position_t>(event[2]),
+		event::lex_cast_value<position_t>(event[3]),
+		{event::lex_cast_value<position_t>(event[0]),
+		event::lex_cast_value<position_t>(event[1])},
+	};
+}
+
 using namespace core::raw_format;
 const std::vector<format_t> supported_formats = {
 		rgb24, bgr24, rgba32, bgra32, argb32, abgr32,
@@ -84,7 +135,7 @@ const std::vector<format_t> supported_formats = {
 Mosaic::Mosaic(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("mosaic")),
 BasicEventConsumer(log),
-radius_(300),tile_size_(50),center_{100,100}
+mosaics_{{300,50,{100,100}}}
 {
 	IOTHREAD_INIT(parameters)
 	set_supported_formats(supported_formats);
@@ -101,12 +152,12 @@ core::pFrame Mosaic::do_special_single_step(const core::pRawVideoFrame & frame)
 
 	resolution_t image_size = frame->get_resolution();
 	coordinates_t img = {static_cast<position_t>(image_size.width), static_cast<position_t>(image_size.height)};
-	coordinates_t lu_corner = center_ - coordinates_t{radius_, radius_};
+
 //	resolution_t rb_corner = center_ + resolution_t{radius_, radius_};
 
 	core::pRawVideoFrame frame_out = dynamic_pointer_cast<core::RawVideoFrame>(frame->get_copy());//core::RawVideoFrame::create_empty(frame->get_format(), image_size);
 //	size_t tiles = 2*radius_ / tile_size_;
-	size_t tile_count = tile_size_?(2*radius_ / tile_size_):0;
+
 	const uint8_t * data_in = PLANE_RAW_DATA(frame,0);
 	uint8_t * data_out = PLANE_RAW_DATA(frame_out,0);
 	size_t linesize = PLANE_DATA(frame,0).get_line_size();
@@ -114,57 +165,54 @@ core::pFrame Mosaic::do_special_single_step(const core::pRawVideoFrame & frame)
 //	const auto& fi = core::raw_format::get_format_info(frame->get_format());
 	size_t bpp = core::raw_format::get_fmt_bpp(frame->get_format(),0)/8;
 	log[log::verbose_debug] << "Mosaicing " << core::raw_format::get_format_name(frame->get_format());
-//	log[log::info] << "Number of tiles " << tile_count;
-	for (size_t x = 0; x < tile_count+1; ++x) {
-		for (size_t y = 0; y < tile_count+1; ++y) {
-			coordinates_t corner = lu_corner + coordinates_t{static_cast<position_t>(x*tile_size_), static_cast<position_t>(y*tile_size_)};
-
-			if (corner.x > img.x) continue;
-			if (corner.y > img.y) continue;
-			if (corner.x + tile_size_ < 0) continue;
-			if (corner.y + tile_size_ < 0) continue;
-			coordinates_t dest_lu {std::max(corner.x, 0L), std::max(corner.y, 0L)};
-			coordinates_t dest_rb {std::min<position_t>(corner.x+ tile_size_, img.x), std::min<position_t>(corner.y + tile_size_, img.y)};
-
-			switch (bpp) {
-				case 1:	apply_mosaic<1>(data_in, data_out, linesize, dest_lu, dest_rb, [&](const coordinates_t& c)
-							{return get_distance(center_, c) > radius_;}); break;
-				case 2:	apply_mosaic<2>(data_in, data_out, linesize, dest_lu, dest_rb, [&](const coordinates_t& c)
-							{return get_distance(center_, c) > radius_;}); break;
-				case 3:	apply_mosaic<3>(data_in, data_out, linesize, dest_lu, dest_rb, [&](const coordinates_t& c)
-							{return get_distance(center_, c) > radius_;}); break;
-				case 4:	apply_mosaic<4>(data_in, data_out, linesize, dest_lu, dest_rb, [&](const coordinates_t& c)
-							{return get_distance(center_, c) > radius_;}); break;
-			}
-
-		}
+	for (const auto& x: mosaics_) {
+		process_mosaic(data_in, data_out, linesize, bpp, img, x.center, x.radius, x.tile_size);
 	}
+
+
+
 	return frame_out;
 }
 
 bool Mosaic::set_param(const core::Parameter& param)
 {
 	if (param.get_name() == "center") {
-		center_ = param.get<coordinates_t>();
+		mosaics_[0].center = param.get<coordinates_t>();
 	} else if (param.get_name() == "radius") {
-		radius_ = param.get<position_t>();
+		mosaics_[0].radius = param.get<position_t>();
 	} else if (param.get_name() == "tile_size") {
-		tile_size_ = param.get<position_t>();
+		mosaics_[0].tile_size = param.get<position_t>();
 	} else return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
 	return true;
 }
 bool Mosaic::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
 	if (event_name == "x") {
-		center_.x = event::lex_cast_value<position_t>(event);
+		mosaics_[0].center.x = event::lex_cast_value<position_t>(event);
 	} else if (event_name == "y") {
-		center_.y = event::lex_cast_value<position_t>(event);
+		mosaics_[0].center.y = event::lex_cast_value<position_t>(event);
 	} else if (event_name == "radius") {
-		radius_ = event::lex_cast_value<position_t>(event);
+		mosaics_[0].radius = event::lex_cast_value<position_t>(event);
 	} else if (event_name == "tile_size") {
-		tile_size_ = event::lex_cast_value<position_t>(event);
+		mosaics_[0].tile_size = event::lex_cast_value<position_t>(event);
 	} else if (event_name == "center") {
-		center_ = event::lex_cast_value<coordinates_t>(event);
+		mosaics_[0].center = event::lex_cast_value<coordinates_t>(event);
+	} else if (event_name == "mosaic" && event->get_type() == event::event_type_t::vector_event) {
+		if (auto mosaic_event = dynamic_pointer_cast<event::EventVector>(event)) {
+			mosaics_={parse_mosaic_info(*mosaic_event)};
+		}
+	} else if (event_name == "mosaics" && event->get_type() == event::event_type_t::vector_event) {
+		if (auto mosaic_events = dynamic_pointer_cast<event::EventVector>(event)) {
+			mosaics_.clear();
+			log[log::debug] << "Received " << mosaic_events->size() << " mosaics.";
+			for (const auto& ev: *mosaic_events) {
+				if (ev->get_type() == event::event_type_t::vector_event) {
+					if (auto mos_vec = dynamic_pointer_cast<event::EventVector>(ev)) {
+						mosaics_.push_back(parse_mosaic_info(*mos_vec));
+					}
+				}
+			}
+		}
 	}
 	return true;
 }

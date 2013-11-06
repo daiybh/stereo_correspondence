@@ -17,6 +17,12 @@
 namespace yuri {
 namespace mosaic {
 
+struct mosaic_detail_t {
+	position_t radius;
+	position_t tile_size;
+	coordinates_t center;
+};
+
 class Mosaic: public core::SpecializedIOFilter<core::RawVideoFrame>, public event::BasicEventConsumer
 {
 public:
@@ -29,9 +35,8 @@ private:
 	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
 	virtual bool set_param(const core::Parameter& param);
 	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
-	position_t radius_;
-	position_t tile_size_;
-	coordinates_t center_;
+
+	std::vector<mosaic_detail_t> mosaics_;
 };
 
 } /* namespace mosaic */
