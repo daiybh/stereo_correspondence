@@ -100,9 +100,9 @@ core::pRawVideoFrame merge_planes_420p_yuyv(core::pRawVideoFrame frame) {
 	iter_t iter_in2 = PLANE_DATA(frame, 2).begin();
 	iter_t iter_out = PLANE_DATA(frame_out, 0).begin();
 	for (size_t line = 0; line < res.height; line+=2) {
-		iter_t it1 = iter_in1;
-		iter_t it2 = iter_in2;
 		for (size_t line2 = line; line2 < std::min(res.height,line+2); ++line2) {
+			iter_t it1 = iter_in1;
+			iter_t it2 = iter_in2;
 			for (size_t col = 0; col < res.width; col+=2) {
 					*iter_out++ = *iter_in0++;
 					*iter_out++ = *it1++;
@@ -127,9 +127,9 @@ core::pRawVideoFrame merge_planes_420p_yvyu(core::pRawVideoFrame frame) {
 	iter_t iter_in2 = PLANE_DATA(frame, 2).begin();
 	iter_t iter_out = PLANE_DATA(frame_out, 0).begin();
 	for (size_t line = 0; line < res.height; line+=2) {
-		iter_t it1 = iter_in1;
-		iter_t it2 = iter_in2;
 		for (size_t line2 = line; line2 < std::min(res.height,line+2); ++line2) {
+			iter_t it1 = iter_in1;
+			iter_t it2 = iter_in2;
 			for (size_t col = 0; col < res.width; col+=2) {
 					*iter_out++ = *iter_in0++;
 					*iter_out++ = *it2++;
@@ -154,9 +154,9 @@ core::pRawVideoFrame merge_planes_420p_uyvy(core::pRawVideoFrame frame) {
 	iter_t iter_in2 = PLANE_DATA(frame, 2).begin();
 	iter_t iter_out = PLANE_DATA(frame_out, 0).begin();
 	for (size_t line = 0; line < res.height; line+=2) {
-		iter_t it1 = iter_in1;
-		iter_t it2 = iter_in2;
 		for (size_t line2 = line; line2 < std::min(res.height,line+2); ++line2) {
+			iter_t it1 = iter_in1;
+			iter_t it2 = iter_in2;
 			for (size_t col = 0; col < res.width; col+=2) {
 				*iter_out++ = *it1++;
 				*iter_out++ = *iter_in0++;
@@ -181,9 +181,9 @@ core::pRawVideoFrame merge_planes_420p_vyuy(core::pRawVideoFrame frame) {
 	iter_t iter_in2 = PLANE_DATA(frame, 2).begin();
 	iter_t iter_out = PLANE_DATA(frame_out, 0).begin();
 	for (size_t line = 0; line < res.height; line+=2) {
-		iter_t it1 = iter_in1;
-		iter_t it2 = iter_in2;
 		for (size_t line2 = line; line2 < std::min(res.height,line+2); ++line2) {
+			iter_t it1 = iter_in1;
+			iter_t it2 = iter_in2;
 			for (size_t col = 0; col < res.width; col+=2) {
 				*iter_out++ = *it2++;
 				*iter_out++ = *iter_in0++;
