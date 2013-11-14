@@ -41,7 +41,7 @@ fps_(30)
 	strs << "screen:fps=" << fps_;
 
 	if (!!init_capture(strs.str())) {
-		throw exception::InitializationFailed("Failed to initialize v4l2 device!");
+		throw exception::InitializationFailed("Failed to initialize screen capture!");
 	}
 }
 
