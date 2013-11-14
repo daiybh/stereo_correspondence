@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<app name="webcam_sdl">
+<description>
+Test application showing testcard output
+</description>
+
+<!-- Specify variables for command line substitution -->
+<variable name="resolution" description="Testcard resolution">640x480</variable>
+<variable name="resolution_out" description="Display resolution">@resolution</variable>
+<variable name="fps">100</variable>
+<variable name="format">rgb</variable>
+
+
+<!-- General settings -->
+<general>
+<!-- Unlimited run time -->
+  <parameter name="run_limit">-1</parameter>
+<!-- Moderate debug informations -->
+  <parameter name="debug">0</parameter>
+</general>
+
+<!-- Nodes -->
+
+<node class="uv_testcard" name="card">
+  <parameter name="resolution">@resolution</parameter>
+  <parameter name="fps">@fps</parameter>
+  <parameter name="format">@format</parameter>
+</node>
+
+
+<node class="sdl_window" name="sdl">
+  <parameter name="resolution">@resolution_out</parameter>
+</node>
+
+<!-- Link specifications -->
+<link name="yuyv_image" class="single" source="card:0" target="sdl:0"/>
+
+</app>
