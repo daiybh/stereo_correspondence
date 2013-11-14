@@ -131,7 +131,7 @@ RawAVFile::RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core
 
 }
 
-RawAVFile::~RawAVFile()
+RawAVFile::~RawAVFile() noexcept
 {
 
 }
