@@ -29,10 +29,8 @@ private:
 	double fps;
 	shared_ptr<Display> dpy;
 	Window win;
-	ssize_t x;
-	ssize_t y;
-	ssize_t width;
-	ssize_t height;
+	coordinates_t position_;
+	resolution_t resolution_;
 	std::string win_name;
 	size_t pid;
 	Window win_id_;

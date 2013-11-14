@@ -27,10 +27,8 @@ core::Parameters ScreenGrab::configure()
 	p.set_description("ScreenGrab module.");
 	p["display"]["X display"]=std::string();
 	p["fps"]["Frames per second"]=10.0;
-	p["x"]["X offset of the grabbed image"]=0;
-	p["y"]["Y offset of the grabbed image"]=0;
-	p["width"]["Width of the grabbed image (set to -1 to grab full image)"]=-1;
-	p["height"]["Height of the grabbed image (set to -1 to grab full image)"]=-1;
+	p["position"]["Position of grabbed area"]="0x0";
+	p["resolution"]["Resolution of the grabbed image (set to 0x0 to grab full image)"]="0x0";
 	p["win_name"]["Window name (set to empty string to grab whole screen)"]=std::string();
 	p["pid"]["PID of application that created the window (set to 0 to grab whole screen)"]=0;
 	p["win_id"]["Window ID (set to 0 to grab whole screen)"]=0;
@@ -99,8 +97,8 @@ Window find_child(Display* dpy, Window top, T val, F func)
 }
 
 ScreenGrab::ScreenGrab(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("screen_grab")),win(0),x(0),y(0),
-width(-1),height(-1),pid(0),win_id_(0)
+core::IOThread(log_,parent,1,1,std::string("screen_grab")),win(0),position_{0,0},
+resolution_{0,0},pid(0),win_id_(0)
 {
 	IOTHREAD_INIT(parameters)
 	XInitThreads();
@@ -166,14 +164,14 @@ bool ScreenGrab::grab()
 		XWindowAttributes attr;
 		XGetWindowAttributes(dpy.get(),win,&attr);
 		log[log::debug] << "Found window " << attr.width << "x" << attr.height;
-		if (x > attr.width && y > attr.height) {
+		if (position_.x > attr.width || position_.y > attr.height) {
 			log[log::warning] << "Offset out of range of the image";
 			return true;
 		}
-		const int w = (width>0)?std::min(attr.width-x,width):attr.width-x;
-		const int h = (height>0)?std::min(attr.height-y,height):attr.height-y;
+		const int w = (resolution_.width>0)?std::min<int>(attr.width-position_.x,resolution_.width):attr.width-position_.x;
+		const int h = (resolution_.height>0)?std::min<int>(attr.height-position_.y,resolution_.height):attr.height-position_.y;
 
-		shared_ptr<XImage> img (XGetImage(dpy.get(),win,x,y,w,h,AllPlanes,ZPixmap),ImageDeleter());
+		shared_ptr<XImage> img (XGetImage(dpy.get(),win,position_.x,position_.y,w,h,AllPlanes,ZPixmap),ImageDeleter());
 		if (!img) {
 			log[log::warning] << "Failed to get image from the window";
 			return true;
@@ -209,14 +207,10 @@ bool ScreenGrab::set_param(const core::Parameter &param)
 		display = param.get<std::string>();
 	} else if (param.get_name() == "fps") {
 		fps = param.get<double>();
-	} else if (param.get_name() == "x") {
-		x = param.get<ssize_t>();
-	} else if (param.get_name() == "y") {
-		y = param.get<ssize_t>();
-	} else if (param.get_name() == "width") {
-		width = param.get<ssize_t>();
-	} else if (param.get_name() == "height") {
-		height = param.get<ssize_t>();
+	} else if (param.get_name() == "position") {
+		position_ = param.get<coordinates_t>();
+	} else if (param.get_name() == "resolution") {
+		resolution_ = param.get<resolution_t>();
 	} else if (param.get_name() == "win_name") {
 		win_name = param.get<std::string>();
 	} else if (param.get_name() == "pid") {
