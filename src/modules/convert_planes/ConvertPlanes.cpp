@@ -264,7 +264,7 @@ core::Parameters ConvertPlanes::configure()
 {
 	core::Parameters p = core::SpecializedIOFilter<core::RawVideoFrame>::configure();
 	p.set_description("ConvertPlanes");
-	p["format"]["Target format"]="YUV444P";
+	p["format"]["Target format"]="YUV";
 	return p;
 }
 
