@@ -132,14 +132,7 @@ ScreenGrab::~ScreenGrab() noexcept
 {
 }
 
-/*bool ScreenGrab::step()
-{	if (!in[0]) return true;
-	core::pBasicFrame frame = in[0]->pop_frame();
-	if (!frame) return true;
 
-	//push_raw_frame(0,frame);
-	return true;
-}*/
 namespace {
 int error_handler(Display *, XErrorEvent *)
 {
@@ -149,16 +142,13 @@ int error_handler(Display *, XErrorEvent *)
 void ScreenGrab::run()
 {
 	XSetErrorHandler(error_handler);
-//	IO_THREAD_PRE_RUN
-	while(still_running()) {
-		if (!grab()) break;
-	}
+	while(still_running() && step()) {	}
+	close_pipes();
 	XSetErrorHandler(nullptr);
 	dpy.reset();
-//	IO_THREAD_POST_RUN
 }
 
-bool ScreenGrab::grab()
+bool ScreenGrab::step()
 {
 	try {
 		XWindowAttributes attr;

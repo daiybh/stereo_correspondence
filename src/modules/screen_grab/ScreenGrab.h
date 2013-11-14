@@ -23,8 +23,8 @@ public:
 private:
 
 	virtual void run();
+	virtual bool step();
 	virtual bool set_param(const core::Parameter &param);
-	bool grab();
 	std::string display;
 	double fps;
 	shared_ptr<Display> dpy;
