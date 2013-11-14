@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<app name="play_file">
+<!-- Specify variables for command line substitution -->
+<variable name="width" description="Width of SDL window. Can be overriden by 'resolution'.">800</variable>
+<variable name="height" description="Height of SDL window. Can be overriden by 'resolution'.">600</variable>
+<variable name="resolution" description="Size of SDL window.">add(add(str(@width),"x"),str(@height))</variable>
+<variable name="path" required="1" description="Path to the file to be played."/>
+<variable name="fps" description="Explicit framerate. Set to 0 for default.">0</variable>
+
+<!-- General settings -->
+<general>
+<!-- Unlimited run time -->
+  <parameter name="run_limit">-1</parameter>
+<!-- Moderate debug informations -->
+  <parameter name="debug">0</parameter>
+</general>
+
+<!-- Nodes -->
+<node class="rawavsource" name="source">
+        <parameter name="decode">1</parameter>
+        <parameter name="filename">@path</parameter>
+        <parameter name="fps">@fps</parameter>
+</node>
+
+<node class="sdl_window" name="renderer">
+        <parameter name="width">@width</parameter>
+        <parameter name="height">@height</parameter>
+</node>
+
+<!-- Link specifications -->
+<link name="raw_file" class="single" source="source:0" target="renderer:0"/>
+
+</app>
