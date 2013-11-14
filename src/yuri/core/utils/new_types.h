@@ -15,6 +15,8 @@
 #include <functional>
 #include <condition_variable>
 #include <ios>
+#include <ostream>
+#include <istream>
 #include "platform.h"
 
 namespace yuri {
@@ -121,15 +123,15 @@ constexpr inline coordinates_t operator-(const coordinates_t& a, const resolutio
 	return {a.x - static_cast<position_t>(b.width), a.y - static_cast<position_t>(b.height)};
 }
 
-template<class Stream>
-Stream& operator<<(Stream& os, const resolution_t& res)
+//template<class Stream>
+inline std::ostream& operator<<(std::ostream& os, const resolution_t& res)
 {
 	os << res.width << "x" << res.height;
 	return os;
 }
 
-template<class Stream>
-Stream& operator>>(Stream& is, resolution_t& res)
+//template<class Stream>
+inline std::istream& operator>>(std::istream& is, resolution_t& res)
 {
 	resolution_t r;
 	char c;
@@ -138,15 +140,15 @@ Stream& operator>>(Stream& is, resolution_t& res)
 	if (!is.fail()) res = r;
 	return is;
 }
-template<class Stream>
-Stream& operator<<(Stream& os, const coordinates_t& res)
+//template<class Stream>
+inline std::ostream& operator<<(std::ostream& os, const coordinates_t& res)
 {
 	os << res.x<< "x" << res.y ;
 	return os;
 }
 
-template<class Stream>
-Stream& operator>>(Stream& is, coordinates_t& res)
+//template<class Stream>
+inline std::istream& operator>>(std::istream& is, coordinates_t& res)
 {
 	coordinates_t r;
 	char c;
@@ -155,8 +157,8 @@ Stream& operator>>(Stream& is, coordinates_t& res)
 	if (!is.fail()) res = r;
 	return is;
 }
-template<class Stream>
-Stream& operator<<(Stream& os, const geometry_t& geo)
+//template<class Stream>
+inline std::ostream& operator<<(std::ostream& os, const geometry_t& geo)
 {
 	os << geo.width << "x" << geo.height << "+" << geo.x << "+" << geo.y;
 	return os;
@@ -171,8 +173,8 @@ Stream& operator<<(Stream& os, const geometry_t& geo)
  * @param geo	Reference to geometry_t
  * @return		Input stream
  */
-template<class Stream>
-Stream& operator>>(Stream& is, geometry_t& geo)
+//template<class Stream>
+inline std::istream& operator>>(std::istream& is, geometry_t& geo)
 {
 	geometry_t g;
 	char c0, c1, c2;

@@ -11,6 +11,9 @@
 #include <chrono>
 #include <cstdlib>
 #include <iomanip>
+#include <ostream>
+#include <istream>
+
 namespace yuri {
 namespace detail {
 	using clock_t 		= std::chrono::high_resolution_clock;
@@ -160,8 +163,8 @@ operator*(const T& b, const duration_t& a)
 	return duration_t(a.value*b);
 }
 
-template<class Stream>
-Stream& operator<<(Stream& os, const duration_t& duration)
+//template<class Stream>
+inline std::ostream& operator<<(std::ostream& os, const duration_t& duration)
 {
 	const uint64_t val 		= std::abs(duration.value);
 	const uint64_t hours 	=  val / 1000000 / 3600;
@@ -172,8 +175,8 @@ Stream& operator<<(Stream& os, const duration_t& duration)
 	return os;
 }
 /// TODO: Not implemented...
-template<class Stream>
-Stream& operator<<(Stream& os, const timestamp_t&)
+//template<class Stream>
+inline std::ostream& operator<<(std::ostream& os, const timestamp_t&)
 {
 	os << "Timestamp []";
 	return os;
