@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<app name="webcam">
+	<variable name="device">/dev/video0</variable>
+	<node class="v4l2source" name="webcam">
+		<parameter name="path">@device</parameter>
+	</node>
+	<node class="sdl_window" name="sdl"/>
+	<link name="yuyv_image" class="single" source="webcam:0" target="sdl:0"/>
+</app>

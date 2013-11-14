@@ -1,0 +1,50 @@
+<?xml version="1.0" ?>
+<!-- Simple example of lib yuri function.
+     The application connects to video4lionux2 device (web camera)
+     shows the image.
+     
+     [ webcam ] -> [ renderer ]
+     
+      -->
+<app name="webcam_sdl">
+<description>
+Test application displaying output of v4l2 device
+</description>
+
+<!-- Specify variables for command line substitution -->
+<variable name="resolution" description="Capture resolution.">640x480</variable>
+<variable name="resolution_out" description="Display resolution.">@resolution</variable>
+<variable name="device" description="Path to device node for the v4l2 device." required="1">/dev/video0</variable>
+<variable name="fps" description="Capture framerate">100</variable>
+<variable name="fs" description="Fullscreen display">FALSE</variable>
+<variable name="format" description="Capture format.">YUYV</variable>
+
+
+<!-- General settings -->
+<general>
+<!-- Unlimited run time -->
+  <parameter name="run_limit">-1</parameter>
+<!-- Moderate debug informations -->
+  <parameter name="debug">0</parameter>
+</general>
+
+<!-- Units -->
+<!-- Video4Linux2 device source -->
+<node class="uv_v4l2" name="webcam">
+  <parameter name="path">@device</parameter>
+  <parameter name="resolution">@resolution</parameter>
+  <parameter name="fps">@fps</parameter>
+  <parameter name="fps_stats">100</parameter>
+  <parameter name="format">@format</parameter>
+</node>
+
+<!-- And finally simple rendering window -->
+<node class="uv_sdl" name="sdl">
+  <parameter name="resolution">@resolution_out</parameter>
+  <parameter name="fullscreen">@fs</parameter>
+</node>
+
+<!-- Link specifications -->
+<link name="yuyv_image" class="single" source="webcam:0" target="sdl:0"/>
+
+</app>
