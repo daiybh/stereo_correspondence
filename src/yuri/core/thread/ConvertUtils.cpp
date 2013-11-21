@@ -1,9 +1,13 @@
-/*
- * ConvertUtils.cpp
+/*!
+ * @file 		ConvertUtils.cpp
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
+ * @date 		30.10.2013
+ * @date		21.11.2013
+ * @copyright	Institute of Intermedia, CTU in Prague, 2013
+ * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
- *  Created on: 30.10.2013
- *      Author: neneko
  */
+
 
 #include "ConvertUtils.h"
 #include <unordered_map>

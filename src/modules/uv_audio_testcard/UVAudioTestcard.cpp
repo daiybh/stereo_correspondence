@@ -1,8 +1,8 @@
 /*!
  * @file 		UVAudioTestcard.cpp
- * @author 		<Your name>
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
  * @date		22.10.2013
- * @copyright	Institute of Intermedia, 2013
+ * @copyright	CESNET, z.s.p.o, 2013
  * 				Distributed under BSD License
  *
  */

@@ -2,8 +2,9 @@
  * @file 		make_unique.h
  * @author 		Zdenek Travnicek
  * @date		6.9.2013
- * @copyright	Institute of Intermedia, 2013
- * 				Distributed under BSD license
+ * @date		21.11.2013
+ * @copyright	Institute of Intermedia, CTU in Prague, 2013
+ * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
  */
 

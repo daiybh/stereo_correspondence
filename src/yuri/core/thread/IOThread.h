@@ -2,11 +2,12 @@
  * @file 		IOThread.h
  * @author 		Zdenek Travnicek
  * @date 		31.5.2008
- * @date		16.2.2013
- * @copyright	Institute of Intermedia, 2008 - 2013
- * 				Distributed under GNU Public License 3.0
+ * @date		21.11.2013
+ * @copyright	Institute of Intermedia, CTU in Prague, 2008 - 2013
+ * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
  */
+
 #ifndef BASICIOTHREAD_H_
 #define BASICIOTHREAD_H_
 

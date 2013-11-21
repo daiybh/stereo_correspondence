@@ -1,8 +1,11 @@
-/*
- * time_types.h
+/*!
+ * @file 		time_types.h
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
+ * @date 		8.9.2013
+ * @date		21.11.2013
+ * @copyright	Institute of Intermedia, CTU in Prague, 2013
+ * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
- *  Created on: 8.9.2013
- *      Author: neneko
  */
 
 #ifndef TIME_TYPES_H_

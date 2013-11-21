@@ -1,8 +1,11 @@
-/*
- * DatagramSocketGenerator.h
+/*!
+ * @file 		DatagramSocketGenerator.h
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
+ * @date 		15.10.2013
+ * @date		21.11.2013
+ * @copyright	CESNET, z.s.p.o, 2013
+ * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
- *  Created on: 15.10.2013
- *      Author: neneko
  */
 
 #ifndef DATAGRAMSOCKETGENERATOR_H_

@@ -4,8 +4,8 @@
  * @date 		30.3.2011
  * @date		16.2.2013
  * @date		14.8.2013
- * @copyright	Institute of Intermedia, 2011 - 2013
- * 				Distributed under GNU Public License 3.0
+ * @copyright	Institute of Intermedia, CTU in Prague, 2011 - 2013
+ * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  */
 
 

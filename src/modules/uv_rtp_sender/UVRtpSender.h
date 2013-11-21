@@ -1,9 +1,9 @@
 /*!
  * @file 		UVRtpSender.h
- * @author 		<Your name>
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
  * @date 		17.10.2013
- * @copyright	Institute of Intermedia, 2013
- * 				Distributed BSD License
+ * @copyright	CESNET, z.s.p.o, 2013
+ * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
  */
 
