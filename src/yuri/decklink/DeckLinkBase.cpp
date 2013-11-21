@@ -1,9 +1,13 @@
-/*
- * DeckLinkBase.cpp
+/*!
+ * @file 		DeckLinkBase.cpp
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
+ * @date		22.9.2011
+ * @date		21.11.2013
+ * @copyright	CESNET, z.s.p.o, 2011 - 2013
+ * 				Distributed under BSD Licence, details in file doc/LICENSE
  *
- *  Created on: Sep 22, 2011
- *      Author: worker
  */
+
 
 #include "DeckLinkBase.h"
 //#include <boost/assign.hpp>

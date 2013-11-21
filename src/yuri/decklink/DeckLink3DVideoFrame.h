@@ -1,8 +1,11 @@
-/*
- * DeckLink3DVideoFrame.h
+/*!
+ * @file 		DeckLink3DVideoFrame.h
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
+ * @date		25.1.2012
+ * @date		21.11.2013
+ * @copyright	CESNET, z.s.p.o, 2012 - 2013
+ * 				Distributed under BSD Licence, details in file doc/LICENSE
  *
- *  Created on: Jan 25, 2012
- *      Author: worker
  */
 
 #ifndef DECKLINK3DVIDEOFRAME_H_

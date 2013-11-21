@@ -1,9 +1,12 @@
-/*
- * libav.cpp
+/*!
+ * @file 		libav.cpp
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
+ * @date		29.10.2013
+ * @copyright	Institute of Intermedia, CTU in Prague, 2013
+ * 				Distributed under BSD Licence, details in file doc/LICENSE
  *
- *  Created on: 29.10.2013
- *      Author: neneko
  */
+
 #include "libav.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/compressed_frame_types.h"

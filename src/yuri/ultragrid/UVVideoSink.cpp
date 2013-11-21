@@ -1,9 +1,13 @@
-/*
- * UVSink.cpp
+/*!
+ * @file 		UVVideoSink.cpp
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
+ * @date 		23.10.2013
+ * @date		21.11.2013
+ * @copyright	CESNET, z.s.p.o, 2013
+ * 				Distributed under BSD Licence, details in file doc/LICENSE
  *
- *  Created on: 23.10.2013
- *      Author: neneko
  */
+
 
 #include "UVVideoSink.h"
 #include "yuri/core/Module.h"

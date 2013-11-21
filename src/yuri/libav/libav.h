@@ -1,8 +1,10 @@
-/*
- * libav.h
+/*!
+ * @file 		libav.h
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
+ * @date		29.10.2013
+ * @copyright	Institute of Intermedia, CTU in Prague, 2013
+ * 				Distributed under BSD Licence, details in file doc/LICENSE
  *
- *  Created on: 29.10.2013
- *      Author: neneko
  */
 
 #ifndef LIBAV_H_
