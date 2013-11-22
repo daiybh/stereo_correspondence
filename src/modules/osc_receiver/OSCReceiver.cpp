@@ -25,6 +25,7 @@ core::Parameters OSCReceiver::configure()
 	core::Parameters p = core::IOThread::configure();
 	p.set_description("OSCReceiver");
 	p["socket_type"]="uv_udp";
+	p["port"]=57120;
 	//p->set_max_pipes(0,0);
 	return p;
 }
@@ -135,6 +136,29 @@ int32_t read_int32(Iterator& first, const Iterator& last)
 	}
 	return i;
 }
+struct midi_struct{
+	uint8_t port;
+	uint8_t status;
+	uint8_t data1;
+	uint8_t data2;
+};
+
+template<class Iterator>
+midi_struct read_midi(Iterator& first, const Iterator& last)
+{
+	midi_struct m;
+//	uint8_t *fptr=reinterpret_cast<uint8_t*>(&i);
+//	ssize_t idx = 3;
+//	while (first != last && idx>=0) {
+//		fptr[idx--]=*first++;
+//	}
+	m.port=*first++;
+	m.status=*first++;
+	m.data1=*first++;
+	m.data2=*first++;
+	return m;
+}
+
 }
 
 template<class Iterator>
@@ -169,6 +193,14 @@ void OSCReceiver::process_data(Iterator& first, const Iterator& last)
 					int32_t i = read_int32(first,last);
 					events.push_back(make_shared<event::EventInt>(i));
 					log[log::verbose_debug] << "Int value: " << i;
+				}; break;
+				case 'm': {
+					auto m = read_midi(first,last);
+					//events.push_back(make_shared<event::EventInt>(i));
+					log[log::info] << "Midi port  " << static_cast<int>(m.port)
+							<< ", status: " << static_cast<int>(m.status)
+							<< ", data: " << static_cast<int>(m.data1)
+							<< ", " << static_cast<int>(m.data2);
 				}; break;
 				default:
 					{first=last;return;}
@@ -220,6 +252,8 @@ bool OSCReceiver::set_param(const core::Parameter& param)
 {
 	if (param.get_name() == "socket_type") {
 		socket_type_ = param.get<std::string>();
+	} else if (param.get_name() == "port") {
+		port_ = param.get<uint16_t>();
 	} else return core::IOThread::set_param(param);
 	return true;
 }
