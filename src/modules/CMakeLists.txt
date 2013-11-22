@@ -114,7 +114,7 @@ IF(CORE_UV)
 	add_subdirectory(uv_testcard)
 	add_subdirectory(uv_rtp_sender)
 	add_subdirectory(uv_rtp_receiver)
-	
+	add_subdirectory(uv_uyvy)
 	
 	
 	
