@@ -22,6 +22,9 @@ include(yuri_install)
 #################################################################
 git_describe(YURI_GIT_VERSION)
 
+IF("${YURI_GIT_VERSION}" STREQUAL "HEAD-HASH-NOTFOUND")
+SET(YURI_GIT_VERSION "2.8.0")
+ENDIF()
 #################################################################
 # Add strict warning if building under linux
 #################################################################
