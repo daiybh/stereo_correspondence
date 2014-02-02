@@ -32,7 +32,7 @@ bool UVVideoSource::init_capture(const std::string& params)
 	unique_ptr<vidcap_params, void(*)(vidcap_params*)> par (vidcap_params_allocate(),
 			[](vidcap_params* par){vidcap_params_free_struct(par);});
 
-	vidcap_params_assign_device(par.get(), params.c_str());
+	vidcap_params_set_device(par.get(), params.c_str());
 
 	log[log::debug] << "Format string is " << vidcap_params_get_fmt(par.get());
 	if (capt_params_.init_func) {

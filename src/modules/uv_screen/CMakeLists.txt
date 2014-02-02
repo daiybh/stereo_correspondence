@@ -4,7 +4,7 @@ SET (MODULE uv_screen)
 # Set all source files module uses
 SET (SRC UVScreen.cpp
 		 UVScreen.h
-		 ${UV_BASE}/video_capture/screen.c)
+		 ${UV_BASE}/video_capture/screen_x11.c)
 
 include_directories(${UV_BASE})
 
