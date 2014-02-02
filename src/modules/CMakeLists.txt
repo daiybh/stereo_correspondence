@@ -107,49 +107,8 @@ ENDIF()
 	# This should be replaced by a proper detection!
 	
 IF(CORE_UV)
-	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)	
-	add_subdirectory(uv_audio_testcard)
-	add_subdirectory(uv_convert)
-	add_subdirectory(uv_udp)
-	add_subdirectory(uv_testcard)
-	add_subdirectory(uv_rtp_sender)
-	add_subdirectory(uv_rtp_receiver)
-	add_subdirectory(uv_uyvy)
-	
-	
-	
-	if (X11_FOUND)
-		add_subdirectory(uv_screen)
-	ENDIF()
-	
-	pkg_check_modules(libv4l2 libv4l2)
-	IF (libv4l2_FOUND)
-		add_subdirectory(uv_v4l2)
-	ENDIF()
-	
-	IF(SDL_FOUND)
-		add_subdirectory(uv_sdl)
-	ENDIF()
-	
-	find_package(GLUT)
-	find_package(GLEW)
-	IF(GLUT_FOUND AND GLEW_FOUND)
-		add_subdirectory(uv_gl)
-		add_subdirectory(uv_rtdxt)
-	ENDIF()
-	
-	IF(ALSA_FOUND)
-		add_subdirectory(uv_alsa)
-	ENDIF()
-	
-	
-	IF(libavcodec_FOUND)
-		add_subdirectory(uv_libavcodec)
-	ENDIF()
-	
-	IF(GPUJPEG_FOUND)
-		add_subdirectory(uv_jpeg)
-	ENDIF()
+	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)
+	add_subdirectory(ultragrid)	
 ENDIF()
 #############
 
