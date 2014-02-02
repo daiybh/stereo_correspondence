@@ -13,6 +13,7 @@
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/thread/ConvertUtils.h"
 #include "yuri/core/thread/IOThreadGenerator.h"
+#include "yuri/core/utils/Timer.h"
 #include <unordered_map>
 #ifdef __clang__
 #pragma clang diagnostic push
@@ -117,6 +118,7 @@ Convert::~Convert() noexcept
 pFrame Convert::do_convert_frame(pFrame frame_in, format_t target_format)
 {
 	if (!frame_in) return {};
+	Timer t;
 	format_t source_format = frame_in->get_format();
 	if (source_format == target_format) return frame_in;
 	auto path = find_conversion(source_format, target_format);
@@ -134,6 +136,7 @@ pFrame Convert::do_convert_frame(pFrame frame_in, format_t target_format)
 			return {};
 		}
 	}
+	log[log::verbose_debug] << "Conversion of path with " << path.first.size() << " took " <<t.get_duration();
 //	log[log::info] << "COnversion ok";
 	return result;
 }
@@ -165,6 +168,7 @@ pFrame Convert::convert_to_cheapest(const pFrame& frame, const std::vector<forma
 		pFrame frame_out = convert_frame(frame, f.first);
 		if (frame_out) return frame_out;
 	}
+	log[log::warning] << "No suitable conversion found";
 	return {};
 }
 pFrame Convert::do_simple_single_step(const pFrame& frame)
