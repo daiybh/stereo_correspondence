@@ -12,6 +12,12 @@
 #ifndef PLATFORM_H_
 #define PLATFORM_H_
 
+#if __cplusplus >= 201103L
+#ifndef YURI_USE_CXX11
+#define YURI_USE_CXX11 1
+#endif
+#endif
+
 #ifndef YURI_USE_CXX11
 #error C++11 mode is required!
 #endif
