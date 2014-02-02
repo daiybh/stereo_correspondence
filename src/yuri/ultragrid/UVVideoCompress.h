@@ -13,6 +13,7 @@
 
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/thread/ConverterThread.h"
 extern "C" {
 #include "video_compress.h"
 #include "video_frame.h"
@@ -52,7 +53,7 @@ yuri::ultragrid::detail::uv_video_compress_params { \
 }
 
 
-class UVVideoCompress: public core::SpecializedIOFilter<core::RawVideoFrame>
+class UVVideoCompress: public core::SpecializedIOFilter<core::RawVideoFrame>, core::ConverterThread
 {
 public:
 	UVVideoCompress(const log::Log &log_, core::pwThreadBase parent, const std::string& name, detail::uv_video_compress_params uv_compress_params);
@@ -62,6 +63,7 @@ protected:
 private:
 
 	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
+	virtual core::pFrame 		do_convert_frame(core::pFrame input_frame, format_t target_format) override;
 	module* encoder_;
 	detail::uv_video_compress_params uv_compress_params_;
 	unique_ptr<video_frame, void(*)(video_frame*)> uv_frame;
