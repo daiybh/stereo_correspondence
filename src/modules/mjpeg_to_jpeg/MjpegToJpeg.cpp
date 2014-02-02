@@ -204,7 +204,7 @@ core::pFrame MjpegToJpeg::do_special_single_step(const core::pCompressedVideoFra
 	// Copy Huffman tables
 	it2 = std::copy(huffman_tables, huffman_tables+sizeof(huffman_tables), it2);
 	// Copy SOS marker and the rest of the frame
-	it2 = std::copy(it,frame->end(), it2);
+	/*it2 = */std::copy(it,frame->end(), it2);
 	return frame_out;
 }
 

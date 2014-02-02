@@ -116,7 +116,7 @@ data_type_t read_type(Iterator& first, const Iterator& last)
 template<class Iterator>
 float read_float(Iterator& first, const Iterator& last)
 {
-	float f;
+	float f = 0.0f;
 	uint8_t *fptr=reinterpret_cast<uint8_t*>(&f);
 	ssize_t idx = 3;
 	while (first != last && idx>=0) {
@@ -128,7 +128,7 @@ float read_float(Iterator& first, const Iterator& last)
 template<class Iterator>
 int32_t read_int32(Iterator& first, const Iterator& last)
 {
-	int32_t i;
+	int32_t i = 0;
 	uint8_t *fptr=reinterpret_cast<uint8_t*>(&i);
 	ssize_t idx = 3;
 	while (first != last && idx>=0) {

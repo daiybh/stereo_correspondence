@@ -59,7 +59,7 @@ bool GLProgram::link()
 		GLchar* compiler_log = new GLchar[blen];
 		glGetInfoLogARB(program, blen, &slen, compiler_log);
 		log[log::error] << "compiler_log:" <<  compiler_log <<"\n";
-		delete compiler_log;
+		delete [] compiler_log;
 	}
 	return false;
 }

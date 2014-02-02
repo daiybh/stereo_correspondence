@@ -13,7 +13,17 @@
 
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawAudioFrame.h"
-
+extern "C" {
+#include "audio/audio.h"
+// Ugh, for some reason there are these ugly macros defined in config_unix.h
+// Compatibility with windows? It certainly breaks lots of stuff here...
+#ifdef max
+#undef max
+#endif
+#ifdef min
+#undef min
+#endif
+}
 namespace yuri {
 namespace uv_alsa_output {
 
@@ -34,8 +44,10 @@ private:
 	std::string device_name_;
 
 	format_t format_;
-	size_t channels_;
-	size_t sampling_frequency_;
+//	size_t channels_;
+//	size_t sampling_frequency_;
+
+	audio_frame frame_;
 
 
 };

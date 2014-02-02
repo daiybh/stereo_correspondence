@@ -12,6 +12,7 @@
 #include <fstream>
 #include <iostream>
 #include <GL/glext.h>
+#include <algorithm>
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -81,7 +82,7 @@ bool GLShader::compile()
 	 GLchar* compiler_log = new GLchar[blen];
 	 glGetInfoLogARB(shader_object, blen, &slen, compiler_log);
 	 log[log::error] << "compiler_log:" <<  compiler_log <<endl;
-	 delete compiler_log;
+	 delete [] compiler_log;
 	}
 	return false;
 }

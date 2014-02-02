@@ -11,6 +11,7 @@
 #define UVRTDXT_H_
 
 #include "yuri/ultragrid/UVVideoCompress.h"
+
 namespace yuri {
 namespace uv_rtdxt {
 
@@ -26,7 +27,6 @@ public:
 private:
 	
 	virtual bool 				set_param(const core::Parameter& param);
-
 	format_t 					format_;
 	ssize_t						bps_;
 	std::string 				subsampling_;
