@@ -10,7 +10,7 @@
 #ifndef UVV4L2_H_
 #define UVV4L2_H_
 
-#include "yuri/ultragrid/UVVideoSource.h"
+#include "UVVideoSource.h"
 
 
 namespace yuri {

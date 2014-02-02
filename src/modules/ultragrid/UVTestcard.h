@@ -10,7 +10,7 @@
 #ifndef UVTESTCARD_H_
 #define UVTESTCARD_H_
 
-#include "yuri/ultragrid/UVVideoSource.h"
+#include "UVVideoSource.h"
 
 namespace yuri {
 namespace uv_testcard {

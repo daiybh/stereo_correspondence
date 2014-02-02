@@ -11,7 +11,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/raw_frame_params.h"
-#include "yuri/ultragrid/YuriUltragrid.h"
+#include "YuriUltragrid.h"
 #include "yuri/core/thread/ConverterRegister.h"
 namespace yuri {
 namespace uv_convert {

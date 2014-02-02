@@ -11,7 +11,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
-#include "yuri/ultragrid/YuriUltragrid.h"
+#include "YuriUltragrid.h"
 extern "C" {
 #include "transmit.h"
 #include "rtp/rtp.h"

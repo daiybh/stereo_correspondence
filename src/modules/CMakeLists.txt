@@ -106,7 +106,7 @@ ENDIF()
 #IF(NOT YURI_DISABLE_ULTRAGRID)
 	# This should be replaced by a proper detection!
 	
-IF(CORE_UV)
+IF(NOT YURI_DISABLE_ULTRAGRID)
 	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)
 	add_subdirectory(ultragrid)	
 ENDIF()

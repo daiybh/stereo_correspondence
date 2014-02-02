@@ -10,7 +10,7 @@
 #ifndef UVRTDXT_H_
 #define UVRTDXT_H_
 
-#include "yuri/ultragrid/UVVideoCompress.h"
+#include "UVVideoCompress.h"
 namespace yuri {
 namespace uv_rtdxt {
 

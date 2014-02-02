@@ -9,7 +9,7 @@
 
 #include "UVRTDxt.h"
 #include "yuri/core/Module.h"
-#include "yuri/ultragrid/YuriUltragrid.h"
+#include "YuriUltragrid.h"
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/frame/compressed_frame_params.h"
 extern "C" {

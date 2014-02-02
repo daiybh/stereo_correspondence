@@ -9,7 +9,7 @@
 
 #include "UVTestcard.h"
 #include "yuri/core/Module.h"
-#include "yuri/ultragrid/YuriUltragrid.h"
+#include "YuriUltragrid.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/raw_frame_params.h"
 extern "C" {

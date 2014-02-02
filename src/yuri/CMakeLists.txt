@@ -41,15 +41,6 @@ IF(NOT YURI_DISABLE_DECKLINK)
 	find_package(DECKLINK)
 ENDIF()
 
-IF(NOT YURI_DISABLE_ULTRAGRID)
-	# This should be replaced by a proper detection!
-	SET(UV_BASE ${CMAKE_SOURCE_DIR}/../ultragrid/src)
-	SET(ULTRAGRID_FOUND TRUE)
-	find_package(X11)
-	find_package(OpenSSL)
-	pkg_check_modules(SPEEX speex speexdsp)
-ENDIF()
-
 #################################################################
 # Set up dependencies for libyuri_core
 #################################################################
@@ -94,10 +85,6 @@ IF(NOT YURI_DISABLE_DECKLINK AND DECKLINK_FOUND)
 	SET(YURI_HELPER_DECKLINK_LIBS ${DECKLINK_LIBRARIES})
 ENDIF()
 
-IF(NOT YURI_DISABLE_ULTRAGRID)
-	SET(YURI_HELPER_UV_INCLUDE ${UV_BASE})
-	SET(YURI_HELPER_UV_LIBS ${LIBNAME} ${X11_LIBRARIES} ${X11_Xfixes_LIB} ${OPENSSL_LIBRARIES} ${SPEEX_LIBRARIES} ${SPEEXDSP_LIBRARIES})
-ENDIF()
 #################################################################
 # Adding CXXFLAGS and LDFLAGS for libyuri_core
 #################################################################
@@ -169,16 +156,6 @@ IF(NOT YURI_DISABLE_DECKLINK AND DECKLINK_FOUND)
 ELSE()
 	SET(CORE_DECKLINK FALSE PARENT_SCOPE)
 	SET(CORE_DECKLINK FALSE)
-ENDIF()
-
-IF(NOT YURI_DISABLE_ULTRAGRID AND ULTRAGRID_FOUND)
-	add_subdirectory(ultragrid)
-	SET(CORE_UV TRUE PARENT_SCOPE)
-	SET(CORE_UV TRUE)
-	add_definitions("-DYURI_HAVE_UV")
-ELSE()
-	SET(CORE_UV FALSE PARENT_SCOPE)
-	SET(CORE_UV FALSE)
 ENDIF()
 
 #################################################################
@@ -264,24 +241,7 @@ IF(${CORE_DECKLINK})
 						ARCHIVE DESTINATION lib)
 	
 ENDIF()
-IF(${CORE_UV})
-		
-	MESSAGE("Building ULTRAGRID helper library!")
-	add_library(${LIBNAME_HELPER_UV} ${YURI_HELPER_UV_SRC})
-	target_link_libraries ( ${LIBNAME_HELPER_UV} ${YURI_HELPER_UV_LIBS})
-	SET_TARGET_PROPERTIES( ${LIBNAME_HELPER_UV} PROPERTIES SOVERSION ${SO_VERSION} VERSION ${YURI_CORE_VERSION} )
-	SET_TARGET_PROPERTIES(${LIBNAME_HELPER_UV} PROPERTIES COMPILE_FLAGS "-DHAVE_CONFIG_H -DUV_IN_YURI")
-	SET_PROPERTY(TARGET ${LIBNAME_HELPER_UV} PROPERTY INCLUDE_DIRECTORIES ${YURI_HELPER_UV_INCLUDE}/..;${YURI_HELPER_UV_INCLUDE})
-	#SET_TARGET_PROPERTIES(${LIBNAME_HELPER_UV} PROPERTIES INCLUDE_DIRECTORIES ${YURI_HELPER_UV_INCLUDE})
-	
-	
-	
 
-	include_directories( ${CMAKE_SOURCE_DIR}/src )
-	install(TARGETS ${LIBNAME_HELPER_UV} 	RUNTIME DESTINATION bin
-						LIBRARY DESTINATION lib 
-						ARCHIVE DESTINATION lib)
-ENDIF()
 IF(UNIX)
 	IF(APPLE)
 		SET( YURI_LIBS ${YURI_LIBS} dl)

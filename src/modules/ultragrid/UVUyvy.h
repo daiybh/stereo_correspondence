@@ -10,7 +10,7 @@
 #ifndef UVUYVY_H_
 #define UVUYVY_H_
 
-#include "yuri/ultragrid/UVVideoCompress.h"
+#include "UVVideoCompress.h"
 
 namespace yuri {
 namespace uv_uyvy {

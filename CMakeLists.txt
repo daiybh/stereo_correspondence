@@ -55,8 +55,6 @@ SET(LIBNAME_HELPER_IEEE1394 ${LIBNAME_PREFIX}_helper_ieee1394)
 SET(LIBNAME_HELPER_ASIO 	${LIBNAME_PREFIX}_helper_asio)
 SET(LIBNAME_HELPER_DECKLINK ${LIBNAME_PREFIX}_helper_decklink)
 
-SET(LIBNAME_HELPER_UV 		${LIBNAME_PREFIX}_helper_uv)
-
 #################################################################
 # Set prefix for modules
 #################################################################
@@ -78,7 +76,6 @@ SET(CORE_CUDA FALSE)
 SET(CORE_X11 FALSE)
 SET(CORE_IEEE1394 FALSE)
 SET(CORE_ASIO FALSE)
-SET(CORE_UV FALSE)
 
 #################################################################
 # Add some options to control build

@@ -10,7 +10,7 @@
 #ifndef UVJPEGCOMPRESS_H_
 #define UVJPEGCOMPRESS_H_
 
-#include "yuri/ultragrid/UVVideoCompress.h"
+#include "UVVideoCompress.h"
 
 namespace yuri {
 namespace uv_jpeg_compress {

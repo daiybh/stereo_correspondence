@@ -10,7 +10,7 @@
 
 #include "UVVideoCompress.h"
 #include "yuri/core/Module.h"
-#include "yuri/ultragrid/YuriUltragrid.h"
+#include "YuriUltragrid.h"
 
 namespace yuri {
 namespace ultragrid {

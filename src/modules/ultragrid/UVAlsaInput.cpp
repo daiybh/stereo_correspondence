@@ -11,7 +11,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/RawAudioFrame.h"
 #include "yuri/core/frame/raw_audio_frame_types.h"
-#include "yuri/ultragrid/YuriUltragrid.h"
+#include "YuriUltragrid.h"
 extern "C" {
 #include "audio/audio.h"
 #include "audio/capture/alsa.h"

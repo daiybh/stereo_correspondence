@@ -3,13 +3,124 @@ SET (MODULE ultragrid)
 
 include_directories(${UV_BASE} ${UV_BASE}/..)
 
-SET(SRC register.cpp)
-
 find_package(ALSA)
 find_package(GLEW)
 find_package(GLUT)
 find_package(SDL)
 find_package(X11)
+find_package(OpenSSL)
+pkg_check_modules(SPEEX speex speexdsp)
+
+SET(SRC 
+    YuriUltragrid.cpp
+    YuriUltragrid.h
+	UVVideoSink.cpp
+	UVVideoSink.h
+	UVVideoSource.cpp
+	UVVideoSource.h
+	UVVideoCompress.cpp
+	UVVideoCompress.h
+	
+	${UV_BASE}/capture_filter.c
+	${UV_BASE}/debug.c
+	${UV_BASE}/host.c
+	${UV_BASE}/lib_common.c
+	${UV_BASE}/messaging.cpp
+	${UV_BASE}/module.c
+	${UV_BASE}/ntp.c
+	${UV_BASE}/pdb.c
+	${UV_BASE}/tfrc.c
+	${UV_BASE}/transmit.c
+	${UV_BASE}/tv.c
+	${UV_BASE}/vf_split.c
+	${UV_BASE}/video_capture.c
+	${UV_BASE}/video_codec.c
+	${UV_BASE}/video_compress.cpp
+	${UV_BASE}/video_display.c
+	${UV_BASE}/video_frame.c
+	${UV_BASE}/x11_common.c
+	
+	${UV_BASE}/audio/audio.c
+	${UV_BASE}/audio/audio_capture.c
+	${UV_BASE}/audio/audio_playback.c
+	${UV_BASE}/audio/codec.c
+	${UV_BASE}/audio/echo.c
+	${UV_BASE}/audio/export.c
+	${UV_BASE}/audio/resampler.c
+	${UV_BASE}/audio/utils.c
+	${UV_BASE}/audio/wav_reader.c
+	
+	${UV_BASE}/audio/capture/none.c
+	${UV_BASE}/audio/capture/sdi.c
+	
+	${UV_BASE}/audio/codec/dummy_pcm.c
+	
+	${UV_BASE}/audio/playback/none.c
+	${UV_BASE}/audio/playback/sdi.c
+	
+	
+	${UV_BASE}/capture_filter/blank.c
+	${UV_BASE}/capture_filter/none.c
+	${UV_BASE}/capture_filter/every.c
+	${UV_BASE}/capture_filter/logo.c
+	
+	${UV_BASE}/compat/platform_spin.c
+	
+	${UV_BASE}/crypto/md5.c
+	${UV_BASE}/crypto/crc_32.c
+	${UV_BASE}/crypto/crypt_aes.c
+	${UV_BASE}/crypto/crypt_aes_impl.c
+	${UV_BASE}/crypto/crypt_des.c
+	${UV_BASE}/crypto/random.c
+	
+
+	${UV_BASE}/rtp/audio_decoders.c
+	${UV_BASE}/rtp/ldgm.cpp
+	${UV_BASE}/rtp/net_udp.c
+	${UV_BASE}/rtp/pbuf.c
+	${UV_BASE}/rtp/pc.cpp
+	${UV_BASE}/rtp/rtp.c
+	${UV_BASE}/rtp/rtp_callback.c
+	
+	${UV_BASE}/utils/config_file.c
+	${UV_BASE}/utils/list.c
+	${UV_BASE}/utils/message_queue.cpp
+	${UV_BASE}/utils/resource_manager.cpp
+	${UV_BASE}/utils/packet_counter.cpp
+	${UV_BASE}/utils/ring_buffer.c
+	${UV_BASE}/utils/worker.cpp
+	
+	${UV_BASE}/video_capture/null.c
+	
+	${UV_BASE}/video_compress/none.c
+	
+	${UV_BASE}/video_display/null.c
+		
+	${UV_BASE}/../ldgm-coding/ldgm-session.cpp
+	${UV_BASE}/../ldgm-coding/ldgm-session-cpu.cpp
+	${UV_BASE}/../ldgm-coding/tanner.cpp
+	${UV_BASE}/../ldgm-coding/matrix-gen/ldpc-matrix.cpp
+	${UV_BASE}/../ldgm-coding/matrix-gen/matrix-generator.cpp
+)
+SET(LIBS )
+if (X11_FOUND)
+    SET(SRC, ${SRC} 
+             ${UV_BASE}/x11_common.c)
+    SET(LIBS ${LIBS} ${X11_LIBRARIES} ${X11_Xfixes_LIB})
+endif()
+
+IF(OPENSSL_FOUND)
+    SET(SRC ${SRC}
+    	${UV_BASE}/crypto/openssl_encrypt.c
+    	${UV_BASE}/crypto/openssl_decrypt.c
+	)
+	SET(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
+ENDIF()
+IF(SPEEX_FOUND)
+    SET(LIBS ${LIBS} ${SPEEX_LIBRARIES} ${SPEEXDSP_LIBRARIES})
+ENDIF()
+
+SET(SRC ${SRC} register.cpp)
 
 IF(NOT YURI_DISABLE_LIBAV)
 	pkg_check_modules(libavcodec libavcodec)
@@ -25,7 +136,7 @@ IF(ALSA_FOUND)
     		 ${UV_BASE}/audio/capture/alsa.c
     		 ${UV_BASE}/audio/playback/alsa.c)
     
-    SET (LIBS ${ALSA_LIBRARIES})
+    SET (LIBS ${LIBS} ${ALSA_LIBRARIES})
     add_definitions(-DYURI_UV_ALSA_SUPPORTED)
 ENDIF()
 
@@ -153,9 +264,8 @@ ENDIF()
 		 
 
 add_library(${MODULE} MODULE ${SRC})
-target_link_libraries(${MODULE} ${LIBNAME} ${LIBNAME_HELPER_UV} ${LIBS})
-SET_TARGET_PROPERTIES(${MODULE} PROPERTIES COMPILE_FLAGS -DHAVE_CONFIG_H)
-
+target_link_libraries(${MODULE} ${LIBNAME} ${LIBS})
+SET_TARGET_PROPERTIES(${MODULE} PROPERTIES COMPILE_FLAGS "-DHAVE_CONFIG_H -DUV_IN_YURI")
 YURI_INSTALL_MODULE(${MODULE})
 
 # END of file

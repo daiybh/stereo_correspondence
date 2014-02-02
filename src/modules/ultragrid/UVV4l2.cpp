@@ -9,7 +9,7 @@
 
 #include "UVV4l2.h"
 #include "yuri/core/Module.h"
-#include "yuri/ultragrid/YuriUltragrid.h"
+#include "YuriUltragrid.h"
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 extern "C" {

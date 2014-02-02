@@ -10,7 +10,7 @@
 #ifndef UVGL_H_
 #define UVGL_H_
 
-#include "yuri/ultragrid/UVVideoSink.h"
+#include "UVVideoSink.h"
 
 namespace yuri {
 namespace uv_gl {

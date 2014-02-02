@@ -10,7 +10,7 @@
 #ifndef UVSCREEN_H_
 #define UVSCREEN_H_
 
-#include "yuri/ultragrid/UVVideoSource.h"
+#include "UVVideoSource.h"
 
 namespace yuri {
 namespace uv_screen {

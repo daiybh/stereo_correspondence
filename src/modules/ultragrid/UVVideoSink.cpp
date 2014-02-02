@@ -11,7 +11,7 @@
 
 #include "UVVideoSink.h"
 #include "yuri/core/Module.h"
-#include "yuri/ultragrid/YuriUltragrid.h"
+#include "YuriUltragrid.h"
 #include "yuri/core/frame/VideoFrame.h"
 extern "C" {
 #include "video_display.h"
