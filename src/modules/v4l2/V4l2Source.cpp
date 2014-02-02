@@ -157,9 +157,9 @@ V4l2Source::V4l2Source(log::Log &log_,core::pwThreadBase parent, const core::Par
 V4l2Source::~V4l2Source() noexcept{
 	if (fd>0) close(fd);
 	if (buffers) {
-		if (method==METHOD_READ) for (unsigned int i=0;i<no_buffers;++i) delete [] (uint8_t*)buffers[0].start;
-		else if (method==METHOD_MMAP) for (unsigned int i=0;i<no_buffers;++i) munmap(buffers[0].start,buffers[0].length);
-		else if (method==METHOD_USER) for (unsigned int i=0;i<no_buffers;++i) free(buffers[0].start);
+		if (method==METHOD_READ) for (unsigned int i=0;i<no_buffers;++i) delete [] (uint8_t*)buffers[i].start;
+		else if (method==METHOD_MMAP) for (unsigned int i=0;i<no_buffers;++i) munmap(buffers[i].start,buffers[i].length);
+		else if (method==METHOD_USER) for (unsigned int i=0;i<no_buffers;++i) delete[] buffers[i].start;
 		delete [] buffers;
 		buffers=0;
 	}
