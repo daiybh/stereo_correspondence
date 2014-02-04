@@ -7,32 +7,35 @@
 
 #include "FpsFixer.h"
 #include "yuri/core/Module.h"
+#include "yuri/core/utils/Timer.h"
+
 namespace yuri {
 
 namespace fps {
 
 
-REGISTER("fix_fps",FpsFixer)
+MODULE_REGISTRATION_BEGIN("fix_fps")
+	REGISTER_IOTHREAD("fix_fps",FpsFixer)
+MODULE_REGISTRATION_END()
 
-IO_THREAD_GENERATOR(FpsFixer)
+IOTHREAD_GENERATOR(FpsFixer)
 
-core::pParameters FpsFixer::configure()
+core::Parameters FpsFixer::configure()
 {
-	core::pParameters p = core::IOThread::configure();
-	p->set_max_pipes(1,1);
-	(*p)["fps"]["FPS"]=25;
-	(*p)["fps_nom"]["FPS nominator. ie. frame wil be output once every fps_nom/fps seconds"]=1;
+	core::Parameters p = core::IOThread::configure();
+	p["fps"]["FPS"]=25.0;
+//	p["fps_nom"]["FPS nominator. ie. frame wil be output once every fps_nom/fps seconds"]=1;
 	return p;
 }
 
 
-FpsFixer::FpsFixer(log::Log &log_, core::pwThreadBase parent, core::Parameters& parameters):
-		IOThread(log_,parent,1,1,"FpsFixer"),fps(25)
+FpsFixer::FpsFixer(log::Log &log_, core::pwThreadBase parent, const core::Parameters& parameters):
+		IOThread(log_,parent,1,1,"FpsFixer"),fps_(25.0)
 {
-	IO_THREAD_INIT("FpsFixer")
+	IOTHREAD_INIT(parameters)
 }
 
-FpsFixer::~FpsFixer()
+FpsFixer::~FpsFixer() noexcept
 {
 //	log[log::info] << "Outputed " << frames << " in " << to_simple_string(act_time - start_time) <<
 //				". That makes " << (double)frames*1.0e6/((act_time - start_time).total_microseconds()) <<
@@ -42,32 +45,21 @@ FpsFixer::~FpsFixer()
 void FpsFixer::run()
 {
 	IOThread::print_id();
-	core::pBasicFrame frame;
-	time_duration time_delta = nanoseconds(static_cast<size_t>(fps_nom*1e6/fps));
-	//yuri::size_t act_index = 0;
-	time_value next_time = std::chrono::steady_clock::now();
-	start_time = next_time;
-	time_duration offset = next_time.time_since_epoch();
-	offset = nanoseconds(offset.count() % time_delta.count());
-	next_time = next_time - offset + time_delta;
+	core::pFrame frame;
+	Timer timer;
+
 	frames = 0;
 	while(still_running()) {
-		if (in[0] && !in[0]->is_empty()) {
-			while (!in[0]->is_empty()) frame=in[0]->pop_frame();
+		while (auto f = pop_frame(0)) {
+			frame = f;
 		}
-		act_time=std::chrono::steady_clock::now();
-		if (act_time > next_time) {
+		if (timer.get_duration() > frames * 1_s/fps_) {
 			if (frame) {
-				if (out[0]) push_raw_video_frame(0,frame);//->get_copy());
-//				log[log::debug] << "Pushed frame in " << to_simple_string(act_time.time_of_day()) <<
-//						", time_delta is " << to_simple_string(time_delta) << ", next_time was: " <<
-//						to_simple_string(next_time.time_of_day()) << "\n";
-
+				push_frame(0,frame);
 			}
-			next_time+=time_delta;
 			frames++;
 		} else {
-			ThreadBase::sleep((next_time - act_time).count()/2);
+			sleep(get_latency());
 		}
 	}
 
@@ -75,10 +67,8 @@ void FpsFixer::run()
 
 bool FpsFixer::set_param(const core::Parameter &parameter)
 {
-	if (parameter.name == "fps") {
-		fps=parameter.get<yuri::size_t>();
-	} else if (parameter.name == "fps_nom") {
-		fps_nom=parameter.get<yuri::size_t>();
+	if (parameter.get_name() == "fps") {
+		fps_=parameter.get<double>();
 	} else return IOThread::set_param(parameter);
 	return true;
 }
