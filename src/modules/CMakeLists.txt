@@ -11,6 +11,7 @@ add_subdirectory(diff)
 add_subdirectory(dup)
 add_subdirectory(event_info)
 add_subdirectory(fade)
+add_subdirectory(filedump)
 add_subdirectory(flip)
 add_subdirectory(frame_info)
 add_subdirectory(irc_client)
@@ -122,9 +123,6 @@ add_subdirectory(blank)
 add_subdirectory(crop)
 
 add_subdirectory(dummy)
-
-add_subdirectory(filedump)
-
 
 add_subdirectory(split)
 add_subdirectory(dxt_compress)

@@ -1,0 +1,50 @@
+<?xml version="1.0" ?>
+<app name="webcam_dump_jpg">
+<description>
+Test application converting images from a webcam to JPG and dumping them to a file(s)
+</description>
+
+<!-- Specify variables for command line substitution -->
+<variable name="resolution" description="Capture resolution">640x480</variable>
+<variable name="device"  description="Path to the capture device">/dev/video0</variable>
+<variable name="fps"  description="Capture framerate">100</variable>
+<variable name="format"  description="Capture format">YUV422</variable>
+<variable name="q"  description="Jpeg quality">90</variable>
+<variable name="file"  description="output file" required="1"></variable>
+<variable name="sequence"  description="Number of digits in output filename">4</variable>
+
+
+<!-- General settings -->
+<general>
+<!-- Unlimited run time -->
+  <parameter name="run_limit">-1</parameter>
+<!-- Moderate debug informations -->
+  <parameter name="debug">0</parameter>
+</general>
+
+<!-- Units -->
+<!-- Video4Linux2 device source -->
+<node class="v4l2source" name="webcam">
+  <parameter name="path">@device</parameter>
+  <parameter name="resolution">@resolution</parameter>
+  <parameter name="fps">@fps</parameter>
+  <parameter name="fps_stats">100</parameter>
+  <parameter name="format">@format</parameter>
+</node>
+
+<node class="jpeg_encoder" name="jpeg">
+  <parameter name="quality">@q</parameter>
+  <parameter name="fps_stats">100</parameter>
+</node>
+
+<!-- And finally a dumper  -->
+<node class="filedump" name="dump">
+  <parameter name="filename">@file</parameter>
+  <parameter name="sequence">@sequence</parameter>
+</node>
+
+<!-- Link specifications -->
+<link name="yuyv_image" class="single" source="webcam:0" target="jpeg:0"/>
+<link name="jpeg_image" class="single" source="jpeg:0" target="dump:0"/>
+
+</app>
