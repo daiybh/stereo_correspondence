@@ -2,8 +2,8 @@
  * @file 		FileDump.cpp
  * @author 		Zdenek Travnicek
  * @date 		24.7.2010
- * @date		16.2.2013
- * @copyright	Institute of Intermedia, CTU in Prague, 2010 - 2013
+ * @date		04.2.2014
+ * @copyright	Institute of Intermedia, CTU in Prague, 2010 - 2014
  * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
  */
@@ -57,15 +57,14 @@ core::pFrame FileDump::do_simple_single_step(const core::pFrame& frame)
 		std::stringstream ss;
 		const auto dot_index = filename.find_last_of('.');
 		if (dot_index != std::string::npos) {
-			ss << filename.substr(0,filename.find_last_of('.'));
+			ss << filename.substr(0,dot_index);
 		} else {
 			ss << filename;
 		}
 		ss << std::setfill('0') << std::setw(seq_chars) << seq_number++;
 		if (dot_index != std::string::npos) {
-			ss << filename.substr(filename.find_last_of('.'));
+			ss << filename.substr(dot_index);
 		}
-		log[log::info] << "FIlename: " << ss.str() << ", idx " << dot_index;
 		dump_file.open(ss.str().c_str(), std::ios::binary | std::ios::out);
 	}
 	if (auto f = std::dynamic_pointer_cast<core::RawVideoFrame>(frame)) {

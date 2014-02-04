@@ -2,8 +2,8 @@
  * @file 		FileDump.h
  * @author 		Zdenek Travnicek
  * @date 		24.7.2010
- * @date		16.2.2013
- * @copyright	Institute of Intermedia, CTU in Prague, 2010 - 2013
+ * @date		04.2.2014
+ * @copyright	Institute of Intermedia, CTU in Prague, 2010 - 2014
  * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
  */
