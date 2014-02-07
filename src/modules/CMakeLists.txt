@@ -3,7 +3,7 @@ include_directories( ${Boost_INCLUDE_DIRS})
 link_directories (${Boost_LIBRARY_DIRS})
 
 
-
+add_subdirectory(anaglyph)
 add_subdirectory(color_key)
 add_subdirectory(combine)
 add_subdirectory(convert_planes)
@@ -119,7 +119,6 @@ IF(FALSE)
 #################################################################
 # Add modules that are compile unconditionally
 #################################################################
-add_subdirectory(anaglyph)
 add_subdirectory(blank)
 add_subdirectory(crop)
 
@@ -178,7 +177,6 @@ IF(CORE_LIBAV)
 	ENDIF()
 	IF (${libavformat_FOUND})
 		add_subdirectory(tsmuxer)
-		add_subdirectory(rawavfile)
 		#add_subdirectory(avdemuxer)
 	ENDIF()
 	IF (${libswscale_FOUND})

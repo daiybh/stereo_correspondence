@@ -8,40 +8,30 @@
  *
  */
 
-#include <yuri/core/BasicIOFilter.h>
-
+#include "yuri/core/thread/SpecializedMultiIOFilter.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 #ifndef ANAGLYPH_H_
 #define ANAGLYPH_H_
 
 namespace yuri {
 
 namespace anaglyph {
-
-class Anaglyph: public core::BasicMultiIOFilter {
+using anaglyph_base = core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>;
+class Anaglyph: public anaglyph_base
+{
 public:
-	PACK_START
-	struct _rgb {
-		char r,g,b;
-	} PACK_END;
-	PACK_START struct _rgba {
-			char r,g,b,a;
-	} PACK_END;
 	/// Standard constructor
 	/// @param _log  logger
 	/// @param parent  parent thread
 	/// @param correction Correction in pixels meaning how many pixels to the right should be right image shifted
 									Anaglyph(log::Log &_log,
-					core::pwThreadBase parent, core::Parameters& parameters);
-	virtual 						~Anaglyph();
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters 		configure();
+					core::pwThreadBase parent, const core::Parameters& parameters);
+	virtual 						~Anaglyph() noexcept;
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters 		configure();
 protected:
 	//virtual bool step();
-	std::vector<core::pBasicFrame>	do_single_step(const std::vector<core::pBasicFrame>& frames);
-	template<typename T> core::pBasicFrame
-									makeAnaglyph(const core::pBasicFrame& left,
-					const core::pBasicFrame& right);
-
+	std::vector<core::pFrame>	do_special_step(const std::tuple<core::pRawVideoFrame, core::pRawVideoFrame>& frames);
 	bool 							set_param(const core::Parameter& param);
 protected:
 	int correction;
