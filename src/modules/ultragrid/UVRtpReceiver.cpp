@@ -14,9 +14,8 @@
 extern "C" {
 #include "transmit.h"
 #include "rtp/rtp.h"
-#include "video_frame.h"
 }
-
+#include "uv_video.h"
 
 namespace yuri {
 namespace uv_rtp_receiver {

@@ -15,8 +15,8 @@
 extern "C" {
 #include "transmit.h"
 #include "rtp/rtp.h"
-#include "video_frame.h"
 }
+#include "uv_video.h"
 namespace yuri {
 namespace uv_rtp_sender {
 
@@ -42,7 +42,8 @@ rtp_session_(nullptr),tx_session_(nullptr)
 {
 	IOTHREAD_INIT(parameters)
 
-	if (!(tx_session_ = tx_init(nullptr, 1300, TX_MEDIA_VIDEO, nullptr, nullptr))) {
+	//if (!(tx_session_ = tx_init(nullptr, 1300, TX_MEDIA_VIDEO, nullptr, nullptr))) {
+	if (!(tx_session_ = tx_init(1300, nullptr))) {
 		log[log::fatal] << "Failed to prepare tx session";
 		throw exception::InitializationFailed("Failed to prepare tx session");
 	}
@@ -62,10 +63,10 @@ UVRtpSender::~UVRtpSender() noexcept
 
 core::pFrame UVRtpSender::do_simple_single_step(const core::pFrame& frame)
 {
-	video_frame* f = ultragrid::allocate_uv_frame(frame);
+	auto f = ultragrid::allocate_uv_frame(frame);
 	if (f) {
-		tx_send(tx_session_, f, rtp_session_);
-		vf_free(f);
+		tx_send(tx_session_, f.get(), rtp_session_);
+//		vf_free(f);
 	}
 	return {};
 }

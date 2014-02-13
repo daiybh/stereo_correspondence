@@ -10,7 +10,7 @@
 #include "UVScreen.h"
 #include "yuri/core/Module.h"
 extern "C" {
-#include "video_capture/screen_x11.h"
+#include "video_capture/screen.h"
 }
 namespace yuri {
 namespace uv_screen {
@@ -28,15 +28,15 @@ core::Parameters UVScreen::configure()
 
 
 UVScreen::UVScreen(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-ultragrid::UVVideoSource(log_,parent,"uv_screen",UV_CAPTURE_DETAIL(screen_x11)),
+ultragrid::UVVideoSource(log_,parent,"uv_screen",UV_CAPTURE_DETAIL(screen)),
 fps_(30)
 {
 	IOTHREAD_INIT(parameters)
 
 	std::stringstream strs;
-	strs << "screen:fps=" << fps_;
+	strs << /*"screen:"<<*/ "fps=" << fps_;
 
-	if (!!init_capture(strs.str())) {
+	if (!init_capture(strs.str())) {
 		throw exception::InitializationFailed("Failed to initialize screen capture!");
 	}
 }

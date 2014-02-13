@@ -17,8 +17,7 @@
 extern "C" {
 #include "video_compress.h"
 #include "video_compress/libavcodec.h"
-#include "video_frame.h"
-
+#include "uv_video.h"
 }
 
 namespace yuri {

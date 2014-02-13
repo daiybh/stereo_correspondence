@@ -27,9 +27,10 @@ UVVideoCompress::~UVVideoCompress() noexcept
 }
 bool UVVideoCompress::init_compressor(const std::string& params)
 {
-	video_compress_params par{params.c_str()};
+	// Ewwww, this is NOT nice, but init_func shouldn't modify the string...
+	char *fmt = const_cast<char*>(params.c_str());
 	if (uv_compress_params_.init_func) {
-		encoder_ = uv_compress_params_.init_func(nullptr,&par);
+		encoder_ = uv_compress_params_.init_func(fmt);
 	}
 	return (encoder_ != nullptr);
 }
@@ -37,16 +38,19 @@ bool UVVideoCompress::init_compressor(const std::string& params)
 core::pFrame UVVideoCompress::do_special_single_step(const core::pRawVideoFrame& frame)
 {
 	if (!uv_frame) {
-		uv_frame.reset(ultragrid::allocate_uv_frame(frame));
+		uv_frame = ultragrid::allocate_uv_frame(frame);
 	} else {
-		ultragrid::copy_to_uv_frame(frame, uv_frame.get());
+		ultragrid::copy_to_uv_frame(frame, uv_frame);
 	}
 
 	video_frame * out_uv_frame  = nullptr;
+
 	if (uv_compress_params_.compress_func) {
 		out_uv_frame  = uv_compress_params_.compress_func(encoder_, uv_frame.get(), 0);
 	} else if (uv_compress_params_.compress_tile_func) {
-		out_uv_frame = uv_compress_params_.compress_tile_func(encoder_, uv_frame.get(), 0, 0);
+		video_desc desc = video_desc_from_frame(uv_frame.get());
+		tile * out_tile = uv_compress_params_.compress_tile_func(encoder_, &uv_frame->tiles[0], &desc, 0);
+#warning NOT implemented tile output...
 	}
 
 	if (out_uv_frame) {

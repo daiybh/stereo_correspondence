@@ -15,7 +15,7 @@
 extern "C" {
 #include "video_compress.h"
 #include "video_compress/dxt_glsl.h"
-#include "video_frame.h"
+#include "uv_video.h"
 }
 namespace yuri {
 namespace uv_rtdxt {

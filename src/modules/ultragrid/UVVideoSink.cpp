@@ -21,6 +21,7 @@ namespace yuri {
 namespace ultragrid {
 
 namespace {
+const codec_t VIDEO_CODEC_NONE = static_cast<codec_t>(-1);
 class UVSinkHelper: public core::ThreadBase
 {
 public:
@@ -53,6 +54,7 @@ UVVideoSink::UVVideoSink(const log::Log &log_, core::pwThreadBase parent, const 
  last_desc_{1,1,VIDEO_CODEC_NONE,1,PROGRESSIVE, 1},
  sink_params_(sink_params)
 {
+	 init_uv();
 }
 
 UVVideoSink::~UVVideoSink() noexcept
@@ -109,7 +111,6 @@ core::pFrame UVVideoSink::do_special_single_step(const core::pVideoFrame& frame)
 	format_t yfmt = frame->get_format();
 	codec_t uv_fmt = ultragrid::yuri_to_uv(yfmt);
 	if (!uv_fmt) return {};
-//	core::pVideoFrame frame = dynamic_pointer_cast<core::VideoFrame>(source_format);
 
 	resolution_t res = frame->get_resolution();
 	video_desc desc {static_cast<unsigned int>(res.width), static_cast<unsigned int>(res.height), uv_fmt, 1, PROGRESSIVE, 1};

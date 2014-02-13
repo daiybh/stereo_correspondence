@@ -25,19 +25,21 @@ SET(SRC
 	${UV_BASE}/debug.c
 	${UV_BASE}/host.c
 	${UV_BASE}/lib_common.c
-	${UV_BASE}/messaging.cpp
-	${UV_BASE}/module.c
+#	${UV_BASE}/messaging.cpp
+	#${UV_BASE}/module.c
 	${UV_BASE}/ntp.c
 	${UV_BASE}/pdb.c
 	${UV_BASE}/tfrc.c
+	${UV_BASE}/tile.c
 	${UV_BASE}/transmit.c
 	${UV_BASE}/tv.c
-	${UV_BASE}/vf_split.c
+	${UV_BASE}/video.c
 	${UV_BASE}/video_capture.c
 	${UV_BASE}/video_codec.c
-	${UV_BASE}/video_compress.cpp
+	${UV_BASE}/video_compress.c
+	${UV_BASE}/video_decompress.c
 	${UV_BASE}/video_display.c
-	${UV_BASE}/video_frame.c
+	#${UV_BASE}/video_frame.c
 	${UV_BASE}/x11_common.c
 	
 	${UV_BASE}/audio/audio.c
@@ -60,14 +62,14 @@ SET(SRC
 	
 	
 	${UV_BASE}/capture_filter/blank.c
-	${UV_BASE}/capture_filter/none.c
+	#${UV_BASE}/capture_filter/none.c
 	${UV_BASE}/capture_filter/every.c
-	${UV_BASE}/capture_filter/logo.c
+	#${UV_BASE}/capture_filter/logo.c
 	
-	${UV_BASE}/compat/platform_spin.c
+	#${UV_BASE}/compat/platform_spin.c
 	
 	${UV_BASE}/crypto/md5.c
-	${UV_BASE}/crypto/crc_32.c
+	#${UV_BASE}/crypto/crc_32.c
 	${UV_BASE}/crypto/crypt_aes.c
 	${UV_BASE}/crypto/crypt_aes_impl.c
 	${UV_BASE}/crypto/crypt_des.c
@@ -75,24 +77,31 @@ SET(SRC
 	
 
 	${UV_BASE}/rtp/audio_decoders.c
+	${UV_BASE}/rtp/decoders.c
 	${UV_BASE}/rtp/ldgm.cpp
 	${UV_BASE}/rtp/net_udp.c
 	${UV_BASE}/rtp/pbuf.c
-	${UV_BASE}/rtp/pc.cpp
+	
+	#${UV_BASE}/rtp/pc.cpp
+	${UV_BASE}/rtp/ll.cpp
 	${UV_BASE}/rtp/rtp.c
 	${UV_BASE}/rtp/rtp_callback.c
 	
-	${UV_BASE}/utils/config_file.c
+	#${UV_BASE}/utils/config_file.c
 	${UV_BASE}/utils/list.c
-	${UV_BASE}/utils/message_queue.cpp
+	#${UV_BASE}/utils/message_queue.cpp
 	${UV_BASE}/utils/resource_manager.cpp
 	${UV_BASE}/utils/packet_counter.cpp
 	${UV_BASE}/utils/ring_buffer.c
 	${UV_BASE}/utils/worker.cpp
 	
+	${UV_BASE}/vo_postprocess.c
+	
 	${UV_BASE}/video_capture/null.c
 	
 	${UV_BASE}/video_compress/none.c
+	
+	${UV_BASE}/video_decompress/null.c
 	
 	${UV_BASE}/video_display/null.c
 		
@@ -111,8 +120,8 @@ endif()
 
 IF(OPENSSL_FOUND)
     SET(SRC ${SRC}
-    	${UV_BASE}/crypto/openssl_encrypt.c
-    	${UV_BASE}/crypto/openssl_decrypt.c
+    	#${UV_BASE}/crypto/openssl_encrypt.c
+    	#${UV_BASE}/crypto/openssl_decrypt.c
 	)
 	SET(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
 ENDIF()
@@ -218,7 +227,7 @@ if (X11_FOUND)
     SET (SRC ${SRC}
              UVScreen.cpp
     	     UVScreen.h
-    	     ${UV_BASE}/video_capture/screen_x11.c)
+    	     ${UV_BASE}/video_capture/screen.c)
     add_definitions(-DYURI_UV_SCREEN_SUPPORTED)
 ENDIF()
 
@@ -260,12 +269,13 @@ IF (libv4l2_FOUND)
     		 UVV4l2.h
     		 ${UV_BASE}/video_capture/v4l2.c)
     SET(LIBS ${LIBS} ${libv4l2_LIBRARIES})
+    add_definitions(-DYURI_UV_V4L2_SUPPORTED)
 ENDIF()
 		 
 
 add_library(${MODULE} MODULE ${SRC})
 target_link_libraries(${MODULE} ${LIBNAME} ${LIBS})
-SET_TARGET_PROPERTIES(${MODULE} PROPERTIES COMPILE_FLAGS "-DHAVE_CONFIG_H -DUV_IN_YURI")
+SET_TARGET_PROPERTIES(${MODULE} PROPERTIES COMPILE_FLAGS "-DHAVE_CONFIG_H -DUV_IN_YURI -DBUILD_LIBRARIES")
 YURI_INSTALL_MODULE(${MODULE})
 
 # END of file

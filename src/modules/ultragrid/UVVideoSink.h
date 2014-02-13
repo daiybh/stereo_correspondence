@@ -13,8 +13,16 @@
 
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/VideoFrame.h"
-#include "types.h"
+#include "video.h"
 //#include <unordered_set>
+
+// Getting rid of UGLY macros
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
 
 namespace yuri {
 namespace ultragrid {

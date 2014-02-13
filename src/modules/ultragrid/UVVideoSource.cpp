@@ -21,6 +21,7 @@ UVVideoSource::UVVideoSource(const log::Log &log_, core::pwThreadBase parent, co
 :IOThread(log_, parent, 0, 1, name),state_(nullptr),capt_params_(capt_params)
 {
 	set_latency(5_ms);
+	init_uv();
 }
 
 UVVideoSource::~UVVideoSource() noexcept
@@ -29,14 +30,12 @@ UVVideoSource::~UVVideoSource() noexcept
 }
 bool UVVideoSource::init_capture(const std::string& params)
 {
-	unique_ptr<vidcap_params, void(*)(vidcap_params*)> par (vidcap_params_allocate(),
-			[](vidcap_params* par){vidcap_params_free_struct(par);});
+	// EWWWW, GROSSS..... why it needs non-const char* ?????
+	char * fmt = const_cast<char*>(params.c_str());
 
-	vidcap_params_set_device(par.get(), params.c_str());
-
-	log[log::debug] << "Format string is " << vidcap_params_get_fmt(par.get());
+	log[log::info] << "Params: '"<<fmt<<"'";
 	if (capt_params_.init_func) {
-		state_ = capt_params_.init_func(par.get());
+		state_ = capt_params_.init_func(fmt, 0);
 	}
 	return state_ != nullptr;
 }
@@ -54,6 +53,9 @@ void UVVideoSource::run()
 			core::pFrame frame = ultragrid::copy_from_from_uv(uv_frame, log);
 			if (frame) push_frame(0, frame);
 		}
+	}
+	if (capt_params_.finish_func) {
+		capt_params_.finish_func(state_);
 	}
 	if (capt_params_.done_func) {
 		capt_params_.done_func(state_);

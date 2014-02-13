@@ -16,7 +16,11 @@
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/utils/array_range.h"
 #include <unordered_map>
-#include "video_frame.h"
+
+extern "C" {
+	#include "host.h"
+}
+//#include "video_frame.h"
 
 
 namespace yuri {
@@ -24,7 +28,6 @@ namespace ultragrid {
 
 
 namespace {
-
 
 std::unordered_map<codec_t, format_t> uv_to_yuri_raw_formats =
 {
@@ -76,6 +79,7 @@ void video_frame_deleter(video_frame* frame)
 		delete [] ptr.data;
 		ptr.data = nullptr;
 	}
+	vf_free(frame);
 }
 
 }
@@ -133,7 +137,7 @@ core::pFrame copy_from_from_uv(const video_frame* uv_frame, log::Log& log)
 	format_t fmt = ultragrid::uv_to_yuri(uv_frame->color_spec);
 	if (fmt) {
 		log[log::debug] << "Received frame "<<res<<" in format '"<< core::raw_format::get_format_name(fmt) << "' with " << uv_frame->tile_count << " tiles";
-		frame = core::RawVideoFrame::create_empty(fmt,
+		/*frame = */return core::RawVideoFrame::create_empty(fmt,
 					res,
 					reinterpret_cast<const uint8_t*>(tile.data),
 					static_cast<size_t>(tile.data_len),
@@ -186,17 +190,19 @@ bool copy_to_uv_frame(const core::pCompressedVideoFrame& frame_in, video_frame* 
 	return true;
 }
 
-video_frame* allocate_uv_frame(const core::pRawVideoFrame& in_frame)
+video_frame_t allocate_uv_frame(const core::pRawVideoFrame& in_frame)
 {
 	codec_t uv_fmt = yuri_to_uv(in_frame->get_format());
 	if (!uv_fmt) return nullptr;
 
-	video_frame* out_frame = vf_alloc(1);
+//	video_frame* out_frame = vf_alloc(1);
+	video_frame_t out_frame (vf_alloc(1),video_frame_deleter);
 	if (out_frame) {
 		auto &tile = out_frame->tiles[0];
 		tile.data=new char[PLANE_SIZE(in_frame,0)];
 		tile.data_len = PLANE_SIZE(in_frame,0);
-		out_frame->data_deleter = video_frame_deleter;
+//#warning Where's the deleter now??????
+		//out_frame->data_deleter = video_frame_deleter;
 		resolution_t res = in_frame->get_resolution();
 		tile.width = res.width;
 		tile.height = res.height;
@@ -206,24 +212,25 @@ video_frame* allocate_uv_frame(const core::pRawVideoFrame& in_frame)
 		int64_t dur_val = in_frame->get_duration().value;
 		out_frame->fps = dur_val?1e6/dur_val:30;
 	}
-
 	if (!copy_to_uv_frame(in_frame, out_frame)) {
 		if (out_frame) {
-			vf_free(out_frame);
-			out_frame = nullptr;
+			out_frame.reset();
+//			vf_free(out_frame);
+//			out_frame = nullptr;
 		}
 	}
 	return out_frame;
 }
 
-video_frame* allocate_uv_frame(const core::pCompressedVideoFrame& in_frame)
+video_frame_t allocate_uv_frame(const core::pCompressedVideoFrame& in_frame)
 {
-	video_frame* out_frame = vf_alloc(1);
+	video_frame_t out_frame (vf_alloc(1),video_frame_deleter);
 	if (out_frame) {
 		auto &tile = out_frame->tiles[0];
 		tile.data=new char[in_frame->size()];
 		tile.data_len = in_frame->size();
-		out_frame->data_deleter = video_frame_deleter;
+//#warning Where's the deleter now??????
+		//out_frame->data_deleter = video_frame_deleter;
 		resolution_t res = in_frame->get_resolution();
 		tile.width = res.width;
 		tile.height = res.height;
@@ -233,18 +240,18 @@ video_frame* allocate_uv_frame(const core::pCompressedVideoFrame& in_frame)
 		int64_t dur_val = in_frame->get_duration().value;
 		out_frame->fps = dur_val?1e6/dur_val:30;
 	}
-
 	if (!copy_to_uv_frame(in_frame, out_frame)) {
 		if (out_frame) {
-			vf_free(out_frame);
-			out_frame = nullptr;
+//			vf_free(out_frame);
+//			out_frame = nullptr;
+			out_frame.reset();
 		}
 	}
 	return out_frame;
 }
 
 
-video_frame* allocate_uv_frame(const core::pFrame& in_frame)
+video_frame_t allocate_uv_frame(const core::pFrame& in_frame)
 {
 	if (core::pRawVideoFrame raw_frame = dynamic_pointer_cast<core::RawVideoFrame>(in_frame)) {
 		return allocate_uv_frame(raw_frame);
@@ -256,15 +263,23 @@ video_frame* allocate_uv_frame(const core::pFrame& in_frame)
 
 }
 
-
-}
-}
-
-
 extern "C" {
-void exit_uv(int ) {
+void (*exit_uv)(int status);
+void exit_uv_yuri(int ) {
 	throw std::runtime_error("Ultragrid exit!");
 }
+
+
+
+}
+void init_uv() {
+	static std::mutex mutex_;
+	std::unique_lock<std::mutex> _(mutex_);
+	if (!exit_uv) exit_uv = exit_uv_yuri;
+}
+
+}
+
 
 }
 

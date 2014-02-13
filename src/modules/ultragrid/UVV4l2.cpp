@@ -47,7 +47,7 @@ ultragrid::UVVideoSource(log_,parent,"uv_v4l2",UV_CAPTURE_DETAIL(v4l2))
 	std::string uv_fmt_str = ultragrid::uv_to_string(uv_fmt);
 
 	std::stringstream strs;
-	strs << "v4l2:" << device_ << ":" << uv_fmt_str << ":" << resolution_.width << ":" << resolution_.height << ":1/" << fps_;// << ":"
+	strs << /*"v4l2:" <<*/ device_ << ":" << uv_fmt_str << ":" << resolution_.width << ":" << resolution_.height << ":1/" << fps_;// << ":"
 
 	if (!init_capture(strs.str())) {
 		throw exception::InitializationFailed("Failed to initialize v4l2 device!");

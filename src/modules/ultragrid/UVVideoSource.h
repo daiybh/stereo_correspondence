@@ -20,14 +20,16 @@ namespace ultragrid {
 
 namespace detail {
 typedef function<vidcap_type*()>						vidcap_probe_t;
-typedef function<void*(const vidcap_params *)>			vidcap_init_t;
+typedef function<void*(char *fmt, unsigned int flags)>	vidcap_init_t;
 typedef function<void(void *)>							vidcap_done_t;
+typedef function<void(void *)>							vidcap_finish_t;
 typedef function<video_frame*(void *, audio_frame **)>	vidcap_grab_t;
 
 struct capture_params {
 	std::string		name;
 	vidcap_init_t	init_func;
 	vidcap_done_t	done_func;
+	vidcap_done_t	finish_func;
 	vidcap_grab_t	grab_func;
 };
 
@@ -36,6 +38,7 @@ struct capture_params {
 		#name, 	\
 		vidcap_ ## name ## _init,	\
 		vidcap_ ## name ## _done,	\
+		vidcap_ ## name ## _finish,	\
 		vidcap_ ## name ## _grab,	\
 	}
 

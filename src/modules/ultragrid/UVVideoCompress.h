@@ -16,16 +16,17 @@
 #include "yuri/core/thread/ConverterThread.h"
 extern "C" {
 #include "video_compress.h"
-#include "video_frame.h"
+#include "uv_video.h"
+
 }
 struct module;
 namespace yuri {
 namespace ultragrid {
 
 namespace detail {
-typedef function<module* (module *, const video_compress_params *)>	compress_init_t;
-typedef function<video_frame* (module *, video_frame *, int)> 	compress_t;
-typedef function<video_frame* (module *, video_frame *, int, int)> compress_tile_t;
+typedef function<void* (char*)>	compress_init_t;
+typedef function<video_frame* (void *, video_frame *, int)> 	compress_t;
+typedef function<tile* (void *, tile *, video_desc*, int)> compress_tile_t;
 
 struct uv_video_compress_params {
 	std::string 			name;
@@ -64,9 +65,10 @@ private:
 
 	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
 	virtual core::pFrame 		do_convert_frame(core::pFrame input_frame, format_t target_format) override;
-	module* encoder_;
+	void* encoder_;
 	detail::uv_video_compress_params uv_compress_params_;
-	unique_ptr<video_frame, void(*)(video_frame*)> uv_frame;
+	video_frame_t uv_frame;
+//	unique_ptr<video_frame, void(*)(video_frame*)> uv_frame;
 };
 }
 

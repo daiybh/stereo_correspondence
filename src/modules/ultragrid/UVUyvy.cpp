@@ -12,8 +12,8 @@
 extern "C" {
 #include "video_compress.h"
 #include "video_compress/uyvy.h"
-#include "video_frame.h"
 }
+#include "uv_video.h"
 namespace yuri {
 namespace uv_uyvy {
 

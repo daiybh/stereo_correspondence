@@ -15,12 +15,12 @@
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/forward.h"
 #include "yuri/log/Log.h"
-#include "types.h"
-
-
+#include "uv_video.h"
 
 namespace yuri {
 namespace ultragrid {
+
+void init_uv();
 
 codec_t yuri_to_uv(format_t);
 format_t uv_to_yuri(codec_t );
@@ -30,15 +30,39 @@ format_t uv_to_yuri_compressed(codec_t );
 std::string uv_to_string(codec_t);
 std::string yuri_to_uv_string(format_t);
 
-core::pFrame copy_from_from_uv(const video_frame*, log::Log&);
+core::pFrame copy_from_from_uv(const video_frame *, log::Log&);
+inline core::pFrame copy_from_from_uv(video_frame_t frame, log::Log& log)
+{
+	return copy_from_from_uv(frame.get(), log);
+}
 
 bool copy_to_uv_frame(const core::pFrame&, video_frame*);
 bool copy_to_uv_frame(const core::pRawVideoFrame&, video_frame*);
 bool copy_to_uv_frame(const core::pCompressedVideoFrame&, video_frame*);
 
-video_frame* allocate_uv_frame(const core::pRawVideoFrame&);
-video_frame* allocate_uv_frame(const core::pCompressedVideoFrame&);
-video_frame* allocate_uv_frame(const core::pFrame&);
+template<class T>
+bool copy_to_uv_frame(const T& frame, video_frame_t uv_frame)
+{
+	return copy_to_uv_frame(frame, uv_frame.get());
+}
+
+//inline bool copy_to_uv_frame(const core::pFrame& frame, video_frame_t uv_frame)
+//{
+//	return copy_to_uv_frame(frame, uv_frame.get());
+//}
+//inline bool copy_to_uv_frame(const core::pRawVideoFrame& frame, video_frame_t uv_frame)
+//{
+//	return copy_to_uv_frame(frame, uv_frame.get());
+//}
+//inline bool copy_to_uv_frame2(const core::pCompressedVideoFrame& framex, video_frame_t uv_framex)
+//{
+//	return copy_to_uv_frame(framex, uv_framex.get());
+//}
+
+
+video_frame_t allocate_uv_frame(const core::pRawVideoFrame&);
+video_frame_t allocate_uv_frame(const core::pCompressedVideoFrame&);
+video_frame_t allocate_uv_frame(const core::pFrame&);
 }
 }
 
