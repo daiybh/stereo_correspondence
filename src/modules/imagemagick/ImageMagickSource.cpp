@@ -13,6 +13,8 @@
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/thread/ConverterRegister.h"
+#define MAGICKCORE_QUANTUM_DEPTH 16
+#define MAGICKCORE_HDRI_ENABLE 0
 #include "Magick++.h"
 #include <map>
 namespace yuri {
