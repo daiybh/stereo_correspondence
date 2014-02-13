@@ -44,22 +44,28 @@ core::pFrame UVVideoCompress::do_special_single_step(const core::pRawVideoFrame&
 	}
 
 	video_frame * out_uv_frame  = nullptr;
-
+	video_frame tmp_frame;
 	if (uv_compress_params_.compress_func) {
 		out_uv_frame  = uv_compress_params_.compress_func(encoder_, uv_frame.get(), 0);
 	} else if (uv_compress_params_.compress_tile_func) {
 		video_desc desc = video_desc_from_frame(uv_frame.get());
 		tile * out_tile = uv_compress_params_.compress_tile_func(encoder_, &uv_frame->tiles[0], &desc, 0);
-#warning NOT implemented tile output...
+
+		// This smells quite hacky... :)
+		std::copy(uv_frame.get(), uv_frame.get()+1,&tmp_frame);
+		tmp_frame.tiles=out_tile;
+		tmp_frame.tile_count = 1;
+		out_uv_frame = &tmp_frame;
 	}
 
+	// Should I clean up out_uv_frame?
 	if (out_uv_frame) {
 		core::pFrame out_frame = ultragrid::copy_from_from_uv(out_uv_frame, log);
 		if (out_frame) return {out_frame};
 	}
 	return {};
 }
-core::pFrame UVVideoCompress::do_convert_frame(core::pFrame input_frame, format_t target_format)
+core::pFrame UVVideoCompress::do_convert_frame(core::pFrame /*input_frame*/, format_t /*target_format*/)
 {
 	return {};
 }
