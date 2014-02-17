@@ -10,6 +10,11 @@
 
 #include "SageOutput.h"
 #include "yuri/core/Module.h"
+#include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/raw_frame_params.h"
+#include "yuri/core/frame/compressed_frame_types.h"
+#include "yuri/core/frame/RawVideoFrame.h"
+
 
 // Unexported method from libsage, needed to register sharing without using processMessages
 void addNewClient(sail *sageInf, char *fsIP);
@@ -18,49 +23,53 @@ void addNewClient(sail *sageInf, char *fsIP);
 namespace yuri {
 namespace sage {
 
-REGISTER("sage_output",SageOutput)
+IOTHREAD_GENERATOR(SageOutput)
 
-IO_THREAD_GENERATOR(SageOutput)
+MODULE_REGISTRATION_BEGIN("sage_output")
+		REGISTER_IOTHREAD("sage_output",SageOutput)
+MODULE_REGISTRATION_END()
 
-core::pParameters SageOutput::configure()
+
+core::Parameters SageOutput::configure()
 {
-	core::pParameters p = IOThread::configure();
+	core::Parameters p = IOThread::configure();
 
-	(*p)["address"]["SAGE address (ignored)"]=std::string("127.0.0.1");
-	(*p)["app_name"]["Application name to use when registering to SAGE"]=std::string("yuri");
-	(*p)["width"]["Force image width. -1 to use input image size"]=-1;
-	(*p)["height"]["Force image height. -1 to use input image size"]=-1;
+	p["address"]["SAGE address (ignored)"]=std::string("127.0.0.1");
+	p["app_name"]["Application name to use when registering to SAGE"]=std::string("yuri");
+	p["width"]["Force image width. -1 to use input image size"]=-1;
+	p["height"]["Force image height. -1 to use input image size"]=-1;
 	return p;
 }
 
 namespace {
 std::map<format_t, sagePixFmt> yuri_sage_fmt_map = boost::assign::map_list_of<format_t, sagePixFmt>
-(YURI_FMT_UYVY422, PIXFMT_YUV)
-(YURI_FMT_YUV422, PIXFMT_YUV)
-(YURI_FMT_RGB24, PIXFMT_888)
-(YURI_FMT_BGR, PIXFMT_888_INV)
-(YURI_FMT_RGB32, PIXFMT_8888)
-(YURI_FMT_BGRA, PIXFMT_8888_INV)
-(YURI_FMT_DXT1, PIXFMT_DXT);
+(core::raw_format::uyvy422, PIXFMT_YUV)
+(core::raw_format::yuyv422, PIXFMT_YUV)
+(core::raw_format::rgb24, PIXFMT_888)
+(core::raw_format::bgr24, PIXFMT_888_INV)
+(core::raw_format::rgba32, PIXFMT_8888)
+(core::raw_format::bgra32, PIXFMT_8888_INV)
+(core::compressed_frame::dxt1, PIXFMT_DXT);
 }
 
-SageOutput::SageOutput(yuri::log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters)
+SageOutput::SageOutput(yuri::log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters)
 :IOThread(log_,parent,1,0,"SageOutput"),sail_info(0),width(-1),height(-1),
- fmt(YURI_FMT_NONE),sage_fmt(PIXFMT_NULL),sage_address("127.0.0.1"),app_name_("yuri")
+ fmt(0),sage_fmt(PIXFMT_NULL),sage_address("127.0.0.1"),app_name_("yuri")
 {
-	IO_THREAD_INIT("SageOutput")
+	IOTHREAD_INIT(parameters)
 }
 
 
-SageOutput::~SageOutput()
+SageOutput::~SageOutput() noexcept
 {
 	deleteSAIL(sail_info);
 }
+
 namespace {
 struct swap_yuv {
-	yuri::ubyte_t a;
-	yuri::ubyte_t b;
-	swap_yuv(const ushort_t rhs):a((rhs&0xFF00)>>8),b(rhs&0xFF) {}
+	uint8_t a;
+	uint8_t b;
+	swap_yuv(const uint16_t rhs):a((rhs&0xFF00)>>8),b(rhs&0xFF) {}
 } __attribute__((packed));
 
 
@@ -88,73 +97,82 @@ bool SageOutput::step()
 		request_end();
 		return false;
 	}
-	if (!in[0]) return true;
-	core::pBasicFrame frame = in[0]->pop_latest();
-	if (!frame) return true;
-	if (fmt == YURI_FMT_NONE) {
-		const format_t tmp_fmt = frame->get_format();
-		if (!yuri_sage_fmt_map.count(tmp_fmt)) {
-			log[log::warning] << "Unsupported input format";
-			return true;
+//	if (!in[0]) return true;
+	if (core::pFrame frame = pop_frame(0)) {
+		if (fmt == 0) {
+			const format_t tmp_fmt = frame->get_format();
+			if (!yuri_sage_fmt_map.count(tmp_fmt)) {
+				log[log::warning] << "Unsupported input format";
+				return true;
+			}
+			fmt = tmp_fmt;
+			sage_fmt=yuri_sage_fmt_map[fmt];
+			log[yuri::log::info] << "Connecting to SAGE @ " << sage_address << "\n";
+			sail_info = createSAIL(app_name_.c_str(),width,height,sage_fmt,0,TOP_TO_BOTTOM);//sage_address.c_str());
+			if (!sail_info) {
+				//throw yuri::exception::InitializationFailed(
+				log[log::fatal] << "Failed to connect to SAIL";
+				request_end();
+				return false;
+			}
 		}
-		fmt = tmp_fmt;
-		sage_fmt=yuri_sage_fmt_map[fmt];
-		log[yuri::log::info] << "Connecting to SAGE @ " << sage_address << "\n";
-		sail_info = createSAIL(app_name_.c_str(),width,height,sage_fmt,0,TOP_TO_BOTTOM);//sage_address.c_str());
-		if (!sail_info) {
-			//throw yuri::exception::InitializationFailed(
-			log[log::fatal] << "Failed to connect to SAIL";
-			request_end();
-			return false;
+		if (frame->get_format() != fmt) return true;
+
+		if (core::pRawVideoFrame raw_frame = std::dynamic_pointer_cast<core::RawVideoFrame>(frame)) {
+			const auto& finfo = core::raw_format::get_format_info(fmt);
+	//		const yuri::FormatInfo_t finfo = core::BasicPipe::get_format_info(fmt);
+			auto depth = finfo.planes[0].bit_depth;
+			const yuri::size_t sage_line_width = depth.first * width/depth.second/8;
+			const yuri::size_t input_line_width = depth.first * raw_frame->get_width()/depth.second/8;;
+			const yuri::size_t copy_width = std::min(sage_line_width, input_line_width);
+			const yuri::size_t copy_lines = std::min(height, raw_frame->get_height());
+			if (fmt == core::raw_format::yuyv422) {
+				// Sage expects UYUV instead od YUYV
+				swap_yuv* sail_buffer = reinterpret_cast<swap_yuv *>(nextBuffer(sail_info));
+				if (!sail_buffer) {
+					log[yuri::log::fatal] << "Got empty buffer from the SAIL library. Assuming connection is closed and bailing out.\n";
+					return false;
+				}
+				for (yuri::size_t line = 0; line < copy_lines; ++line) {
+					const uint16_t* data_start = reinterpret_cast<uint16_t*>(PLANE_RAW_DATA(raw_frame,0) + line*input_line_width);
+					std::copy(data_start,data_start+copy_width/2,sail_buffer+line*sage_line_width/2);
+				}
+			}
+			else  {
+				uint8_t* sail_buffer = reinterpret_cast<uint8_t*>(nextBuffer(sail_info));
+				if (!sail_buffer) {
+					log[yuri::log::fatal] << "Got empty buffer from the SAIL library. Assuming connection is closed and bailing out.\n";
+					return false;
+				}
+				for (yuri::size_t line = 0; line < copy_lines; ++line) {
+					const uint8_t* data_start = PLANE_RAW_DATA(raw_frame,0) + line*input_line_width;
+					std::copy(data_start,data_start+copy_width,sail_buffer+line*sage_line_width);
+				}
+			}
+		} else {
+			log[log::warning] << "Compressed frames not supported yet";
 		}
+
+//		} else {
+//			ubyte_t* sail_buffer = reinterpret_cast<ubyte_t*>(nextBuffer(sail_info));
+//			const yuri::ubyte_t* data_start = reinterpret_cast<yuri::ubyte_t*>(PLANE_RAW_DATA(frame,0));
+//			std::copy(data_start,data_start+PLANE_SIZE(frame,0),sail_buffer);
+//		}
+		//swapBuffer(sail_info);
+		sail_info->swapBuffer(SAGE_NON_BLOCKING);
 	}
-	if (frame->get_format() != fmt) return true;
-	const yuri::FormatInfo_t finfo = core::BasicPipe::get_format_info(fmt);
-	const yuri::size_t sage_line_width = finfo->bpp*width/8;
-	const yuri::size_t input_line_width = finfo->bpp*frame->get_width()/8;
-	const yuri::size_t copy_width = std::min(sage_line_width, input_line_width);
-	const yuri::size_t copy_lines = std::min(height, frame->get_height());
-	if (fmt == YURI_FMT_YUV422) {
-		// Sage expects UYUV instead od YUYV
-		swap_yuv* sail_buffer = reinterpret_cast<swap_yuv *>(nextBuffer(sail_info));
-		if (!sail_buffer) {
-			log[yuri::log::fatal] << "Got empty buffer from the SAIL library. Assuming connection is closed and bailing out.\n";
-			return false;
-		}
-		for (yuri::size_t line = 0; line < copy_lines; ++line) {
-			const yuri::ushort_t* data_start = reinterpret_cast<yuri::ushort_t*>(PLANE_RAW_DATA(frame,0) + line*input_line_width);
-			std::copy(data_start,data_start+copy_width/2,sail_buffer+line*sage_line_width/2);
-		}
-	}
-	else if (!finfo->compressed){
-		ubyte_t* sail_buffer = reinterpret_cast<ubyte_t*>(nextBuffer(sail_info));
-		if (!sail_buffer) {
-			log[yuri::log::fatal] << "Got empty buffer from the SAIL library. Assuming connection is closed and bailing out.\n";
-			return false;
-		}
-		for (yuri::size_t line = 0; line < copy_lines; ++line) {
-			const yuri::ubyte_t* data_start = reinterpret_cast<yuri::ubyte_t*>(PLANE_RAW_DATA(frame,0) + line*input_line_width);
-			std::copy(data_start,data_start+copy_width,sail_buffer+line*sage_line_width);
-		}
-	} else {
-		ubyte_t* sail_buffer = reinterpret_cast<ubyte_t*>(nextBuffer(sail_info));
-		const yuri::ubyte_t* data_start = reinterpret_cast<yuri::ubyte_t*>(PLANE_RAW_DATA(frame,0));
-		std::copy(data_start,data_start+PLANE_SIZE(frame,0),sail_buffer);
-	}
-	//swapBuffer(sail_info);
-	sail_info->swapBuffer(SAGE_NON_BLOCKING);
 	return true;
 }
 
 bool SageOutput::set_param(const core::Parameter &parameter)
 {
-	if (parameter.name == "address")
+	if (parameter.get_name() == "address")
 		sage_address=parameter.get<std::string>();
-	else if (parameter.name == "app_name")
+	else if (parameter.get_name() == "app_name")
 		app_name_ =parameter.get<std::string>();
-	else if (parameter.name == "width")
+	else if (parameter.get_name() == "width")
 		width=parameter.get<yuri::size_t>();
-	else if (parameter.name == "height")
+	else if (parameter.get_name() == "height")
 		height=parameter.get<yuri::size_t>();
 	else /*if (parameter.name == "address")
 		sage_address=parameter.get<std::string>();

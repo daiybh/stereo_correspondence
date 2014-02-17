@@ -104,6 +104,13 @@ IF(${OpenCV_FOUND})
 	#add_subdirectory(opencv_calib)
 ENDIF()
 
+IF(NOT YURI_DISABLE_SAGE)
+	find_package(SAGE)
+ENDIF()
+IF(${SAGE_FOUND})
+	add_subdirectory(sage)
+ENDIF()
+
 #### UV #####
 #IF(NOT YURI_DISABLE_ULTRAGRID)
 	# This should be replaced by a proper detection!
@@ -141,9 +148,7 @@ add_subdirectory(repack_audio)
 
 find_package(CURL)
 
-IF(NOT YURI_DISABLE_SAGE)
-	find_package(SAGE)
-ENDIF()
+
 IF(NOT YURI_DISABLE_CUDA)
 	find_package(CUDA)
 ENDIF()
@@ -194,9 +199,6 @@ IF(${CORE_X11})
 	add_subdirectory(fb_grab)
 ENDIF()
 
-IF(${SAGE_FOUND})
-	add_subdirectory(sage)
-ENDIF()
 
 IF(${CORE_ASIO})
 	add_subdirectory(tsrtp_receiver)

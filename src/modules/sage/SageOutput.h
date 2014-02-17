@@ -11,7 +11,7 @@
 #ifndef SAGEOUTPUT_H_
 #define SAGEOUTPUT_H_
 
-#include "yuri/core/IOThread.h"
+#include "yuri/core/thread/IOThread.h"
 // Libsail has some warnings, let's disable them for the moment (before upstream fixes them)
 // Clang has to be first as it also defines __GNUC__
 #if defined __clang__
@@ -37,11 +37,12 @@ namespace sage {
 
 class SageOutput: public yuri::core::IOThread {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
-	virtual ~SageOutput();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+	virtual ~SageOutput() noexcept;
+	SageOutput(log::Log &log_,core::pwThreadBase parent, const core::Parameters &p);
 private:
-	SageOutput(log::Log &log_,core::pwThreadBase parent,core::Parameters &p);
+
 	sail *sail_info;
 	yuri::size_t width, height;
 	yuri::format_t fmt;
