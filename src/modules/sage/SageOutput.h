@@ -11,7 +11,7 @@
 #ifndef SAGEOUTPUT_H_
 #define SAGEOUTPUT_H_
 
-#include "yuri/core/thread/IOThread.h"
+#include "yuri/core/thread/IOFilter.h"
 // Libsail has some warnings, let's disable them for the moment (before upstream fixes them)
 // Clang has to be first as it also defines __GNUC__
 #if defined __clang__
@@ -35,7 +35,7 @@
 namespace yuri {
 namespace sage {
 
-class SageOutput: public yuri::core::IOThread {
+class SageOutput: public yuri::core::IOFilter{
 public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
@@ -50,8 +50,9 @@ private:
 	std::string sage_address;
 	std::string app_name_;
 
-	virtual bool set_param(const core::Parameter &parameter);
-	virtual bool step();
+	virtual bool set_param(const core::Parameter &parameter) override;
+	virtual core::pFrame do_simple_single_step(const core::pFrame& frame) override;
+	virtual bool step() override;
 };
 
 } /* namespace sage */
