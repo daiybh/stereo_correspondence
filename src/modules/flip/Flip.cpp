@@ -29,9 +29,6 @@ core::Parameters Flip::configure()
 	core::Parameters p = core::SpecializedIOFilter<core::RawVideoFrame>::configure();
 	p["flip_x"]["flip x (around y axis)"]=true;
 	p["flip_y"]["flip y (around X axis)"]=false;
-	//p->set_max_pipes(1,1);
-	//p->add_input_format(YURI_FMT_RGB);
-	//p->add_output_format(YURI_FMT_RGB);
 	return p;
 }
 
@@ -39,6 +36,7 @@ core::Parameters Flip::configure()
 namespace {
 bool verify_support(const core::raw_format::raw_format_t& fmt)
 {
+	// multiple planes should be implemented as well..
 	if (fmt.planes.size() > 1) return false;
 	if (fmt.planes.empty()) return false;
 	const auto& plane= fmt.planes[0];
@@ -100,40 +98,67 @@ struct cpy_helper_uyvy {
 	}
 };
 
-
-template<class Iter, class Iter2>
-	void flip_line(Iter src_begin, Iter src_end, Iter2 dst_end)
-{
-	for (;src_begin!=src_end;) {
-		*(--dst_end)=*src_begin++;
-	}
-}
-
 template<class T>
-void flip_line_conv(const uint8_t* src, const uint8_t* src_end, uint8_t* dest)
+struct flip_line_conv {
+void operator()(const uint8_t* src, const uint8_t* src_end, uint8_t* dest)
 {
 	const T* s0 = reinterpret_cast<const T*>(src);
 	const T* s1 = reinterpret_cast<const T*>(src_end);
 	T* d0 = reinterpret_cast<T*>(dest);
-	flip_line(s0, s1, d0);
+	std::reverse_copy(s0, s1, d0);
+}
+};
+
+
+
+
+
+template<class T, class F>
+void process_lines(const uint8_t* src, uint8_t* dest, size_t lines, size_t line_size, size_t flip_y, F f = F())
+{
+	const size_t s_advance = flip_y?-line_size:line_size;
+	if (flip_y) {
+		src = src+(lines-1)*line_size;
+	}
+	const uint8_t* src_end = src + line_size;
+	for (size_t line = 0;line < lines; ++line) {
+		f(src, src_end, dest);
+		src += s_advance;
+		src_end += s_advance;
+		dest += line_size;
+	}
 }
 
-void flip_dispatch(int yuv_pos, int bpp, const uint8_t* in_ptr, const uint8_t* in_ptr_end, uint8_t* out_ptr_end)
+template<class T, template <class> class F>
+void process_lines(const uint8_t* src, uint8_t* dest, size_t lines, size_t line_size, size_t flip_y)
 {
-	if (yuv_pos == 0) {
-		flip_line_conv<cpy_helper_yuyv>(in_ptr, in_ptr_end, out_ptr_end);
+	process_lines<T,F<T>>(src, dest, lines, line_size, flip_y);
+}
+
+void flip_dispatch(int yuv_pos, int bpp, bool flip_x, bool flip_y,
+		size_t line_size, size_t lines,
+		const uint8_t* in_ptr, uint8_t* out_ptr)
+{
+	if (!flip_x) {
+		process_lines<cpy_helper_yuyv>(in_ptr, out_ptr, lines, line_size, flip_y,
+				[](const uint8_t* src, const uint8_t* src_end, uint8_t* dest){std::copy(src, src_end, dest);});
+	} else if (yuv_pos == 0) {
+		process_lines<cpy_helper_yuyv, flip_line_conv>(in_ptr, out_ptr, lines, line_size, flip_y);
 	} else if (yuv_pos == 1) {
-		flip_line_conv<cpy_helper_uyvy>(in_ptr, in_ptr_end, out_ptr_end);
-	} else switch (bpp) {
-		case 1:flip_line_conv<cpy_helper<1>>(in_ptr, in_ptr_end, out_ptr_end);break;
-		case 2:flip_line_conv<cpy_helper<2>>(in_ptr, in_ptr_end, out_ptr_end);break;
-		case 3:flip_line_conv<cpy_helper<3>>(in_ptr, in_ptr_end, out_ptr_end);break;
-		case 4:flip_line_conv<cpy_helper<4>>(in_ptr, in_ptr_end, out_ptr_end);break;
-		case 5:flip_line_conv<cpy_helper<5>>(in_ptr, in_ptr_end, out_ptr_end);break;
-		case 6:flip_line_conv<cpy_helper<6>>(in_ptr, in_ptr_end, out_ptr_end);break;
-		case 7:flip_line_conv<cpy_helper<7>>(in_ptr, in_ptr_end, out_ptr_end);break;
-		case 8:flip_line_conv<cpy_helper<8>>(in_ptr, in_ptr_end, out_ptr_end);break;
-		default:break;
+		process_lines<cpy_helper_uyvy, flip_line_conv>(in_ptr, out_ptr, lines, line_size, flip_y);
+	} else {
+		assert(line_size % bpp == 0);
+		switch (bpp) {
+			case 1:process_lines<cpy_helper<1>, flip_line_conv>(in_ptr, out_ptr, lines, line_size, flip_y);break;
+			case 2:process_lines<cpy_helper<2>, flip_line_conv>(in_ptr, out_ptr, lines, line_size, flip_y);break;
+			case 3:process_lines<cpy_helper<3>, flip_line_conv>(in_ptr, out_ptr, lines, line_size, flip_y);break;
+			case 4:process_lines<cpy_helper<4>, flip_line_conv>(in_ptr, out_ptr, lines, line_size, flip_y);break;
+			case 5:process_lines<cpy_helper<5>, flip_line_conv>(in_ptr, out_ptr, lines, line_size, flip_y);break;
+			case 6:process_lines<cpy_helper<6>, flip_line_conv>(in_ptr, out_ptr, lines, line_size, flip_y);break;
+			case 7:process_lines<cpy_helper<7>, flip_line_conv>(in_ptr, out_ptr, lines, line_size, flip_y);break;
+			case 8:process_lines<cpy_helper<8>, flip_line_conv>(in_ptr, out_ptr, lines, line_size, flip_y);break;
+			default:break;
+		}
 	}
 }
 
@@ -151,14 +176,13 @@ core::pFrame Flip::do_special_single_step(const core::pRawVideoFrame& frame)
 
 	if (!verify_support(fi)) return {};
 
-	// multiple planes shoul be implemented as well..
-//	assert(fi.planes.size() == 1);
-
 	const auto depth = fi.planes[0].bit_depth;
 	const size_t bpp = depth.first/depth.second/8;
 	const size_t line_length = w*bpp;
 	int yuv_y_pos = -1;
 
+
+	// Special cases for yuv 422 formats.
 	if (frame->get_format()==core::raw_format::yuyv422 ||
 		frame->get_format()==core::raw_format::yvyu422) {
 		yuv_y_pos = 0;
@@ -167,34 +191,13 @@ core::pFrame Flip::do_special_single_step(const core::pRawVideoFrame& frame)
 		yuv_y_pos = 1;
 	}
 
+	core::pRawVideoFrame frame_out = core::RawVideoFrame::create_empty(frame->get_format(), frame->get_resolution());
 
-	core::pRawVideoFrame  frame_out = core::RawVideoFrame::create_empty(frame->get_format(), frame->get_resolution());
+	const uint8_t * in_ptr =  PLANE_RAW_DATA(frame,0);
+	uint8_t *out_ptr = PLANE_RAW_DATA(frame_out,0);
 
-	const size_t src_line_advance = flip_y_?-line_length:line_length;
+	flip_dispatch(yuv_y_pos, bpp, flip_x_, flip_y_, line_length, h, in_ptr, out_ptr);
 
-	const uint8_t * base_ptr =  PLANE_RAW_DATA(frame,0);
-	if (flip_y_) base_ptr += (h-1)*line_length;
-	const uint8_t  *in_ptr = base_ptr;
-	const uint8_t  *in_ptr_end = in_ptr + line_length;
-	uint8_t *base_ptr_out =  PLANE_RAW_DATA(frame_out,0);
-
-	if (flip_x_) {
-		uint8_t *out_ptr_end = base_ptr_out+line_length;
-		for (yuri::size_t line = 0;line < h; ++line) {
-			flip_dispatch(yuv_y_pos, bpp, in_ptr, in_ptr_end, out_ptr_end);
-			in_ptr += src_line_advance;
-			in_ptr_end += src_line_advance;
-			out_ptr_end += line_length;
-		}
-	} else if (flip_y_) {
-		uint8_t *out_ptr = base_ptr_out;
-		for (yuri::size_t line = 0;line < h; ++line) {
-			std::copy(in_ptr, in_ptr_end, out_ptr);
-			in_ptr += src_line_advance;
-			in_ptr_end += src_line_advance;
-			out_ptr += line_length;
-		}
-	}
 	return frame_out;
 }
 
