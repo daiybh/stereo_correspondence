@@ -22,7 +22,7 @@ MODULE_REGISTRATION_BEGIN("jpeg")
 		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::rgb24, "jpeg_decoder", 30)
 		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::bgr24, "jpeg_decoder", 30)
 		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::yuv444, "jpeg_decoder", 25)
-		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::y8, "jpeg_decoder", 25)
+		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::y8, "jpeg_decoder", 35)
 
 		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::rgba32, "jpeg_decoder", 30)
 		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::argb32, "jpeg_decoder", 30)
