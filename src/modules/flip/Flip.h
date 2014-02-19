@@ -13,11 +13,13 @@
 
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/event/BasicEventConsumer.h"
 namespace yuri {
 
 namespace io {
 
-class Flip: public core::SpecializedIOFilter<core::RawVideoFrame> {
+class Flip: public core::SpecializedIOFilter<core::RawVideoFrame>, public event::BasicEventConsumer
+{
 public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
@@ -26,6 +28,7 @@ public:
 	virtual ~Flip() noexcept;
 private:
 	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
+	bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 	bool flip_x_, flip_y_;
 };
 

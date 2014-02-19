@@ -12,6 +12,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/event/EventHelpers.h"
 #include <cassert>
 #include <algorithm>
 namespace yuri {
@@ -37,8 +38,7 @@ namespace {
 bool verify_support(const core::raw_format::raw_format_t& fmt)
 {
 	// multiple planes should be implemented as well..
-	if (fmt.planes.size() > 1) return false;
-	if (fmt.planes.empty()) return false;
+	if (fmt.planes.size() != 1) return false;
 	const auto& plane= fmt.planes[0];
 	if (plane.components.empty()) return false;
 	const auto& depth = plane.bit_depth;
@@ -49,7 +49,7 @@ bool verify_support(const core::raw_format::raw_format_t& fmt)
 }
 
 Flip::Flip(log::Log &_log, core::pwThreadBase parent, const core::Parameters &parameters)
-:core::SpecializedIOFilter<core::RawVideoFrame>(_log,parent,"flip"),
+:core::SpecializedIOFilter<core::RawVideoFrame>(_log,parent,"flip"),event::BasicEventConsumer(log),
  flip_x_(true),flip_y_(false)
  {
 	IOTHREAD_INIT(parameters)
@@ -211,6 +211,23 @@ bool Flip::set_param(const core::Parameter &parameter)
 	return true;
 }
 
+
+bool Flip::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
+{
+	try {
+
+		if (event_name == "flip_x") {
+			flip_x_ = event::lex_cast_value<bool>(event);
+		} else if (event_name == "flip_y") {
+			flip_y_ = event::lex_cast_value<bool>(event);
+		} else return false;
+	}
+	catch (std::bad_cast&) {
+		log[log::info] << "bad cast in " << event_name;
+		return false;
+	}
+	return true;
+}
 }
 
 }
