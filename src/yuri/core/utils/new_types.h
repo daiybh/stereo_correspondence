@@ -56,18 +56,26 @@ struct coordinates_t {
 	position_t	y;
 };
 
-struct resolution_t {
-	dimension_t	width;
-	dimension_t	height;
-};
-
+struct resolution_t;
 struct geometry_t {
 	dimension_t	width;
 	dimension_t	height;
 	position_t	x;
 	position_t	y;
-//	operator resolution_t() { return resolution_t{width, height};}
+	resolution_t get_resolution() const;
 };
+
+struct resolution_t {
+	dimension_t	width;
+	dimension_t	height;
+	geometry_t get_geometry() const { return {width, height, 0, 0}; }
+};
+
+inline resolution_t geometry_t::get_resolution() const
+{
+	return {width, height};
+}
+
 
 typedef int32_t format_t;
 typedef int32_t pix_fmt_t;
@@ -124,6 +132,32 @@ constexpr inline coordinates_t operator+(const coordinates_t& b, const resolutio
 constexpr inline coordinates_t operator-(const coordinates_t& a, const resolution_t& b)
 {
 	return {a.x - static_cast<position_t>(b.width), a.y - static_cast<position_t>(b.height)};
+}
+
+
+inline position_t geometry_max_x (const geometry_t rect) { return rect.width + rect.x;}
+inline position_t geometry_max_y (const geometry_t rect) { return rect.height + rect.y;}
+
+inline geometry_t intersection(const geometry_t& rect1, const geometry_t& rect2)
+{
+	geometry_t rect_out;
+	rect_out.x = std::max(rect1.x, rect2.x);
+	rect_out.y = std::max(rect1.y, rect2.y);
+	rect_out.width = std::min(geometry_max_x(rect1),geometry_max_x(rect2))-rect_out.x;
+	rect_out.height = std::min(geometry_max_y(rect1),geometry_max_y(rect2))-rect_out.y;
+	return rect_out;
+}
+inline geometry_t intersection(const geometry_t& rect1, const resolution_t& rect2)
+{
+	return intersection(rect1, rect2.get_geometry());
+}
+inline geometry_t intersection(const resolution_t& rect1, const geometry_t& rect2)
+{
+	return intersection(rect1.get_geometry(), rect2);
+}
+inline resolution_t intersection(const resolution_t& rect1, const resolution_t& rect2)
+{
+	return {std::min(rect1.width, rect2.width), std::min(rect1.height, rect2.height)};
 }
 
 //template<class Stream>
