@@ -7,6 +7,7 @@ add_subdirectory(anaglyph)
 add_subdirectory(color_key)
 add_subdirectory(combine)
 add_subdirectory(convert_planes)
+add_subdirectory(crop)
 add_subdirectory(diff)
 add_subdirectory(dup)
 add_subdirectory(event_info)
@@ -127,7 +128,6 @@ IF(FALSE)
 # Add modules that are compile unconditionally
 #################################################################
 add_subdirectory(blank)
-add_subdirectory(crop)
 
 add_subdirectory(dummy)
 

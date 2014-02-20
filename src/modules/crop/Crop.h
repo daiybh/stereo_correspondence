@@ -11,25 +11,24 @@
 #ifndef CROP_H_
 #define CROP_H_
 
-#include "yuri/core/IOThread.h"
+#include "yuri/core/thread/SpecializedIOFilter.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 
 namespace yuri {
 
 namespace io {
 
-class Crop: public core::IOThread {
+class Crop: public core::SpecializedIOFilter<core::RawVideoFrame> {
+	using base_type = core::SpecializedIOFilter<core::RawVideoFrame>;
 public:
-	virtual ~Crop();
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
+	Crop(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~Crop() noexcept;
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
 	virtual bool set_param(const core::Parameter &parameter);
 protected:
-	Crop(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters) IO_THREAD_CONSTRUCTOR;
-	virtual bool step();
-	yuri::ssize_t dest_x;
-	yuri::ssize_t dest_y;
-	yuri::ssize_t dest_w;
-	yuri::ssize_t dest_h;
+	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
+	geometry_t geometry_;
 };
 
 }

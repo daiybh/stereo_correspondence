@@ -10,106 +10,93 @@
 
 #include "Crop.h"
 #include "yuri/core/Module.h"
+#include "yuri/core/frame/raw_frame_params.h"
 
 namespace yuri {
 
 namespace io {
 
-REGISTER("crop",Crop)
+MODULE_REGISTRATION_BEGIN("crop")
+		REGISTER_IOTHREAD("crop",Crop)
+MODULE_REGISTRATION_END()
 
-IO_THREAD_GENERATOR(Crop)
+IOTHREAD_GENERATOR(Crop)
 
-core::pParameters Crop::configure()
+core::Parameters Crop::configure()
 {
-	core::pParameters p (new core::Parameters());
-	(*p)["x"]["offset x"]=0;
-	(*p)["y"]["offset y"]=0;
-	(*p)["width"]["width"]=-1;
-	(*p)["height"]["height"]=-1;
-	p->set_max_pipes(1,1);
-//	p->add_input_format(YURI_FMT_RGB);
-//	p->add_output_format(YURI_FMT_RGB);
+	core::Parameters p  = base_type::configure();
+	p["geometry"]["Geometry to crop"]=geometry_t{800,600,0,0};
 	return p;
 }
 
-
-Crop::Crop(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters) IO_THREAD_CONSTRUCTOR:
-	core::IOThread(_log,parent,1,1)
+namespace {
+bool verify_support(const core::raw_format::raw_format_t& fmt)
 {
-	IO_THREAD_INIT("Crop")
-}
+	if (fmt.planes.size() != 1) return false;
+	const auto& plane= fmt.planes[0];
+	if (plane.components.empty()) return false;
+	const auto& depth = plane.bit_depth;
+	if (depth.first % (depth.second * 8)) return false;
 
-Crop::~Crop() {
-
-}
-
-bool Crop::step()
-{
-	core::pBasicFrame frame;
-	if (!in[0] || !(frame = in[0]->pop_frame()))
-		return true;
-
-	const size_t in_width = frame->get_width();
-	const size_t in_height = frame->get_height();
-	yuri::ssize_t x = dest_x, y = dest_y, w = dest_w, h = dest_h;
-	if (x >= static_cast<yuri::ssize_t>(in_width) || y >= static_cast<yuri::ssize_t>(in_height))
-		return true;
-	if (w < 0) {
-		w = in_width - x;
-	} else 	if (x + w > static_cast<yuri::ssize_t>(in_width)) {
-		w = in_width - x;
-	}
-	if (h < 0) {
-		h = static_cast<yuri::ssize_t>(in_height) - y;
-	} else if (y + h > static_cast<yuri::ssize_t>(in_height)) {
-		h = in_height - y;
-	}
-	log[log::verbose_debug] << "X: " << x << ", Y: " << y << ", W: " << w<< ", H: " << h;
-	if (!x && !y && w==static_cast<yuri::ssize_t>(in_width)
-			&& h==static_cast<yuri::ssize_t>(in_height)) {
-		log[log::verbose_debug] << "Passing thru";
-		push_raw_video_frame(0,frame);
-		return true;
-	}
-
-	core::pBasicFrame frame_out = allocate_empty_frame(frame->get_format(),w, h, true);
-	const FormatInfo_t info = core::BasicPipe::get_format_info(frame->get_format());
-	assert(info);
-	if (info->planes!=1) {
-		log[log::warning] << "Received frame has more that a single plane. \n";
-		return true;
-	}
-	if (info->bpp&0x07) {
-		log[log::warning] << "Currently only formats with bit depth divisible by 8 are supported.";
-		return true;
-	}
-	yuri::size_t Bpp = info->bpp >> 3;
-	log[log::verbose_debug] << "size: " << w <<"x"<<h<<"+"<<x<<"+"<<y<<" at "<<Bpp<<"Bpp"<<std::endl;
-	yuri::ubyte_t  *out_ptr=PLANE_RAW_DATA(frame_out,0);
-	const size_t in_line_width = in_width * Bpp;
-	const size_t out_line_width = w * Bpp;
-	log[log::verbose_debug] << "in_line_width: " << in_line_width << ", out_line_width: " << out_line_width;
-	const yuri::ubyte_t *ptr = PLANE_RAW_DATA(frame,0)+(y * in_line_width) + x*Bpp;
-	for (int i = 0; i < h; ++i) {
-		std::copy(ptr, ptr + out_line_width, out_ptr);
-		out_ptr+=out_line_width;
-		ptr+=in_line_width;
-	}
-	push_video_frame(0,frame_out,frame->get_format(),w, h);
 	return true;
 }
+std::vector<format_t> get_supported_fmts(log::Log& log) {
+	std::vector<format_t> fmts;
+	for (const auto& f: core::raw_format::formats()) {
+		if (verify_support(f.second)) {
+			fmts.push_back(f.first);
+			log[log::verbose_debug] << "Setting format " << f.second.name << " as supported";
+		}
+	}
+	return fmts;
+}
+
+}
+Crop::Crop(log::Log &log_, core::pwThreadBase parent,const core::Parameters &parameters):
+	base_type(log_,parent,"Crop"),geometry_{800,600,0,0}
+{
+	IOTHREAD_INIT(parameters)
+	set_supported_formats(get_supported_fmts(log));
+
+}
+
+Crop::~Crop() noexcept {
+
+}
+
+
+core::pFrame Crop::do_special_single_step(const core::pRawVideoFrame& frame)
+{
+	const format_t format = frame->get_format();
+	const auto& fi = core::raw_format::get_format_info(format);
+	if (!verify_support(fi)) return {};
+
+
+	const resolution_t in_res = frame->get_resolution();
+	const geometry_t geometry_out = intersection(in_res, geometry_);
+
+	log[log::verbose_debug] << "Cropping to " << geometry_out;
+
+	const auto depth = fi.planes[0].bit_depth;
+	const size_t bpp = depth.first/depth.second/8;
+	const dimension_t copy_bytes = geometry_out.width * bpp;
+	const dimension_t line_size = in_res.width * bpp;
+	core::pRawVideoFrame frame_out = core::RawVideoFrame::create_empty(format, geometry_out.get_resolution());
+	auto iter_in = PLANE_DATA(frame,0).begin() +  geometry_out.x * bpp + geometry_out.y * line_size;
+	auto iter_out = PLANE_DATA(frame_out,0).begin();
+	for (dimension_t line = 0; line < geometry_out.height; ++line) {
+		std::copy(iter_in, iter_in+copy_bytes, iter_out);
+		iter_in += line_size;
+		iter_out += copy_bytes;
+	}
+
+	return frame_out;}
 
 bool Crop::set_param(const core::Parameter &parameter)
 {
-	if (parameter.name== "x") {
-		dest_x=parameter.get<yuri::ssize_t>();
-	} else if (parameter.name== "y") {
-		dest_y=parameter.get<yuri::ssize_t>();
-	} else if (parameter.name== "width") {
-		dest_w=parameter.get<yuri::ssize_t>();
-	} else if (parameter.name== "height") {
-		dest_h=parameter.get<yuri::ssize_t>();
-	} else  return IOThread::set_param(parameter);
+	if (parameter.get_name()== "geometry") {
+		geometry_=parameter.get<geometry_t>();
+	} else  return base_type::set_param(parameter);
 	return true;
 }
 }
