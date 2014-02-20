@@ -25,6 +25,7 @@ IOTHREAD_GENERATOR(Crop)
 core::Parameters Crop::configure()
 {
 	core::Parameters p  = base_type::configure();
+	p.set_description("Crops the image to the specified dimensions");
 	p["geometry"]["Geometry to crop"]=geometry_t{800,600,0,0};
 	return p;
 }
