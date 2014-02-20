@@ -13,12 +13,13 @@
 
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/event/BasicEventConsumer.h"
 
 namespace yuri {
 
 namespace io {
 
-class Crop: public core::SpecializedIOFilter<core::RawVideoFrame> {
+class Crop: public core::SpecializedIOFilter<core::RawVideoFrame>, public event::BasicEventConsumer {
 	using base_type = core::SpecializedIOFilter<core::RawVideoFrame>;
 public:
 	Crop(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
@@ -28,6 +29,7 @@ public:
 	virtual bool set_param(const core::Parameter &parameter);
 protected:
 	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
+	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 	geometry_t geometry_;
 };
 

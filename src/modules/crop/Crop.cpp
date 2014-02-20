@@ -53,7 +53,7 @@ std::vector<format_t> get_supported_fmts(log::Log& log) {
 
 }
 Crop::Crop(log::Log &log_, core::pwThreadBase parent,const core::Parameters &parameters):
-	base_type(log_,parent,"Crop"),geometry_{800,600,0,0}
+	base_type(log_,parent,"Crop"),event::BasicEventConsumer(log),geometry_{800,600,0,0}
 {
 	IOTHREAD_INIT(parameters)
 	set_supported_formats(get_supported_fmts(log));
@@ -90,13 +90,35 @@ core::pFrame Crop::do_special_single_step(const core::pRawVideoFrame& frame)
 		iter_out += copy_bytes;
 	}
 
-	return frame_out;}
+	return frame_out;
+}
 
 bool Crop::set_param(const core::Parameter &parameter)
 {
 	if (parameter.get_name()== "geometry") {
 		geometry_=parameter.get<geometry_t>();
 	} else  return base_type::set_param(parameter);
+	return true;
+}
+bool Crop::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
+{
+	try {
+		if (event_name == "geometry") {
+			geometry_ = event::lex_cast_value<geometry_t>(event);
+		} else if (event_name == "x") {
+			geometry_.x = event::lex_cast_value<position_t>(event);
+		} else if (event_name == "y") {
+			geometry_.y = event::lex_cast_value<position_t>(event);
+		} else if (event_name == "width") {
+			geometry_.width = event::lex_cast_value<dimension_t>(event);
+		} else if (event_name == "height") {
+			geometry_.height = event::lex_cast_value<dimension_t>(event);
+		} else return false;
+	}
+	catch (std::bad_cast&) {
+		log[log::info] << "bad cast in " << event_name;
+		return false;
+	}
 	return true;
 }
 }
