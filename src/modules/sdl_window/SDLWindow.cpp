@@ -17,7 +17,7 @@ namespace yuri {
 namespace sdl_window {
 
 namespace {
-std::unordered_map<format_t, Uint32> yuri_to_sdl_yuv =
+const std::unordered_map<format_t, Uint32> yuri_to_sdl_yuv =
 	{{core::raw_format::yuyv422, SDL_YUY2_OVERLAY},
 	 {core::raw_format::yvyu422, SDL_YVYU_OVERLAY},
 	 {core::raw_format::uyvy422, SDL_UYVY_OVERLAY}};
@@ -29,7 +29,7 @@ Uint32 map_yuv_yuri_to_sdl(format_t fmt) {
 	return it->second;
 }
 
-std::vector<format_t> supported_formats = {
+const std::vector<format_t> supported_formats = {
 	core::raw_format::yuyv422,
 	core::raw_format::yvyu422,
 	core::raw_format::uyvy422,
@@ -55,7 +55,7 @@ MODULE_REGISTRATION_END()
 
 core::Parameters SDLWindow::configure()
 {
-	core::Parameters p = core::SpecializedIOFilter<core::RawVideoFrame>::configure();
+	core::Parameters p = base_type::configure();
 	p.set_description("SDLWindow");
 	p["resolution"]["Resolution of output window"]=resolution_t{800,600};
 	p["fullscreen"]["Start in fullscreen"]=false;
@@ -97,9 +97,14 @@ void SDLWindow::run()
 	overlay_.reset();
 	rgb_surface_.reset();
 }
-core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame)
+bool SDLWindow::step()
 {
 	process_sdl_events();
+	return base_type::step();
+}
+core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame)
+{
+
 	const resolution_t res = frame->get_resolution();
 	const dimension_t src_linesize  = PLANE_DATA(frame,0).get_line_size();
 	auto it = PLANE_DATA(frame,0).begin();
@@ -165,7 +170,7 @@ bool SDLWindow::set_param(const core::Parameter& param)
 	} else if (iequals(param.get_name(), "window_title")) {
 		std::string new_title = param.get<std::string>();
 		if (!new_title.empty()) title_=std::move(new_title);
-	} else return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
+	} else return base_type::set_param(param);
 	return true;
 }
 void SDLWindow::process_sdl_events()

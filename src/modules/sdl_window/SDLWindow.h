@@ -18,6 +18,7 @@ namespace sdl_window {
 
 class SDLWindow: public core::SpecializedIOFilter<core::RawVideoFrame>
 {
+	using base_type = core::SpecializedIOFilter<core::RawVideoFrame>;
 public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
@@ -26,7 +27,7 @@ public:
 private:
 	
 	virtual void run() override;
-	//virtual bool step() override;
+	virtual bool step() override;
 	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
 	virtual bool set_param(const core::Parameter& param);
 	void process_sdl_events();
