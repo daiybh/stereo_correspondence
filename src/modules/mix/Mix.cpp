@@ -29,7 +29,7 @@ core::Parameters Mix::configure()
 
 
 Mix::Mix(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,2,1,std::string("mix"))
+core::IOThread(log_,parent,0,1,std::string("mix"))
 {
 	IOTHREAD_INIT(parameters)
 	set_latency(1_ms);
@@ -55,7 +55,13 @@ bool Mix::step()
 }
 void Mix::do_connect_in(position_t pos, core::pPipe pipe)
 {
-//	if (pos >= get_no_in_ports()) resize(pos+1,1);
+	position_t inp = do_get_no_in_ports();
+	if (pos < 0) {
+		resize(inp+1,1);
+		pos = inp;
+	} else if (pos >= inp) {
+		resize(pos+1,1);
+	}
 	IOThread::do_connect_in(pos, pipe);
 }
 bool Mix::set_param(const core::Parameter& param)
