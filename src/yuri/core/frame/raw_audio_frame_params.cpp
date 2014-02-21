@@ -10,6 +10,7 @@
 
 #include "raw_audio_frame_types.h"
 #include "raw_audio_frame_params.h"
+#include "yuri/core/utils.h"
 
 namespace yuri {
 namespace core {
@@ -17,6 +18,8 @@ namespace raw_audio_format {
 
 
 namespace {
+mutex	format_info_map_mutex;
+
 format_info_map_t raw_audio_formats_info = {
 		{unsigned_8bit, {unsigned_8bit, "Unsigned 8bit", {"u8"}, 8}},
 		{unsigned_16bit, {unsigned_16bit, "Unsigned 16bit (little endian)", {"u16", "u16_le"}, 16}},
@@ -47,6 +50,19 @@ const raw_audio_format_t &get_format_info(format_t format)
 	auto it = raw_audio_formats_info.find(format);
 	if (it == raw_audio_formats_info.end()) throw std::runtime_error("Unknown format");
 	return it->second;
+}
+
+format_t parse_format(const std::string& name)
+{
+	lock_t _(format_info_map_mutex);
+	for (const auto& fmt: raw_audio_formats_info) {
+		for (const auto& fname: fmt.second.short_names) {
+			if (iequals(fname, name)) {
+				return fmt.first;
+			}
+		}
+	}
+	return unknown;
 }
 
 format_info_map_t::const_iterator formats::begin() const
