@@ -17,16 +17,16 @@
 namespace yuri {
 
 namespace vnc {
-struct _color_spec {
+struct color_spec_t {
 	uint16_t max;
 	uint8_t shift;
 };
-struct _pixel_format {
+struct pixel_format_t {
 	uint16_t bpp, depth;
 	bool big_endian, true_color;
-	_color_spec colors[3];
+	color_spec_t colors[3];
 };
-enum _receiving_states {
+enum receiving_states_t {
 	awaiting_data,
 	receiving_rectangles
 };
@@ -44,32 +44,24 @@ private:
 	bool handshake();
 	bool set_param(const core::Parameter &p);
 	bool process_data();
-	bool request_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool incremental);
+	bool request_rect(geometry_t geometry, bool incremental);
 	bool enable_continuous();
 	bool set_encodings();
-	static inline uint32_t get_uint(uint8_t *start);
-	static inline uint16_t get_ushort(uint8_t *start);
-	static inline void store_ushort(uint8_t *start, uint16_t data);
-	static inline void store_uint(uint8_t *start, uint32_t data);
-	inline yuri::size_t get_pixel(uint8_t *buf);
 	void move_buffer(yuri::ssize_t offset);
 
 	size_t read_data_at_least(uint8_t* data, size_t size, size_t at_least);
 	std::string address;
 	uint16_t port;
-//	boost::shared_ptr<ASIOAsyncTCPSocket> socket;
-	//boost::shared_ptr<asio::ASIOTCPSocket> socket;
 	core::socket::pStreamSocket socket_;
 
 	uvector<uint8_t> buffer, image;
 	uint8_t *buffer_pos, *buffer_end;
 	yuri::size_t buffer_size, buffer_free, buffer_valid;
-	uint16_t server_major, server_minor;
-	uint16_t width,height;
-	_pixel_format pixel_format;
-	_receiving_states state;
+
+	resolution_t resolution_;
+	pixel_format_t pixel_format;
+	receiving_states_t state;
 	yuri::size_t remaining_rectangles;
-//	boost::posix_time::ptime last_read, now;
 	timestamp_t last_read;
 };
 

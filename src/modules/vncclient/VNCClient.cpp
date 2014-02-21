@@ -39,6 +39,7 @@ VNCClient::VNCClient(const log::Log &log_,core::pwThreadBase parent, const core:
 	remaining_rectangles(0)
 {
 	IOTHREAD_INIT(parameters)
+	set_latency(1_ms);
 //	buffer.reset(new uint8_t[buffer_size]);
 	buffer.resize(buffer_size);
 	buffer_pos = &buffer[0];
@@ -53,6 +54,86 @@ VNCClient::VNCClient(const log::Log &log_,core::pwThreadBase parent, const core:
 VNCClient::~VNCClient() noexcept
 {
 }
+
+namespace {
+/** \brief Reads unsigned 4B integer from a buffer
+ *  \param start start of a buffer
+ *  \return retrieved integer
+ */
+uint32_t get_uint(const uint8_t *start)
+{
+	return (start[0]<<24) |
+			(start[1]<<16) |
+			(start[2]<<8) |
+			(start[3]<<0);
+
+}
+
+/** \brief Reads unsigned 2B integer from a buffer
+ *  \param start start of a buffer
+ *  \return retrieved integer
+ */
+uint16_t get_ushort(const uint8_t *start)
+{
+	return (start[0]<<8) |
+		   (start[1]<<0);
+
+}
+
+/** \brief Reads a pixel value from a buffer
+ *
+ * Currently this method supports only 24b pixel depths, in 24b or 32b per pixel
+ *  \param buf Start of a buffer
+ *  \return Retrieved pixel value
+ */
+yuri::size_t get_pixel(const uint8_t *buf)
+{
+	yuri::size_t px = 0;
+	px=(buf[0]<<16)+(buf[1]<<8)+buf[2];
+	return px;
+}
+
+
+geometry_t get_geometry(const uint8_t* buf)
+{
+	geometry_t g;
+	g.x = get_ushort(buf+0);
+	g.y = get_ushort(buf+2);
+	g.width = get_ushort(buf+4);
+	g.height = get_ushort(buf+6);
+	return g;
+}
+resolution_t get_resolution(const uint8_t* buf)
+{
+	return {get_ushort(buf),
+			get_ushort(buf+2)};
+}
+/** \brief Stores unsigned 2B integer to a buffer
+ *  \param start Start of a buffer
+ *  \param data Value to store
+ */
+void store_ushort(uint8_t *start, uint16_t data)
+{
+	start[0]=(data>>8)&0xFF;
+	start[1]=data&0xFF;
+}
+void store_uint(uint8_t *start, uint32_t data)
+{
+	start[0]=(data>>24)&0xFF;
+	start[1]=(data>>16)&0xFF;
+	start[2]=(data>>8)&0xFF;
+	start[3]=data&0xFF;
+}
+void store_geometry(uint8_t* start, const geometry_t& geometry)
+{
+	store_ushort(start+0,geometry.x);
+	store_ushort(start+2,geometry.y);
+	store_ushort(start+4,geometry.width);
+	store_ushort(start+6,geometry.height);
+}
+}
+
+
 
 void VNCClient::run()
 {
@@ -74,9 +155,7 @@ void VNCClient::run()
 					need_data=false;
 					last_read = timestamp_t{};//boost::posix_time::microsec_clock::local_time();
 				}
-			} /*else {
-				IOThread::sleep(get_latency());
-			}*/
+			}
 		}
 		if (!buffer_free) {
 			log[log::error] << "Buffer full. Moving data.";
@@ -99,7 +178,7 @@ void VNCClient::run()
 		// TODO reimplement this (?)
 		timestamp_t now;// = boost::posix_time::microsec_clock::local_time();
 		if (now - last_read > 100_ms) {
-			request_rect(0,0,width,height,true);
+			request_rect(resolution_.get_geometry(),true);
 			last_read = now;
 		}
 		if (!process_data()) need_data=true;
@@ -115,8 +194,6 @@ void VNCClient::run()
  */
 bool VNCClient::connect()
 {
-	//if (!socket) socket.reset(new asio::ASIOTCPSocket(log,get_this_ptr()));
-	//socket->set_endpoint(address,port);
 	log[log::info] << "connecting to " << address << ":" << port;
 	if (!socket_->connect(address,port)) return false;
 	log[log::info] << "Connected to " << address << ":" << port;;
@@ -133,6 +210,7 @@ bool VNCClient::set_param(const core::Parameter &p)
 	} else return IOThread::set_param(p);
 	return true;
 }
+
 /** \brief Goes thru the handshake with the server, setting up necessary parameters
  *  \return true if handshake ended successfully, false otherwise
  */
@@ -165,7 +243,7 @@ bool VNCClient::handshake()
 	buffer_pos[0]=1;
 	socket_->send_data(buffer_pos,1);
 	read = read_data_at_least(buffer_pos, 4, 4);
-//	read = 	socket_->receive_data(buffer_pos,4);
+
 	assert(read==4);
 	if (*reinterpret_cast<uint32_t*>(buffer_pos) != 0) {
 		log[log::error] << "handshake unsuccessful";
@@ -176,8 +254,7 @@ bool VNCClient::handshake()
 	read = read_data_at_least(buffer_pos, buffer_free, 24);
 //	read = 	socket_->receive_data(buffer_pos,buffer_free);
 	assert(read>=24);
-	width = get_ushort(buffer_pos);
-	height = get_ushort(buffer_pos+2);
+	resolution_ = get_resolution(buffer_pos);
 	pixel_format.bpp = buffer_pos[4];
 	pixel_format.depth = buffer_pos[5];
 	for (uint16_t i = 0; i < 3; ++i) {
@@ -187,7 +264,7 @@ bool VNCClient::handshake()
 	uint32_t name_len = get_uint(buffer_pos+20);
 	std::string name(reinterpret_cast<const char*>(buffer_pos+24),name_len);
 	log[log::info] << "handshake finished, connected to server " << name <<
-			", with resolution " << width << "x" << height;
+			", with resolution " << resolution_;
 	log[log::info] << "Server encoding uses " << pixel_format.bpp <<
 			" bit per pixel, with " << pixel_format.depth <<
 			" valid bits";
@@ -196,8 +273,8 @@ bool VNCClient::handshake()
 			"green @" << static_cast<uint16_t>(pixel_format.colors[1].shift) << ", max: " <<  pixel_format.colors[1].max <<
 			"blue @" << static_cast<uint16_t>(pixel_format.colors[2].shift) << ", max: " <<  pixel_format.colors[2].max;
 	//image.reset(new uint8_t[width*height*3]);
-	image.resize(width*height*3);
-	request_rect(0,0,width,height,false);
+	image.resize(resolution_.width*resolution_.height*3);
+	request_rect(resolution_.get_geometry(),false);
 	set_encodings();
 	//enable_continuous();
 	return true;
@@ -251,17 +328,12 @@ bool VNCClient::process_data()
 			}
 			if (buffer_valid < 12) return false;
 			{
-				uint16_t x,y,w,h;
-				uint32_t  enc;
-				x = get_ushort(buffer_pos+0);
-				y = get_ushort(buffer_pos+2);
-				w = get_ushort(buffer_pos+4);
-				h = get_ushort(buffer_pos+6);
-				enc = get_uint(buffer_pos+8);
-				log[log::debug] << "Got update for rect " << w<<"x"<<h<<" at " <<x<<"x"<<y<<", encoding: " << enc;
+				geometry_t geometry = get_geometry(buffer_pos);
+				uint32_t  enc = get_uint(buffer_pos+8);
+				log[log::debug] << "Got update for rect " <<geometry<<", encoding: " << enc;
 				size_t need = 0;
 				switch (enc) {
-					case 0: need = w*h*(pixel_format.bpp>>3);
+					case 0: need = geometry.width*geometry.height*(pixel_format.bpp>>3);
 						break;
 					case 1: need = 4;
 						log[log::warning] << "copy rect!";
@@ -279,9 +351,9 @@ bool VNCClient::process_data()
 						uint8_t * pos = buffer_pos + 12, *outpos;
 						yuri::size_t pixel;
 						assert(pixel_format.bpp == 32);
-						for (uint16_t line=y; line < y+h; ++line) {
-							outpos = &image[0]+3*width*line+x*3;
-							for (uint16_t row = x; row < x + w; ++row) {
+						for (uint16_t line=geometry.y; line < geometry.y+geometry.height; ++line) {
+							outpos = &image[0]+3*resolution_.width*line+geometry.x*3;
+							for (uint16_t row = geometry.x; row < geometry.x + geometry.width; ++row) {
 								pixel = get_pixel(pos);
 								*outpos++ = (pixel>>pixel_format.colors[2].shift)&pixel_format.colors[2].max;
 								*outpos++ = (pixel>>pixel_format.colors[1].shift)&pixel_format.colors[1].max;
@@ -291,26 +363,22 @@ bool VNCClient::process_data()
 						}; }
 						break;
 					case 1: {
-						uint16_t x0 = get_ushort(buffer_pos + 12);
-						uint16_t y0 = get_ushort(buffer_pos + 14);
-						uint8_t *tmp, *pos=0;
-						tmp = new uint8_t[w*h*3];
-						uint8_t *b=tmp;
-						for (uint16_t line=y0; line < y0+h; ++line) {
-							pos = &image[0]+3*width*line+x0*3;
-							//memcpy(b,pos,w*3);
-							std::copy(pos,pos+w*3, b);
-							b+=w*3;
-						}
-						b = tmp;
-						for (uint16_t line=y; line < y+h; ++line) {
-							pos = &image[0]+3*width*line+x*3;
-//							memcpy(pos,b,w*3);
-							std::copy(b,b+w*3, pos);
-							b+=w*3;
-						}
-						delete [] tmp;
-
+							uint16_t x0 = get_ushort(buffer_pos + 12);
+							uint16_t y0 = get_ushort(buffer_pos + 14);
+							uint8_t *pos=0;
+							std::vector<uint8_t> tmp(geometry.width*geometry.height*3);
+							uint8_t *b=&tmp[0];
+							for (uint16_t line=y0; line < y0+geometry.height; ++line) {
+								pos = &image[0]+3*resolution_.width*line+x0*3;
+								std::copy(pos,pos+geometry.width*3, b);
+								b+=geometry.width*3;
+							}
+							b = &tmp[0];
+							for (uint16_t line=geometry.y; line < geometry.y+geometry.height; ++line) {
+								pos = &image[0]+3*resolution_.width*line+geometry.x*3;
+								std::copy(b,b+geometry.width*3, pos);
+								b+=geometry.width*3;
+							}
 						} break;
 
 					default:
@@ -320,11 +388,9 @@ bool VNCClient::process_data()
 				move_buffer(12+need);
 				if (!--remaining_rectangles) {
 					state = awaiting_data;
-//					core::pBasicFrame frame = IOThread::allocate_frame_from_memory(image,width*height*3);
-//					core::pBasicFrame frame = IOThread::allocate_frame_from_memory(image);
-					core::pRawVideoFrame frame = core::RawVideoFrame::create_empty(core::raw_format::rgb24, {width, height}, image.data(), width*height*3,  true);
+					core::pRawVideoFrame frame = core::RawVideoFrame::create_empty(core::raw_format::rgb24, resolution_, image.data(), resolution_.width*resolution_.height*3,  true);
 					push_frame(0,frame);
-					request_rect(0,0,width,height,true);
+					request_rect(resolution_.get_geometry(),true);
 				}
 			}
 			break;
@@ -339,61 +405,6 @@ void VNCClient::move_buffer(yuri::ssize_t offset)
 	buffer_pos+=offset;
 	buffer_valid-=offset;
 }
-/** \brief Reads unsigned 4B integer from a buffer
- *  \param start start of a buffer
- *  \return retrieved integer
- */
-uint32_t VNCClient::get_uint(uint8_t *start)
-{
-	return (start[0]<<24) |
-			(start[1]<<16) |
-			(start[2]<<8) |
-			(start[3]<<0);
-
-}
-/** \brief Reads unsigned 2B integer from a buffer
- *  \param start start of a buffer
- *  \return retrieved integer
- */
-uint16_t VNCClient::get_ushort(uint8_t *start)
-{
-	return (start[0]<<8) |
-		   (start[1]<<0);
-
-}
-/** \brief Reads a pixel value from a buffer
- *
- * Currently this method supports only 24b pixel depths, in 24b or 32b per pixel
- *  \param buf Start of a buffer
- *  \return Retrieved pixel value
- */
-yuri::size_t VNCClient::get_pixel(uint8_t *buf)
-{
-	//uint16_t b = 0;
-	yuri::size_t px = 0;
-	/*while (b < pixel_format.depth) {
-		px=px<<8+*buf++;
-		b+=8;
-	}*/
-	px=(buf[0]<<16)+(buf[1]<<8)+buf[2];
-	return px;
-}
-/** \brief Stores unsigned 2B integer to a buffer
- *  \param start Start of a buffer
- *  \param data Value to store
- */
-void VNCClient::store_ushort(uint8_t *start, uint16_t data)
-{
-	start[0]=(data>>8)&0xFF;
-	start[1]=data&0xFF;
-}
-void VNCClient::store_uint(uint8_t *start, uint32_t data)
-{
-	start[0]=(data>>24)&0xFF;
-	start[1]=(data>>16)&0xFF;
-	start[2]=(data>>8)&0xFF;
-	start[3]=data&0xFF;
-}
 /** \brief Sends a request for an update of arbitrary rectangle
  *
  *  \param x Offset from the left
@@ -405,17 +416,14 @@ void VNCClient::store_uint(uint8_t *start, uint32_t data)
  *  framebuffer, that changed since last framebuffer update
  *  \return Always true
  */
-bool VNCClient::request_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool incremental)
+bool VNCClient::request_rect(geometry_t geometry, bool incremental)
 {
 	uint8_t b[10];
 	b[0]=3;
 	b[1]=static_cast<uint8_t>(incremental);
-	store_ushort(b+2,x);
-	store_ushort(b+4,y);
-	store_ushort(b+6,w);
-	store_ushort(b+8,h);
-	yuri::size_t size = socket_->send_data(b,10);
-	assert (size==10);
+	store_geometry(b+2, geometry);
+	/*yuri::size_t size = */socket_->send_data(b,10);
+//	assert (size==10);
 	return true;
 }
 /** \brief Sends a request for a continuous updates
@@ -427,12 +435,9 @@ bool VNCClient::enable_continuous()
 	uint8_t b[10];
 	b[0]=150;
 	b[1]=0;
-	store_ushort(b+2,0);
-	store_ushort(b+4,0);
-	store_ushort(b+6,width);
-	store_ushort(b+8,height);
-	yuri::size_t size = socket_->send_data(b,10);
-	assert (size==10);
+	store_geometry(b+2, resolution_.get_geometry());
+	/*yuri::size_t size = */socket_->send_data(b,10);
+//	assert (size==10);
 	return true;
 }
 bool VNCClient::set_encodings()
@@ -443,8 +448,8 @@ bool VNCClient::set_encodings()
 	store_ushort(b+2,2);
 	store_uint(b+4,0);
 	store_uint(b+8,1);
-	yuri::size_t size = socket_->send_data(b,12);
-	assert (size==12);
+	/*yuri::size_t size = */socket_->send_data(b,12);
+//	assert (size==12);
 	return true;
 }
 
