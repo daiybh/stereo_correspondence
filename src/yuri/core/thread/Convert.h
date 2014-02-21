@@ -33,6 +33,7 @@ private:
 	pFrame 	do_simple_single_step(const pFrame& frame);
 	virtual bool set_param(const core::Parameter& param);
 	format_t	format_;
+	bool allow_passthrough_;
 
 	struct convert_pimpl_;
 	unique_ptr<convert_pimpl_> pimpl_;

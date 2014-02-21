@@ -11,6 +11,8 @@
 #include "Convert.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_params.h"
+#include "yuri/core/frame/compressed_frame_params.h"
+#include "yuri/core/frame/raw_audio_frame_params.h"
 #include "yuri/core/thread/ConvertUtils.h"
 #include "yuri/core/thread/IOThreadGenerator.h"
 #include "yuri/core/utils/Timer.h"
@@ -48,6 +50,7 @@ core::Parameters Convert::configure()
 	core::Parameters p = core::IOFilter::configure();
 	p.set_description("Convert");
 	p["format"]["Target format"]="YUV";
+	p["allow_passthrough"]["Allow passing the original frame though, when invalid output format is specified"]=false;
 	return p;
 }
 
@@ -105,7 +108,7 @@ struct Convert::convert_pimpl_ {
 
 
 Convert::Convert(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOFilter(log_,parent,std::string("convert"))
+core::IOFilter(log_,parent,std::string("convert")),allow_passthrough_(false)
 {
 	IOTHREAD_INIT(parameters)
 	pimpl_.reset(new convert_pimpl_(log));
@@ -117,6 +120,8 @@ Convert::~Convert() noexcept
 
 pFrame Convert::do_convert_frame(pFrame frame_in, format_t target_format)
 {
+	if (!target_format && allow_passthrough_) return frame_in;
+	if (!target_format) return {};
 	if (!frame_in) return {};
 	Timer t;
 	format_t source_format = frame_in->get_format();
@@ -180,6 +185,10 @@ bool Convert::set_param(const core::Parameter& param)
 {
 	if (param.get_name() == "format") {
 		format_ = raw_format::parse_format(param.get<std::string>());
+		if (!format_) format_ = compressed_frame::parse_format(param.get<std::string>());
+		if (!format_) format_ = raw_audio_format::parse_format(param.get<std::string>());
+	} else if (param.get_name() == "allow_passthrough") {
+		allow_passthrough_ = param.get<bool>();
 	} else return core::IOFilter::set_param(param);
 	return true;
 }
