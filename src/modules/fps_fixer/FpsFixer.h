@@ -9,25 +9,27 @@
 #define FPSFIXER_H_
 
 #include "yuri/core/thread/IOThread.h"
-//#include <boost/date_time/posix_time/posix_time.hpp>
+#include "yuri/event/BasicEventConsumer.h"
+#include "yuri/core/utils/Timer.h"
 
 namespace yuri {
 
 namespace fps {
-//using namespace boost::posix_time;
 
-class FpsFixer: public yuri::core::IOThread{
+class FpsFixer: public yuri::core::IOThread, event::BasicEventConsumer
+{
 public:
 	FpsFixer(log::Log &log_, core::pwThreadBase parent, const core::Parameters& parameters);
 	virtual ~FpsFixer() noexcept;
 	IOTHREAD_GENERATOR_DECLARATION
-	//static shared_ptr<IOThread> generate(Log &_log,pThreadBase parent) throw (Exception);
 	static core::Parameters configure();
-	virtual bool set_param(const core::Parameter &parameter);
+private:
+	virtual bool set_param(const core::Parameter &parameter) override;
 	virtual void run() override;
-protected:
+	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 	double fps_;
-	yuri::size_t frames;
+	yuri::size_t frames_;
+	Timer timer_;
 };
 
 }
