@@ -369,7 +369,7 @@ void XmlBuilder::builder_pimpl_t::verify_links()
 		auto s2 = used_sources.find(selem);
 		auto t2 = used_targets.find(telem);
 		VALID(s2 == used_sources.end() || link.second.source_index < 0, "Duplicate specification for source " + selem.first +":"+lexical_cast<std::string>(selem.second)+", specified in "+s2->second+" and "+link.first)
-		VALID(t2 == used_targets.end(), "Duplicate specification for target " + telem.first +":"+lexical_cast<std::string>(telem.second)+", specified in "+t2->second+" and "+link.first)
+		VALID(t2 == used_targets.end() || link.second.target_index < 0, "Duplicate specification for target " + telem.first +":"+lexical_cast<std::string>(telem.second)+", specified in "+t2->second+" and "+link.first)
 		used_sources[selem]=link.first;
 		used_targets[telem]=link.first;
 	}
