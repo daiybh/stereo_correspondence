@@ -31,15 +31,16 @@ core::Parameters VNCClient::configure()
 	p.set_description("Receives data from VNC server");
 	p["port"]["Port to connect to"]=5900;
 	p["address"]["Address to connect to"]="127.0.0.1";
+	p["socket"]["Socket implementation"]="yuri_tcp";
 	return p;
 }
 
 VNCClient::VNCClient(const log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters)
 :IOThread(log_,parent,0,1,"VNCClient"),buffer_size(104857600),state(awaiting_data),
-	remaining_rectangles(0)
+	remaining_rectangles(0),socket_impl_("yuri_tcp")
 {
 	IOTHREAD_INIT(parameters)
-	set_latency(1_ms);
+	set_latency(20_ms);
 //	buffer.reset(new uint8_t[buffer_size]);
 	buffer.resize(buffer_size);
 	buffer_pos = &buffer[0];
@@ -47,7 +48,7 @@ VNCClient::VNCClient(const log::Log &log_,core::pwThreadBase parent, const core:
 	buffer_free = buffer_size;
 	buffer_valid = 0;
 
-	socket_ = core::StreamSocketGenerator::get_instance().generate("yuri_tcp", log);
+	socket_ = core::StreamSocketGenerator::get_instance().generate(socket_impl_, log);
 	log[log::info] << "Created socket";
 }
 

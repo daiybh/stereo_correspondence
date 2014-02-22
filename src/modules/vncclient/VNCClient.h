@@ -63,6 +63,7 @@ private:
 	receiving_states_t state;
 	yuri::size_t remaining_rectangles;
 	timestamp_t last_read;
+	std::string socket_impl_;
 };
 
 }
