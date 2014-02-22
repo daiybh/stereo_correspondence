@@ -36,7 +36,8 @@ IF(UNIX)
 	add_subdirectory(yuri_tcp)
 ENDIF()
 
-CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
+CHECK_INCLUDE_FILE_CXX (linux/videodev2.h HAVE_VIDEODEV2_H)
+CHECK_INCLUDE_FILE_CXX (linux/dvb/video.h HAVE_DVB_VIDEO_H)
 
 IF(NOT YURI_DISABLE_LIBAV)
 	pkg_check_modules(libavformat libavformat) 
@@ -52,6 +53,10 @@ ENDIF()
 
 IF(HAVE_VIDEODEV2_H)
 	add_subdirectory(v4l2)
+ENDIF()
+
+IF(HAVE_DVB_VIDEO_H)
+	add_subdirectory(dvb)
 ENDIF()
 
 find_package(SDL)
