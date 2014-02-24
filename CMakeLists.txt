@@ -51,7 +51,6 @@ SET(LIBNAME 				${LIBNAME_PREFIX}_core)
 SET(LIBNAME_HELPER_LIBAV 	${LIBNAME_PREFIX}_helper_av)
 SET(LIBNAME_HELPER_CUDA 	${LIBNAME_PREFIX}_helper_cuda)
 SET(LIBNAME_HELPER_X11 		${LIBNAME_PREFIX}_helper_x11)
-SET(LIBNAME_HELPER_DECKLINK ${LIBNAME_PREFIX}_helper_decklink)
 
 #################################################################
 # Set prefix for modules

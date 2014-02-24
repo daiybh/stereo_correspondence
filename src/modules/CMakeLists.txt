@@ -77,7 +77,12 @@ IF(JPEG_FOUND)
 	add_subdirectory(jpeg)
 ENDIF()
 
-IF(CORE_DECKLINK AND DECKLINK_FOUND)
+
+IF(NOT YURI_DISABLE_DECKLINK)
+	find_package(DECKLINK)
+ENDIF()
+
+IF(DECKLINK_FOUND)
 	add_subdirectory(decklink)
 ENDIF()
 

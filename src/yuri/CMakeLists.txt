@@ -34,10 +34,6 @@ ENDIF()
 #	CHECK_INCLUDE_FILE_CXX ("boost/asio.hpp" HAVE_BOOST_ASIO_H)
 #ENDIF()
 
-IF(NOT YURI_DISABLE_DECKLINK)
-	find_package(DECKLINK)
-ENDIF()
-
 #################################################################
 # Set up dependencies for libyuri_core
 #################################################################
@@ -68,17 +64,12 @@ IF(NOT YURI_DISABLE_CUDA AND CUDA_FOUND)
 ENDIF()
 
 
-IF(NOT YURI_DISABLE_DECKLINK AND DECKLINK_FOUND)
-	SET(YURI_HELPER_DECKLINK_INCLUDE ${DECKLINK_INCLUDE_DIRS})
-	SET(YURI_HELPER_DECKLINK_LIBS ${DECKLINK_LIBRARIES})
-ENDIF()
-
 #################################################################
 # Adding CXXFLAGS and LDFLAGS for libyuri_core
 #################################################################
 add_definitions("-DYURI_MODULE_IN_TREE -DINSTALL_PREFIX=\\\"${CMAKE_INSTALL_PREFIX}\\\"")
 link_directories ( ${YURI_LINK} ${YURI_HELPER_LIBAV_LINK} ${YURI_HELPER_X11_LINK})
-include_directories ( ${YURI_INCLUDE} ${YURI_HELPER_LIBAV_INCLUDE} ${YURI_HELPER_X11_INCLUDE} ${YURI_HELPER_DECKLINK_INCLUDE})
+include_directories ( ${YURI_INCLUDE} ${YURI_HELPER_LIBAV_INCLUDE} ${YURI_HELPER_X11_INCLUDE})
 
 #################################################################
 # Submerge into subdirectories to collect source files
@@ -116,16 +107,6 @@ IF(NOT YURI_DISABLE_X11 AND X11_FOUND AND OPENGL_FOUND)
 ELSE()
 	SET(CORE_X11 FALSE PARENT_SCOPE)
 	SET(CORE_X11 FALSE)
-ENDIF()
-
-IF(NOT YURI_DISABLE_DECKLINK AND DECKLINK_FOUND)
-	add_subdirectory(decklink)
-	SET(CORE_DECKLINK TRUE PARENT_SCOPE)
-	SET(CORE_DECKLINK TRUE)
-	add_definitions("-DYURI_HAVE_DECKLINK")
-ELSE()
-	SET(CORE_DECKLINK FALSE PARENT_SCOPE)
-	SET(CORE_DECKLINK FALSE)
 ENDIF()
 
 #################################################################
@@ -175,23 +156,6 @@ IF(${CORE_X11})
 	install(TARGETS ${LIBNAME_HELPER_X11} 	RUNTIME DESTINATION bin
 						LIBRARY DESTINATION lib 
 						ARCHIVE DESTINATION lib)
-ENDIF()
-
-IF(${CORE_DECKLINK})
-	MESSAGE("Building DECKLINK helper library!")
-	add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/decklink/DeckLinkAPIDispatch.cpp"
-	    	COMMAND ${CMAKE_COMMAND} -E copy_if_different
-	    	"${DECKLINK_INCLUDE_DIR}/DeckLinkAPIDispatch.cpp"
-	    	"${CMAKE_CURRENT_BINARY_DIR}/decklink/DeckLinkAPIDispatch.cpp"
-	    )	  
-	SET(YURI_HELPER_DECKLINK_SRC ${YURI_HELPER_DECKLINK_SRC} "${CMAKE_CURRENT_BINARY_DIR}/decklink/DeckLinkAPIDispatch.cpp")
-	add_library(${LIBNAME_HELPER_DECKLINK} ${YURI_HELPER_DECKLINK_SRC})
-	target_link_libraries ( ${LIBNAME_HELPER_DECKLINK} ${YURI_HELPER_DECKLINK_LIBS})
-	SET_TARGET_PROPERTIES( ${LIBNAME_HELPER_DECKLINK} PROPERTIES SOVERSION ${SO_VERSION} VERSION ${YURI_CORE_VERSION} )
-	install(TARGETS ${LIBNAME_HELPER_DECKLINK} 	RUNTIME DESTINATION bin
-						LIBRARY DESTINATION lib 
-						ARCHIVE DESTINATION lib)
-	
 ENDIF()
 
 IF(UNIX)

@@ -8,7 +8,7 @@
 #ifndef DECKLINKINPUT_H_
 #define DECKLINKINPUT_H_
 
-#include "yuri/decklink/DeckLinkBase.h"
+#include "DeckLinkBase.h"
 
 namespace yuri {
 

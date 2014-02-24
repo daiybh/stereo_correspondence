@@ -8,8 +8,8 @@
 #ifndef DECKLINKOUTPUT_H_
 #define DECKLINKOUTPUT_H_
 
-#include "yuri/decklink/DeckLinkBase.h"
-#include "yuri/decklink/DeckLink3DVideoFrame.h"
+#include "DeckLinkBase.h"
+#include "DeckLink3DVideoFrame.h"
 #include "yuri/core/forward.h"
 #include <deque>
 namespace yuri {

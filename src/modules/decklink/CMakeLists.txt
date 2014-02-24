@@ -2,17 +2,26 @@
 SET (MODULE decklink)
 
 # Set all source files module uses
-SET (SRC DeckLinkInput.cpp
+SET (SRC DeckLinkAPIDispatch.cpp 
+	     DeckLinkBase.cpp
+	     DeckLinkBase.h
+	     DeckLink3DVideoFrame.cpp
+	     DeckLink3DVideoFrame.h 
+         DeckLinkInput.cpp
 		 DeckLinkInput.h
 		 DeckLinkOutput.cpp
 		 DeckLinkOutput.h 
 		 register.cpp)
 
-
-
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/DeckLinkAPIDispatch.cpp"
+	    	COMMAND ${CMAKE_COMMAND} -E copy_if_different
+	    	"${DECKLINK_INCLUDE_DIR}/DeckLinkAPIDispatch.cpp"
+	    	"${CMAKE_CURRENT_BINARY_DIR}/DeckLinkAPIDispatch.cpp"
+	    )
+	    
 # You shouldn't need to edit anything below this line
 include_directories(${DECKLINK_INCLUDE_DIRS}) 
 add_library(${MODULE} MODULE ${SRC})
-target_link_libraries(${MODULE} ${LIBNAME}  ${LIBNAME_HELPER_DECKLINK})
+target_link_libraries(${MODULE} ${LIBNAME} ${DECKLINK_LIBRARIES})
 
 YURI_INSTALL_MODULE(${MODULE})
