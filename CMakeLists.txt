@@ -51,8 +51,6 @@ SET(LIBNAME 				${LIBNAME_PREFIX}_core)
 SET(LIBNAME_HELPER_LIBAV 	${LIBNAME_PREFIX}_helper_av)
 SET(LIBNAME_HELPER_CUDA 	${LIBNAME_PREFIX}_helper_cuda)
 SET(LIBNAME_HELPER_X11 		${LIBNAME_PREFIX}_helper_x11)
-SET(LIBNAME_HELPER_IEEE1394 ${LIBNAME_PREFIX}_helper_ieee1394)
-SET(LIBNAME_HELPER_ASIO 	${LIBNAME_PREFIX}_helper_asio)
 SET(LIBNAME_HELPER_DECKLINK ${LIBNAME_PREFIX}_helper_decklink)
 
 #################################################################
@@ -74,8 +72,6 @@ SET (TARGET_MODULE_PATH lib/yuri2/)
 SET(CORE_LIBAV FALSE)
 SET(CORE_CUDA FALSE)
 SET(CORE_X11 FALSE)
-SET(CORE_IEEE1394 FALSE)
-SET(CORE_ASIO FALSE)
 
 #################################################################
 # Add some options to control build
@@ -85,7 +81,7 @@ OPTION (YURI_DISABLE_CUDA "Disable building of CUDA helpers" ON)
 OPTION (YURI_DISABLE_LIBAV "Disable building of libav helpers and support" ON)
 OPTION (YURI_DISABLE_SAGE "Disable building of libsage related modules" ON)
 OPTION (YURI_DISABLE_X11 "Explicitly disable building of X11 helpers and related modules" ON)
-OPTION (YURI_DISABLE_IEEE1394 "Disable building of IEEE1394 helpers" ON)
+OPTION (YURI_DISABLE_IEEE1394 "Disable building of IEEE1394 sources" OFF)
 OPTION (YURI_DISABLE_ASIO "Disable building of boost::asio helpers" ON)
 OPTION (YURI_DISABLE_DECKLINK "Disable building of decklink API helpers" ON)
 OPTION (YURI_DISABLE_PNG "Disable building of CUDA helpers" ON)

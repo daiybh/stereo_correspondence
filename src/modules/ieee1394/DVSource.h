@@ -11,7 +11,7 @@
 #ifndef DVSOURCE_H_
 #define DVSOURCE_H_
 
-#include "yuri/ieee1394/IEEE1394SourceBase.h"
+#include "IEEE1394SourceBase.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
 
 namespace yuri {

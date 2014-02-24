@@ -15,10 +15,6 @@ namespace yuri {
 
 namespace ieee1394 {
 
-MODULE_REGISTRATION_BEGIN("hdvsource")
-		REGISTER_IOTHREAD("hdvsource",HDVSource)
-MODULE_REGISTRATION_END()
-
 
 core::pIOThread HDVSource::generate(log::Log &_log,core::pwThreadBase parent, const core::Parameters& parameters)
 {

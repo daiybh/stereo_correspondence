@@ -81,10 +81,14 @@ IF(CORE_DECKLINK AND DECKLINK_FOUND)
 	add_subdirectory(decklink)
 ENDIF()
 
-IF(${CORE_IEEE1394})
-	add_subdirectory(dvsource)
-	add_subdirectory(hdvsource)
+IF(NOT YURI_DISABLE_IEEE1394)
+	pkg_check_modules(ieee1394 libiec61883 libavc1394)
 ENDIF()
+
+IF(ieee1394_FOUND)
+    add_subdirectory(ieee1394)
+ENDIF()
+
 
 
 IF(CORE_LIBAV AND libavcodec_FOUND AND libavformat_FOUND)
@@ -118,6 +122,7 @@ ENDIF()
 IF(${SAGE_FOUND})
 	add_subdirectory(sage)
 ENDIF()
+
 
 #### UV #####
 #IF(NOT YURI_DISABLE_ULTRAGRID)

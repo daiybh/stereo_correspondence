@@ -16,10 +16,6 @@ namespace yuri {
 
 namespace ieee1394 {
 
-MODULE_REGISTRATION_BEGIN("dvsource")
-		REGISTER_IOTHREAD("dvsource",DVSource)
-MODULE_REGISTRATION_END()
-
 core::pIOThread DVSource::generate(log::Log &_log,core::pwThreadBase parent, const core::Parameters& parameters)
 {
 	shared_ptr<DVSource> dv(new DVSource(_log,parent,
