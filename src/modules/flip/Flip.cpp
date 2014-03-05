@@ -15,6 +15,7 @@
 #include "yuri/event/EventHelpers.h"
 #include <cassert>
 #include <algorithm>
+#include <array>
 namespace yuri {
 
 namespace io {
