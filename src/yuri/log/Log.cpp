@@ -28,7 +28,6 @@ std::map<_debug_flags, std::string> level_names=map_list_of<_debug_flags, std::s
 	(error,"ERROR")
 	(warning,"WARNING")
 	(info,"INFO")
-	(normal,"")
 	(debug,"DEBUG")
 	(verbose_debug,"VERBOSE_DEBUG")
 	(trace,"TRACE");
@@ -37,8 +36,7 @@ std::map<_debug_flags, std::string> level_colors=map_list_of<_debug_flags, std::
 (fatal,"\033[4;31;42m") // Red, underscore, bg
 (error,"\033[31m") // Red
 (warning,"\033[35m")
-(info,"\033[32m")
-(normal,"\033[00m")
+(info,"\033[00m")
 (debug,"\033[35m")
 (verbose_debug,"\033[36m")
 (trace,"\033[4;36m");
@@ -54,7 +52,7 @@ id(-1),
 #else
 id(0),
 #endif
-ids(""),flags(normal),output_flags(normal),quiet(false)
+ids(""),flags(info),output_flags(info),quiet(false)
 {
 }
 
@@ -63,7 +61,7 @@ ids(""),flags(normal),output_flags(normal),quiet(false)
  */
 Log::~Log()
 {
-	(*this)[verbose_debug] << "Destroying logger " << uid << std::endl;
+	(*this)[verbose_debug] << "Destroying logger " << uid;
 }
 
 void Log::set_id(int id)
@@ -78,7 +76,7 @@ void Log::set_id(int id)
 Log::Log(const Log &log):uid(uids++),out(log.out),id(log.id),ids(""),flags(log.flags),
 		output_flags(log.output_flags),quiet(log.quiet)
 {
-	(*this)[verbose_debug] << "Copying logger "	<< log.uid << " -> " << uid	<< std::endl;
+	(*this)[verbose_debug] << "Copying logger "	<< log.uid << " -> " << uid;
 }
 /**
  * Sets textual label for current instance
@@ -132,7 +130,7 @@ std::string Log::print_level()
 	_debug_flags f = static_cast<_debug_flags>(flags&flag_mask);
 	if (level_names.count(f)) {
 		if ((output_flags&use_colors) && level_colors.count(f)) {
-			return level_colors[f]+level_names[f]+level_colors[normal]+" ";
+			return level_colors[f]+level_names[f]+level_colors[info]+" ";
 		}
 		return level_names[f]+" ";
 	}
