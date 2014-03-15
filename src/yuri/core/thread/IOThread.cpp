@@ -156,6 +156,7 @@ void IOThread::do_connect_out(position_t index, pPipe pipe)
 bool IOThread::push_frame(position_t index, pFrame frame)
 {
 	TRACE_METHOD
+	if (!frame) return true;
 	if (index >= 0 && index < get_no_out_ports() && out_[index])
 		if(out_[index]->push_frame(frame)) {
 			if (fps_stats_ && ++streamed_frames_[index]>=fps_stats_) {
