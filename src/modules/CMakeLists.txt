@@ -5,6 +5,7 @@ link_directories (${Boost_LIBRARY_DIRS})
 
 add_subdirectory(anaglyph)
 add_subdirectory(color_key)
+add_subdirectory(color_picker)
 add_subdirectory(combine)
 add_subdirectory(convert_planes)
 add_subdirectory(crop)
