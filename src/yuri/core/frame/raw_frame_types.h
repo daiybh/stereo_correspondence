@@ -75,6 +75,9 @@ const format_t yvyu422		= 0x203;	// YVYU		2pixels, 8bit
 const format_t uyvy422		= 0x204;	// UYVY		2pixels, 8bit
 const format_t vyuy422		= 0x205;	// VYUY		2pixels, 8bit
 const format_t yuv444		= 0x206;	// YUV		1 pixel, 8bit
+const format_t ayuv4444		= 0x207;	// AYUV		1 pixel, 8bit
+const format_t yuva4444		= 0x208;	// YUVA		1 pixel, 8bit
+
 
 const format_t yuv422_v210	= 0x220;	// YUVx	10:10:10:2
 const format_t yvu422_v210	= 0x221;	// YVUx	10:10:10:2

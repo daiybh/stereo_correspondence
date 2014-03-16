@@ -68,6 +68,8 @@ namespace {
 			{vyuy422,{vyuy422,"YUV 4:2:2 packed (VYUY)",{"VYUY"}, "",	{{"VYUY",{32, 2}, {8,8,8,8}}} }},
 
 			{yuv444,{yuv444,"YUV 4:4:4 packed (YUV)",{"YUV444"}, "",	{{"YUV",{24, 1}, {8,8,8}}} }},
+			{ayuv4444,{ayuv4444,"YUV 4:4:4:4 packed (AYUV)",{"AYUV4444"}, "",	{{"AYUV",{32, 1}, {8,8,8,8}}} }},
+			{yuva4444,{yuva4444,"YUV 4:4:4:4 packed (YUVA)",{"YUVA4444"}, "",	{{"YUVA",{32, 1}, {8,8,8,8}}} }},
 
 			// TODO Well, this is crazy but ...
 			{yuv422_v210,{yuv422_v210,"YUV 4:2:2 10bit",{"V210"}, "",	{{"YUY*VYU*YVY*UYV*",{128, 6}, {10,10,10,2,10,10,10,2,10,10,10,2,10,10,10,2}}} }},
