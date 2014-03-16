@@ -206,6 +206,83 @@ void convert_line<core::raw_format::yuv444, core::raw_format::uyvy422>
 		*dest++=y;
 	}
 }
+
+template<>
+void convert_line<core::raw_format::yuva4444, core::raw_format::yuv444>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*src++;
+		*dest++=*src++;
+		*dest++=*src++;
+		src++;
+	}
+}
+template<>
+void convert_line<core::raw_format::ayuv4444, core::raw_format::yuv444>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		src++;
+		*dest++=*src++;
+		*dest++=*src++;
+		*dest++=*src++;
+	}
+}
+template<>
+void convert_line<core::raw_format::yuv444, core::raw_format::yuva4444>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*src++;
+		*dest++=*src++;
+		*dest++=*src++;
+		*dest++=255;
+	}
+}
+template<>
+void convert_line<core::raw_format::yuv444, core::raw_format::ayuv4444>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=255;
+		*dest++=*src++;
+		*dest++=*src++;
+		*dest++=*src++;
+	}
+}
+template<>
+void convert_line<core::raw_format::yuva4444, core::raw_format::yuyv422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width/2; ++pixel) {
+		*dest++=*src++;
+		*dest++=*src++;
+		src++;
+		src++;
+		*dest++=*src++;
+		src++;
+		*dest++=*src++;
+		src++;
+	}
+}
+template<>
+void convert_line<core::raw_format::ayuv4444, core::raw_format::yuyv422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width/2; ++pixel) {
+		src++;
+		*dest++=*src++;
+		*dest++=*src++;
+		
+		src++;
+		src++;
+		*dest++=*src++;
+		src++;
+		*dest++=*src++;
+	}
+}
+
 /* ***************************************************************************
  * 					YUV - RGB conversions
  *************************************************************************** */

@@ -58,6 +58,13 @@ MODULE_REGISTRATION_BEGIN("yuri_convert")
 		REGISTER_CONVERTER(core::raw_format::uyvy422,  	core::raw_format::yuv444, "yuri_convert", 15)
 		REGISTER_CONVERTER(core::raw_format::yuv444,  	core::raw_format::uyvy422, "yuri_convert", 15)
 
+		REGISTER_CONVERTER(core::raw_format::yuva4444,  core::raw_format::yuv444, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::ayuv4444,  core::raw_format::yuv444, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::yuv444,  core::raw_format::yuva4444, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::yuv444,  core::raw_format::ayuv4444, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::yuva4444,  core::raw_format::yuyv422, "yuri_convert", 15)
+		REGISTER_CONVERTER(core::raw_format::ayuv4444,  core::raw_format::yuyv422, "yuri_convert", 15)
+
 		REGISTER_CONVERTER(core::raw_format::rgb24,  	core::raw_format::yuv444, "yuri_convert", 20)
 		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::yuv444, "yuri_convert", 20)
 		REGISTER_CONVERTER(core::raw_format::bgr24,  	core::raw_format::yuv444, "yuri_convert", 20)
@@ -151,6 +158,14 @@ namespace {
 		ADD_CONVERSION(core::raw_format::yuv444, 	core::raw_format::yuyv422)
 		ADD_CONVERSION(core::raw_format::uyvy422, 	core::raw_format::yuv444)
 		ADD_CONVERSION(core::raw_format::yuv444, 	core::raw_format::uyvy422)
+
+		ADD_CONVERSION(core::raw_format::yuva4444, 	core::raw_format::yuv444)
+		ADD_CONVERSION(core::raw_format::ayuv4444, 	core::raw_format::yuv444)
+		ADD_CONVERSION(core::raw_format::yuv444, 	core::raw_format::yuva4444)
+		ADD_CONVERSION(core::raw_format::yuv444, 	core::raw_format::ayuv4444)
+
+		ADD_CONVERSION(core::raw_format::yuva4444, 	core::raw_format::yuyv422)
+		ADD_CONVERSION(core::raw_format::ayuv4444, 	core::raw_format::yuyv422)
 
 		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::yuv444)
 		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::yuv444)
