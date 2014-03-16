@@ -12,7 +12,7 @@
 
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
-
+#include "yuri/event/BasicEventConsumer.h"
 
 namespace yuri {
 namespace color_key {
@@ -23,8 +23,9 @@ enum diff_types_ {
 };
 
 
-class ColorKey: public core::SpecializedIOFilter<core::RawVideoFrame>
+class ColorKey: public core::SpecializedIOFilter<core::RawVideoFrame>, public event::BasicEventConsumer
 {
+	using base_type = core::SpecializedIOFilter<core::RawVideoFrame>;
 public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
@@ -35,11 +36,15 @@ private:
 //	virtual bool step();
 	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
 	virtual bool set_param(const core::Parameter& param);
+	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
+
 	template<class kernel>
 	core::pRawVideoFrame find_key(const core::pRawVideoFrame& frame);
 	template<format_t format>
 	core::pRawVideoFrame dispatch_find_key(const core::pRawVideoFrame& frame);
 	uint8_t r_, g_, b_;
+	uint8_t y_, u_, v_;
+	size_t y_cutoff_;
 	ssize_t delta_, delta2_;
 	diff_types_ diff_type_;
 };
