@@ -26,6 +26,8 @@ namespace detail {
 	using duration		= std::chrono::duration<duration_rep,period>;
 }
 
+struct duration_t;
+
 struct timestamp_t {
 	using duration = detail::time_point::duration;
 
@@ -35,6 +37,8 @@ struct timestamp_t {
 		value(std::chrono::time_point_cast<duration>(tp))
 	{}
 
+	timestamp_t &operator+=(const duration_t& dur);
+	timestamp_t &operator-=(const duration_t& dur);
 	detail::time_point			value;
 };
 
@@ -72,6 +76,15 @@ struct duration_t {
 					std::chrono::duration<Rep, Period>>(
 							detail::duration(value));
 	}
+
+	duration_t& operator+=(const duration_t& rhs) {
+		value += rhs.value;
+		return *this;
+	}
+	duration_t& operator-=(const duration_t& rhs) {
+		value -= rhs.value;
+		return *this;
+	}
 	detail::duration_rep		value;
 };
 
@@ -89,17 +102,38 @@ inline constexpr duration_t operator"" _minutes(long double val) { return durati
 inline constexpr duration_t operator"" _hours(long double val) { return duration_t{static_cast<detail::duration_rep>(val*3600e6)}; }
 inline constexpr duration_t operator"" _days(long double val) { return duration_t{static_cast<detail::duration_rep>(val*24*3600e6)}; }
 
+inline timestamp_t &timestamp_t::operator+=(const duration_t& dur) {
+	value += timestamp_t::duration(dur);
+	return *this;
+}
+inline timestamp_t &timestamp_t::operator-=(const duration_t& dur) {
+	value -= timestamp_t::duration(dur);
+	return *this;
+}
+
 inline duration_t operator-(const timestamp_t& t1, const timestamp_t& t2)
 {
 	return duration_t(t1.value - t2.value);
 }
-inline timestamp_t operator+(const timestamp_t& t, const duration_t& d)
+inline timestamp_t operator+(timestamp_t t, const duration_t& d)
 {
-	return timestamp_t(t.value + timestamp_t::duration(d));
+	t += d;
+	return t;
 }
-inline timestamp_t operator+(const duration_t& d, const timestamp_t& t)
+inline timestamp_t operator+(const duration_t& d, timestamp_t t)
 {
-	return timestamp_t(t.value  + timestamp_t::duration(d));
+	t += d;
+	return t;
+}
+inline timestamp_t operator-(timestamp_t t, const duration_t& d)
+{
+	t -= d;
+	return t;
+}
+inline timestamp_t operator-(const duration_t& d, timestamp_t t)
+{
+	t -= d;
+	return t;
 }
 inline constexpr duration_t operator-(const duration_t& a)
 {
@@ -129,11 +163,11 @@ inline constexpr bool operator<=(const duration_t& a, const duration_t& b)
 {
 	return !(a.value > b.value);
 }
-inline constexpr duration_t operator-(const duration_t& a, const duration_t& b)
+inline constexpr duration_t operator-(duration_t a, const duration_t& b)
 {
 	return duration_t(a.value-b.value);
 }
-inline constexpr duration_t operator+(const duration_t& a, const duration_t& b)
+inline constexpr duration_t operator+(duration_t a, const duration_t& b)
 {
 	return duration_t(a.value+b.value);
 }
