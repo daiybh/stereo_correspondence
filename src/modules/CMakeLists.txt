@@ -130,6 +130,11 @@ IF(${SAGE_FOUND})
 	add_subdirectory(sage)
 ENDIF()
 
+IF (Boost_REGEX_FOUND)
+	add_subdirectory(rawfilesource)
+ENDIF()
+
+
 
 #### UV #####
 #IF(NOT YURI_DISABLE_ULTRAGRID)
@@ -230,9 +235,6 @@ IF(${OPENNI2_FOUND})
 ENDIF()
 
 
-IF (Boost_REGEX_FOUND)
-	add_subdirectory(rawfilesource)
-ENDIF()
 
 IF(VIDEOMASTER_INCLUDE_DIR)
 	add_subdirectory(delta)

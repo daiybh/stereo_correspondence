@@ -11,7 +11,7 @@
 #ifndef RAWFILESOURCE_H_
 #define RAWFILESOURCE_H_
 
-#include "yuri/core/IOThread.h"
+#include "yuri/core/thread/IOThread.h"
 //#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace yuri {
@@ -19,33 +19,39 @@ namespace yuri {
 namespace rawfilesource {
 
 
-//using namespace boost::posix_time;
+enum class frame_type_t {
+	unknown,
+	raw_video,
+	compressed_viceo,
+	raw_audio
+};
 
 class RawFileSource: public core::IOThread
 {
+	using base_type = core::IOThread;
 public:
-	RawFileSource(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters);
-	virtual ~RawFileSource();
-	static core::pIOThread generate(log::Log &_log,core::pwThreadBase parent,
-			core::Parameters& parameters);
-	static core::pParameters configure();
+	RawFileSource(log::Log &_log, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~RawFileSource() noexcept;
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
 	void run();
 protected:
 	virtual bool set_param(const core::Parameter &parameter);
 	bool read_chunk();
 	std::string next_file();
-	core::pBasicFrame frame;
+	core::pFrame frame;
 	yuri::size_t position, chunk_size, width, height;
 	yuri::format_t output_format;
 	double fps;
 	std::string path;
-	time_value last_send;
+	timestamp_t last_send;
 	std::ifstream file;
 	bool keep_alive,loop, failed_read, sequence;
-	yuri::usize_t block;
+	size_t block;
 	yuri::size_t loop_number;
 	size_t sequence_pos;
 
+	frame_type_t frame_type_;
 };
 
 }

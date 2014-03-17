@@ -10,8 +10,11 @@
 
 #include "RawFileSource.h"
 #include "yuri/core/Module.h"
+#include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/frame/CompressedVideoFrame.h"
+#include "yuri/core/frame/raw_frame_params.h"
+#include "yuri/core/frame/compressed_frame_params.h"
 #include <fstream>
-//#include <boost/assign.hpp>
 #include <boost/regex.hpp>
 #include <iomanip>
 namespace yuri {
@@ -19,76 +22,71 @@ namespace yuri {
 namespace rawfilesource {
 
 
-REGISTER("raw_filesource",RawFileSource)
+MODULE_REGISTRATION_BEGIN("raw_filesource")
+	REGISTER_IOTHREAD("raw_filesource",RawFileSource)
+MODULE_REGISTRATION_END()
 
-core::pIOThread RawFileSource::generate(log::Log &_log,core::pwThreadBase parent, core::Parameters& parameters)
-{
-	core::pIOThread c (new RawFileSource(_log,parent,parameters));
-	return c;
-}
+IOTHREAD_GENERATOR(RawFileSource)
 
-core::pParameters RawFileSource::configure()
+
+core::Parameters RawFileSource::configure()
 {
-	core::pParameters p = IOThread::configure();
-	(*p)["path"]["Path to the file"]=std::string();
-	(*p)["keep_alive"]["Stay idle after pushing the file (setting to false will cause the object to quit afterward)"]=true;
-	(*p)["output_format"]["Force output format"]=std::string("single16");
-	(*p)["width"]["Force output width to"]=0;
-	(*p)["height"]["Force output height to"]=0;
-	(*p)["chunk"]["Chunk size (0 to output whole file at once)"]=0;
-	(*p)["fps"]["Framerate for chunk output"]=25;
-	(*p)["loop"]["Start againg from beginning of the file after reaching end"]=true;
-	(*p)["offset"]["skip offset bytes from beginning"]=0;
-	(*p)["block"]["Threat output pipes as blocking. Specify as max number of frames in output pipe."]=0;
-	p->set_max_pipes(0,1);
-	p->add_output_format(YURI_FMT_NONE);
+	core::Parameters p = base_type::configure();
+	p["path"]["Path to the file"]=std::string();
+	p["keep_alive"]["Stay idle after pushing the file (setting to false will cause the object to quit afterward)"]=true;
+	p["format"]["Force output format"]="none";
+	p["width"]["Force output width to"]=0;
+	p["height"]["Force output height to"]=0;
+	p["chunk"]["Chunk size (0 to output whole file at once)"]=0;
+	p["fps"]["Framerate for chunk output"]=25;
+	p["loop"]["Start again from beginning of the file after reaching end"]=true;
+	p["offset"]["skip offset bytes from beginning"]=0;
+	p["block"]["Threat output pipes as blocking. Specify as max number of frames in output pipe."]=0;
 	return p;
 }
 
 
-RawFileSource::RawFileSource(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters):
-			core::IOThread(_log,parent,1,2,"RawFileSource"), position(0),
-			chunk_size(0), width(0), height(0),output_format(YURI_FMT_NONE),
-			fps(25.0),last_send(time_value::min()),keep_alive(true),loop(true),
-			failed_read(false),sequence(false),block(0),loop_number(0),sequence_pos(0)
+RawFileSource::RawFileSource(log::Log &_log, core::pwThreadBase parent,const core::Parameters &parameters):
+			core::IOThread(_log,parent,1,1,"RawFileSource"), position(0),
+			chunk_size(0), width(0), height(0),output_format(0),
+			fps(25.0),keep_alive(true),loop(true),
+			failed_read(false),sequence(false),block(0),loop_number(0),sequence_pos(0),
+			frame_type_(frame_type_t::raw_video)
 {
-	IO_THREAD_INIT("Raw file source")
-	latency = 1000;
+	IOTHREAD_INIT(parameters)
+	set_latency(1_ms);
 }
 
-RawFileSource::~RawFileSource() {
+RawFileSource::~RawFileSource() noexcept {
 }
 
 void RawFileSource::run()
 {
-	IO_THREAD_PRE_RUN
+//	IOTHREAD_PRE_RUN
 	while (still_running()) {
-		ThreadBase::sleep(latency);
+		ThreadBase::sleep(get_latency());
 		if (!frame) if (!read_chunk()) break;
 		if (failed_read) break;
 		if (!frame) continue;
-		if (block && out[0] && out[0]->get_count() >= block) continue;
-		if (last_send != time_value::min()) {
-			time_duration delta;
-			if (fps!=0.0)
-				delta = nanoseconds(static_cast<nanoseconds::rep>(1e9/fps));
-			else delta = microseconds(0);
-			if ((std::chrono::steady_clock::now()-last_send) < delta) continue;
-			last_send+=delta;
-		} else {
-			last_send=std::chrono::steady_clock::now();
-		}
-		if (out[0]) {
-			if (frame) push_raw_frame(0,frame);
-			if (chunk_size) frame.reset();
-			else if (sequence && !chunk_size) frame.reset();
-			if (!loop && loop_number) break;
-		}
+//		if (block && out_[0] && out[0]->get_count() >= block) continue;
+
+		duration_t delta;
+		if (fps!=0.0)
+			delta = 1_s/fps;
+		else delta = 0_s;
+
+		if ((timestamp_t{} - last_send) < delta) continue;
+		last_send+=delta;
+		push_frame(0,frame);
+		if (chunk_size) frame.reset();
+		else if (sequence && !chunk_size) frame.reset();
+		if (!loop && loop_number) break;
 	}
 	if (keep_alive) while (still_running()) {
-		ThreadBase::sleep(latency);
+		ThreadBase::sleep(get_latency());
 	}
-	IO_THREAD_POST_RUN
+	request_end();
+//	IO_THREAD_POST_RUN
 }
 
 bool RawFileSource::read_chunk()
@@ -117,42 +115,64 @@ bool RawFileSource::read_chunk()
 		}
 		yuri::size_t length = chunk_size;
 		std::vector<yuri::size_t> planes= {length};
-		FormatInfo_t fi = core::BasicPipe::get_format_info(output_format);
-		if (output_format != YURI_FMT_NONE && fi && !fi->compressed && width && height) {
+//		if (frame_type_ == frame_type_t::compressed_viceo) {
+//
+//
+//		} else
 
-			// Known raw format. I can guess the chunk_size.
-			length = (width*height*fi->bpp)>>3;
-			if (fi->planes>1)
-			{
+		if (frame_type_ == frame_type_t::raw_video && width && height) {
+			const auto& fi = core::raw_format::get_format_info(output_format);
+			const auto bd = fi.planes[0].bit_depth;
+			length = width*bd.first/bd.second/8;
+			if (fi.planes.size() > 1) {
 				planes.clear();
-				for (yuri::size_t i=0;i<fi->planes;++i)
+				for (yuri::size_t i=0;i<fi.planes.size();++i)
 				{
-					planes.push_back((width*height*fi->component_depths[i]/fi->plane_x_subs[i]/fi->plane_y_subs[i])>>3);
+					const auto& p = fi.planes[i];
+					planes.push_back(length / p.sub_x / p.sub_y);
 				}
-
-			} else planes={length};
-			log[log::debug] << "Guessed size for " << fi->long_name << " is " << length<<std::endl;
+			} else {
+				planes = {length};
+			}
 		} else if (!chunk_size) {
 			file.seekg(0,std::ios_base::end);
 			length = static_cast<yuri::size_t>(file.tellg()) - position;
 			file.seekg(position,std::ios_base::beg);
 			planes={length};
 		}
-		frame.reset(new core::BasicFrame(planes.size()));
-		//(*frame)[0].set(data,length);
-		for (yuri::size_t i=0;i<planes.size();++i) {
-			yuri::size_t plane_length = planes[i];
-			std::istreambuf_iterator<char> it(file);
-			frame->get_plane(i).resize(plane_length);
-//			std::copy(it,it+plane_length,std::back_inserter(frame->get_plane(0)));
-//			shared_array<yuri::ubyte_t> data = IOThread::allocate_memory_block(plane_length,true);
 
-			file.read(reinterpret_cast<char*>(PLANE_RAW_DATA(frame,i)),plane_length);
-			if (static_cast<yuri::size_t>(file.gcount()) != plane_length ) {
+		if (frame_type_ == frame_type_t::raw_video) {
+			auto rframe = core::RawVideoFrame::create_empty(output_format, {width, height});
+			frame = rframe;
+			for (yuri::size_t i=0;i<planes.size();++i) {
+				const yuri::size_t plane_length = planes[i];
+				std::istreambuf_iterator<char> it(file);
+
+				file.read(reinterpret_cast<char*>(PLANE_RAW_DATA(rframe,i)),std::min(plane_length, PLANE_DATA(rframe,i).size()));
+				if (static_cast<yuri::size_t>(file.gcount()) != plane_length ) {
+					if (first_read) {
+						if (!sequence || sequence_pos==0) {
+							failed_read=true;
+							log[log::warning]<< "Wrong length of the file (read " << file.gcount() << ", expected " << plane_length << ")";
+						} else {
+							sequence_pos = 0;
+						}
+					}
+					file.close();
+					frame.reset();++loop_number;
+					return !failed_read;
+				}
+			}
+
+		} else if (frame_type_ == frame_type_t::compressed_viceo) {
+			auto cframe = core::CompressedVideoFrame::create_empty(output_format, resolution_t{width, height}, length);
+			frame = cframe;
+			file.read(reinterpret_cast<char*>(cframe->get_data().data()), length);
+			if (static_cast<yuri::size_t>(file.gcount()) != length ) {
 				if (first_read) {
 					if (!sequence || sequence_pos==0) {
 						failed_read=true;
-						log[log::warning]<< "Wrong length of the file (read " << file.gcount() << ", expected " << plane_length << ")" << std::endl;
+						log[log::warning]<< "Wrong length of the file (read " << file.gcount() << ", expected " << length << ")";
 					} else {
 						sequence_pos = 0;
 					}
@@ -161,7 +181,7 @@ bool RawFileSource::read_chunk()
 				frame.reset();++loop_number;
 				return !failed_read;
 			}
-//			(*frame)[i].set(data,plane_length);
+
 		}
 		if (file.eof()) {
 			log[log::info] << "EOF";
@@ -172,7 +192,7 @@ bool RawFileSource::read_chunk()
 		}
 		//frame.reset(new BasicFrame(1));
 		//(*frame)[0].set(data,length);
-		frame->set_parameters(output_format, width, height);
+//		frame->set_parameters(output_format, width, height);
 	}
 	catch (std::exception &e) {
 		frame.reset();
@@ -180,8 +200,8 @@ bool RawFileSource::read_chunk()
 			sequence_pos = 0;
 			return true;
 		}
-		log[log::error] << "Failed to process file " << params["path"].get<std::string>()
-				<< " (" << e.what() << ")"<<std::endl;
+		log[log::error] << "Failed to process file " << path
+				<< " (" << e.what() << ")";
 		failed_read=true;
 		return false;
 	}
@@ -189,31 +209,39 @@ bool RawFileSource::read_chunk()
 }
 bool RawFileSource::set_param(const core::Parameter &parameter)
 {
-	if (parameter.name == "chunk") {
+	if (parameter.get_name() == "chunk") {
 		chunk_size=parameter.get<yuri::size_t>();
-	} else if (parameter.name == "fps") {
+	} else if (parameter.get_name() == "fps") {
 		fps=parameter.get<double>();
-	} else if (parameter.name == "width") {
+	} else if (parameter.get_name() == "width") {
 		width=parameter.get<yuri::size_t>();
-	} else if (parameter.name == "height") {
+	} else if (parameter.get_name() == "height") {
 		height=parameter.get<yuri::size_t>();
-	} else if (parameter.name == "output_format") {
-		output_format = core::BasicPipe::get_format_from_string(parameter.get<std::string>());
+	} else if (parameter.get_name() == "format") {
+		auto fmt_string = parameter.get<std::string>();
+
+		if ((output_format = core::raw_format::parse_format(fmt_string))) {
+			frame_type_ = frame_type_t::raw_video;
+		} else if ((output_format = core::compressed_frame::parse_format(fmt_string)))  {
+			frame_type_ = frame_type_t::compressed_viceo;
+		} else {
+			frame_type_ = frame_type_t::unknown;
+		}
 		log[log::info] << "output format " << output_format << std::endl;
-	} else if (parameter.name == "path") {
+	} else if (parameter.get_name() == "path") {
 		path=parameter.get<std::string>();
 		if (path.find("%")!=std::string::npos) {
 			sequence = true;
 		}
-	} else if (parameter.name == "keep_alive") {
+	} else if (parameter.get_name() == "keep_alive") {
 		keep_alive=parameter.get<bool>();
-	} else if (parameter.name == "offset") {
+	} else if (parameter.get_name() == "offset") {
 		position=parameter.get<yuri::size_t>();
-	} else if (parameter.name == "loop") {
+	} else if (parameter.get_name() == "loop") {
 		loop=parameter.get<bool>();
-	} else if (parameter.name == "block") {
-		block=parameter.get<usize_t>();
-	} else return IOThread::set_param(parameter);
+	} else if (parameter.get_name() == "block") {
+		block=parameter.get<size_t>();
+	} else return base_type::set_param(parameter);
 	return true;
 }
 
