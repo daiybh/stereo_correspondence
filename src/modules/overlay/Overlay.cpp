@@ -256,13 +256,44 @@ public combine_base<2, 3, 3, yuv444, 2> {
 	static void compute
 (plane_t::const_iterator& , plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 {
-	*dest_pix++ =*(ovr_pix+0);
-	*dest_pix++ =*(ovr_pix+1);
-	*dest_pix++ =*(ovr_pix+3);
-	*dest_pix++ =*(ovr_pix+2);
-	*dest_pix++ =*(ovr_pix+1);
-	*dest_pix++ =*(ovr_pix+3);
-	ovr_pix+=4;
+	std::copy(ovr_pix, ovr_pix+6, dest_pix);
+	ovr_pix+=6;
+	dest_pix+=6;
+//	*dest_pix++ =*(ovr_pix+0);
+//	*dest_pix++ =*(ovr_pix+1);
+//	*dest_pix++ =*(ovr_pix+3);
+//	*dest_pix++ =*(ovr_pix+2);
+//	*dest_pix++ =*(ovr_pix+1);
+//	*dest_pix++ =*(ovr_pix+3);
+//	ovr_pix+=4;
+}
+};
+
+template<>
+struct combine_kernel<yuyv422, yuva4444>:
+public combine_base<2, 4, 4, yuva4444, 2> {
+	static void compute
+(plane_t::const_iterator& src_pix, plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
+{
+	const double alpha = ovr_pix[3]/255.0;
+	const double minus_alpha = 1.0 - alpha;
+
+//	std::fill(dest_pix, dest_pix+4, 0);
+
+	*dest_pix++ =static_cast<uint8_t>((minus_alpha * *src_pix++) + (*ovr_pix++ * alpha));
+	const uint8_t u = *src_pix++;
+	*dest_pix++ =static_cast<uint8_t>((minus_alpha * u) + (*ovr_pix++ * alpha));
+	const uint8_t y2 = *src_pix++;
+	const uint8_t v = *src_pix++;
+	*dest_pix++ =static_cast<uint8_t>((minus_alpha * v) + (*ovr_pix++ * alpha));
+	*dest_pix++ = 255;
+	ovr_pix++;
+
+	*dest_pix++ =static_cast<uint8_t>((minus_alpha * y2) + (*ovr_pix++ * alpha));
+	*dest_pix++ =static_cast<uint8_t>((minus_alpha * u) + (*ovr_pix++ * alpha));
+	*dest_pix++ =static_cast<uint8_t>((minus_alpha * v) + (*ovr_pix++ * alpha));
+	*dest_pix++ = 255;
+	ovr_pix++;
 }
 };
 template<format_t f>
@@ -292,6 +323,8 @@ core::pRawVideoFrame dispatch2_yuv(Overlay& overlay, const core::pRawVideoFrame&
 			return overlay.combine<combine_kernel<f, yuyv422> >(frame_0, frame_1);
 		case yuv444:
 			return overlay.combine<combine_kernel<f, yuv444> >(frame_0, frame_1);
+		case yuva4444:
+			return overlay.combine<combine_kernel<f, yuva4444> >(frame_0, frame_1);
 		default:
 			break;
 	}
@@ -381,13 +414,9 @@ core::pRawVideoFrame Overlay::combine(const core::pRawVideoFrame& frame_0, const
 	}
 	return outframe;
 }
-//std::vector<core::pFrame> Overlay::do_single_step(const std::vector<core::pFrame>& frames)
 std::vector<core::pFrame> Overlay::do_special_step(const param_type& frames)
 {
 	process_events();
-//	assert(frames.size() == 2);
-//	core::pRawVideoFrame f0 = dynamic_pointer_cast<core::RawVideoFrame>(frames[0]);
-//	core::pRawVideoFrame f1 = dynamic_pointer_cast<core::RawVideoFrame>(frames[1]);
 	core::pRawVideoFrame f0 = std::get<0>(frames);
 	core::pRawVideoFrame f1 = std::get<1>(frames);
 	if (!f0 || !f1) return {};
