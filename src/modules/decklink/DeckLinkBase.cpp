@@ -16,6 +16,7 @@
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/utils.h"
+#include <cstdlib>
 namespace yuri {
 
 namespace decklink {
@@ -26,7 +27,7 @@ struct compare_insensitive
 {
 	bool operator()(const std::string& a, const std::string& b) const
 	{
-		return iequals(a,b);
+		return iless(a,b);
 	}
 };
 
@@ -111,8 +112,8 @@ core::Parameters DeckLinkBase::configure()
 
 BMDDisplayMode parse_format(const std::string& fmt)
 {
-//	boost::algorithm::to_lower(fmt);
-	if (mode_strings.count(fmt)) return mode_strings[fmt];
+	auto it = mode_strings.find(fmt);
+	if (it != mode_strings.end()) return it->second;
 
 	return bmdModeUnknown;
 }
@@ -193,7 +194,7 @@ bool DeckLinkBase::set_param(const core::Parameter &p)
 			mode = m;
 			actual_format_is_psf = is_psf(p.get<std::string>());
 		}
-
+		log[log::info] << "Using " << get_mode_name(mode) << " (parsed from " << p.get<std::string>() <<")";
 	} else if (iequals(p.get_name(), "audio")) {
 		audio_enabled=p.get<bool>();
 	} else if (iequals(p.get_name(), "pixel_format")) {
@@ -243,29 +244,28 @@ bool DeckLinkBase::init_decklink()
 	device->GetDisplayName(&device_name);
 	if (device_name) {
 		log[log::info] << "Using blackmagic device: " << device_name << std::endl;
-		delete device_name;
+		std::free (const_cast<char*>(device_name)); // Calling free becaus it's allocated inside decklink api using malloc
 	}
 	return true;
 }
 std::string DeckLinkBase::get_mode_name(BMDDisplayMode mode, bool psf)
 {
-	for (auto it=mode_strings.begin();
-			it!=mode_strings.end();++it) {
-		if (it->second == mode) {
+	for (auto it: mode_strings) {
+		if (it.second == mode) {
 			if (psf) {
-				if (progresive_to_psf.count(it->first)) {
-					return progresive_to_psf[it->first];
+				if (progresive_to_psf.count(it.first)) {
+					return progresive_to_psf[it.first];
 				}
 			}
-			return it->first;
+			return it.first;
 		}
 	}
 	return std::string();
 }
 bool DeckLinkBase::is_psf(const std::string& name)
 {
-	for (auto it=progresive_to_psf.begin();it!=progresive_to_psf.end();++it) {
-		if (it->second == name) return true;
+	for (auto it: progresive_to_psf) {
+		if (it.second == name) return true;
 	}
 	return false;
 }

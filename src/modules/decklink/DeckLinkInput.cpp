@@ -106,7 +106,6 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 	int res = S_OK;
 	log[log::debug] << "VideoInputFrameArrived" << "\n";
 	if (videoFrame->GetFlags()&bmdFrameHasNoInputSource) {
-		//LOG(log,warning,"No input detected");
 		log[log::warning] << "No input detected" << "\n";
 		if (manual_detect_format && ++manual_detect_timeout>manual_detect_format) {
 			BMDDisplayMode orig_mode = mode;
@@ -125,30 +124,18 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 			current_format_name_ = get_mode_name(mode);
 		}
 
-	} else /*if (out[0] && out[1])*/ {
+	} else {
 		uint8_t *data;
 		core::pRawVideoFrame frame;
 		yuri::format_t output_format = convert_bm_to_yuri(pixel_format);
-//		core::pFrameInfo frame_info = yuri::make_shared<core::FrameInfo>();
-//		frame_info->format = current_format_name_;
-		//if (pixel_format_map.count(pixel_format)) output_format = pixel_format_map[pixel_format];
 
 		if (videoFrame->GetBytes(reinterpret_cast<void**>(&data))!=S_OK) {
 			log[log::error] << "Failed to get data from frame" << "\n";
 			return S_OK;
 		} else {
 			yuri::size_t data_size = videoFrame->GetRowBytes() * height;
-//			log[log::info] << "Allocating " << data_size << " bytes for " << height << " lines, " << videoFrame->GetRowBytes() << " bytes each" << "\n";
+			//log[log::info] << "Copying " << data_size << " bytes for " << height << " lines, " << videoFrame->GetRowBytes() << " bytes each";
 			frame = core::RawVideoFrame::create_empty(output_format, {width, height}, data, data_size);
-					//allocate_frame_from_memory(data,data_size);
-//			if (output_format==YURI_FMT_YUV422) {
-//				uint8_t *dta = PLANE_RAW_DATA(frame,0);
-//				uint8_t *dta_end=dta+data_size;
-//				while (dta<dta_end) {
-//					swap(*dta,*(dta+1));
-//					dta+=2;
-//				}
-//			}
 		}
 		if (audioPacket && audio_pipe>=0) {
 			yuri::size_t samples = audioPacket->GetSampleFrameCount();
@@ -186,13 +173,6 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 			} else {
 				yuri::size_t data_size = rightframe->GetRowBytes() * height;
 				core::pRawVideoFrame frame2 = core::RawVideoFrame::create_empty(output_format, {width, height}, data2,data_size);
-//				uint8_t *dta = PLANE_RAW_DATA(frame2,0);
-//				uint8_t *dta_end=dta+data_size;
-//				while (dta<dta_end) {
-//					swap(*dta,*(dta+1));
-//					dta+=2;
-//				}
-//				frame2->set_info(frame_info);
 				if (output_format) push_frame(1,frame2);//,output_format,width,height,0,1e6*value/scale,0);
 				videoFrame->Release();
 //				ext->Release();
