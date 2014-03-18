@@ -59,7 +59,7 @@ ids(""),flags(info),output_flags(info),quiet(false)
 /**
  * Destroys an instance
  */
-Log::~Log()
+Log::~Log() noexcept
 {
 	(*this)[verbose_debug] << "Destroying logger " << uid;
 }

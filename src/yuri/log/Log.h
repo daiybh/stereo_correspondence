@@ -54,7 +54,7 @@ public:
 	Log(std::ostream &out);
 	//! Constructs Log instance as a copy of @em log, with a new id
 	Log(const Log& log);
-	virtual ~Log();
+	virtual ~Log() noexcept;
 	void set_id(int id);
 	void set_label(std::string s);
 	void set_flags(int f) { output_flags=f; }

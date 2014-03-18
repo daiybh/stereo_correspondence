@@ -43,6 +43,7 @@ struct guarded_stream {
 		return *this;
 	}
 	guarded_stream(stream_t& str):str_(str) {}
+	~guarded_stream() noexcept {}
 	char_t widen(char c) { return str_.widen(c); }
 private:
 	stream_t& str_;
@@ -106,7 +107,7 @@ public:
 		else return *this << manip;
 	}
 
-	~LogProxy() {
+	~LogProxy() noexcept {
 #if 0 && __cplusplus >=201103L
 		const std::string msg = buffer_.str();
 		if (!dummy_) std::async([&msg,this](){stream_.write(msg);});
