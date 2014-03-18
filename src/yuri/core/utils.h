@@ -84,6 +84,27 @@ bool iequals(const std::basic_string<Char, traits>& a, const Char *b)
 }
 
 
+template<class Char, class traits>
+bool iless(const std::basic_string<Char, traits>& a, const std::basic_string<Char, traits>& b)
+{
+	if (a.size() != b.size()) return a.size() < b.size();
+	auto ai = a.cbegin();
+	auto bi = b.cbegin();
+	while (ai!=a.cend()) {
+		const auto& au = std::toupper(*ai++);
+		const auto& bu = std::toupper(*bi++);
+		if (au < bu) return true;
+		if (au > bu) return false;
+	}
+	return false;
+}
+template<class Char, class traits>
+bool iless(const std::basic_string<Char, traits>& a, const Char *b)
+{
+	return iless(a, std::basic_string<Char, traits>(b));
+}
+
+
 template<class T>
 class SingletonBase: public T {
 public:
