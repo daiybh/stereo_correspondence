@@ -130,6 +130,12 @@ IF(${SAGE_FOUND})
 	add_subdirectory(sage)
 ENDIF()
 
+pkg_check_modules(JACK jack)
+IF(${JACK_FOUND})
+    add_subdirectory(jack)
+ENDIF()
+
+
 IF (Boost_REGEX_FOUND)
 	add_subdirectory(rawfilesource)
 ENDIF()
