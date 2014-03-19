@@ -194,9 +194,9 @@ struct simple_kernel<core::raw_format::yuv444, diff_method> {
 			*dest_pix++=255;
 		}
 	}
-	static ssize_t difference(core::RawVideoFrame::value_type::const_iterator data, uint8_t y, uint8_t u, uint8_t v, int)
+	static ssize_t difference(core::RawVideoFrame::value_type::const_iterator data, uint8_t y, uint8_t u, uint8_t v, int y_cutoff)
 	{
-		return diff_method::combine(diff(*(data+0)/2+*(data+0)/2,y)/10, diff(*(data+1),u), diff(*(data+3),v));
+		return diff_method::combine(diff(*(data+0),y)/y_cutoff, diff(*(data+1),u), diff(*(data+3),v));
 	}
 };
 template<class diff_method>
@@ -228,7 +228,7 @@ struct simple_kernel<core::raw_format::yuva4444, diff_method> {
 	}
 	static ssize_t difference(core::RawVideoFrame::value_type::const_iterator data, uint8_t y, uint8_t u, uint8_t v, int y_cutoff)
 	{
-		return diff_method::combine(diff(*(data+0)/2+*(data+0)/2,y)/y_cutoff, diff(*(data+1),u), diff(*(data+3),v));
+		return diff_method::combine(diff(*(data+0),y)/y_cutoff, diff(*(data+1),u), diff(*(data+3),v));
 	}
 };
 template<class diff_method>
@@ -279,7 +279,7 @@ struct simple_kernel<core::raw_format::yuyv422, diff_method> {
 	}
 	static ssize_t difference(core::RawVideoFrame::value_type::const_iterator data, uint8_t y, uint8_t u, uint8_t v, int y_cutoff)
 	{
-		return diff_method::combine(diff(*(data+0)/2+*(data+0)/2,y)/y_cutoff, diff(*(data+1),u), diff(*(data+3),v));
+		return diff_method::combine(diff(*(data+0)/2+*(data+2)/2,y)/y_cutoff, diff(*(data+1),u), diff(*(data+3),v));
 	}
 };
 
