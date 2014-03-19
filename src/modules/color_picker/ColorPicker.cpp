@@ -13,6 +13,7 @@
 #include "yuri/core/frame/raw_frame_types.h"
 
 #include <numeric>
+#include <array>
 namespace yuri {
 namespace color_picker {
 
