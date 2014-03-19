@@ -73,7 +73,7 @@ format_(0),device_name_("default"),channels_(0),sampling_rate_(0)
 
 AlsaOutput::~AlsaOutput() noexcept
 {
-	error_call(snd_pcm_close (handle_), 	"Failed to close the device");
+	if (handle_) error_call(snd_pcm_close (handle_), 	"Failed to close the device");
 }
 
 bool AlsaOutput::is_different_format(const core::pRawAudioFrame& frame)
