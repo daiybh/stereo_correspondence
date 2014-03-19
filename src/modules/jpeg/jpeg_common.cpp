@@ -38,11 +38,13 @@ using namespace yuri::core::raw_format;
 std::unordered_map<J_COLOR_SPACE, format_t> jpeg_to_yuri_formats = {
 		{JCS_GRAYSCALE, 	y8},
 		{JCS_RGB, 			rgb24},
+#if defined(JCS_EXTENSIONS) && defined(JCS_ALPHA_EXTENSIONS)
 		{JCS_EXT_BGR,		bgr24},
 		{JCS_EXT_RGBA, 		rgba32},
 		{JCS_EXT_BGRA, 		bgra32},
 		{JCS_EXT_ABGR, 		abgr32},
 		{JCS_EXT_ARGB, 		argb32},
+#endif
 		{JCS_YCbCr,			yuv444},
 };
 

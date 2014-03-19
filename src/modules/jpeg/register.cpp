@@ -20,22 +20,25 @@ MODULE_REGISTRATION_BEGIN("jpeg")
 		REGISTER_IOTHREAD("jpeg_encoder",JpegEncoder)
 
 		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::rgb24, "jpeg_decoder", 30)
-		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::bgr24, "jpeg_decoder", 30)
 		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::yuv444, "jpeg_decoder", 25)
 		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::y8, "jpeg_decoder", 35)
+#if defined(JCS_EXTENSIONS) && defined(JCS_ALPHA_EXTENSIONS)
+		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::bgr24, "jpeg_decoder", 30)
 
 		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::rgba32, "jpeg_decoder", 30)
 		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::argb32, "jpeg_decoder", 30)
 		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::bgra32, "jpeg_decoder", 30)
 		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::abgr32, "jpeg_decoder", 30)
-
+#endif
 
 		REGISTER_CONVERTER(raw_format::rgb24, compressed_frame::jpeg, "jpeg_encoder", 200)
+#if defined(JCS_EXTENSIONS) && defined(JCS_ALPHA_EXTENSIONS)
 		REGISTER_CONVERTER(raw_format::bgr24, compressed_frame::jpeg, "jpeg_encoder", 200)
 		REGISTER_CONVERTER(raw_format::rgba32, compressed_frame::jpeg, "jpeg_encoder", 200)
 		REGISTER_CONVERTER(raw_format::bgra32, compressed_frame::jpeg, "jpeg_encoder", 200)
 		REGISTER_CONVERTER(raw_format::abgr32, compressed_frame::jpeg, "jpeg_encoder", 200)
 		REGISTER_CONVERTER(raw_format::argb32, compressed_frame::jpeg, "jpeg_encoder", 200)
+#endif
 		REGISTER_CONVERTER(raw_format::yuv444, compressed_frame::jpeg, "jpeg_encoder", 200)
 		REGISTER_CONVERTER(raw_format::y8, compressed_frame::jpeg, "jpeg_encoder", 200)
 
