@@ -145,6 +145,7 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 					log[log::error] << "Failed to get data for audio samples! (" << bmerr(res)<<")" << "\n";
 				} else {
 					core::pRawAudioFrame audio_frame = core::RawAudioFrame::create_empty(core::raw_audio_format::signed_16bit, audio_channels, 48000, audio_data ,samples*audio_channels*2);
+					push_frame(audio_pipe, audio_frame);
 //					push_audio_frame(audio_pipe,audio_frame,YURI_AUDIO_PCM_S16_LE,audio_channels,samples,0,0,0);
 				}
 			} else {
