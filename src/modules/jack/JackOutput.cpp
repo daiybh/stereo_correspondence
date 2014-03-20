@@ -25,6 +25,8 @@ core::Parameters JackOutput::configure()
 {
 	core::Parameters p = base_type::configure();
 	p.set_description("JackOutput");
+	p["channels"]["Number of output channels"]=2;
+	p["allow_different_frequencies"]["Ignore sampling frequency from input frames"]=false;
 	return p;
 }
 
@@ -62,79 +64,125 @@ std::string get_error_string(jack_status_t err)
 	return "Unknown";
 }
 
+int process_audio_wrapper(jack_nframes_t nframes, void *arg)
+{
+	auto j = reinterpret_cast<JackOutput*>(arg);
+	return j->process_audio(nframes);
+}
+
 }
 
 
 JackOutput::JackOutput(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("jack_output")),handle_(nullptr),
-port_(nullptr),client_name_("yuri_jack"),port_name_("output")
+client_name_("yuri_jack"),channels_(2),allow_different_frequencies_(false),buffer_size_(1048576)
 {
 	IOTHREAD_INIT(parameters)
+	if (channels_ < 1) {
+		throw exception::InitializationFailed("Invalid number of channels");
+	}
 	jack_status_t status;
-	handle_ = jack_client_open(client_name_.c_str(), JackNullOption, &status);
+	handle_ = {jack_client_open(client_name_.c_str(), JackNullOption, &status),[](jack_client_t*p){if(p)jack_client_close(p);}};
 	if (!handle_) throw exception::InitializationFailed("Failed to connect to JACK server: " + get_error_string(status));
 
 	if (status & JackServerStarted) {
 		log[log::info] << "Jack server was started";
 	}
 	if (status&JackNameNotUnique) {
-		client_name_ = jack_get_client_name(handle_);
+		client_name_ = jack_get_client_name(handle_.get());
 		log[log::warning] << "Client name wasn't unique, we got new name from server instead: '" << client_name_ << "'";
 	}
 	log[log::info] << "Connected to JACK server";
 
-	port_ = jack_port_register (handle_, port_name_.c_str(),  JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
-	if (!port_) {
-		jack_client_close(handle_);
-		throw exception::InitializationFailed("Failed to allocate output port");
+	buffers_.resize(channels_, buffer_t<jack_default_audio_sample_t>(buffer_size_));
+
+	if (jack_set_process_callback (handle_.get(), process_audio_wrapper, this)  !=0) {
+		log[log::error] << "Failed to set process callback!";
 	}
 
-	// SET CALLBACKS
-
-	if (jack_activate (handle_)!=0) {
-		jack_port_unregister(handle_,port_);
-		jack_client_close(handle_);
-		throw exception::InitializationFailed("Failed to allocate output port");
+	for (size_t i=0;i<channels_;++i) {
+		std::string port_name = "output" + lexical_cast<std::string>(i);
+		auto port = jack_port_register (handle_.get(), port_name.c_str(),  JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+		if (!port) {
+			throw exception::InitializationFailed("Failed to allocate output port");
+		}
+		ports_.push_back({port,[&](jack_port_t*p){if(p)jack_port_unregister(handle_.get(),p);}});
+		log[log::info] << "Opened port " << port_name;
 	}
 
-	const char **ports = jack_get_ports (handle_, nullptr, nullptr, JackPortIsPhysical|JackPortIsInput);
+	if (jack_activate (handle_.get())!=0) {
+		throw exception::InitializationFailed("Failed to allocate output port");
+	}
+	log[log::info] << "client activated";
+	const char **ports = jack_get_ports (handle_.get(), nullptr, nullptr, JackPortIsPhysical|JackPortIsInput);
 	if (!ports) {
 		log[log::warning] << "No physical output ports";
 	} else {
-		if (jack_connect (handle_, jack_port_name (port_), ports[0])) {
-			log[log::warning] << "Failed connect to output port";
+		for (size_t i=0;i<ports_.size();++i) {
+			if (!ports[i]) break;
+			if (jack_connect (handle_.get(), jack_port_name (ports_[i].get()), ports[i])) {
+				log[log::warning] << "Failed connect to output port " << i;
+			} else {
+				log[log::info] << "Connected port " << jack_port_name (ports_[i].get()) << " to " << ports[i];
+			}
 		}
-		std::free (ports);
+		jack_free (ports);
 	}
-
 }
 
 JackOutput::~JackOutput() noexcept
 {
-	if (handle_) jack_client_close(handle_);
 }
 
 core::pFrame JackOutput::do_special_single_step(const core::pRawAudioFrame& frame)
 {
-	jack_default_audio_sample_t *out;
-	size_t nframes = frame->get_sample_count();// * frame->get_channel_count();
-	out = reinterpret_cast<jack_default_audio_sample_t *>(jack_port_get_buffer (port_, nframes));
-
-	const int16_t * in_frames = reinterpret_cast<const int16_t*>(frame->data());
-
-	for (size_t i = 0; i< nframes;++i) {
-		*out++ = static_cast<jack_default_audio_sample_t>(*in_frames)/32768.0;
-		in_frames+=frame->get_channel_count();
+	jack_nframes_t sample_rate =  jack_get_sample_rate(handle_.get());
+	if (sample_rate != frame->get_sampling_frequency() && !allow_different_frequencies_) {
+		log[log::warning] << "Frame has different sampling rate than JACKd, ignoring";
+		return {};
 	}
 
-//	int16_t
-//	memcpy (out, in,
-//			sizeof (jack_default_audio_sample_t) * nframes);
+	size_t nframes = frame->get_sample_count();
+	const int16_t * in_frames = reinterpret_cast<const int16_t*>(frame->data());
+
+	const size_t in_channels = frame->get_channel_count();
+	const size_t copy_channels = std::min(in_channels, ports_.size());
+
+	std::unique_lock<std::mutex> lock(data_mutex_);
+	if (copy_channels < ports_.size()) {
+		for (size_t c=0;c<(ports_.size()-copy_channels);++c) {
+			buffers_[c+copy_channels].push_silence(nframes);
+		}
+	}
+	for (size_t i = 0; i< nframes;++i) {
+		for (size_t c=0;c<copy_channels;++c) {
+			buffers_[c].push(static_cast<jack_default_audio_sample_t>(*(in_frames+c))/std::numeric_limits<int16_t>::max());
+		}
+		in_frames+=in_channels;
+	}
+
 	return {};
+}
+
+int JackOutput::process_audio(jack_nframes_t nframes)
+{
+	std::unique_lock<std::mutex> lock(data_mutex_);
+	size_t copy_count = std::min<size_t>(buffers_[0].size(), nframes);
+	for (size_t i=0;i<buffers_.size();++i) {
+		if (!ports_[i]) continue;
+		jack_default_audio_sample_t* data = reinterpret_cast<jack_default_audio_sample_t *>(jack_port_get_buffer (ports_[i].get(), nframes));
+		buffers_[i].pop(data,copy_count);
+	}
+	return 0;
 }
 bool JackOutput::set_param(const core::Parameter& param)
 {
-	return base_type::set_param(param);
+	if (param.get_name() == "channels") {
+		channels_ = param.get<size_t>();
+	} else if (param.get_name() == "allow_different_frequencies") {
+		allow_different_frequencies_ = param.get<bool>();
+	} else return base_type::set_param(param);
+	return true;
 }
 
 } /* namespace jack_output */
