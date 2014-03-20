@@ -9,6 +9,7 @@
 
 #include "JackOutput.h"
 #include "yuri/core/Module.h"
+#include "yuri/core/frame/raw_audio_frame_types.h"
 #include <cstdlib>
 
 namespace yuri {
@@ -71,6 +72,65 @@ int process_audio_wrapper(jack_nframes_t nframes, void *arg)
 	auto j = reinterpret_cast<JackOutput*>(arg);
 	return j->process_audio(nframes);
 }
+
+template<typename Target, typename Source>
+Target convert_sample(Source);
+
+
+template<>
+float convert_sample(int16_t value)
+{
+	return static_cast<float>(value)/std::numeric_limits<int16_t>::max();
+}
+template<>
+float convert_sample(int32_t value)
+{
+	return static_cast<float>(value)/std::numeric_limits<int32_t>::max();
+}
+template<>
+float convert_sample(uint8_t value)
+{
+	return 2.0f*static_cast<float>(value)/std::numeric_limits<uint8_t>::max()-1.0;
+}
+template<>
+float convert_sample(uint16_t value)
+{
+	return 2.0f*static_cast<float>(value)/std::numeric_limits<uint16_t>::max()-1.0;
+}
+template<>
+float convert_sample(uint32_t value)
+{
+	return 2.0f*static_cast<float>(value)/std::numeric_limits<uint32_t>::max()-1.0;
+}
+template<>
+float convert_sample(float value)
+{
+	return value;
+}
+
+
+
+
+
+
+template<typename Target, class Source, typename src_fmt>
+void store_samples(std::vector<buffer_t<Target>>& buffers, const src_fmt* in, size_t nframes, size_t in_channels)
+{
+	const Source* in_frames = reinterpret_cast<const Source*>(in);
+	const size_t copy_channels = std::min(in_channels, buffers.size());
+	if (copy_channels < buffers.size()) {
+		for (size_t c=0;c<(buffers.size()-copy_channels);++c) {
+			buffers[c+copy_channels].push_silence(nframes);
+		}
+	}
+	for (size_t i = 0; i< nframes;++i) {
+		for (size_t c=0;c<copy_channels;++c) {
+			buffers[c].push(convert_sample<Target>(*(in_frames+c)));
+		}
+		in_frames+=in_channels;
+	}
+}
+
 
 }
 
@@ -135,6 +195,9 @@ client_name_("yuri_jack"),channels_(2),allow_different_frequencies_(false),buffe
 		}
 		jack_free (ports);
 	}
+
+	using namespace core::raw_audio_format;
+	set_supported_formats({unsigned_8bit, unsigned_16bit, unsigned_32bit, signed_16bit, signed_32bit, float_32bit});
 }
 
 JackOutput::~JackOutput() noexcept
@@ -150,22 +213,35 @@ core::pFrame JackOutput::do_special_single_step(const core::pRawAudioFrame& fram
 	}
 
 	size_t nframes = frame->get_sample_count();
-	const int16_t * in_frames = reinterpret_cast<const int16_t*>(frame->data());
+//	const int16_t * in_frames = reinterpret_cast<const int16_t*>(frame->data());
 
 	const size_t in_channels = frame->get_channel_count();
-	const size_t copy_channels = std::min(in_channels, ports_.size());
+
 
 	std::unique_lock<std::mutex> lock(data_mutex_);
-	if (copy_channels < ports_.size()) {
-		for (size_t c=0;c<(ports_.size()-copy_channels);++c) {
-			buffers_[c+copy_channels].push_silence(nframes);
-		}
-	}
-	for (size_t i = 0; i< nframes;++i) {
-		for (size_t c=0;c<copy_channels;++c) {
-			buffers_[c].push(static_cast<jack_default_audio_sample_t>(*(in_frames+c))/std::numeric_limits<int16_t>::max());
-		}
-		in_frames+=in_channels;
+	using namespace core::raw_audio_format;
+	switch (frame->get_format()) {
+		case unsigned_8bit:
+			store_samples<jack_default_audio_sample_t, uint8_t>(buffers_, frame->data(), nframes, in_channels);
+			break;
+		case signed_16bit:
+			store_samples<jack_default_audio_sample_t, int16_t>(buffers_, frame->data(), nframes, in_channels);
+			break;
+		case unsigned_16bit:
+			store_samples<jack_default_audio_sample_t, uint16_t>(buffers_, frame->data(), nframes, in_channels);
+			break;
+		case signed_32bit:
+			store_samples<jack_default_audio_sample_t, int32_t>(buffers_, frame->data(), nframes, in_channels);
+			break;
+		case unsigned_32bit:
+			store_samples<jack_default_audio_sample_t, uint32_t>(buffers_, frame->data(), nframes, in_channels);
+			break;
+		case float_32bit:
+			store_samples<jack_default_audio_sample_t, float>(buffers_, frame->data(), nframes, in_channels);
+			break;
+		default:
+			log[log::warning] << "Unsupported frame format";
+			break;
 	}
 
 	return {};
