@@ -1,6 +1,6 @@
 /*!
  * @file 		JackOutput.cpp
- * @author 		<Your name>
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
  * @date		19.03.2014
  * @copyright	Institute of Intermedia, 2013
  * 				Distributed BSD License
@@ -27,6 +27,8 @@ core::Parameters JackOutput::configure()
 	p.set_description("JackOutput");
 	p["channels"]["Number of output channels"]=2;
 	p["allow_different_frequencies"]["Ignore sampling frequency from input frames"]=false;
+	p["connect_to"]["Specify where to connect the outputs to (e.g. 'system')"]="";
+	p["buffer_size"]["Size of internal buffer"]=1048576;
 	return p;
 }
 
@@ -114,9 +116,14 @@ client_name_("yuri_jack"),channels_(2),allow_different_frequencies_(false),buffe
 		throw exception::InitializationFailed("Failed to allocate output port");
 	}
 	log[log::info] << "client activated";
-	const char **ports = jack_get_ports (handle_.get(), nullptr, nullptr, JackPortIsPhysical|JackPortIsInput);
+	const char **ports = nullptr;
+	if (connect_to_.empty()) {
+		ports = jack_get_ports (handle_.get(), nullptr, nullptr, JackPortIsPhysical|JackPortIsInput);
+	} else {
+		ports = jack_get_ports (handle_.get(), connect_to_.c_str(), nullptr, JackPortIsInput);
+	}
 	if (!ports) {
-		log[log::warning] << "No physical output ports";
+		log[log::warning] << "No suitable output ports found";
 	} else {
 		for (size_t i=0;i<ports_.size();++i) {
 			if (!ports[i]) break;
@@ -181,6 +188,10 @@ bool JackOutput::set_param(const core::Parameter& param)
 		channels_ = param.get<size_t>();
 	} else if (param.get_name() == "allow_different_frequencies") {
 		allow_different_frequencies_ = param.get<bool>();
+	} else if (param.get_name() == "connect_to") {
+		connect_to_ = param.get<std::string>();
+	} else if (param.get_name() == "buffer_size") {
+		buffer_size_ = param.get<size_t>();
 	} else return base_type::set_param(param);
 	return true;
 }

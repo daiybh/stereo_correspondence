@@ -1,6 +1,6 @@
 /*!
  * @file 		JackOutput.h
- * @author 		<Your name>
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
  * @date 		19.03.2014
  * @copyright	Institute of Intermedia, 2013
  * 				Distributed BSD License
@@ -81,11 +81,13 @@ private:
 	std::vector<port_t> ports_;
 	std::string client_name_;
 	std::string port_name_;
+	std::string connect_to_;
 	size_t channels_;
 	bool allow_different_frequencies_;
 	size_t buffer_size_;
 	std::vector<buffer_t<jack_default_audio_sample_t>> buffers_;
 	std::mutex	data_mutex_;
+
 
 
 };
