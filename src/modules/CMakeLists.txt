@@ -135,6 +135,11 @@ IF(${JACK_FOUND})
     add_subdirectory(jack)
 ENDIF()
 
+pkg_check_modules(SHOUT shout)
+IF(${SHOUT_FOUND})
+    add_subdirectory(shout_cast)
+ENDIF()
+
 pkg_check_modules(THEORAENC theoraenc)
 IF(${THEORAENC_FOUND})
     add_subdirectory(theora)
