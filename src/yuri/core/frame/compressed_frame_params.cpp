@@ -33,6 +33,8 @@ namespace {
 			{mpeg2ts,{mpeg2ts,"MPEG 2 Transport Stream", {"MPEG2TS","MPGTS","TS"}, {}}},
 			{huffyuv,{huffyuv,"HUFFYUV", {"HUFFYUV","HUFF"}, {}}},
 			{mpeg1,	{mpeg1,	"MPEG 1", {"MPEG1","MPG","MPEG"}, {}}},
+			{ogg,	{ogg,	"OGG", {"MPEG1"}, {"application/ogg"}}},
+			{theora,{theora,"THEORA", {"THEORA"}, {"video/theora"}}},
 	};
 
 	bool do_add_format(const compressed_frame_info_t& info)

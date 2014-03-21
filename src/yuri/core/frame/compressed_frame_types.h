@@ -30,6 +30,8 @@ const format_t mpeg2		= 0x10009;
 const format_t mpeg2ts		= 0x1000a;
 const format_t huffyuv		= 0x1000b;
 const format_t mpeg1		= 0x1000c;
+const format_t ogg			= 0x1000d;
+const format_t theora		= 0x1000e;
 
 const format_t user_start 	= 0x11000;
 
