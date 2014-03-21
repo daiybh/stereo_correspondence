@@ -98,7 +98,7 @@ protected:
 	size_t number_of_inputs;
 
 	size_t fps;
-	size_t frame_duration;
+	duration_t frame_duration;
 };
 
 }
