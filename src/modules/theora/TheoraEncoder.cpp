@@ -14,6 +14,9 @@
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
 #include "yuri/version.h"
+
+
+#include <theora/theoradec.h>
 namespace yuri {
 namespace theora {
 
@@ -65,7 +68,8 @@ void TheoraEncoder::process_packet(ogg_packet& packet)
 {
 	ogg_stream_packetin(&ogg_state_, &packet);
 	ogg_page page;
-	while(ogg_stream_pageout(&ogg_state_,&page)) {
+//	while(ogg_stream_pageout(&ogg_state_,&page)) {
+	while(ogg_stream_flush(&ogg_state_,&page)) {
 		auto frame  = core::CompressedVideoFrame::create_empty(core::compressed_frame::ogg, resolution_t{theora_info_.frame_width, theora_info_.frame_height}, page.body_len + page.header_len);
 		std::copy(page.header, page.header+page.header_len, frame->data());
 		std::copy(page.body, page.body+page.body_len, frame->data()+page.header_len);
@@ -83,6 +87,7 @@ bool TheoraEncoder::init_ctx(const core::pRawVideoFrame& frame)
 	}
 	const auto& res = frame->get_resolution();
 
+	th_info_init(&theora_info_);
 	theora_info_.frame_width = (res.width+15)&~0xF;
 	theora_info_.frame_height = (res.height+15)&~0xF;
 	theora_info_.pic_width = res.width;
@@ -91,15 +96,18 @@ bool TheoraEncoder::init_ctx(const core::pRawVideoFrame& frame)
 	theora_info_.pic_y = 0;
 	theora_info_.pixel_fmt = it->second;
 	theora_info_.colorspace = TH_CS_UNSPECIFIED;
-	theora_info_.quality=20;
-	theora_info_.target_bitrate=0;
+	theora_info_.quality=6;
+	theora_info_.target_bitrate=16000000; // 2MB/s
 
 	theora_info_.aspect_numerator = 1;
 	theora_info_.aspect_denominator = 1;
 
+	duration_t dur = frame->get_duration();
+	if (dur < 1_ms) dur = 100_ms;
+
 	// TODO set fps
-	theora_info_.fps_numerator = 0;
-	theora_info_.fps_denominator = 0;
+	theora_info_.fps_numerator = 1000;
+	theora_info_.fps_denominator = dur.value/(1_ms).value;
 
 	ctx_ = {th_encode_alloc(&theora_info_),[](th_enc_ctx* p){th_encode_free(p);}};
 	if (!ctx_) {
@@ -148,6 +156,7 @@ core::pFrame TheoraEncoder::do_special_single_step(const core::pRawVideoFrame& f
 	th_encode_ycbcr_in(ctx_.get(), buffer);
 
 	ogg_packet packet;
+
 	while (th_encode_packetout(ctx_.get(), 0, &packet)) {
 		process_packet(packet);
 	}
