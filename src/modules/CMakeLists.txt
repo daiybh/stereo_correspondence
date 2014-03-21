@@ -4,6 +4,7 @@ link_directories (${Boost_LIBRARY_DIRS})
 
 
 add_subdirectory(anaglyph)
+add_subdirectory(audio_noise)
 add_subdirectory(color_key)
 add_subdirectory(color_picker)
 add_subdirectory(combine)
