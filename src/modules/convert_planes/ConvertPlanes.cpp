@@ -24,9 +24,10 @@ core::pRawVideoFrame split_planes(core::pRawVideoFrame frame) {
 	typedef decltype(PLANE_DATA(frame_out,0).begin()) iter_t;
 	std::vector<iter_t> iters(planes);
 	iter_t iter_in = PLANE_DATA(frame, 0).begin();
-	iter_t iter_out = PLANE_DATA(frame_out, 0).begin();
+//	iter_t iter_out = PLANE_DATA(frame_out, 0).begin();
 	for (size_t i = 0; i < planes; ++i) {
-		iters[i]=iter_out+i;
+		//iters[i]=iter_out+i;
+		iters[i]=PLANE_DATA(frame_out, i).begin();
 	}
 	for (size_t line = 0; line < res.height; ++ line) {
 		for (size_t col = 0; col < res.width; ++col) {
@@ -230,7 +231,7 @@ core::pFrame dispatch(core::pRawVideoFrame frame, format_t target) {
 //	printf("BOO0\n");
 //	if (source == rgb24 && target == rgb24p) return split_planes<rgb24, rgb24p, 3>(frame);
 //	if (source == rgba32 && target == rgba32p) return split_planes<rgba32, rgba32p, 4>(frame);
-//	if (source == yuv444 && target == yuv444p) return split_planes<yuv444, yuv444p, 3>(frame);
+	if (source == yuv444 && target == yuv444p) return split_planes<yuv444, yuv444p, 3>(frame);
 //	if (source == yuv420p && target == yuv444) return merge_planes_sub3_xy<yuv420p, yuv444>(frame);
 //	if (source == yuv411p && target == yuyv422) return merge_planes_411p_422<yuv420p, yuyv422>(frame);
 	if (source == yuv420p && target == yuyv422) return merge_planes_420p_yuyv<yuv420p, yuyv422>(frame);
@@ -250,7 +251,7 @@ MODULE_REGISTRATION_BEGIN("convert_planar")
 		REGISTER_IOTHREAD("convert_planar",ConvertPlanes)
 //		REGISTER_CONVERTER(yuri::core::raw_format::rgb24, yuri::core::raw_format::rgb24p, "convert_planar", 5)
 //		REGISTER_CONVERTER(yuri::core::raw_format::rgba32, yuri::core::raw_format::rgba32p, "convert_planar", 5)
-//		REGISTER_CONVERTER(yuri::core::raw_format::yuv444, yuri::core::raw_format::yuv444p, "convert_planar", 5)
+		REGISTER_CONVERTER(yuri::core::raw_format::yuv444, yuri::core::raw_format::yuv444p, "convert_planar", 5)
 //		REGISTER_CONVERTER(yuri::core::raw_format::yuv420p, yuri::core::raw_format::yuv444, "convert_planar", 5)
 		REGISTER_CONVERTER(yuri::core::raw_format::yuv420p, yuri::core::raw_format::yuyv422, "convert_planar", 5)
 		REGISTER_CONVERTER(yuri::core::raw_format::yuv420p, yuri::core::raw_format::yvyu422, "convert_planar", 5)
