@@ -297,7 +297,6 @@ core::pFrame ConvertPlanes::do_convert_frame(core::pFrame input_frame, format_t 
 		log[log::warning] << "Got bad frame type!!";
 		return {};
 	}
-	log[log::info] << "Duration in " << frame->get_duration() << " |" << input_frame->get_duration();
 	return dispatch(frame, target_format);
 }
 bool ConvertPlanes::set_param(const core::Parameter& param)
