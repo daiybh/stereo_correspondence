@@ -103,7 +103,10 @@ bool TheoraEncoder::init_ctx(const core::pRawVideoFrame& frame)
 	theora_info_.aspect_denominator = 1;
 
 	duration_t dur = frame->get_duration();
-	if (dur < 1_ms) dur = 100_ms;
+	if (dur < 1_ms) {
+		log[log::warning] << "No duration set in incoming frame. Assuming 10fps.";
+		dur = 100_ms;
+	}
 
 	// TODO set fps
 	theora_info_.fps_numerator = 1000;
