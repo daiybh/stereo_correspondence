@@ -363,9 +363,22 @@ void ThreadBase::child_ends_hook(pwThreadBase, int code, size_t remaining_child_
 //#endif
 //}
 
-void ThreadBase::print_id(_debug_flags /*f*/)
+namespace {
+pid_t retrieve_tid()
 {
-	//log[f] << "Started as thread " << retrieve_tid() <<"\n";
+#if defined(YURI_LINUX) && !defined(YURI_ANDROID)
+	return syscall(SYS_gettid);
+#else
+//	log[warning] << "TID not supported under this platform"<< "\n";
+	return 0;
+#endif
+}
+
+}
+
+void ThreadBase::print_id(_debug_flags f)
+{
+	log[f] << "Started as thread " << retrieve_tid() <<"\n";
 }
 
 bool ThreadBase::bind_to_cpu(size_t cpu)

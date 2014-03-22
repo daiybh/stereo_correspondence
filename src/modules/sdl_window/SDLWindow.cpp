@@ -12,6 +12,7 @@
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/version.h"
+#include "yuri/core/utils/Timer.h"
 #include <unordered_map>
 namespace yuri {
 namespace sdl_window {
@@ -72,7 +73,7 @@ resolution_({800,600}),fullscreen_(false),default_keys_(true),use_gl_(false),
 sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")")
 {
 	IOTHREAD_INIT(parameters)
-	set_latency(10_ms);
+	set_latency(1_ms);
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0) {
 		throw exception::InitializationFailed("Failed to initialize SDL");
@@ -93,6 +94,7 @@ SDLWindow::~SDLWindow() noexcept
 }
 void SDLWindow::run()
 {
+	print_id();
 	IOThread::run();
 	overlay_.reset();
 	rgb_surface_.reset();
@@ -104,7 +106,7 @@ bool SDLWindow::step()
 }
 core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame)
 {
-
+	Timer timer;
 	const resolution_t res = frame->get_resolution();
 	const dimension_t src_linesize  = PLANE_DATA(frame,0).get_line_size();
 	auto it = PLANE_DATA(frame,0).begin();
@@ -154,7 +156,7 @@ core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame
 		const auto& fi = core::raw_format::get_format_info(format);
 		log[log::warning] << "Unsupported format '" << fi.name << "'";
 	}
-
+	log[log::debug] << "Processing took " << timer.get_duration();
 	return {};
 }
 bool SDLWindow::set_param(const core::Parameter& param)

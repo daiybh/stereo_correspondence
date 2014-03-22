@@ -29,6 +29,8 @@
 #include "yuri/core/pipe/PipeGenerator.h"
 #include "yuri/core/thread/FixedMemoryAllocator.h"
 #include "yuri/core/thread/ConverterRegister.h"
+#include "yuri/core/thread/ConvertUtils.h"
+#include "yuri/core/frame/raw_frame_types.h"
 #ifdef HAVE_BOOST_PROGRAM_OPTIONS
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -304,6 +306,31 @@ void list_converters(yuri::log::Log& l_)
 
 	}
 }
+
+void try_path(yuri::log::Log& l_, format_t a, format_t b)
+{
+	l_[log::info] << "Looking up path for " << get_format_name_no_throw(a) << " -> " << get_format_name_no_throw(b);
+	const auto& xpath = yuri::core::find_conversion(a, b);
+
+	auto ll = l_[log::info];
+	ll << "Path: " << get_format_name_no_throw(a);
+	for (const auto& x: xpath.first) {
+		ll << " -> [" << x.name <<"] -> " << get_format_name_no_throw(x.target_format);
+	}
+//	ll << "";
+}
+
+void list_test(yuri::log::Log& l_)
+{
+	using namespace yuri;
+	try_path(l_, core::raw_format::rgb24, core::raw_format::rgba32);
+	try_path(l_, core::raw_format::rgb24, core::raw_format::yuyv422);
+	try_path(l_, core::raw_format::abgr32, core::raw_format::uyvy422);
+	try_path(l_, core::raw_format::vyuy422, core::raw_format::abgr32);
+
+
+
+}
 //void list_converters(Log l_)
 //{
 //	for (const auto& conv: core::RegisteredClass::get_all_converters()) {
@@ -392,6 +419,7 @@ int main(int argc, char**argv)
 		else if (iequals(list_what,"functions")) list_functions(l_);
 		else if (iequals(list_what,"converters")) list_converters(l_);
 		else if (iequals(list_what,"pipes")) list_pipes(l_);
+		else if (iequals(list_what,"test")) list_test(l_);
 		else list_registered(l_);
 		return 0;
 	}
@@ -494,9 +522,11 @@ int main(int argc, char**argv)
 	}
 	// Explicit release of resources is needed here, so the destruction can take place before main ends
 	// Otherwise it would be destroyed among global variables and this could lead to segfaults.
+//	builder->finish();
 	builder.reset();
 	l[log::info] << "Application successfully destroyed";
 	auto mp = yuri::core::FixedMemoryAllocator::clear_all();
 	l[log::info] << "Memory pool cleared ("<< mp.first << " blocks, " << mp.second << " bytes)";
 	return 0;
 }
+

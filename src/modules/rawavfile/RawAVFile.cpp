@@ -181,7 +181,7 @@ void RawAVFile::run()
 						continue;
 					} else {
 						next_times_[i] = next_times_[i]+time_deltas[i];
-						ready = true;
+						//ready = true;
 					}
 				}
 //				log[log::info] << "Pushing... " << i;

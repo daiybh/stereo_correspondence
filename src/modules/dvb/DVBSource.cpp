@@ -51,7 +51,9 @@ DVBSource::DVBSource(log::Log &log_, core::pwThreadBase parent, const core::Para
 	 demux_fd(-1),dvr_fd(-1),output_ts_(true)
 {
 	IOTHREAD_INIT(parameters)
-
+	if (!init()) {
+		throw exception::InitializationFailed("Failed to initialize dvb");
+	}
 }
 
 DVBSource::~DVBSource() noexcept
@@ -62,10 +64,7 @@ DVBSource::~DVBSource() noexcept
 
 void DVBSource::run()
 {
-	if (!init()) {
-		request_end();
-		return;
-	}
+
 	print_id();
 //	size_t chunk = chunk_size_;//4096;//params["chunk"].get<size_t>();
 //	yuri::ubyte_t *data = new yuri::ubyte_t[chunk];

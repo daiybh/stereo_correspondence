@@ -6,7 +6,7 @@
  */
 
 
-#include "yuri/core/ApplicationBuilder.h"
+#include "yuri/core/thread/XmlBuilder.h"
 #include "../modules/fb_grab/FrameBufferGrabber.h"
 #include "yuri/core/Module.h"
 extern "C" {
@@ -26,23 +26,23 @@ using namespace yuri;
 class __yuri_starter:public yuri::core::IOThread {
 public:
 	__yuri_starter(log::Log &l);
-	shared_ptr<core::ApplicationBuilder> builder;
-	shared_ptr<fbgrab::FrameBufferGrabber> fbgrab;
-	shared_ptr<fbgrab::FrameBufferGrabber> get_grabber() {
+	std::shared_ptr<core::ApplicationBuilder> builder;
+	std::shared_ptr<fbgrab::FrameBufferGrabber> fbgrab;
+	std::shared_ptr<fbgrab::FrameBufferGrabber> get_grabber() {
 		//return dynamic_pointer_cast<fbgrab::FrameBufferGrabber>(builder->get_node(grabber_name));
 		return yuri::static_pointer_cast<fbgrab::FrameBufferGrabber>(builder->get_node(grabber_name));
 		//return builder->get_node(grabber_name);
-		//return shared_ptr<fbgrab::FrameBufferGrabber>();
+		//return std::shared_ptr<fbgrab::FrameBufferGrabber>();
 	}
 	std::string config_file;
 	std::string grabber_name;
 };
 
 
-static shared_ptr<log::Log> l;
+static std::shared_ptr<log::Log> l;
 
-static shared_ptr<__yuri_starter> __yuri_start;
-//static shared_ptr<FrameBufferGrabber> fbgrab;
+static std::shared_ptr<__yuri_starter> __yuri_start;
+//static std::shared_ptr<FrameBufferGrabber> fbgrab;
 // We need plain pointer here, otherwise the value might get overwritten
 static fbgrab::FrameBufferGrabber* fbgrab_instance=0;
 

@@ -42,7 +42,6 @@ core::MultiIOFilter(log_,parent,1,1,std::string("combine")),x_(2),y_(2)
 	IOTHREAD_INIT(parameters)
 	if (x_<1 || y_<1) throw exception::InitializationFailed("Wrong size of the grid");
 	resize(x_ * y_,1);
-//	frames.resize(x_ * y_);
 }
 
 Combine::~Combine() noexcept
@@ -50,32 +49,15 @@ Combine::~Combine() noexcept
 }
 
 std::vector<core::pFrame> Combine::do_single_step(const std::vector<core::pFrame>& framesx)
-//bool Combine::step()
 {
-//	const size_t frames_no = x_*y_;
-//	frames.resize(frames_no);
-//	size_t valid_frames=0;
-//	for (size_t i=0;i<frames_no;++i) {
-//		if (!in[i]) return true;
-//		if (!frames[i]) frames[i]=in[i]->pop_frame();
-//		if (frames[i]) valid_frames++;
-//	}
-//	if (valid_frames < frames_no) return true;
 	const format_t format = framesx[0]->get_format();
 	const auto& fi = core::raw_format::get_format_info(format);
-
-//	FormatInfo_t fi = core::BasicPipe::get_format_info(format);
 	const size_t frames_no = framesx.size();
 
 	if (fi.planes.size() != 1) {
-//	if (fi->planes > 1) {
 		log[log::warning] << "Planar formats not supported";
 		return {};
 	}
-//	if (fi->compressed) {
-//		log[log::warning] << "Compressed formats not supported";
-//		return true;
-//	}
 
 	std::vector<core::pRawVideoFrame> frames;
 	for (auto& x: framesx) {
@@ -99,8 +81,6 @@ std::vector<core::pFrame> Combine::do_single_step(const std::vector<core::pFrame
 		}
 		if (frames[i]->get_resolution() != resolution) {
 			log[log::warning] << "Wrong size for frame in pipe " << i;
-//			frames[i].reset();
-//			return true;
 			return {};
 		}
 	}
@@ -121,11 +101,6 @@ std::vector<core::pFrame> Combine::do_single_step(const std::vector<core::pFrame
 		}
 	}
 	return {output};
-//	push_raw_video_frame(0,output);
-//	for (size_t i=0;i<frames_no;++i) {
-//		frames[i].reset();
-//	}
-//	return true;
 }
 bool Combine::set_param(const core::Parameter& param)
 {
