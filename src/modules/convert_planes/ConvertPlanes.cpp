@@ -228,18 +228,23 @@ core::pFrame dispatch(core::pRawVideoFrame frame, format_t target) {
 	if (!frame) return {};
 	format_t source = frame->get_format();
 	using namespace yuri::core::raw_format;
+	core::pRawVideoFrame frame_out;
 //	printf("BOO0\n");
-//	if (source == rgb24 && target == rgb24p) return split_planes<rgb24, rgb24p, 3>(frame);
-//	if (source == rgba32 && target == rgba32p) return split_planes<rgba32, rgba32p, 4>(frame);
-	if (source == yuv444 && target == yuv444p) return split_planes<yuv444, yuv444p, 3>(frame);
-//	if (source == yuv420p && target == yuv444) return merge_planes_sub3_xy<yuv420p, yuv444>(frame);
-//	if (source == yuv411p && target == yuyv422) return merge_planes_411p_422<yuv420p, yuyv422>(frame);
-	if (source == yuv420p && target == yuyv422) return merge_planes_420p_yuyv<yuv420p, yuyv422>(frame);
-	if (source == yuv420p && target == yvyu422) return merge_planes_420p_yvyu<yuv420p, yvyu422>(frame);
-	if (source == yuv420p && target == uyvy422) return merge_planes_420p_uyvy<yuv420p, uyvy422>(frame);
-	if (source == yuv420p && target == vyuy422) return merge_planes_420p_vyuy<yuv420p, vyuy422>(frame);
-	if (source == yuv422p && target == yuyv422) return merge_planes_422p_yuyv<yuv422p, yuyv422>(frame);
-	return {};
+//	if (source == rgb24 && target == rgb24p) frame_out = split_planes<rgb24, rgb24p, 3>(frame);
+//	if (source == rgba32 && target == rgba32p) frame_out =  split_planes<rgba32, rgba32p, 4>(frame);
+	if (source == yuv444 && target == yuv444p) frame_out =  split_planes<yuv444, yuv444p, 3>(frame);
+//	if (source == yuv420p && target == yuv444) frame_out =  merge_planes_sub3_xy<yuv420p, yuv444>(frame);
+//	if (source == yuv411p && target == yuyv422) frame_out =  merge_planes_411p_422<yuv420p, yuyv422>(frame);
+	if (source == yuv420p && target == yuyv422) frame_out =  merge_planes_420p_yuyv<yuv420p, yuyv422>(frame);
+	if (source == yuv420p && target == yvyu422) frame_out =  merge_planes_420p_yvyu<yuv420p, yvyu422>(frame);
+	if (source == yuv420p && target == uyvy422) frame_out =  merge_planes_420p_uyvy<yuv420p, uyvy422>(frame);
+	if (source == yuv420p && target == vyuy422) frame_out =  merge_planes_420p_vyuy<yuv420p, vyuy422>(frame);
+	if (source == yuv422p && target == yuyv422) frame_out =  merge_planes_422p_yuyv<yuv422p, yuyv422>(frame);
+	if (frame_out) {
+		frame_out->set_duration(frame->get_duration());
+		frame_out->set_timestamp(frame->get_timestamp());
+	}
+	return frame_out;
 }
 
 
@@ -292,6 +297,7 @@ core::pFrame ConvertPlanes::do_convert_frame(core::pFrame input_frame, format_t 
 		log[log::warning] << "Got bad frame type!!";
 		return {};
 	}
+	log[log::info] << "Duration in " << frame->get_duration() << " |" << input_frame->get_duration();
 	return dispatch(frame, target_format);
 }
 bool ConvertPlanes::set_param(const core::Parameter& param)
