@@ -227,6 +227,8 @@ core::pFrame YuriConvertor::do_convert_frame(core::pFrame input_frame, format_t 
 	if (converters.count(conv_pair)) converter = converters[conv_pair];
 	if (converter) {
 		outframe = converter(frame, *this);
+		outframe->set_duration(input_frame->get_duration());
+		outframe->set_timestamp(input_frame->get_timestamp());
 	} else if (in_fmt == target_format) {
 		outframe = frame;
 	} else {

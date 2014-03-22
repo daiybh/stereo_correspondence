@@ -141,6 +141,10 @@ pFrame Convert::do_convert_frame(pFrame frame_in, format_t target_format)
 			return {};
 		}
 	}
+	if (result->get_duration() == 0_us) {
+		result->set_duration(frame_in->get_duration());
+		result->set_timestamp(frame_in->get_timestamp());
+	}
 	log[log::verbose_debug] << "Conversion of path with " << path.first.size() << " took " <<t.get_duration();
 //	log[log::info] << "COnversion ok";
 	return result;
