@@ -50,6 +50,11 @@ public:
 	{
 		return send_data(reinterpret_cast<const uint8_t*>(data.data()), N * sizeof(T))/sizeof(T);
 	}
+	template<class Char>
+	size_t send_data(const std::basic_string<Char>& data)
+	{
+		return send_data(data.data(), data.size());
+	}
 
 	size_t receive_data(uint8_t* data, size_t size);
 
