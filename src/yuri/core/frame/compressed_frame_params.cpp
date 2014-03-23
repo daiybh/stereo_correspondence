@@ -79,6 +79,18 @@ format_t parse_format(const std::string& name)
 	return unknown;
 }
 
+format_t get_format_from_mime(const std::string& mime)
+{
+	lock_t _(format_info_map_mutex);
+	for (const auto& fmt: format_info_map) {
+		for (const auto& fname: fmt.second.mime_types) {
+			if (iequals(fname, mime)) {
+				return fmt.first;
+			}
+		}
+	}
+	return unknown;
+}
 
 
 comp_format_info_map_t::const_iterator formats::begin() const

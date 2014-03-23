@@ -43,6 +43,7 @@ bool add_format(const compressed_frame_info_t &);
 format_t new_user_format();
 format_t parse_format(const std::string& name);
 const std::string& get_format_name(format_t format);
+format_t get_format_from_mime(const std::string& mime);
 
 
 
