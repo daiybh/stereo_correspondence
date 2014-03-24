@@ -36,8 +36,8 @@ core::Parameters SageOutput::configure()
 
 	p["address"]["SAGE address (ignored)"]=std::string("127.0.0.1");
 	p["app_name"]["Application name to use when registering to SAGE"]=std::string("yuri");
-	p["width"]["Force image width. -1 to use input image size"]=-1;
-	p["height"]["Force image height. -1 to use input image size"]=-1;
+	p["width"]["Force image width. 0 to use input image size"]=0;
+	p["height"]["Force image height. 0 to use input image size"]=0;
 	return p;
 }
 
@@ -47,14 +47,14 @@ std::map<format_t, sagePixFmt> yuri_sage_fmt_map = {
 {core::raw_format::yuyv422, PIXFMT_YUV},
 {core::raw_format::rgb24, PIXFMT_888},
 {core::raw_format::bgr24, PIXFMT_888_INV},
-{core::raw_format::rgba32, PIXFMT_8888},
-{core::raw_format::bgra32, PIXFMT_8888_INV},
+//{core::raw_format::rgba32, PIXFMT_8888},
+//{core::raw_format::bgra32, PIXFMT_8888_INV},
 {core::compressed_frame::dxt1, PIXFMT_DXT}};
 
 }
 
 SageOutput::SageOutput(yuri::log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters)
-:IOFilter(log_,parent,"SageOutput"),sail_info(nullptr),width(-1),height(-1),
+:IOFilter(log_,parent,"SageOutput"),sail_info(nullptr),width(0),height(0),
  fmt(0),sage_fmt(PIXFMT_NULL),sage_address("127.0.0.1"),app_name_("yuri")
 {
 	set_latency(2_ms);
@@ -111,7 +111,9 @@ bool SageOutput::step()
 
 core::pFrame SageOutput::do_simple_single_step(const core::pFrame& frame)
 {
-	if (fmt == 0) {
+	if (fmt == 0 || !sail_info) {
+		core::pVideoFrame video_frame = std::dynamic_pointer_cast<core::VideoFrame>(frame);
+		if (!video_frame) return {};
 		const format_t tmp_fmt = frame->get_format();
 		if (!yuri_sage_fmt_map.count(tmp_fmt)) {
 			log[log::warning] << "Unsupported input format";
@@ -119,7 +121,15 @@ core::pFrame SageOutput::do_simple_single_step(const core::pFrame& frame)
 		}
 		fmt = tmp_fmt;
 		sage_fmt=yuri_sage_fmt_map[fmt];
-		log[yuri::log::info] << "Connecting to SAGE @ " << sage_address << "\n";
+
+		if (!width) width = video_frame->get_resolution().width;
+		if (!height) height = video_frame->get_resolution().height;
+		if (!width || !height) {
+			log[log::error] << "Input resolution not specified!";
+			return {};
+		}
+//		log[yuri::log::info] << "Connecting to SAGE @ " << sage_address << "\n";
+		log[yuri::log::info] << "Connecting to SAGE with resolution " << width << "x" << height;
 		sail_info = createSAIL(app_name_.c_str(),width,height,sage_fmt,0,TOP_TO_BOTTOM);//sage_address.c_str());
 		if (!sail_info) {
 			//throw yuri::exception::InitializationFailed(
@@ -159,6 +169,7 @@ core::pFrame SageOutput::do_simple_single_step(const core::pFrame& frame)
 				request_end();
 				return {};
 			}
+//			log[log::info] << "input_line_width: " << input_line_width << ", sage_line_width: " << sage_line_width << " copy_lines: " <<copy_lines;
 			for (yuri::size_t line = 0; line < copy_lines; ++line) {
 				const uint8_t* data_start = PLANE_RAW_DATA(raw_frame,0) + line*input_line_width;
 				std::copy(data_start,data_start+copy_width,sail_buffer+line*sage_line_width);
