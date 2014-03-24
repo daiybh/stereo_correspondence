@@ -24,20 +24,43 @@ IOTHREAD_GENERATOR(YuriConvertor)
 MODULE_REGISTRATION_BEGIN("yuri_convert")
 		REGISTER_IOTHREAD("yuri_convert",YuriConvertor)
 		REGISTER_CONVERTER(core::raw_format::rgb24, 	core::raw_format::rgba32, "yuri_convert", 12)
-
+		REGISTER_CONVERTER(core::raw_format::bgr24,  	core::raw_format::bgra32, "yuri_convert", 12)
+		REGISTER_CONVERTER(core::raw_format::rgb24, 	core::raw_format::argb32, "yuri_convert", 12)
 		REGISTER_CONVERTER(core::raw_format::bgr24,  	core::raw_format::abgr32, "yuri_convert", 12)
 		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::rgb24, "yuri_convert", 12)
+		REGISTER_CONVERTER(core::raw_format::bgra32,  	core::raw_format::bgr24, "yuri_convert", 12)
+		REGISTER_CONVERTER(core::raw_format::argb32,  	core::raw_format::rgb24, "yuri_convert", 12)
 		REGISTER_CONVERTER(core::raw_format::abgr32,  	core::raw_format::bgr24, "yuri_convert", 12)
 
-		REGISTER_CONVERTER(core::raw_format::abgr32,  	core::raw_format::rgba32, "yuri_convert", 10)
-		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::abgr32, "yuri_convert", 10)
-		REGISTER_CONVERTER(core::raw_format::bgr24,  	core::raw_format::rgb24, "yuri_convert", 10)
-		REGISTER_CONVERTER(core::raw_format::rgb24,  	core::raw_format::bgr24, "yuri_convert", 10)
 
-		REGISTER_CONVERTER(core::raw_format::abgr32,  	core::raw_format::rgb24, "yuri_convert", 12)
-		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::bgr24, "yuri_convert", 12)
+		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::argb32, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::abgr32, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::bgra32, "yuri_convert", 10)
+
+		REGISTER_CONVERTER(core::raw_format::argb32,  	core::raw_format::rgba32, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::argb32,  	core::raw_format::abgr32, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::argb32,  	core::raw_format::bgra32, "yuri_convert", 10)
+
+		REGISTER_CONVERTER(core::raw_format::bgra32,  	core::raw_format::rgba32, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::bgra32,  	core::raw_format::argb32, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::bgra32,  	core::raw_format::abgr32, "yuri_convert", 10)
+
+		REGISTER_CONVERTER(core::raw_format::abgr32,  	core::raw_format::argb32, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::abgr32,  	core::raw_format::rgba32, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::abgr32,  	core::raw_format::bgra32, "yuri_convert", 10)
+
+		REGISTER_CONVERTER(core::raw_format::rgb24,  	core::raw_format::bgra32, "yuri_convert", 12)
 		REGISTER_CONVERTER(core::raw_format::bgr24,  	core::raw_format::rgba32, "yuri_convert", 12)
 		REGISTER_CONVERTER(core::raw_format::rgb24,  	core::raw_format::abgr32, "yuri_convert", 12)
+		REGISTER_CONVERTER(core::raw_format::bgr24,  	core::raw_format::argb32, "yuri_convert", 12)
+
+		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::bgr24, "yuri_convert", 12)
+		REGISTER_CONVERTER(core::raw_format::bgra32,  	core::raw_format::rgb24, "yuri_convert", 12)
+		REGISTER_CONVERTER(core::raw_format::argb32,  	core::raw_format::bgr24, "yuri_convert", 12)
+		REGISTER_CONVERTER(core::raw_format::abgr32,  	core::raw_format::rgb24, "yuri_convert", 12)
+
+		REGISTER_CONVERTER(core::raw_format::bgr24,  	core::raw_format::rgb24, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::rgb24,  	core::raw_format::bgr24, "yuri_convert", 10)
 
 
 		REGISTER_CONVERTER(core::raw_format::yuyv422,  	core::raw_format::uyvy422, "yuri_convert", 10)
@@ -68,12 +91,12 @@ MODULE_REGISTRATION_BEGIN("yuri_convert")
 		REGISTER_CONVERTER(core::raw_format::rgb24,  	core::raw_format::yuv444, "yuri_convert", 20)
 		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::yuv444, "yuri_convert", 20)
 		REGISTER_CONVERTER(core::raw_format::bgr24,  	core::raw_format::yuv444, "yuri_convert", 20)
-		REGISTER_CONVERTER(core::raw_format::abgr32,  	core::raw_format::yuv444, "yuri_convert", 20)
+		REGISTER_CONVERTER(core::raw_format::bgra32,  	core::raw_format::yuv444, "yuri_convert", 20)
 
 		REGISTER_CONVERTER(core::raw_format::rgb24,  	core::raw_format::yuyv422, "yuri_convert", 25)
 		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::yuyv422, "yuri_convert", 25)
 		REGISTER_CONVERTER(core::raw_format::bgr24,  	core::raw_format::yuyv422, "yuri_convert", 25)
-		REGISTER_CONVERTER(core::raw_format::abgr32,  	core::raw_format::yuyv422, "yuri_convert", 25)
+		REGISTER_CONVERTER(core::raw_format::bgra32,  	core::raw_format::yuyv422, "yuri_convert", 25)
 
 		REGISTER_CONVERTER(core::raw_format::yuv444, 	core::raw_format::rgb24, "yuri_convert", 20)
 		REGISTER_CONVERTER(core::raw_format::yuyv422, 	core::raw_format::rgb24, "yuri_convert", 25)
@@ -126,20 +149,42 @@ namespace {
 	std::map<format_pair_t, converter_t> converters = {
 
 		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::rgba32)
+		ADD_CONVERSION(core::raw_format::bgr24, 		core::raw_format::bgra32)
+		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::argb32)
 		ADD_CONVERSION(core::raw_format::bgr24, 		core::raw_format::abgr32)
 		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::rgb24)
+		ADD_CONVERSION(core::raw_format::bgra32, 		core::raw_format::bgr24)
+		ADD_CONVERSION(core::raw_format::argb32, 		core::raw_format::rgb24)
 		ADD_CONVERSION(core::raw_format::abgr32, 		core::raw_format::bgr24)
+
+		ADD_CONVERSION(core::raw_format::bgra32, 		core::raw_format::rgba32)
+		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::bgra32)
+		ADD_CONVERSION(core::raw_format::abgr32, 		core::raw_format::argb32)
+		ADD_CONVERSION(core::raw_format::argb32, 		core::raw_format::abgr32)
 
 		ADD_CONVERSION(core::raw_format::abgr32, 		core::raw_format::rgba32)
 		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::abgr32)
-		ADD_CONVERSION(core::raw_format::bgr24, 		core::raw_format::rgb24)
-		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::bgr24)
+		ADD_CONVERSION(core::raw_format::bgra32, 		core::raw_format::argb32)
+		ADD_CONVERSION(core::raw_format::argb32, 		core::raw_format::bgra32)
 
-		ADD_CONVERSION(core::raw_format::abgr32, 		core::raw_format::rgb24)
-		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::bgr24)
+		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::argb32)
+		ADD_CONVERSION(core::raw_format::bgra32, 		core::raw_format::abgr32)
+		ADD_CONVERSION(core::raw_format::abgr32, 		core::raw_format::bgra32)
+		ADD_CONVERSION(core::raw_format::argb32, 		core::raw_format::rgba32)
+
+		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::bgra32)
 		ADD_CONVERSION(core::raw_format::bgr24, 		core::raw_format::rgba32)
 		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::abgr32)
+		ADD_CONVERSION(core::raw_format::bgr24, 		core::raw_format::argb32)
 
+		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::bgr24)
+		ADD_CONVERSION(core::raw_format::bgra32, 		core::raw_format::rgb24)
+		ADD_CONVERSION(core::raw_format::argb32, 		core::raw_format::bgr24)
+		ADD_CONVERSION(core::raw_format::abgr32, 		core::raw_format::rgb24)
+
+
+		ADD_CONVERSION(core::raw_format::bgr24, 		core::raw_format::rgb24)
+		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::bgr24)
 
 		ADD_CONVERSION(core::raw_format::yuyv422, 	core::raw_format::uyvy422)
 		ADD_CONVERSION(core::raw_format::uyvy422, 	core::raw_format::yuyv422)
@@ -170,12 +215,12 @@ namespace {
 		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::yuv444)
 		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::yuv444)
 		ADD_CONVERSION(core::raw_format::bgr24, 		core::raw_format::yuv444)
-		ADD_CONVERSION(core::raw_format::abgr32, 		core::raw_format::yuv444)
+		ADD_CONVERSION(core::raw_format::bgra32, 		core::raw_format::yuv444)
 
 		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::yuyv422)
 		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::yuyv422)
 		ADD_CONVERSION(core::raw_format::bgr24, 		core::raw_format::yuyv422)
-		ADD_CONVERSION(core::raw_format::abgr32, 		core::raw_format::yuyv422)
+		ADD_CONVERSION(core::raw_format::bgra32, 		core::raw_format::yuyv422)
 
 		ADD_CONVERSION(core::raw_format::yuv444,		core::raw_format::rgb24)
 		ADD_CONVERSION(core::raw_format::yuyv422,		core::raw_format::rgb24)
@@ -283,6 +328,7 @@ bool YuriConvertor::set_param(const core::Parameter &p)
 }
 
 }
+
 
 
 

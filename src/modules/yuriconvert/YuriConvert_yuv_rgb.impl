@@ -213,7 +213,7 @@ static void eval
 };
 
 template<>
-void convert_line<core::raw_format::abgr32, core::raw_format::yuv444>
+void convert_line<core::raw_format::bgra32, core::raw_format::yuv444>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width, const YuriConvertor& conv)
 {
 	colorimetry_t col = conv.get_colorimetry();
@@ -324,7 +324,7 @@ static void eval
 };
 
 template<>
-void convert_line<core::raw_format::abgr32, core::raw_format::yuyv422>
+void convert_line<core::raw_format::bgra32, core::raw_format::yuyv422>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width, const YuriConvertor& conv)
 {
 	colorimetry_t col = conv.get_colorimetry();

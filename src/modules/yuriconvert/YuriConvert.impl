@@ -18,12 +18,32 @@ void convert_line<core::raw_format::rgb24, core::raw_format::rgba32>
 	rgb_rgba(src, dest, width, 255);
 }
 template<>
-void convert_line<core::raw_format::bgr24, core::raw_format::abgr32>
+void convert_line<core::raw_format::bgr24, core::raw_format::bgra32>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	rgb_rgba(src, dest, width, 255);
 }
-
+void rgb_argb(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width, uint8_t alpha)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=alpha;
+		*dest++=*src++;
+		*dest++=*src++;
+		*dest++=*src++;	
+	}
+}
+template<>
+void convert_line<core::raw_format::rgb24, core::raw_format::argb32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	rgb_argb(src, dest, width, 255);
+}
+template<>
+void convert_line<core::raw_format::bgr24, core::raw_format::abgr32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	rgb_argb(src, dest, width, 255);
+}
 void rgba_rgb(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	for (size_t pixel = 0; pixel < width; ++pixel) {
@@ -40,10 +60,32 @@ void convert_line<core::raw_format::rgba32, core::raw_format::rgb24>
 	rgba_rgb(src, dest, width);
 }
 template<>
-void convert_line<core::raw_format::abgr32, core::raw_format::bgr24>
+void convert_line<core::raw_format::bgra32, core::raw_format::bgr24>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	rgba_rgb(src, dest, width);
+}
+
+void argb_rgb(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		src++;
+		*dest++=*src++;
+		*dest++=*src++;
+		*dest++=*src++;
+	}
+}
+template<>
+void convert_line<core::raw_format::argb32, core::raw_format::rgb24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	argb_rgb(src, dest, width);
+}
+template<>
+void convert_line<core::raw_format::abgr32, core::raw_format::bgr24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	argb_rgb(src, dest, width);
 }
 
 void rgba_bgra(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
@@ -57,6 +99,63 @@ void rgba_bgra(core::Plane::const_iterator src, core::Plane::iterator dest, size
 	}
 }
 template<>
+void convert_line<core::raw_format::bgra32, core::raw_format::rgba32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	rgba_bgra(src, dest, width);
+}
+template<>
+void convert_line<core::raw_format::rgba32, core::raw_format::bgra32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	rgba_bgra(src, dest, width);
+}
+void argb_abgr(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*(src+0);
+		*dest++=*(src+3);
+		*dest++=*(src+2);
+		*dest++=*(src+1);
+		src+=4;
+	}
+}
+template<>
+void convert_line<core::raw_format::abgr32, core::raw_format::argb32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	argb_abgr(src, dest, width);
+}
+template<>
+void convert_line<core::raw_format::argb32, core::raw_format::abgr32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	argb_abgr(src, dest, width);
+}
+
+void rgba_abgr(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*(src+3);
+		*dest++=*(src+2);
+		*dest++=*(src+1);
+		*dest++=*(src+0);
+		src+=4;
+	}
+}
+template<>
+void convert_line<core::raw_format::bgra32, core::raw_format::argb32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	rgba_bgra(src, dest, width);
+}
+template<>
+void convert_line<core::raw_format::argb32, core::raw_format::bgra32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	rgba_bgra(src, dest, width);
+}
+template<>
 void convert_line<core::raw_format::abgr32, core::raw_format::rgba32>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
@@ -68,6 +167,55 @@ void convert_line<core::raw_format::rgba32, core::raw_format::abgr32>
 {
 	rgba_bgra(src, dest, width);
 }
+
+void rgba_argb(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*(src+3);
+		*dest++=*(src+0);
+		*dest++=*(src+1);
+		*dest++=*(src+2);
+		src+=4;
+	}
+}
+template<>
+void convert_line<core::raw_format::rgba32, core::raw_format::argb32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	rgba_argb(src, dest, width);
+}
+template<>
+void convert_line<core::raw_format::bgra32, core::raw_format::abgr32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	rgba_argb(src, dest, width);
+}
+
+void argb_rgba(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*(src+1);
+		*dest++=*(src+2);
+		*dest++=*(src+3);
+		*dest++=*(src+0);
+		src+=4;
+	}
+}
+template<>
+void convert_line<core::raw_format::argb32, core::raw_format::rgba32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	argb_rgba(src, dest, width);
+}
+template<>
+void convert_line<core::raw_format::abgr32, core::raw_format::bgra32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	argb_rgba(src, dest, width);
+}
+
+
+
 void rgb_bgra (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width, uint8_t alpha)
 {
 	for (size_t pixel = 0; pixel < width; ++pixel) {
@@ -80,7 +228,7 @@ void rgb_bgra (core::Plane::const_iterator src, core::Plane::iterator dest, size
 }
 
 template<>
-void convert_line<core::raw_format::rgb24, core::raw_format::abgr32>
+void convert_line<core::raw_format::rgb24, core::raw_format::bgra32>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	rgb_bgra(src, dest, width, 255);
@@ -90,6 +238,30 @@ void convert_line<core::raw_format::bgr24, core::raw_format::rgba32>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	rgb_bgra(src, dest, width, 255);
+}
+
+void rgb_abgr (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width, uint8_t alpha)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=alpha;
+		*dest++=*(src+2);
+		*dest++=*(src+1);
+		*dest++=*(src+0);
+		src+=3;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::rgb24, core::raw_format::abgr32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	rgb_abgr(src, dest, width, 255);
+}
+template<>
+void convert_line<core::raw_format::bgr24, core::raw_format::argb32>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	rgb_abgr(src, dest, width, 255);
 }
 void bgra_rgb (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
@@ -102,7 +274,7 @@ void bgra_rgb (core::Plane::const_iterator src, core::Plane::iterator dest, size
 }
 
 template<>
-void convert_line<core::raw_format::abgr32, core::raw_format::rgb24>
+void convert_line<core::raw_format::bgra32, core::raw_format::rgb24>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	bgra_rgb(src, dest, width);
@@ -112,6 +284,28 @@ void convert_line<core::raw_format::rgba32, core::raw_format::bgr24>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	bgra_rgb(src, dest, width);
+}
+void abgr_rgb (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*(src+3);
+		*dest++=*(src+2);
+		*dest++=*(src+1);
+		src+=4;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::abgr32, core::raw_format::rgb24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	abgr_rgb(src, dest, width);
+}
+template<>
+void convert_line<core::raw_format::argb32, core::raw_format::bgr24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	abgr_rgb(src, dest, width);
 }
 void bgr_rgb (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
