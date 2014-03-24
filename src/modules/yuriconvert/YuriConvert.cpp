@@ -300,10 +300,8 @@ core::pFrame YuriConvertor::do_convert_frame(core::pFrame input_frame, format_t 
 }
 
 core::pFrame YuriConvertor::do_special_single_step(const core::pRawVideoFrame& frame)
-//bool YuriConvertor::step()
 {
-//	if (!in[0] || in[0]->is_empty()) return true;
-//	core::pRawVideoFrame frame = in[0]->pop_frame();
+
 	return convert_frame(frame, format_);
 }
 
