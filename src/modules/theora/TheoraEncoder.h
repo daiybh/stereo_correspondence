@@ -35,6 +35,13 @@ private:
 	th_info theora_info_;
 	ctx_handle_t ctx_;
 	ogg_stream_state ogg_state_;
+	bool mux_into_ogg_;
+	bool low_latency_;
+	int quality_;
+	int bitrate_;
+	int stream_id_;
+	int fast_encoding_;
+	duration_t frame_duration_;
 };
 
 } /* namespace theora */
