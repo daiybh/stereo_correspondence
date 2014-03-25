@@ -183,6 +183,7 @@ bool RawFileSource::read_chunk()
 			}
 
 		}
+		frame->set_duration(1_s/fps);
 		if (file.eof()) {
 			log[log::info] << "EOF";
 			file.close();
