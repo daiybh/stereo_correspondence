@@ -11,6 +11,7 @@
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/compressed_frame_types.h"
 #include <unordered_map>
+#include <map>
 namespace yuri {
 namespace libav {
 
@@ -48,6 +49,12 @@ std::unordered_map<format_t, PixelFormat> yuri_pixel_map = {
 		{yuv411p,					PIX_FMT_YUV411P},
 };
 
+std::map<PixelFormat, PixelFormat> yuri_pixel_special_map = {
+{PIX_FMT_YUVJ420P, PIX_FMT_YUV420P},
+{PIX_FMT_YUVJ422P, PIX_FMT_YUV422P},
+{PIX_FMT_YUVJ444P, PIX_FMT_YUV444P},
+};
+
 }
 
 
@@ -65,6 +72,9 @@ CodecID avcodec_from_yuri_format(yuri::format_t codec)
 
 yuri::format_t yuri_pixelformat_from_av(PixelFormat format)
 {
+	auto it = yuri_pixel_special_map.find(format);
+	if (it != yuri_pixel_special_map.end()) format = it->second;
+
 	for (auto f: yuri_pixel_map) {
 		if (f.second == format) return f.first;
 	}
