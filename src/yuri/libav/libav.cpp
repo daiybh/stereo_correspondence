@@ -38,14 +38,31 @@ using namespace yuri::core::raw_format;
 std::unordered_map<format_t, PixelFormat> yuri_pixel_map = {
 		{rgb8,			 			PIX_FMT_RGB8},
 		{bgr8,			 			PIX_FMT_BGR8},
+		{rgb16,						PIX_FMT_RGB555},
+		{rgb16,						PIX_FMT_RGB565},
+		{bgr15,						PIX_FMT_BGR555},
+		{bgr16,						PIX_FMT_BGR565},
 		{rgb24,			 			PIX_FMT_RGB24},
 		{bgr24,			 			PIX_FMT_BGR24},
 		{rgba32,		 			PIX_FMT_RGBA},
-		{yuyv422,					PIX_FMT_YUYV422},
+		{argb32,		 			PIX_FMT_ARGB},
+		{bgra32,		 			PIX_FMT_BGRA},
+		{abgr32,		 			PIX_FMT_ABGR},
+		{rgb48,						PIX_FMT_RGB48},
+		{bgr48,						PIX_FMT_BGR48},
+		{rgba64,					PIX_FMT_RGBA64},
+		{bgra64,					PIX_FMT_BGRA64},
+
+
+		{y8,						PIX_FMT_GRAY8},
+		{y16,						PIX_FMT_GRAY16},
 		{yuv420p,					PIX_FMT_YUV420P},
 		{yuv422p,					PIX_FMT_YUV422P},
+
 		{yuv444p,					PIX_FMT_YUV444P},
+		{yuyv422,					PIX_FMT_YUYV422},
 		{uyvy422,					PIX_FMT_UYVY422},
+
 		{yuv411p,					PIX_FMT_YUV411P},
 };
 
