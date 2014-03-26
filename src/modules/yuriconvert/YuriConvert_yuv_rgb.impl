@@ -4,14 +4,13 @@
 
 template<size_t wr, size_t wb>
 struct colorimetry_traits {
-	static inline double Wr() { return static_cast<double>(wr)/10000.0; }
-	static inline double Wb() { return static_cast<double>(wb)/10000.0; }
-	static inline double Wg() { return 1.0 - Wr() - Wb(); }
-	static inline double Kb() { return 0.5 / (1.0 - Wb()); }
-	static inline double Kr() { return 0.5 / (1.0 - Wr()); }
-	static inline double WbKbWg() { return  Wb()/Kb()/Wg(); }
-	static inline double WrKrWg() { return  Wr()/Kr()/Wg(); }
-	
+	static inline constexpr double Wr() { return static_cast<double>(wr)/10000.0; }
+	static inline constexpr double Wb() { return static_cast<double>(wb)/10000.0; }
+	static inline constexpr double Wg() { return 1.0 - Wr() - Wb(); }
+	static inline constexpr double Kb() { return 0.5 / (1.0 - Wb()); }
+	static inline constexpr double Kr() { return 0.5 / (1.0 - Wr()); }
+	static inline constexpr double WbKbWg() { return  Wb()/Kb()/Wg(); }
+	static inline constexpr double WrKrWg() { return  Wr()/Kr()/Wg(); }
 };
 
 template<template <class, bool> class func, class colorimetry>
