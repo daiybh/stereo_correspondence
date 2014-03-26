@@ -12,7 +12,7 @@
 #define BASICIOFILTER_H_
 
 #include "MultiIOFilter.h"
-
+#include <algorithm>
 namespace yuri {
 namespace core {
 
@@ -28,6 +28,8 @@ public:
 	pFrame					simple_single_step(const pFrame& frame);
 
 	void					set_supported_formats(const std::vector<format_t>& formats);
+	template<class T>
+	void					set_supported_formats(const std::map<format_t, T>& format_map);
 	const std::vector<format_t>& get_supported_formats() { return supported_formats_; }
 	void					set_supported_priority(bool);
 private:
@@ -38,7 +40,12 @@ private:
 	bool 					priority_supported_;
 };
 
-
+template<class T>
+void IOFilter::set_supported_formats(const std::map<format_t, T>& format_map)
+{
+	supported_formats_.clear();
+	std::transform(format_map.begin(), format_map.end(), std::back_inserter(supported_formats_),[](const std::pair<format_t, T>& val){return val.first;});
+}
 
 
 }
