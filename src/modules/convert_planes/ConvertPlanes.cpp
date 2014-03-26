@@ -354,6 +354,46 @@ core::pRawVideoFrame merge_planes_420p_vyuy(core::pRawVideoFrame frame) {
 	return frame_out;
 }
 
+template<format_t fmt>
+void store_yuv422_plane(uint8_t*& iter_y, uint8_t*& iter_u, uint8_t*& iter_v, uint8_t*& iter_yuv);
+
+template<>
+void store_yuv422_plane<core::raw_format::yuyv422>(uint8_t*& iter_y, uint8_t*& iter_u, uint8_t*& iter_v, uint8_t*& iter_yuv)
+{
+	*iter_yuv++ = *iter_y++;
+	*iter_yuv++ = *iter_u++;
+	*iter_yuv++ = *iter_y++;
+	*iter_yuv++ = *iter_v++;
+}
+
+template<>
+void store_yuv422_plane<core::raw_format::yvyu422>(uint8_t*& iter_y, uint8_t*& iter_u, uint8_t*& iter_v, uint8_t*& iter_yuv)
+{
+	*iter_yuv++ = *iter_y++;
+	*iter_yuv++ = *iter_v++;
+	*iter_yuv++ = *iter_y++;
+	*iter_yuv++ = *iter_u++;
+}
+
+template<>
+void store_yuv422_plane<core::raw_format::uyvy422>(uint8_t*& iter_y, uint8_t*& iter_u, uint8_t*& iter_v, uint8_t*& iter_yuv)
+{
+	*iter_yuv++ = *iter_u++;
+	*iter_yuv++ = *iter_y++;
+	*iter_yuv++ = *iter_v++;
+	*iter_yuv++ = *iter_y++;
+}
+
+template<>
+void store_yuv422_plane<core::raw_format::vyuy422>(uint8_t*& iter_y, uint8_t*& iter_u, uint8_t*& iter_v, uint8_t*& iter_yuv)
+{
+	*iter_yuv++ = *iter_v++;
+	*iter_yuv++ = *iter_y++;
+	*iter_yuv++ = *iter_u++;
+	*iter_yuv++ = *iter_y++;
+}
+
+
 template<format_t in, format_t out>
 core::pRawVideoFrame merge_planes_422p_yuyv(core::pRawVideoFrame frame) {
 
@@ -365,16 +405,9 @@ core::pRawVideoFrame merge_planes_422p_yuyv(core::pRawVideoFrame frame) {
 	iter_t iter_in2 = PLANE_DATA(frame, 2).begin();
 	iter_t iter_out = PLANE_DATA(frame_out, 0).begin();
 	for (size_t line = 0; line < res.height; ++line) {
-		for (size_t line2 = line; line2 < std::min(res.height,line+2); ++line2) {
 			for (size_t col = 0; col < res.width; col+=2) {
-				*iter_out++ = *iter_in0++;
-				*iter_out++ = *iter_in1++;
-				*iter_out++ = *iter_in0++;
-				*iter_out++ = *iter_in2++;
+				store_yuv422_plane<out>(iter_in0, iter_in1, iter_in2, iter_out);
 			}
-		}
-		iter_in1+=res.width/2;
-		iter_in2+=res.width/2;
 	}
 	return frame_out;
 }
@@ -405,7 +438,11 @@ core::pFrame dispatch(core::pRawVideoFrame frame, format_t target) {
 	if (source == yuv420p && target == yvyu422) frame_out =  merge_planes_420p_yvyu<yuv420p, yvyu422>(frame);
 	if (source == yuv420p && target == uyvy422) frame_out =  merge_planes_420p_uyvy<yuv420p, uyvy422>(frame);
 	if (source == yuv420p && target == vyuy422) frame_out =  merge_planes_420p_vyuy<yuv420p, vyuy422>(frame);
+
 	if (source == yuv422p && target == yuyv422) frame_out =  merge_planes_422p_yuyv<yuv422p, yuyv422>(frame);
+	if (source == yuv422p && target == yvyu422) frame_out =  merge_planes_422p_yuyv<yuv422p, yvyu422>(frame);
+	if (source == yuv422p && target == uyvy422) frame_out =  merge_planes_422p_yuyv<yuv422p, uyvy422>(frame);
+	if (source == yuv422p && target == vyuy422) frame_out =  merge_planes_422p_yuyv<yuv422p, vyuy422>(frame);
 	if (frame_out) {
 		frame_out->set_duration(frame->get_duration());
 		frame_out->set_timestamp(frame->get_timestamp());
@@ -438,7 +475,11 @@ MODULE_REGISTRATION_BEGIN("convert_planar")
 		REGISTER_CONVERTER(yuri::core::raw_format::yuv420p, yuri::core::raw_format::yvyu422, "convert_planar", 5)
 		REGISTER_CONVERTER(yuri::core::raw_format::yuv420p, yuri::core::raw_format::uyvy422, "convert_planar", 5)
 		REGISTER_CONVERTER(yuri::core::raw_format::yuv420p, yuri::core::raw_format::vyuy422, "convert_planar", 5)
+
 		REGISTER_CONVERTER(yuri::core::raw_format::yuv422p, yuri::core::raw_format::yuyv422, "convert_planar", 5)
+		REGISTER_CONVERTER(yuri::core::raw_format::yuv422p, yuri::core::raw_format::yvyu422, "convert_planar", 5)
+		REGISTER_CONVERTER(yuri::core::raw_format::yuv422p, yuri::core::raw_format::uyvy422, "convert_planar", 5)
+		REGISTER_CONVERTER(yuri::core::raw_format::yuv422p, yuri::core::raw_format::vyuy422, "convert_planar", 5)
 
 MODULE_REGISTRATION_END()
 
