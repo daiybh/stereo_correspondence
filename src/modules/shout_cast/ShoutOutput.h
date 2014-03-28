@@ -40,6 +40,7 @@ private:
 	std::string agent_;
 	std::string description_;
 	std::string title_;
+	std::string url_;
 	int protocol_;
 	bool sync_;
 };

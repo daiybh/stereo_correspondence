@@ -35,6 +35,7 @@ core::Parameters ShoutOutput::configure()
 	p["description"]["Stream description"]="";
 	p["title"]["Stream title"]="";
 	p["sync"]["Sync with server. Disable it, if you experience problems with playback."]=true;
+	p["url"]["URL to announce with the stream."]="";
 	return p;
 }
 
@@ -84,6 +85,10 @@ sync_(true)
 
 	throw_shout_call(shout_set_format(shout_.get(), SHOUT_FORMAT_OGG),shout_.get(),"Failed to set hostname");
 	throw_shout_call(shout_set_agent(shout_.get(), agent_.c_str()),shout_.get(), "Failed to set user agent");
+
+	if (!url_.empty()) {
+		throw_shout_call(shout_set_url(shout_.get(), url_.c_str()),shout_.get(), "Failed to set url");
+	}
 
 	shout_metadata_t *m = shout_metadata_new();
 	if (!description_.empty()) {
@@ -147,6 +152,8 @@ bool ShoutOutput::set_param(const core::Parameter& param)
 		}
 	} else if (param.get_name() == "sync") {
 		sync_ = param.get<bool>();
+	} else if (param.get_name() == "url") {
+		url_ = param.get<std::string>();
 	} else return base_type::set_param(param);
 
 	return true;
