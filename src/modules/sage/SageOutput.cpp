@@ -14,6 +14,7 @@
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/frame/CompressedVideoFrame.h"
 
 
 // Unexported method from libsage, needed to register sharing without using processMessages
@@ -49,7 +50,8 @@ std::map<format_t, sagePixFmt> yuri_sage_fmt_map = {
 {core::raw_format::bgr24, PIXFMT_888_INV},
 //{core::raw_format::rgba32, PIXFMT_8888},
 //{core::raw_format::bgra32, PIXFMT_8888_INV},
-{core::compressed_frame::dxt1, PIXFMT_DXT}};
+{core::compressed_frame::dxt1, PIXFMT_DXT},
+{core::compressed_frame::dxt5, PIXFMT_DXT5}};
 
 }
 
@@ -59,13 +61,7 @@ SageOutput::SageOutput(yuri::log::Log &log_, core::pwThreadBase parent, const co
 {
 	set_latency(2_ms);
 	IOTHREAD_INIT(parameters)
-	std::vector<format_t> fmts;
-	std::transform(yuri_sage_fmt_map.begin(),
-				   yuri_sage_fmt_map.end(),
-				   std::back_inserter(fmts),
-				   [](const std::pair<format_t, sagePixFmt>& f){return f.first;});
-
-	set_supported_formats(fmts);
+	set_supported_formats(yuri_sage_fmt_map);
 }
 
 
@@ -175,8 +171,11 @@ core::pFrame SageOutput::do_simple_single_step(const core::pFrame& frame)
 				std::copy(data_start,data_start+copy_width,sail_buffer+line*sage_line_width);
 			}
 		}
+	} else if (auto comp_frame = std::dynamic_pointer_cast<core::CompressedVideoFrame>(frame)) {
+		uint8_t* sail_buffer = reinterpret_cast<uint8_t*>(nextBuffer(sail_info));
+		std::copy(comp_frame->data(), comp_frame->data()+comp_frame->size(), sail_buffer);
 	} else {
-		log[log::warning] << "Compressed frames not supported yet";
+		log[log::warning] << "Unsupported frame type";
 	}
 
 //		} else {
