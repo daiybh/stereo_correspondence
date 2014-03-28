@@ -136,6 +136,7 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 			yuri::size_t data_size = videoFrame->GetRowBytes() * height;
 			//log[log::info] << "Copying " << data_size << " bytes for " << height << " lines, " << videoFrame->GetRowBytes() << " bytes each";
 			frame = core::RawVideoFrame::create_empty(output_format, {width, height}, data, data_size);
+			frame->set_duration(value*1_s/scale);
 		}
 		if (audioPacket && audio_pipe>=0) {
 			yuri::size_t samples = audioPacket->GetSampleFrameCount();
@@ -174,6 +175,7 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 			} else {
 				yuri::size_t data_size = rightframe->GetRowBytes() * height;
 				core::pRawVideoFrame frame2 = core::RawVideoFrame::create_empty(output_format, {width, height}, data2,data_size);
+				frame2->set_duration(value*1_s/scale);
 				if (output_format) push_frame(1,frame2);//,output_format,width,height,0,1e6*value/scale,0);
 				videoFrame->Release();
 //				ext->Release();
@@ -272,7 +274,7 @@ bool DeckLinkInput::start_capture()
 	}
 	if (audio_enabled) {
 		if ((res=input->EnableAudioInput(audio_sample_rate,audio_sample_type,audio_channels))!=S_OK) {
-			log[log::error] << "Failed to enable audio (" << bmerr(res)<<")" << "\n";
+			log[log::error] << "Failed to enable audio (" << bmerr(res)<<"), verify you have correct number of channels specified";
 			return false;
 		}
 		log[log::info] << "Audio input enabled" << "\n";
@@ -347,19 +349,19 @@ bool DeckLinkInput::restart_streams()
 }
 bool DeckLinkInput::set_param(const core::Parameter &p)
 {
-	if (iequals(p.get_name(), "format_detection")) {
+	if (p.get_name() == "format_detection") {
 		detect_format=p.get<bool>();
-	} else if (iequals(p.get_name(), "force_detection")) {
+	} else if (p.get_name() == "force_detection") {
 		manual_detect_format=p.get<unsigned>();
-	} else if (iequals(p.get_name(), "stereo")) {
+	} else if (p.get_name() == "stereo") {
 		capture_stereo=p.get<bool>();
-	} else if (iequals(p.get_name(), "disable_ntsc")) {
+	} else if (p.get_name() == "disable_ntsc") {
 		disable_ntsc=p.get<bool>();
-	} else if (iequals(p.get_name(), "disable_pal")) {
+	} else if (p.get_name() == "disable_pal") {
 		disable_pal=p.get<bool>();
-	} else if (iequals(p.get_name(), "disable_interlaced")) {
+	} else if (p.get_name() == "disable_interlaced") {
 		disable_interlaced=p.get<bool>();
-	} else if (iequals(p.get_name(), "disable_progressive")) {
+	} else if (p.get_name() == "disable_progressive") {
 		disable_progressive=p.get<bool>();
 	} else return DeckLinkBase::set_param(p);
 

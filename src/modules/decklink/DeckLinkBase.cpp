@@ -106,7 +106,7 @@ core::Parameters DeckLinkBase::configure()
 	p["format"]["Format"]="1080p25";
 	p["audio"]["Enable audio"]=false;
 	p["pixel_format"]["Select pixel format. Possible values are: (yuv, v210, argb, bgra, r210)"]="yuv";
-	p["audio_channels"]["Number of audio channels to process"]=2;
+	p["audio_channels"]["Number of audio channels to process, supported are 2, 8 or 16 channels"]=2;
 	return p;
 }
 
@@ -179,11 +179,11 @@ DeckLinkBase::~DeckLinkBase() noexcept
 
 bool DeckLinkBase::set_param(const core::Parameter &p)
 {
-	if (iequals(p.get_name(), "device")) {
+	if (p.get_name() == "device") {
 		device_index = p.get<uint16_t>();
-	} else if (iequals(p.get_name(), "connection")) {
+	} else if (p.get_name() ==  "connection") {
 		connection=parse_connection(p.get<std::string>());
-	} else if (iequals(p.get_name(), "format")) {
+	} else if (p.get_name() == "format") {
 		BMDDisplayMode m = parse_format(p.get<std::string>());
 		if (m == bmdModeUnknown) {
 			mode = bmdModeHD1080p25;
@@ -195,9 +195,9 @@ bool DeckLinkBase::set_param(const core::Parameter &p)
 			actual_format_is_psf = is_psf(p.get<std::string>());
 		}
 		log[log::info] << "Using " << get_mode_name(mode) << " (parsed from " << p.get<std::string>() <<")";
-	} else if (iequals(p.get_name(), "audio")) {
+	} else if (p.get_name() ==  "audio") {
 		audio_enabled=p.get<bool>();
-	} else if (iequals(p.get_name(), "pixel_format")) {
+	} else if (p.get_name() =="pixel_format") {
 		if (pixfmt_strings.count(p.get<std::string>())) {
 			pixel_format=pixfmt_strings[p.get<std::string>()];
 			log[log::debug] << "Pixelformat set to " << p.get<std::string>();
@@ -207,7 +207,7 @@ bool DeckLinkBase::set_param(const core::Parameter &p)
 			<< ". Using default 8bit YUV 4:2:2.";
 			pixel_format=bmdFormat8BitYUV;
 		}
-	} else if (iequals(p.get_name(), "audio_channels")) {
+	} else if (p.get_name() == "audio_channels") {
 		audio_channels=p.get<size_t>();
 	} else return IOThread::set_param(p);
 	return true;
