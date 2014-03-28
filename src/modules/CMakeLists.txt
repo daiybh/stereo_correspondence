@@ -147,6 +147,10 @@ IF(${THEORAENC_FOUND})
     add_subdirectory(theora)
 ENDIF()
 
+pkg_check_modules(VORBISENC vorbisenc)
+IF(${VORBISENC_FOUND})
+    add_subdirectory(vorbis)
+ENDIF()
 
 IF (Boost_REGEX_FOUND)
 	add_subdirectory(rawfilesource)
