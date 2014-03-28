@@ -16,6 +16,12 @@
 namespace yuri {
 namespace vorbis {
 
+enum class encoding_type_t {
+	vbr,
+	cbr,
+	abr
+};
+
 class VorbisEncoder: public core::SpecializedIOFilter<core::RawAudioFrame>
 {
 	using base_type = core::SpecializedIOFilter<core::RawAudioFrame>;
@@ -27,13 +33,17 @@ public:
 private:
 	virtual core::pFrame do_special_single_step(const core::pRawAudioFrame& frame) override;
 	virtual bool set_param(const core::Parameter& param);
-
+	bool initialize(const core::pRawAudioFrame& frame);
 	bool process_packet(ogg_packet& packet);
 	vorbis_info info_;
 	vorbis_dsp_state state_;
 	vorbis_block block_;
 	ogg_stream_state ogg_state_;
 	bool initialized_;
+	int bitrate_;
+	float quality_;
+	encoding_type_t encoding_type_;
+	int encoding_channels_;
 };
 
 } /* namespace vorbis */
