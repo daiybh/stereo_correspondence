@@ -152,6 +152,12 @@ IF(${VORBISENC_FOUND})
     add_subdirectory(vorbis)
 ENDIF()
 
+pkg_check_modules(X264 x264)
+IF(${X264_FOUND})
+    add_subdirectory(x264)
+ENDIF()
+
+
 IF (Boost_REGEX_FOUND)
 	add_subdirectory(rawfilesource)
 ENDIF()
