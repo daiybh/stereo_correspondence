@@ -35,6 +35,7 @@ namespace {
 			{mpeg1,	{mpeg1,	"MPEG 1", {"MPEG1","MPG","MPEG"}, {}}},
 			{ogg,	{ogg,	"OGG", {"MPEG1"}, {"application/ogg"}}},
 			{theora,{theora,"THEORA", {"THEORA"}, {"video/theora"}}},
+			{h265,	{h265,	"H.265", {"H265","H.265"}, {"video/h265"}}},
 	};
 
 	bool do_add_format(const compressed_frame_info_t& info)
