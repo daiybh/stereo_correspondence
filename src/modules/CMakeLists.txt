@@ -157,6 +157,10 @@ IF(${X264_FOUND})
     add_subdirectory(x264)
 ENDIF()
 
+pkg_check_modules(X265 x265)
+IF(${X265_FOUND})
+    add_subdirectory(x265)
+ENDIF()
 
 IF (Boost_REGEX_FOUND)
 	add_subdirectory(rawfilesource)
