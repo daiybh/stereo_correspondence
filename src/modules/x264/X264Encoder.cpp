@@ -12,6 +12,8 @@
 #include "yuri/core/frame/CompressedVideoFrame.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/compressed_frame_types.h"
+#include <cstdarg>
+#include <cstdio>
 namespace yuri {
 namespace x264 {
 
@@ -53,6 +55,25 @@ std::map<format_t, int>supported_formats = {
 		{core::raw_format::yuv444p, X264_CSP_I444}
 };
 
+std::map<int, log::debug_flags> x264_log_levels = {
+		{X264_LOG_NONE, log::info},
+		{X264_LOG_ERROR, log::error},
+		{X264_LOG_WARNING, log::warning},
+		{X264_LOG_INFO, log::info},
+		{X264_LOG_DEBUG, log::debug}
+};
+
+void yuri_log(void* priv, int level,  const char *psz, va_list params)
+{
+	log::Log& log = *reinterpret_cast<log::Log*>(priv);
+	char msg[1024];
+	int len = std::vsnprintf(msg, 1024, psz, params);
+	msg[len]=0;
+	log::debug_flags l = log::info;
+	auto it = x264_log_levels.find(level);
+	if (it!=x264_log_levels.end()) l = it->second;
+	log[l] << "X264 " << msg;
+}
 
 }
 
@@ -85,6 +106,10 @@ core::pFrame X264Encoder::do_special_single_step(const core::pRawVideoFrame& fra
 		params_.i_fps_num=25;
 		params_.i_fps_den = 1;
 		params_.i_csp = it->second;
+
+		params_.pf_log = &yuri_log;
+		params_.p_log_private = &log;
+
 		x264_param_apply_profile(&params_, profile_.c_str());
 
 		x264_picture_alloc(&picture_in_, it->second, res.width, res.height);
