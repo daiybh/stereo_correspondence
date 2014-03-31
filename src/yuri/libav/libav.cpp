@@ -68,6 +68,8 @@ std::unordered_map<format_t, PixelFormat> yuri_pixel_map = {
 		{uyvy422,					PIX_FMT_UYVY422},
 
 		{yuv411p,					PIX_FMT_YUV411P},
+
+		{yuv422_v210,				PIX_FMT_YUV422P10LE},
 };
 
 std::map<PixelFormat, PixelFormat> yuri_pixel_special_map = {
@@ -123,7 +125,7 @@ core::pRawVideoFrame yuri_frame_from_av(const AVFrame& av_frame)
 			break;
 		}
 
-		size_t line_size = av_frame.width/fi.planes[i].sub_x;
+		size_t line_size = PLANE_DATA(frame,i).get_line_size();//av_frame.width/fi.planes[i].sub_x;
 		size_t lines = av_frame.height/fi.planes[i].sub_y;
 //				log[log::info] << "Filling plane " << i << ", line size: " << line_size << ", lines: "<<lines;
 		assert(line_size <= static_cast<yuri::size_t>(av_frame.linesize[i]));
