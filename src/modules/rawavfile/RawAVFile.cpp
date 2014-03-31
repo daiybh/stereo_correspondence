@@ -235,8 +235,7 @@ void RawAVFile::run()
 			log[log::debug] << "orig pts: " << packet.pts << ", dts: " << packet.dts << ", dur: " << packet.duration;
 		} else {
 			int whole_frame = 0;
-			const int height = video_streams_[idx]->codec->height;
-			const int width= video_streams_[idx]->codec->width;
+
 			keep_packet = false;
 			int decoded_size = avcodec_decode_video2(video_streams_[idx]->codec,av_frame, &whole_frame,&packet);
 			if (!whole_frame) {
@@ -253,42 +252,15 @@ void RawAVFile::run()
 				log[log::debug] << "Used only " << decoded_size << " bytes out of " << packet.size;
 			}
 
-			//assert(format_out_);
-			format_t fmt = libav::yuri_pixelformat_from_av(static_cast<PixelFormat>(av_frame->format));
-			if (fmt == 0) continue;
-
-			if (format_out_ != fmt) {
+			auto f = libav::yuri_frame_from_av(*av_frame);
+			if (!f) continue;
+			if (format_out_ != f->get_format()) {
 				log[log::warning] << "Unexpected frame format! Expected '" << get_format_name_no_throw(format_out_)
-				<< "', but got '" << get_format_name_no_throw(fmt) << "'";
-				format_out_ = fmt;
+				<< "', but got '" << get_format_name_no_throw(f->get_format()) << "'";
+				format_out_ = f->get_format();
 			}
-//			log[log::info] << __func__ << " @"<<__FILE__<<":"<<__LINE__ << ", format: " << format_out_ << ", fmt: " << fmt << ", orig: " << av_frame->format;
-			if (format_out_ == 0) continue;
-//			log[log::info] << __func__ << " @"<<__FILE__<<":"<<__LINE__;
-			core::pRawVideoFrame f = core::RawVideoFrame::create_empty(format_out_, {static_cast<dimension_t>(width), static_cast<dimension_t>(height)}, true);
-			frames_[idx] = f;
-//			frames_[idx] = allocate_empty_frame(format_out_,width, height, true);
-//			FormatInfo_t fi = core::BasicPipe::get_format_info(format_out_);
-			const auto& fi = core::raw_format::get_format_info(format_out_);
-			for (size_t i=0;i<4;++i) {
-				if ((av_frame->linesize[i] == 0) || (!av_frame->data[i])) break;
-				if (i >= f->get_planes_count()) {
-					log[log::warning] << "BUG? Inconsistent number of planes";
-					break;
-				}
 
-				size_t line_size = width/fi.planes[i].sub_x;
-				size_t lines = height/fi.planes[i].sub_y;
-//				log[log::info] << "Filling plane " << i << ", line size: " << line_size << ", lines: "<<lines;
-				assert(line_size <= static_cast<yuri::size_t>(av_frame->linesize[i]));
-				//assert(av_frame->linesize[i]*height <= PLANE_SIZE(frame,i));
-				for (size_t l=0;l<lines;++l) {
-					std::copy(av_frame->data[i]+l*av_frame->linesize[i],
-								av_frame->data[i]+l*av_frame->linesize[i]+line_size,
-								PLANE_RAW_DATA(f,i)+l*line_size);
-				}
-			}
-			//push_raw_video_frame(0,frame);
+			frames_[idx] = f;
 		}
 	}
 	av_free(av_frame);
