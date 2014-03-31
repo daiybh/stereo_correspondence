@@ -803,7 +803,11 @@ bool V4l2Source::set_frame_params()
 	}
 	log[log::info] << "Driver reports current frame interval " << strp.parm.capture.timeperframe.numerator << "/"
 			<< strp.parm.capture.timeperframe.denominator << "s" << std::endl;
-	frame_duration = 1_s*strp.parm.capture.timeperframe.numerator/strp.parm.capture.timeperframe.denominator;
+	if (strp.parm.capture.timeperframe.denominator!=0) {
+		frame_duration = 1_s*strp.parm.capture.timeperframe.numerator/strp.parm.capture.timeperframe.denominator;
+	} else {
+		frame_duration = 0_s;
+	}
 	return true;
 }
 bool V4l2Source::initialize_capture()
