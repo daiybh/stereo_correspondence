@@ -253,7 +253,10 @@ void RawAVFile::run()
 			}
 
 			auto f = libav::yuri_frame_from_av(*av_frame);
-			if (!f) continue;
+			if (!f) {
+				log[log::warning] << "Failed to convert avframe, probably unsupported pixelformat";
+				continue;
+			}
 			if (format_out_ != f->get_format()) {
 				log[log::warning] << "Unexpected frame format! Expected '" << get_format_name_no_throw(format_out_)
 				<< "', but got '" << get_format_name_no_throw(f->get_format()) << "'";
