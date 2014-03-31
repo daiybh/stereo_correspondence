@@ -10,6 +10,7 @@
 #ifndef LIBAV_H_
 #define LIBAV_H_
 #include "yuri/core/utils/new_types.h"
+#include "yuri/core/forward.h"
 extern "C" {
 	#include "libavcodec/avcodec.h"
 }
@@ -21,6 +22,8 @@ CodecID avcodec_from_yuri_format(yuri::format_t codec);
 
 yuri::format_t yuri_pixelformat_from_av(PixelFormat format);
 yuri::format_t yuri_format_from_avcodec(CodecID codec);
+
+core::pRawVideoFrame yuri_frame_from_av(const AVFrame& frame);
 }
 }
 

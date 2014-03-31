@@ -10,8 +10,12 @@
 #include "libav.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/compressed_frame_types.h"
+#include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/frame/raw_frame_params.h"
+
 #include <unordered_map>
 #include <map>
+#include <cassert>
 namespace yuri {
 namespace libav {
 
@@ -29,7 +33,7 @@ std::unordered_map<format_t, CodecID> yuri_codec_map = {
 //		{YURI_VIDEO_DIRAC,			CODEC_ID_DIRAC},
 //		{YURI_VIDEO_H263,			CODEC_ID_H263},
 //		{YURI_VIDEO_H263PLUS,		CODEC_ID_H263P},
-//		{YURI_VIDEO_THEORA,			CODEC_ID_THEORA},
+		{theora,					CODEC_ID_THEORA},
 		{vp8,						CODEC_ID_VP8},
 };
 }
@@ -104,6 +108,35 @@ yuri::format_t yuri_format_from_avcodec(CodecID codec)
 	}
 	return 0;
 }
+
+core::pRawVideoFrame yuri_frame_from_av(const AVFrame& av_frame)
+{
+	format_t fmt = libav::yuri_pixelformat_from_av(static_cast<PixelFormat>(av_frame.format));
+	if (fmt == 0) return {};
+
+	core::pRawVideoFrame frame = core::RawVideoFrame::create_empty(fmt, {static_cast<dimension_t>(av_frame.width), static_cast<dimension_t>(av_frame.height)}, true);
+	const auto& fi = core::raw_format::get_format_info(fmt);
+	for (size_t i=0;i<4;++i) {
+		if ((av_frame.linesize[i] == 0) || (!av_frame.data[i])) break;
+		if (i >= frame->get_planes_count()) {
+//			log[log::warning] << "BUG? Inconsistent number of planes";
+			break;
+		}
+
+		size_t line_size = av_frame.width/fi.planes[i].sub_x;
+		size_t lines = av_frame.height/fi.planes[i].sub_y;
+//				log[log::info] << "Filling plane " << i << ", line size: " << line_size << ", lines: "<<lines;
+		assert(line_size <= static_cast<yuri::size_t>(av_frame.linesize[i]));
+		//assert(av_frame->linesize[i]*height <= PLANE_SIZE(frame,i));
+		for (size_t l=0;l<lines;++l) {
+			std::copy(av_frame.data[i]+l*av_frame.linesize[i],
+						av_frame.data[i]+l*av_frame.linesize[i]+line_size,
+						PLANE_RAW_DATA(frame,i)+l*line_size);
+		}
+	}
+	return frame;
+}
+
 }
 }
 
