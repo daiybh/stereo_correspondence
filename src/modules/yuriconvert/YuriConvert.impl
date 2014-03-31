@@ -483,85 +483,171 @@ void convert_line<core::raw_format::ayuv4444, core::raw_format::yuyv422>
 #include "YuriConvert_yuv_rgb.impl"
 
 /* ***************************************************************************
+ * 					Single component conversions
+ *************************************************************************** */
+
+template<>
+void convert_line<core::raw_format::u8, core::raw_format::y8>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	std::copy(src, src+width, dest);
+	src+=width;
+	dest+=width;
+}
+
+template<>
+void convert_line<core::raw_format::v8, core::raw_format::y8>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	std::copy(src, src+width, dest);
+	src+=width;
+	dest+=width;
+}
+template<>
+void convert_line<core::raw_format::r8, core::raw_format::y8>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	std::copy(src, src+width, dest);
+	src+=width;
+	dest+=width;
+}
+template<>
+void convert_line<core::raw_format::g8, core::raw_format::y8>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	std::copy(src, src+width, dest);
+	src+=width;
+	dest+=width;
+}
+template<>
+void convert_line<core::raw_format::b8, core::raw_format::y8>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	std::copy(src, src+width, dest);
+	src+=width;
+	dest+=width;
+}
+template<>
+void convert_line<core::raw_format::depth8, core::raw_format::y8>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	std::copy(src, src+width, dest);
+	src+=width;
+	dest+=width;
+}
+
+
+/* ***************************************************************************
  * 					V210 conversions
  *************************************************************************** */
-/*
-template<>
-size_t get_linesize<YURI_FMT_V210>(size_t width)
-{
-	return 8 * (width / 3) + 4 * (width % 3);
-}
 
-template<>
-core::pBasicFrame allocate_frame<YURI_FMT_V210>(size_t width, size_t height)
-{
-	core::pBasicFrame frame = core::BasicIOThread::allocate_empty_frame(get_linesize<YURI_FMT_V210>(width)*height,true);
-	frame->set_parameters(YURI_FMT_V210, width, height);
-	return frame;
-}
-#define V210_B0(x) (((x)&0x000003FF)>> 0)
-#define V210_B1(x) (((x)&0x000FFC00)>>10)
-#define V210_B2(x) (((x)&0x3FF00000)>>20)
+//template<>
+//size_t get_linesize<core::raw_format::yuv422_v210>(size_t width)
+//{
+//	return 16*(width /6);
+//			//8 * (width / 3) + 4 * (width % 3);
+//}
+
+//template<>
+//core::pBasicFrame allocate_frame<core::raw_format::yuv422_v210>(size_t width, size_t height)
+//{
+//	//core::pBasicFrame frame = core::BasicIOThread::allocate_empty_frame(get_linesize<YURI_FMT_V210>(width)*height,true);
+//	//frame->set_parameters(YURI_FMT_V210, width, height);
+//	//return frame;
+//}
+
+
+#define V210_B0_BE(x) (((x)&0x000003FF)>> 0)
+#define V210_B1_BE(x) (((x)&0x000FFC00)>>10)
+#define V210_B2_BE(x) (((x)&0x3FF00000)>>20)
+
+
+//#define V210_B0(x) (((x)&0xFF000000)>> 24) | ((x)&0x00020000) >> 8))
+//#define V210_B0(x) (((x)&0x00FD0000)>> 18) | ((x)&0x00020000) >> 24))
+//#define V210_B1(x) (((x)&0x000FFC00)>>10)
+//#define V210_B2(x) (((x)&0x3FF00000)>>20)
+
 
 // Full range
 template<>
-void convert_line<YURI_FMT_V210, core::raw_format::yuyv422>
+void convert_line<core::raw_format::yuv422_v210, core::raw_format::yuyv422>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
 	const uint32_t* src_pixels = reinterpret_cast<const uint32_t*>(src);
+	
+	
 	for (size_t pixel = 0; pixel < width/3; ++pixel) {
-		*dest++=V210_B1(*src_pixels)>>2;
-		*dest++=V210_B0(*src_pixels)>>2;
-		*dest++=V210_B0(*(src_pixels+1))>>2;
-		*dest++=V210_B2(*src_pixels)>>2;
-		*dest++=V210_B2(*(src_pixels+1))>>2;
-		*dest++=V210_B1(*(src_pixels+1))>>2;
+//		*dest++=V210_B1(*src_pixels)>>2;
+//		*dest++=0x7f;
+//		*dest++=V210_B0(*(src_pixels+1))>>2;
+//		*dest++=0x7f;
+//		*dest++=V210_B2(*(src_pixels+1))>>2;
+//		*dest++=0x7f;
+		
+//		std::fill(dest, dest+6, V210_B1(*src_pixels)>>2);
+//		dest+=6;
+		
+		*dest++=V210_B1_BE(*src_pixels)>>2;
+		*dest++=V210_B0_BE(*src_pixels)>>2;
+		*dest++=V210_B0_BE(*(src_pixels+1))>>2;
+		*dest++=V210_B2_BE(*src_pixels)>>2;
+		*dest++=V210_B2_BE(*(src_pixels+1))>>2;
+		*dest++=V210_B1_BE(*(src_pixels+1))>>2;
 		src_pixels+=2;
+		
+//		*dest++=V210_B0(*src_pixels)>>2;
+//		*dest++=V210_B1(*src_pixels)>>2;
+//		*dest++=V210_B2(*src_pixels)>>2;
+//		src_pixels++;
+//		*dest++=V210_B0(*src_pixels)>>2;
+//		*dest++=V210_B1(*src_pixels)>>2;
+//		*dest++=V210_B2(*src_pixels)>>2;
+//		src_pixels++;
 	}
 }
 
-template<>
-void convert_line<YURI_FMT_V210, core::raw_format::uyvy422>
-(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
-{
-	const uint32_t* src_pixels = reinterpret_cast<const uint32_t*>(src);
-	for (size_t pixel = 0; pixel < width/3; ++pixel) {
-		*dest++=V210_B0(*src_pixels)>>2;
-		*dest++=V210_B1(*src_pixels)>>2;
-		*dest++=V210_B2(*src_pixels)>>2;
-		src_pixels++;
-		*dest++=V210_B0(*src_pixels)>>2;
-		*dest++=V210_B1(*src_pixels)>>2;
-		*dest++=V210_B2(*src_pixels)>>2;
-		src_pixels++;
-	}
-}
-// Full range
-template<>
-void convert_line<core::raw_format::yuyv422, YURI_FMT_V210>
-(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
-{
-	uint32_t* dest_pixels = reinterpret_cast<uint32_t*>(dest);
-	for (size_t pixel = 0; pixel < width/3; ++pixel) {
-		*dest_pixels++=(  (*(src+1))<<2 ) | (  (*(src+0))<<12 ) | (  (*(src+3))<<22 ); 
-		*dest_pixels++=(  (*(src+2))<<2 ) | (  (*(src+5))<<12 ) | (  (*(src+4))<<22 );
-		src+=6;
-	}
-}
-// Full range
-template<>
-void convert_line<core::raw_format::uyvy422, YURI_FMT_V210>
-(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
-{
-	uint32_t* dest_pixels = reinterpret_cast<uint32_t*>(dest);
-	for (size_t pixel = 0; pixel < width/3; ++pixel) {
-		*dest_pixels++=(  (*(src+0))<<2 ) | (  (*(src+1))<<12 ) | (  (*(src+2))<<22 ); 
-		src+=3;
-		*dest_pixels++=(  (*(src+0))<<2 ) | (  (*(src+1))<<12 ) | (  (*(src+2))<<22 );
-		src+=3;
-	}
-}
-*/
+//template<>
+//void convert_line<YURI_FMT_V210, core::raw_format::uyvy422>
+//(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+//{
+//	const uint32_t* src_pixels = reinterpret_cast<const uint32_t*>(src);
+//	for (size_t pixel = 0; pixel < width/3; ++pixel) {
+//		*dest++=V210_B0(*src_pixels)>>2;
+//		*dest++=V210_B1(*src_pixels)>>2;
+//		*dest++=V210_B2(*src_pixels)>>2;
+//		src_pixels++;
+//		*dest++=V210_B0(*src_pixels)>>2;
+//		*dest++=V210_B1(*src_pixels)>>2;
+//		*dest++=V210_B2(*src_pixels)>>2;
+//		src_pixels++;
+//	}
+//}
+//// Full range
+//template<>
+//void convert_line<core::raw_format::yuyv422, YURI_FMT_V210>
+//(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+//{
+//	uint32_t* dest_pixels = reinterpret_cast<uint32_t*>(dest);
+//	for (size_t pixel = 0; pixel < width/3; ++pixel) {
+//		*dest_pixels++=(  (*(src+1))<<2 ) | (  (*(src+0))<<12 ) | (  (*(src+3))<<22 ); 
+//		*dest_pixels++=(  (*(src+2))<<2 ) | (  (*(src+5))<<12 ) | (  (*(src+4))<<22 );
+//		src+=6;
+//	}
+//}
+//// Full range
+//template<>
+//void convert_line<core::raw_format::uyvy422, YURI_FMT_V210>
+//(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+//{
+//	uint32_t* dest_pixels = reinterpret_cast<uint32_t*>(dest);
+//	for (size_t pixel = 0; pixel < width/3; ++pixel) {
+//		*dest_pixels++=(  (*(src+0))<<2 ) | (  (*(src+1))<<12 ) | (  (*(src+2))<<22 ); 
+//		src+=3;
+//		*dest_pixels++=(  (*(src+0))<<2 ) | (  (*(src+1))<<12 ) | (  (*(src+2))<<22 );
+//		src+=3;
+//	}
+//}
+
 /* ***************************************************************************
  * 					Default template definitions
  *************************************************************************** */
@@ -577,25 +663,27 @@ core::pRawVideoFrame allocate_frame(size_t width, size_t height)
 {
 	return core::RawVideoFrame::create_empty(fmt, {width, height}, true);
 }
-template<format_t fmt> size_t get_linesize(size_t width)
-{
-	//FormatInfo_t fi_in			= core::BasicPipe::get_format_info(fmt);
-	//assert (fi_in && !(fi_in->bpp % 8));
-	//return (width * fi_in->bpp) / 8;
-	const auto& fi = core::raw_format::get_format_info(fmt);
-	assert (fi.planes.size()==1);
-	assert (fi.planes[0].bit_depth.first % (8* fi.planes[0].bit_depth.second)== 0);
-	return width * fi.planes[0].bit_depth.first / (8* fi.planes[0].bit_depth.second);
-}
+//template<format_t fmt> size_t get_linesize(size_t width)
+//{
+//	//FormatInfo_t fi_in			= core::BasicPipe::get_format_info(fmt);
+//	//assert (fi_in && !(fi_in->bpp % 8));
+//	//return (width * fi_in->bpp) / 8;
+//	const auto& fi = core::raw_format::get_format_info(fmt);
+//	assert (fi.planes.size()==1);
+//	assert (fi.planes[0].bit_depth.first % (8* fi.planes[0].bit_depth.second)== 0);
+//	return width * fi.planes[0].bit_depth.first / (8* fi.planes[0].bit_depth.second);
+//}
 
 template<format_t fmt_in, format_t fmt_out>
 core::pRawVideoFrame convert_formats(const core::pRawVideoFrame& frame, const YuriConvertor& conv)
 {
 	const size_t width 			= frame->get_width();
 	const size_t height			= frame->get_height();
-	const size_t linesize_in 	= get_linesize<fmt_in>(width);
-	const size_t linesize_out 	= get_linesize<fmt_out>(width);
 	core::pRawVideoFrame outframe 	= allocate_frame<fmt_out>(width, height);
+//	const size_t linesize_in 	= get_linesize<fmt_in>(width);
+//	const size_t linesize_out 	= get_linesize<fmt_out>(width);
+	const size_t linesize_in 	= PLANE_DATA(frame,0).get_line_size();
+	const size_t linesize_out 	= PLANE_DATA(outframe,0).get_line_size();
 	core::Plane::const_iterator src	= PLANE_DATA(frame,0).begin();
 	core::Plane::iterator dest		= PLANE_DATA(outframe,0).begin();
 	for (size_t line = 0; line < height; ++line) {
