@@ -26,14 +26,16 @@ pRawVideoFrame RawVideoFrame::create_empty(format_t format, resolution_t resolut
 		frame = make_shared<RawVideoFrame>(format, resolution, 0);
 		for (const auto& p: info.planes) {
 			const auto fp = get_plane_params(p, resolution);
-			const size_t line_size = fp.first;//p.alignment_requirement?line_size_unaligned+line_size_unaligned%p.alignment_requirement:line_size_unaligned;
-			const size_t frame_size = fp.second;//line_size * resolution.height / p.sub_y;
+			const size_t line_size = std::get<0>(fp);//p.alignment_requirement?line_size_unaligned+line_size_unaligned%p.alignment_requirement:line_size_unaligned;
+			const size_t frame_size = std::get<1>(fp);//line_size * resolution.height / p.sub_y;
+			const resolution_t res = std::get<2>(fp);
+
 			if (!fixed) {
-				frame->emplace_back(frame_size, resolution, line_size);
+				frame->emplace_back(frame_size, res, line_size);
 			} else {
 				auto mem = FixedMemoryAllocator::get_block(frame_size);
 				Plane::vector_type data{mem.first, frame_size, mem.second};
-				frame->emplace_back(std::move(data), resolution, line_size);
+				frame->emplace_back(std::move(data), res, line_size);
 			}
 
 		}
@@ -104,21 +106,21 @@ void RawVideoFrame::copy_parameters(Frame& other) const {
 	VideoFrame::copy_parameters(other);
 }
 
-std::pair<size_t, size_t> RawVideoFrame::get_plane_params(const raw_format::raw_format_t& info, size_t plane, resolution_t resolution)
+std::tuple<size_t, size_t, resolution_t> RawVideoFrame::get_plane_params(const raw_format::raw_format_t& info, size_t plane, resolution_t resolution)
 {
 
 	const auto& p = info.planes[plane];
 	return get_plane_params(p, resolution);
 }
 
-std::pair<size_t, size_t> RawVideoFrame::get_plane_params(const raw_format::plane_info_t& p, resolution_t resolution)
+std::tuple<size_t, size_t, resolution_t> RawVideoFrame::get_plane_params(const raw_format::plane_info_t& p, resolution_t resolution)
 {
 	const size_t line_size_nom = resolution.width * p.bit_depth.first;
 	const size_t line_size_den = p.bit_depth.second * p.sub_x * 8;
 	const size_t line_size_unaligned = line_size_nom / line_size_den + line_size_nom % line_size_den;
 	const size_t line_size = p.alignment_requirement?line_size_unaligned+line_size_unaligned%p.alignment_requirement:line_size_unaligned;
 	const size_t frame_size = line_size * resolution.height / p.sub_y;
-	return {line_size, frame_size};
+	return std::make_tuple(line_size, frame_size, resolution_t{resolution.width / p.sub_x, resolution.height / p.sub_y});
 }
 }
 }

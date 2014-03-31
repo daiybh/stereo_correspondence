@@ -82,8 +82,8 @@ private:
 	 */
 	virtual size_t	do_get_size() const noexcept;
 
-	static std::pair<size_t, size_t>	get_plane_params(const raw_format::raw_format_t& info, size_t plane, resolution_t resolution);
-	static std::pair<size_t, size_t>	get_plane_params(const raw_format::plane_info_t& info, resolution_t resolution);
+	static std::tuple<size_t, size_t, resolution_t> get_plane_params(const raw_format::raw_format_t& info, size_t plane, resolution_t resolution);
+	static std::tuple<size_t, size_t, resolution_t>	get_plane_params(const raw_format::plane_info_t& info, resolution_t resolution);
 protected:
 	/*!
 	 * Copies parameters from the frame to other frame.
@@ -115,7 +115,8 @@ pRawVideoFrame RawVideoFrame::create_empty(format_t format, resolution_t resolut
 	try {
 			const auto& info = raw_format::get_format_info(format);
 			size_t line_size, frame_size;
-			std::tie(line_size, frame_size) = get_plane_params(info, 0, resolution);
+			resolution_t res;
+			std::tie(line_size, frame_size, res) = get_plane_params(info, 0, resolution);
 //			assert(size>= frame_size);
 			// Creating with 0 planes and them emplacing planes into it.
 			pRawVideoFrame frame = make_shared<RawVideoFrame>(format, resolution, 0);
