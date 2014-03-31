@@ -168,12 +168,13 @@ template<>
 struct combine_kernel<rgba32, rgb24>:
 public combine_base<4, 3, 4, rgba32> {
 	static void compute
-(plane_t::const_iterator& , plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
+(plane_t::const_iterator& src_pix, plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 {
 	*dest_pix++ =*ovr_pix++;
 	*dest_pix++ =*ovr_pix++;
 	*dest_pix++ =*ovr_pix++;
 	*dest_pix++ =255;
+	src_pix+=4;
 }
 
 };
@@ -182,11 +183,12 @@ struct combine_kernel<rgb24, rgb24>:
 public combine_base<3, 3, 3, rgb24>
 {
 	static void compute
-	(plane_t::const_iterator& , plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
+	(plane_t::const_iterator& src_pix, plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 	{
 		*dest_pix++ =*ovr_pix++;
 		*dest_pix++ =*ovr_pix++;
 		*dest_pix++ =*ovr_pix++;
+		src_pix+=3;
 	}
 };
 
@@ -194,25 +196,27 @@ template<>
 struct combine_kernel<bgr24, rgb24>:
 public combine_base<3, 3, 3, bgr24> {
 	static void compute
-(plane_t::const_iterator& , plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
+(plane_t::const_iterator& src_pix, plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 {
 	*dest_pix++ =*(ovr_pix+2);
 	*dest_pix++ =*(ovr_pix+1);
 	*dest_pix++ =*(ovr_pix+0);
 	ovr_pix+=3;
+	src_pix+=3;
 }
 };
 template<>
 struct combine_kernel<abgr32, rgb24>:
 public combine_base<4, 3, 4, abgr32> {
 	static void compute
-(plane_t::const_iterator& , plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
+(plane_t::const_iterator& src_pix, plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 {
 	*dest_pix++ =*(ovr_pix+2);
 	*dest_pix++ =*(ovr_pix+1);
 	*dest_pix++ =*(ovr_pix+0);
 	*dest_pix++ =255;
 	ovr_pix+=3;
+	src_pix+=4;
 }
 };
 
@@ -242,23 +246,25 @@ template<>
 struct combine_kernel<yuyv422, yuyv422>:
 public combine_base<2, 2, 2, yuyv422, 2> {
 	static void compute
-(plane_t::const_iterator& , plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
+(plane_t::const_iterator& src_pix, plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 {
 	*dest_pix++ =*ovr_pix++;
 	*dest_pix++ =*ovr_pix++;
 	*dest_pix++ =*ovr_pix++;
 	*dest_pix++ =*ovr_pix++;
+	src_pix+=4;
 }
 };
 template<>
 struct combine_kernel<yuyv422, yuv444>:
 public combine_base<2, 3, 3, yuv444, 2> {
 	static void compute
-(plane_t::const_iterator& , plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
+(plane_t::const_iterator& src_pix, plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
 {
 	std::copy(ovr_pix, ovr_pix+6, dest_pix);
 	ovr_pix+=6;
 	dest_pix+=6;
+	src_pix+=4;
 //	*dest_pix++ =*(ovr_pix+0);
 //	*dest_pix++ =*(ovr_pix+1);
 //	*dest_pix++ =*(ovr_pix+3);
