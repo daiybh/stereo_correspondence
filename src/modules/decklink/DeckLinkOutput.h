@@ -11,6 +11,7 @@
 #include "DeckLinkBase.h"
 #include "DeckLink3DVideoFrame.h"
 #include "yuri/core/forward.h"
+#include "yuri/core/frame/RawAudioFrame.h"
 #include <deque>
 namespace yuri {
 
@@ -57,6 +58,7 @@ protected:
 	BMDTimeScale scale;
 	mutex schedule_mutex;
 	core::pRawVideoFrame frame, frame2;
+	core::pRawAudioFrame aframe;
 	//IDeckLinkMutableVideoFrame *act_oframe, *back_oframe;
 	std::deque<shared_ptr<DeckLink3DVideoFrame> > out_frames;
 	yuri::size_t frame_number;

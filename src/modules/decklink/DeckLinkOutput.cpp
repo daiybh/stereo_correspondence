@@ -10,7 +10,6 @@
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/raw_frame_params.h"
-#include "yuri/core/frame/RawAudioFrame.h"
 #include "yuri/core/frame/raw_audio_frame_types.h"
 #include "yuri/core/frame/raw_audio_frame_params.h"
 
@@ -94,13 +93,14 @@ void DeckLinkOutput::run()
 
 bool DeckLinkOutput::set_param(const core::Parameter &p)
 {
-	if (iequals(p.get_name(), "format_detection")) {
+//	log[log::info] << "Got param " << p.get_name() << ", value: '" << p.get<std::string>() << "'";
+	if (p.get_name() == "format_detection") {
 		detect_format=p.get<bool>();
-	} else if (iequals(p.get_name(), "prebuffer")) {
+	} else if (p.get_name() == "prebuffer") {
 		prebuffer=p.get<size_t>();
-	} else if (iequals(p.get_name(), "sync")) {
+	} else if (p.get_name() == "sync") {
 		sync=p.get<bool>();
-	} else if (iequals(p.get_name(), "stereo")) {
+	} else if (p.get_name()=="stereo") {
 		stereo_mode=p.get<bool>();
 	} return DeckLinkBase::set_param(p);
 	return true;
@@ -325,20 +325,20 @@ bool DeckLinkOutput::step()
 	if (stereo_usable) fill_frame(frame2,pf->get_right());
 	if (audio_enabled /*&& in[2]*/) {
 		using namespace core::raw_audio_format;
-		core::pRawAudioFrame audio_frame=dynamic_pointer_cast<core::RawAudioFrame>(pop_frame(2));
-		if (audio_frame) {
+		if (!aframe) aframe=dynamic_pointer_cast<core::RawAudioFrame>(pop_frame(2));
+		if (aframe) {
 			uint32_t writen;
-			uvector<int16_t> samples(audio_frame->get_sample_count()*audio_channels);
-			if (audio_frame->get_format() == signed_24bit_be) {
-				const uint8_t *data = audio_frame->data();
+			uvector<int16_t> samples(aframe->get_sample_count()*audio_channels);
+			if (aframe->get_format() == signed_24bit_be) {
+				const uint8_t *data = aframe->data();
 //				size_t zeroes=0;
-				const size_t chan = audio_frame->get_channel_count();
+				const size_t chan = aframe->get_channel_count();
 				const size_t copy_chans = std::min(chan,static_cast<size_t>(audio_channels));
 				const size_t zero_chans = audio_channels - copy_chans;
 				size_t skip =(chan-copy_chans)*3;
 				int16_t sample;
 				auto sample_iter=samples.begin();
-				for (size_t i=0;i<audio_frame->get_sample_count();++i) {
+				for (size_t i=0;i<aframe->get_sample_count();++i) {
 					for (size_t ch=0;ch<copy_chans;++ch) {
 						sample = (data[0]<<16)|(data[1]<<8)|data[2];
 						*sample_iter++=sample>>8;
@@ -350,12 +350,33 @@ bool DeckLinkOutput::step()
 					data+=skip;
 				}
 //				log[log::info] << "Zeroes " << zeroes << "/" <<audio_frame->get_sample_count()<<endl;
+			} else if (aframe->get_format() == signed_16bit) {
+				const uint8_t *data = aframe->data();
+//				size_t zeroes=0;
+				const size_t chan = aframe->get_channel_count();
+				const size_t copy_chans = std::min(chan,static_cast<size_t>(audio_channels));
+				const size_t zero_chans = audio_channels - copy_chans;
+				size_t skip =(chan-copy_chans)*2;
+				int16_t sample;
+				auto sample_iter=samples.begin();
+				for (size_t i=0;i<aframe->get_sample_count();++i) {
+					for (size_t ch=0;ch<copy_chans;++ch) {
+						sample = (data[1]<<8)|(data[0]<<0);
+						*sample_iter++=sample>>1;//>>8;
+						data+=2;
+					}
+					for (size_t ch=0;ch<zero_chans;++ch) {
+						*sample_iter++=0;
+					}
+					data+=skip;
+				}
 			} else {
-				log[log::warning] << "Unsupported input format: " << core::raw_audio_format::get_format_name(audio_frame->get_format());
+				log[log::warning] << "Unsupported input format: " << core::raw_audio_format::get_format_name(aframe->get_format());
 			}
 			if (samples.size()) {
-				output->WriteAudioSamplesSync(&samples[0],audio_frame->get_sample_count(),&writen);
+				output->WriteAudioSamplesSync(&samples[0],aframe->get_sample_count(),&writen);
 			}
+
 		} else {
 			log[log::warning] << "No audio\n";
 		}
@@ -368,7 +389,7 @@ bool DeckLinkOutput::step()
 	}
 	frame.reset();
 	frame2.reset();
-
+	aframe.reset();
 	return true;
 }
 shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::get_active_buffer()
