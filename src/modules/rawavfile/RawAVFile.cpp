@@ -8,8 +8,10 @@
 #include "RawAVFile.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/frame/RawAudioFrame.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/raw_frame_params.h"
+#include "yuri/core/frame/raw_audio_frame_types.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/frame/compressed_frame_params.h"
@@ -48,7 +50,7 @@ core::Parameters RawAVFile::configure()
 	p["format"]["Format to decode to"]="YUV422";
 	p["fps"]["Override framerate. Specify 0 to use original, or negative value to maximal speed."]=0;
 	p["max_video"]["Maximal number of video streams to process"]=1;
-	p["max_audio"]["Maximal number of audio streams to process"]=1;
+	p["max_audio"]["Maximal number of audio streams to process"]=0;
 	return p;
 }
 
@@ -95,7 +97,10 @@ RawAVFile::RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core
 	video_formats_out_.resize(video_streams_.size(),video_format_out_);
 	video_codecs_.resize(video_streams_.size(),0);
 	video_formats_.resize(video_streams_.size(),0);
-	frames_.resize(video_streams_.size());
+	audio_formats_out_.resize(audio_streams_.size(),0);
+	audio_codecs_.resize(audio_streams_.size(),0);
+	audio_formats_.resize(audio_streams_.size(),0);
+	frames_.resize(video_streams_.size() + audio_streams_.size());
 	if (!decode_) {
 		for (size_t i=0;i<video_streams_.size();++i) {
 			video_formats_[i] = libav::yuri_format_from_avcodec(video_streams_[i]->codec->codec_id);
@@ -125,6 +130,25 @@ RawAVFile::RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core
 			log[log::info] << "Found video stream with format " << get_format_name_no_throw(video_formats_[i]) <<
 				" and resolution " << video_streams_[i]->codec->width << "x" << video_streams_[i]->codec->height <<
 				". Decoding to " << get_format_name_no_throw(video_formats_out_[i]);
+		}
+		for (size_t i=0;i<audio_streams_.size();++i) {
+			audio_codecs_[i] = avcodec_find_decoder(audio_streams_[i]->codec->codec_id);
+			if (!audio_codecs_[i]) {
+				throw exception::InitializationFailed("Failed to find decoder");
+			}
+//			if(audio_codecs_[i]->capabilities & CODEC_CAP_TRUNCATED)
+//				video_streams_[i]->codec->flags|=CODEC_FLAG_TRUNCATED;
+//			if (audio_formats_out_[i] != 0) {
+//				video_streams_[i]->codec->pix_fmt = libav::avpixelformat_from_yuri(video_formats_out_[i]);
+//			}
+
+			if (avcodec_open2(audio_streams_[i]->codec,audio_codecs_[i],0) < 0) {
+				throw exception::InitializationFailed("Failed to open codec!");
+			}
+			audio_formats_[i] = libav::yuri_format_from_avcodec(audio_streams_[i]->codec->codec_id);
+			audio_formats_out_[i] = libav::yuri_audio_from_av(audio_streams_[i]->codec->sample_fmt);
+			log[log::info] << "Found audio stream, format:" << audio_formats_[i] << " to " << audio_formats_out_[i];// << get_format_name_no_throw(audio_formats_[i]) <<
+//				<<". Decoding to " << get_format_name_no_throw(video_formats_out_[i]);
 		}
 	}
 
@@ -186,12 +210,24 @@ void RawAVFile::run()
 				}
 //				log[log::info] << "Pushing... " << i;
 				push_frame(i,frames_[i]);
+				// TODO: Fix this....
+//				if (audio_streams_.size()) {
+//					for (size_t i=0;i<audio_streams_.size();++i) {
+//						auto i2 = video_streams_.size()+i;
+//						push_frame(i2,frames_[i2]);
+//					}
+//				}
+
+
 				frames_[i].reset();
 				ready=true;
 //				continue;
 			} else {
 				ready = true;
 			}
+		}
+		if (video_streams_.empty()) {
+			ready=true;
 		}
 		if (!ready) {
 			sleep(get_latency());
@@ -209,35 +245,75 @@ void RawAVFile::run()
 				break;
 			}
 		}
-		if (idx>max_video_streams_) continue;
-		if (!decode_) {
-			core::pCompressedVideoFrame f = core::CompressedVideoFrame::create_empty(video_formats_[idx],
-					resolution_t{static_cast<dimension_t>(video_streams_[idx]->codec->width), static_cast<dimension_t>(video_streams_[idx]->codec->height)},
-					packet.data,
-					packet.size	);
-//			frames_[idx] = allocate_frame_from_memory(packet.data, packet.size);
-			frames_[idx] = f;
-			log[log::debug] << "Pushing packet with size: " << f->size();
-			duration_t dur = 1_s * packet.duration*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
-			if (!dur.value) dur = 1_s * video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
+		if (idx<max_video_streams_) {
+			if (!decode_) {
+				core::pCompressedVideoFrame f = core::CompressedVideoFrame::create_empty(video_formats_[idx],
+						resolution_t{static_cast<dimension_t>(video_streams_[idx]->codec->width), static_cast<dimension_t>(video_streams_[idx]->codec->height)},
+						packet.data,
+						packet.size	);
+	//			frames_[idx] = allocate_frame_from_memory(packet.data, packet.size);
+				frames_[idx] = f;
+				log[log::debug] << "Pushing packet with size: " << f->size();
+				duration_t dur = 1_s * packet.duration*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
+				if (!dur.value) dur = 1_s * video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
 
-//			size_t pts = 1e3*packet.pts*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
-//			size_t dts = 1e3*packet.dts*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
-
-
-//			frames_[idx]->set_parameters(video_formats_[idx], video_streams_[idx]->codec->width, video_streams_[idx]->codec->height);
-//			frames_[idx]->set_time(dur, pts, dts);
-			f->set_duration(dur);
+	//			size_t pts = 1e3*packet.pts*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
+	//			size_t dts = 1e3*packet.dts*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
 
 
-			log[log::debug] << "Found packet!"/* (pts: " << pts << ", dts: " << dts <<*/ ", dur: " << dur;
-			log[log::debug] << "num/den:" << video_streams_[idx]->r_frame_rate.num << "/" << video_streams_[idx]->r_frame_rate.den;
-			log[log::debug] << "orig pts: " << packet.pts << ", dts: " << packet.dts << ", dur: " << packet.duration;
+	//			frames_[idx]->set_parameters(video_formats_[idx], video_streams_[idx]->codec->width, video_streams_[idx]->codec->height);
+	//			frames_[idx]->set_time(dur, pts, dts);
+				f->set_duration(dur);
+
+
+				log[log::debug] << "Found packet!"/* (pts: " << pts << ", dts: " << dts <<*/ ", dur: " << dur;
+				log[log::debug] << "num/den:" << video_streams_[idx]->r_frame_rate.num << "/" << video_streams_[idx]->r_frame_rate.den;
+				log[log::debug] << "orig pts: " << packet.pts << ", dts: " << packet.dts << ", dur: " << packet.duration;
+			} else {
+				int whole_frame = 0;
+
+				keep_packet = false;
+				int decoded_size = avcodec_decode_video2(video_streams_[idx]->codec,av_frame, &whole_frame,&packet);
+				if (!whole_frame) {
+	//				log[log::warning] << "No frame this time...";
+					continue;
+				}
+				if (decoded_size < 0) {
+					log[log::warning] << "Failed to decode frame";
+					continue;
+				}
+
+				if (decoded_size != packet.size) {
+					keep_packet = true;
+					log[log::debug] << "Used only " << decoded_size << " bytes out of " << packet.size;
+				}
+
+				auto f = libav::yuri_frame_from_av(*av_frame);
+				if (!f) {
+					log[log::warning] << "Failed to convert avframe, probably unsupported pixelformat";
+					continue;
+				}
+				if (format_out_ != f->get_format()) {
+					log[log::warning] << "Unexpected frame format! Expected '" << get_format_name_no_throw(format_out_)
+					<< "', but got '" << get_format_name_no_throw(f->get_format()) << "'";
+					format_out_ = f->get_format();
+				}
+
+				frames_[idx] = f;
+			}
 		} else {
-			int whole_frame = 0;
-
+			size_t idx=max_audio_streams_+1;
+			for (size_t i=0;i<audio_streams_.size();++i) {
+				if (packet.stream_index == audio_streams_[i]->index) {
+					idx = i;
+					break;
+				}
+			}
+			if (idx >max_audio_streams_) continue;
 			keep_packet = false;
-			int decoded_size = avcodec_decode_video2(video_streams_[idx]->codec,av_frame, &whole_frame,&packet);
+			int whole_frame = 0;
+//			idx+=video_streams_.size();
+			int decoded_size = avcodec_decode_audio4(audio_streams_[idx]->codec, av_frame, &whole_frame,&packet);
 			if (!whole_frame) {
 //				log[log::warning] << "No frame this time...";
 				continue;
@@ -252,18 +328,24 @@ void RawAVFile::run()
 				log[log::debug] << "Used only " << decoded_size << " bytes out of " << packet.size;
 			}
 
-			auto f = libav::yuri_frame_from_av(*av_frame);
+//			log[log::info] << "Decoded audio";
+//			continue;
+//			auto f = libav::yuri_frame_from_av(*av_frame);
+			size_t data_size = av_frame->nb_samples * av_frame->channels * 2 ;
+			auto f = core::RawAudioFrame::create_empty(audio_formats_out_[idx], av_frame->channels, av_frame->sample_rate, av_frame->data[0], data_size);
 			if (!f) {
 				log[log::warning] << "Failed to convert avframe, probably unsupported pixelformat";
 				continue;
 			}
-			if (format_out_ != f->get_format()) {
-				log[log::warning] << "Unexpected frame format! Expected '" << get_format_name_no_throw(format_out_)
-				<< "', but got '" << get_format_name_no_throw(f->get_format()) << "'";
-				format_out_ = f->get_format();
-			}
+//			if (format_out_ != f->get_format()) {
+//				log[log::warning] << "Unexpected frame format! Expected '" << get_format_name_no_throw(format_out_)
+//				<< "', but got '" << get_format_name_no_throw(f->get_format()) << "'";
+//				format_out_ = f->get_format();
+//			}
+			push_frame(idx + max_video_streams_, f);
+			//frames_[idx + video_streams_.size()] = f;
 
-			frames_[idx] = f;
+
 		}
 	}
 	av_free(av_frame);

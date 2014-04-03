@@ -46,6 +46,10 @@ private:
 						video_formats_;
 	std::vector<format_t>
 						video_formats_out_;
+	std::vector<format_t>
+						audio_formats_;
+	std::vector<format_t>
+						audio_formats_out_;
 	format_t 			format_out_;
 	format_t 			video_format_out_;
 	bool				decode_;
