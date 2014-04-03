@@ -29,6 +29,7 @@ add_subdirectory(mosaic)
 add_subdirectory(null)
 add_subdirectory(overlay)
 add_subdirectory(pad)
+add_subdirectory(repack_audio)
 add_subdirectory(rotate)
 add_subdirectory(select)
 add_subdirectory(shout_source)
@@ -197,8 +198,6 @@ add_subdirectory(read_pcap)
 
 add_subdirectory(ts_demuxer)
 
-
-add_subdirectory(repack_audio)
 
 #################################################################
 # Let's check for libraries required 

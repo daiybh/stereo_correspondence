@@ -10,29 +10,33 @@
 #ifndef DUMMYMODULE_H_
 #define DUMMYMODULE_H_
 
-#include "yuri/core/IOThread.h"
-
+#include "yuri/core/thread/SpecializedIOFilter.h"
+#include "yuri/core/frame/RawAudioFrame.h"
 namespace yuri {
 namespace repack_audio {
 
-class RepackAudio: public core::IOThread
+class RepackAudio: public core::SpecializedIOFilter<core::RawAudioFrame>
 {
+	using base_type = core::SpecializedIOFilter<core::RawAudioFrame>;
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
-	virtual ~RepackAudio();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+	RepackAudio(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~RepackAudio() noexcept;
 private:
-	RepackAudio(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
-	virtual bool step();
-	virtual bool set_param(const core::Parameter& param);
-	size_t store_samples(const ubyte_t* start, size_t count);
+
+//	virtual bool step();
+	virtual core::pFrame do_special_single_step(const core::pRawAudioFrame& frame) override;
+	virtual bool set_param(const core::Parameter& param) override;
+	size_t store_samples(const uint8_t* start, size_t count);
 	void push_current_frame();
 	std::string dummy_name;
-	std::vector<ubyte_t> samples_;
+	std::vector<uint8_t> samples_;
 	size_t samples_missing_;
 	size_t total_samples_;
 	size_t channels_;
 	format_t current_format_;
+	size_t sampling_frequency_;
 };
 
 } /* namespace repack_audio */
