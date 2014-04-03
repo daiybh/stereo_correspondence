@@ -11,7 +11,9 @@
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/frame/RawAudioFrame.h"
 #include "yuri/core/frame/raw_frame_params.h"
+#include "yuri/core/frame/raw_audio_frame_types.h"
 
 #include <unordered_map>
 #include <map>
@@ -35,6 +37,8 @@ std::unordered_map<format_t, CodecID> yuri_codec_map = {
 //		{YURI_VIDEO_H263PLUS,		CODEC_ID_H263P},
 		{theora,					CODEC_ID_THEORA},
 		{vp8,						CODEC_ID_VP8},
+		{core::raw_audio_format::signed_16bit,
+									CODEC_ID_PCM_S16LE}
 };
 }
 namespace {
@@ -72,6 +76,12 @@ std::unordered_map<format_t, PixelFormat> yuri_pixel_map = {
 		{yuv422_v210,				PIX_FMT_YUV422P10LE},
 };
 
+using namespace yuri::core::raw_audio_format;
+std::unordered_map<format_t, AVSampleFormat> yuri_audio_format_map = {
+		{signed_16bit, 				AV_SAMPLE_FMT_S16}
+};
+
+
 std::map<PixelFormat, PixelFormat> yuri_pixel_special_map = {
 {PIX_FMT_YUVJ420P, PIX_FMT_YUV420P},
 {PIX_FMT_YUVJ422P, PIX_FMT_YUV422P},
@@ -103,6 +113,15 @@ yuri::format_t yuri_pixelformat_from_av(PixelFormat format)
 	}
 	return 0;
 }
+
+yuri::format_t yuri_audio_from_av(AVSampleFormat format)
+{
+	for (auto f: yuri_audio_format_map) {
+		if (f.second == format) return f.first;
+	}
+	return 0;
+}
+
 yuri::format_t yuri_format_from_avcodec(CodecID codec)
 {
 	for (auto f: yuri_codec_map) {
