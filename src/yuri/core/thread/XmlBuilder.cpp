@@ -177,13 +177,15 @@ void XmlBuilder::builder_pimpl_t::process_module_dirs()
 {
 //	log[log::verbose_debug] << "Loading <module_dir>s";
 	TiXmlElement * node = nullptr;
-	std::vector<std::string> modules;
+	std::vector<std::string> module_dirs;
 	while((node = dynamic_cast<TiXmlElement*>(root->IterateChildren(module_dir_tag, node)))) {
 		std::string path;
 		if (node->QueryValueAttribute(path_attrib, &path)!=TIXML_SUCCESS) continue;
-		modules.push_back(std::move(path));
+		module_dirs.push_back(std::move(path));
 	}
-	load_modules(modules);
+	for (const auto& m: module_dirs) {
+		load_module_dir(m);
+	}
 }
 
 void XmlBuilder::builder_pimpl_t::load_builtin_modules()
