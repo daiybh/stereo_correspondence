@@ -21,7 +21,8 @@ namespace core {
 namespace socket {
 
 typedef uint16_t port_t;
-
+class DatagramSocket;
+typedef std::shared_ptr<DatagramSocket> pDatagramSocket;
 class DatagramSocket {
 public:
 
