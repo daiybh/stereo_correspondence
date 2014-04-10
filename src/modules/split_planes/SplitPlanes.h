@@ -27,6 +27,7 @@ public:
 private:
 	virtual std::vector<core::pFrame> do_special_step(const std::tuple<core::pRawVideoFrame>& frame) override;
 	virtual bool set_param(const core::Parameter& param) override;
+	bool keep_format_;
 };
 
 } /* namespace split_planes */
