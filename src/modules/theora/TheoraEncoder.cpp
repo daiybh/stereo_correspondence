@@ -71,7 +71,7 @@ bool compare_params(const core::pRawVideoFrame& frame, th_info& info)
 
 bool get_ogg_page(ogg_stream_state& state, ogg_page& page, bool low_latency)
 {
-	if (low_latency) {
+	if (!low_latency) {
 		return ogg_stream_pageout(&state,&page);
 	}
 	return ogg_stream_flush(&state,&page);
@@ -170,9 +170,8 @@ void set_th_plane(const core::pRawVideoFrame& frame, size_t index, th_img_plane&
 	const format_t fmt = frame->get_format();
 	const auto res = PLANE_DATA(frame,index).get_resolution();
 	using namespace core::raw_format;
-	// This is ugly, but works ;)
-	plane.width = res.width / ((index>0)&&(fmt==yuv422p||fmt==yuv420p)?2:1);
-	plane.height= res.height / ((index>0 && fmt==yuv420p)?2:1);
+	plane.width = res.width;
+	plane.height= res.height;
 	plane.stride= PLANE_DATA(frame,index).get_line_size();
 	plane.data=PLANE_RAW_DATA(frame,index);
 }
