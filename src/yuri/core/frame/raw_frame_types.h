@@ -41,6 +41,8 @@ const format_t v8			= 0xb;
 const format_t v16			= 0xc;
 const format_t depth8		= 0xd;
 const format_t depth16		= 0xe;
+const format_t alpha8		= 0xf;
+const format_t alpha16		= 0x10;
 // Packed formats (1 plane)
 const format_t rgb8			= 0x100;	// RGB 3:3:2
 const format_t rgb15		= 0x101;	// RGB 5:5:5

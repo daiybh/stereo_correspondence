@@ -34,6 +34,8 @@ namespace {
 			{v16, 	{v16, 	"V 16 bit", 		{"V16"}, 	"", 		{{"V", 	{16,1}, {16}}} }},
 			{depth8,{depth8,"Depth 8 bit", 		{"Depth", "Depth8"},"", {{"D", 	{8,1}, {8}}} }},
 			{depth16,{depth16,"Depth 16 bit", 	{"Depth16"}, 	"", 	{{"D", 	{16,1}, {16}}} }},
+			{alpha8,{alpha8,"Alpha 8 bit", 		{"Alpha", "Alpha8"},"", {{"A", 	{8,1}, {8}}} }},
+			{alpha16,{alpha16,"Alpha 16 bit", 	{"Alpha16"}, 	"", 	{{"A", 	{16,1}, {16}}} }},
 			{rgb8, 	{rgb8, 	"RGB 8 bit (332)", 	{"RGB8", "RGB1"}, "", 	{{"RGB",{8, 1}, {3,3,2}}} }},
 			{rgb15,	{rgb15, "RGB 15 bit (555)",	{"RGB15", "RGB555"}, "",{{"RGB",{16, 1}, {5,5,5}}} }},
 			{rgb16,	{rgb16, "RGB 16 bit (565)",	{"RGB16", "RGB565"}, "",{{"RGB",{16, 1}, {5,6,5}}} }},
