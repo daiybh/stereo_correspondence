@@ -27,7 +27,7 @@ using namespace yuri::log;
 
 core::Parameters Combine::configure()
 {
-	core::Parameters p = core::IOThread::configure();
+	core::Parameters p = base_type::configure();
 	p.set_description("Combine");
 	p["x"]["Width of the grid"]=2;
 	p["y"]["Height of the grid"]=2;
@@ -37,7 +37,7 @@ core::Parameters Combine::configure()
 
 
 Combine::Combine(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::MultiIOFilter(log_,parent,1,1,std::string("combine")),x_(2),y_(2)
+base_type(log_,parent,1,1,std::string("combine")),x_(2),y_(2)
 {
 	IOTHREAD_INIT(parameters)
 	if (x_<1 || y_<1) throw exception::InitializationFailed("Wrong size of the grid");
@@ -80,7 +80,7 @@ std::vector<core::pFrame> Combine::do_single_step(const std::vector<core::pFrame
 			return {};
 		}
 		if (frames[i]->get_resolution() != resolution) {
-			log[log::warning] << "Wrong size for frame in pipe " << i;
+			log[log::warning] << "Wrong size for frame in pipe " << i << " (expected " << resolution << ", got: " << frames[i]->get_resolution() << ")";
 			return {};
 		}
 	}
@@ -108,7 +108,7 @@ bool Combine::set_param(const core::Parameter& param)
 		x_ = param.get<size_t>();
 	} else if (param.get_name() == "y") {
 		y_ = param.get<size_t>();
-	} else return core::IOThread::set_param(param);
+	} else return base_type::set_param(param);
 	return true;
 }
 

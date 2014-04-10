@@ -17,6 +17,7 @@ namespace combine {
 
 class Combine: public core::MultiIOFilter
 {
+	using base_type = core::MultiIOFilter;
 public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
