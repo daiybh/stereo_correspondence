@@ -18,7 +18,7 @@ Parameters MultiIOFilter::configure()
 {
 	Parameters p = IOThread::configure();
 //	p["realtime"]["Read always latest available, frame reducing latency, but dropping frames"]=false;
-	p["main_input"]["Index of input that should trigger the processing. If specified, the precessing will be invoked on each change of this input. Set to -1 to disable"]=-1;
+	p["main_input"]["Index of input that should trigger the processing. If specified, the processing will be invoked on each change of this input. Set to -1 to disable"]=-1;
 	return p;
 }
 
@@ -47,19 +47,21 @@ void MultiIOFilter::resize(position_t inp, position_t outp)
 bool MultiIOFilter::step()
 {
 	bool ready = true;
+	bool change = false;
 	assert(get_no_in_ports()>0);
 	assert(stored_frames_.size() == static_cast<size_t>(get_no_in_ports()));
 	for (position_t i=0; i< get_no_in_ports(); ++i) {
-//		if (realtime_) {
-//			auto f = pop_frame(i);
-//			if (f) stored_frames_[i] = f;
-//		}
-//		else {
-			if (!stored_frames_[i] || (main_input_>=0 && i!=main_input_)) {
+
+		if (main_input_ == -2) {
+			auto f = pop_frame(i);
+			if (f) {
+				stored_frames_[i]=f;
+				change = true;
+			}
+		} else if (!stored_frames_[i] || (main_input_>=0 && i!=main_input_)) {
 				auto f = pop_frame(i);//]->pop_frame();
 				if (f) stored_frames_[i] = f;
-			}
-//		}
+		}
 		if (!stored_frames_[i]) ready = false;
 	}
 	if (ready) {
@@ -67,8 +69,11 @@ bool MultiIOFilter::step()
 		for (position_t i=0; i< std::min(get_no_out_ports(), static_cast<position_t>(outframes.size())); ++i) {
 			if (outframes[i]) push_frame(i, outframes[i]);
 		}
-		// If there's none or invalid main_input, we have to clean everything
-		if (main_input_ < 0 || main_input_ >= get_no_in_ports()) {
+
+		if (main_input_ == -2 ) {
+			// Nothing to do
+		} else if (main_input_ < 0 || main_input_ >= get_no_in_ports()) {
+			// If there's none or invalid main_input, we have to clean everything
 			for (auto& sf: stored_frames_) sf.reset();
 		} else { // Otherwise, let's clean just the main input
 			stored_frames_[main_input_].reset();
