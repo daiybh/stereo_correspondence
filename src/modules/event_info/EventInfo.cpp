@@ -15,9 +15,6 @@ namespace event_info {
 
 IOTHREAD_GENERATOR(EventInfo)
 
-MODULE_REGISTRATION_BEGIN("event_info")
-		REGISTER_IOTHREAD("event_info",EventInfo)
-MODULE_REGISTRATION_END()
 
 core::Parameters EventInfo::configure()
 {
