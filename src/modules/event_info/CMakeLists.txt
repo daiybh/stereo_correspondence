@@ -2,8 +2,12 @@
 SET (MODULE event_info)
 
 # Set all source files module uses
-SET (SRC EventInfo.cpp
-		 EventInfo.h)
+SET (SRC register.cpp 
+         EventInfo.cpp
+		 EventInfo.h
+		 PassEvent.cpp
+		 PassEvent.h
+		 )
 
 
  

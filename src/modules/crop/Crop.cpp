@@ -11,7 +11,7 @@
 #include "Crop.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_params.h"
-
+#include "yuri/core/frame/raw_frame_types.h"
 namespace yuri {
 
 namespace io {
@@ -65,23 +65,52 @@ Crop::~Crop() noexcept {
 
 }
 
+namespace {
+// Values in the map should represent values to mask out
+std::map<format_t, int> special_alignments = {
+		{core::raw_format::yuyv422, 1},
+		{core::raw_format::uyvy422, 1},
+		{core::raw_format::vyuy422, 1},
+		{core::raw_format::yvyu422, 1},
+};
+
+template<typename T, typename T2>
+T align_value(T val, T2 alignment)
+{
+	return val&(~static_cast<T>(alignment));
+}
+
+geometry_t set_alignment(format_t format, geometry_t geometry)
+{
+	auto it = special_alignments.find(format);
+	if (it != special_alignments.end()) {
+		const auto align = it->second;
+		geometry.x = align_value (geometry.x, align);
+		geometry.width = align_value (geometry.width, align);
+	}
+
+	return geometry;
+}
+}
 
 core::pFrame Crop::do_special_single_step(const core::pRawVideoFrame& frame)
 {
+	process_events();
 	const format_t format = frame->get_format();
 	const auto& fi = core::raw_format::get_format_info(format);
 	if (!verify_support(fi)) return {};
 
 
 	const resolution_t in_res = frame->get_resolution();
-	const geometry_t geometry_out = intersection(in_res, geometry_);
+	const geometry_t geometry_out = set_alignment(format, intersection(in_res, set_alignment(format, geometry_)));
+
 
 	log[log::verbose_debug] << "Cropping to " << geometry_out;
 
 	const auto depth = fi.planes[0].bit_depth;
 	const size_t bpp = depth.first/depth.second/8;
 	const dimension_t copy_bytes = geometry_out.width * bpp;
-	const dimension_t line_size = in_res.width * bpp;
+	const dimension_t line_size = PLANE_DATA(frame,0).get_line_size();//in_res.width * bpp;
 	core::pRawVideoFrame frame_out = core::RawVideoFrame::create_empty(format, geometry_out.get_resolution());
 	auto iter_in = PLANE_DATA(frame,0).begin() +  geometry_out.x * bpp + geometry_out.y * line_size;
 	auto iter_out = PLANE_DATA(frame_out,0).begin();
