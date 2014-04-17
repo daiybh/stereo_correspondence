@@ -30,6 +30,7 @@ private:
 	virtual bool set_param(const core::Parameter& param) override;
 
 	resolution_t resolution_;
+	bool fast_;
 };
 
 } /* namespace scale */
