@@ -63,6 +63,12 @@ mode_strings = {
 		{"2k24",		bmdMode2k24},
 		{"2k2398",		bmdMode2k2398},
 		{"2k25",		bmdMode2k25},
+// 4k Modes
+		{"4k2398",		bmdMode4K2160p2398},
+		{"4k24",		bmdMode4K2160p24},
+		{"4k25",		bmdMode4K2160p25},
+		{"4k2997",		bmdMode4K2160p2997},
+		{"4k30",		bmdMode4K2160p30},
 };
 
 std::map<std::string, BMDPixelFormat, compare_insensitive>
@@ -187,7 +193,7 @@ bool DeckLinkBase::set_param(const core::Parameter &p)
 		BMDDisplayMode m = parse_format(p.get<std::string>());
 		if (m == bmdModeUnknown) {
 			mode = bmdModeHD1080p25;
-			log[log::error] << "Failed to parse format, falling back "
+			log[log::error] << "Failed to parse format "<< p.get<std::string>()<<", falling back "
 					"to 1080p25";
 			actual_format_is_psf = false;
 		} else {
