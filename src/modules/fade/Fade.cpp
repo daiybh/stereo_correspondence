@@ -47,6 +47,7 @@ Fade::~Fade() noexcept
 std::vector<core::pFrame> Fade::do_special_step(const std::tuple<core::pRawVideoFrame, core::pRawVideoFrame>& frames)
 {
 	process_events();
+//	timestamp_t start_time;
 //	if (frames.size() != 2) return {};
 	if (std::get<0>(frames)->get_format() != std::get<1>(frames)->get_format()) return {};
 	if (PLANE_SIZE(std::get<0>(frames),0) != PLANE_SIZE(std::get<1>(frames),0)) return {};
@@ -56,11 +57,22 @@ std::vector<core::pFrame> Fade::do_special_step(const std::tuple<core::pRawVideo
 	auto it1 = PLANE_DATA(std::get<1>(frames),0).begin();
 	auto it_out = PLANE_DATA(outframe,0).begin();
 	auto it_last = PLANE_DATA(outframe,0).end();
-	const double t1 = 1.0 - transition_;
+
+//	const double t1 = 1.0 - transition_;
+//	while (it_out != it_last) {
+//		*it_out++ = static_cast<uint8_t>(t1 * static_cast<double>(*it0++) +
+//										transition_ * static_cast<double>(*it1++));
+//	}
+
+	const uint_fast16_t trans = static_cast<uint_fast16_t>(transition_*256);
+	const uint_fast16_t trans1 = 256- trans;
 	while (it_out != it_last) {
-		*it_out++ = static_cast<uint8_t>(t1 * static_cast<double>(*it0++) +
-										transition_ * static_cast<double>(*it1++));
+		*it_out++ = static_cast<uint8_t>((trans1 * *it0++ +
+										trans * *it1++)/256);
 	}
+
+//	timestamp_t end_time;
+//	log[log::info] << "Fade took: " << (end_time - start_time);
 	return {outframe};
 }
 bool Fade::set_param(const core::Parameter& param)
