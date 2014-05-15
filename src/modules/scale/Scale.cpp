@@ -38,7 +38,7 @@ resolution_{800,600},fast_(true)
 	IOTHREAD_INIT(parameters)
 	using namespace core::raw_format;
 	set_supported_formats({rgb24, bgr24, rgba32, argb32, bgra32, abgr32, yuv444,
-							yuyv422,yvyu422});
+							yuyv422,yvyu422, uyvy422, vyuy422});
 //	set_latency(1_ms);
 }
 
@@ -147,15 +147,15 @@ struct scale_line_bilinear_uyvy {
 	inline static void eval(uint8_t* it, const uint8_t* top, const uint8_t* bottom, const dimension_t new_width, const dimension_t old_width, const double unscale_x, const double y_ratio) {
 		const double y_ratio2 = 1.0 - y_ratio;
 		for (dimension_t pixel = 0; pixel < new_width -2; pixel+=2) {
-			*it++=get_uv<0>(pixel, unscale_x, top, bottom, y_ratio, y_ratio2);
-			*it++=get_y(pixel, unscale_x, top, bottom, y_ratio, y_ratio2);
-			*it++=get_uv<1>(pixel+1, unscale_x, top, bottom, y_ratio, y_ratio2);
-			*it++=get_y(pixel+1, unscale_x, top, bottom, y_ratio, y_ratio2);
+			*it++=get_uv<0>(pixel, unscale_x, top-1, bottom-1, y_ratio, y_ratio2);
+			*it++=get_y(pixel, unscale_x, top+1, bottom+1, y_ratio, y_ratio2);
+			*it++=get_uv<1>(pixel+1, unscale_x, top-1, bottom-1, y_ratio, y_ratio2);
+			*it++=get_y(pixel+1, unscale_x, top+1, bottom+1, y_ratio, y_ratio2);
 		}
-		*it++=get_uv<0>((new_width - 2), unscale_x, top, bottom, y_ratio, y_ratio2);
-		*it++=get_y((new_width - 2), unscale_x, top, bottom, y_ratio, y_ratio2);
-		*it++=get_uv<1>((new_width - 1), unscale_x, top, bottom, y_ratio, y_ratio2);
-		*it++=get_y((new_width - 1), unscale_x, top, bottom, y_ratio, y_ratio2);
+		*it++=get_uv<0>((new_width - 2), unscale_x, top-1, bottom-1, y_ratio, y_ratio2);
+		*it++=get_y((new_width - 2), unscale_x, top+1, bottom+1, y_ratio, y_ratio2);
+		*it++=get_uv<1>((new_width - 1), unscale_x, top-1, bottom-1, y_ratio, y_ratio2);
+		*it++=get_y((new_width - 1), unscale_x, top+1, bottom+1, y_ratio, y_ratio2);
 	}
 };
 
@@ -210,15 +210,17 @@ struct scale_line_bilinear_uyvy_fast {
 	inline static void eval(uint8_t* it, const uint8_t* top, const uint8_t* bottom, const dimension_t new_width, const dimension_t old_width, const uint64_t unscale_x, const uint64_t y_ratio) {
 		const uint64_t y_ratio2 = 256 - y_ratio;
 		for (dimension_t pixel = 0; pixel < new_width -2; pixel+=2) {
-			*it++=get_uv_fast<0>(pixel, unscale_x, top, bottom, y_ratio, y_ratio2);
-			*it++=get_y_fast(pixel, unscale_x, top, bottom, y_ratio, y_ratio2);
-			*it++=get_uv_fast<1>(pixel+1, unscale_x, top, bottom, y_ratio, y_ratio2);
-			*it++=get_y_fast(pixel+1, unscale_x, top, bottom, y_ratio, y_ratio2);
+			// Using top - 1 and bottom - 1 to reuse methods for yuv
+			*it++=get_uv_fast<0>(pixel, unscale_x, top-1, bottom-1, y_ratio, y_ratio2);
+			// Using top + 1 and bottom + 1 to reuse methods for yuv
+			*it++=get_y_fast(pixel, unscale_x, top+1, bottom+1, y_ratio, y_ratio2);
+			*it++=get_uv_fast<1>(pixel+1, unscale_x, top-1, bottom-1, y_ratio, y_ratio2);
+			*it++=get_y_fast(pixel+1, unscale_x, top+1, bottom+1, y_ratio, y_ratio2);
 		}
-		*it++=get_uv_fast<0>((new_width - 2), unscale_x, top, bottom, y_ratio, y_ratio2);
-		*it++=get_y_fast((new_width - 2), unscale_x, top, bottom, y_ratio, y_ratio2);
-		*it++=get_uv_fast<1>((new_width - 1), unscale_x, top, bottom, y_ratio, y_ratio2);
-		*it++=get_y_fast((new_width - 1), unscale_x, top, bottom, y_ratio, y_ratio2);
+		*it++=get_uv_fast<0>((new_width - 2), unscale_x, top-1, bottom-1, y_ratio, y_ratio2);
+		*it++=get_y_fast((new_width - 2), unscale_x, top+1, bottom+1, y_ratio, y_ratio2);
+		*it++=get_uv_fast<1>((new_width - 1), unscale_x, top-1, bottom-1, y_ratio, y_ratio2);
+		*it++=get_y_fast((new_width - 1), unscale_x, top+1, bottom+1, y_ratio, y_ratio2);
 	}
 };
 
