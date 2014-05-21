@@ -1,9 +1,13 @@
 # Set name of the module
-SET (MODULE osc_receiver)
+SET (MODULE osc_module)
 
 # Set all source files module uses
 SET (SRC OSCReceiver.cpp
-		 OSCReceiver.h)
+		 OSCReceiver.h
+		 OSCSender.cpp
+		 OSCSender.h
+		 OSC.h
+		 register.cpp)
 
 
  
