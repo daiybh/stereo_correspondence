@@ -34,6 +34,10 @@ size_t DatagramSocket::receive_datagram(uint8_t* data, size_t size) {
 bool DatagramSocket::bind(const std::string& url, port_t port) {
 	return do_bind(url, port);
 }
+bool DatagramSocket::connect(const std::string& url, port_t port) {
+	return do_connect(url, port);
+}
+
 bool DatagramSocket::data_available() {
 	return do_data_available();
 }
