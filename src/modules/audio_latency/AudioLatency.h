@@ -30,7 +30,6 @@ private:
 	virtual bool set_param(const core::Parameter& param) override;
 
 	bool first_peak_;
-//	bool first_frame_;
 	size_t peak_dist_;
 	int_fast32_t threshold_;
 	int_fast32_t cooldown_;

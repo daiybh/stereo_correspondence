@@ -67,7 +67,7 @@ core::pFrame AudioLatency::do_special_single_step(const core::pRawAudioFrame& fr
 				peak_dist_ = 0;
 			}
 			else if (last_peak_ == false){
-				log[log::info] << "Peak distance " << peak_dist_ << " (" << peak_dist_*1.0e6/44100 << " us)";
+				log[log::info] << "Peak distance " << peak_dist_ << " (" << peak_dist_*1.0e6/frame->get_sampling_frequency() << " us)";
 				first_peak_=false;
 			}
 		}
@@ -82,7 +82,7 @@ core::pFrame AudioLatency::do_special_single_step(const core::pRawAudioFrame& fr
 				peak_dist_ = 0;
 			}
 			else if (last_peak_ == true){
-				log[log::info] << "Peak distance " << peak_dist_ << " (" << peak_dist_*1.0e6/44100 << " us)";
+				log[log::info] << "Peak distance " << peak_dist_ << " (" << peak_dist_*1.0e6/frame->get_sampling_frequency() << " us)";
 				first_peak_=false;
 			}
 		}
