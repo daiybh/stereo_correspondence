@@ -24,8 +24,8 @@ core::Parameters DeckLinkInput::configure()
 {
 	core::Parameters p = DeckLinkBase::configure();
 	p.set_description("Outputs input video to BlackMagic Design device (Eclipse, Intensity, ...)");
-	p["format"]["Output format (1080p25, etc)"]="1080p25";
-	p["connection"]["Output connection (HDMI, SDI, SVideo, ...). Please note that enabling one output will also enable other compatible outputs"]=std::string("HDMI");
+//	p["format"]["Output format (1080p25, etc)"]="1080p25";
+//	p["connection"]["Output connection (HDMI, SDI, SVideo, ...). Please note that enabling one output will also enable other compatible outputs"]=std::string("HDMI");
 	p["device"]["Index of device to use"]=0;
 	p["format_detection"]["Try to autodetect video format."]=1;
 	p["force_detection"]["Force autodetecting video format. EXPERIMENTAL"]=0;
