@@ -131,6 +131,26 @@ void list_registered(yuri::log::Log& l_)
 
 }
 
+void list_single_class(yuri::log::Log& l_, const std::string& name)
+{
+	using namespace yuri;
+//	if (verbosity>=0)
+	auto& generator = yuri::IOThreadGenerator::get_instance();
+	if (!generator.is_registered(name)) {
+		l_[log::fatal]<<"Class " << name << "is not registered";
+	} else {
+		const auto& params = generator.configure(name);
+		l_[log::info]<<"Class " << name <<":";
+		const std::string& desc = params.get_description();
+		if (!desc.empty()) {
+			l_[log::info] << "\t" << desc;
+		}
+		list_params(l_, params);
+
+	}
+
+
+}
 namespace {
 
 template<class T, class Stream>
@@ -368,6 +388,7 @@ int main(int argc, char**argv)
 		("input-file,f",po::value<std::string>(&filename),"Input XML file")
 		("parameter,p",po::value<std::vector<std::string> >(&arguments),"Parameters to pass to libyuri builder")
 		("list,l",po::value<std::string>()->implicit_value("classes"),"List registered classes (accepted values classes, functions, formats, datagram_sockets, pipes)")
+		("class,L",po::value<std::string>(),"List details of a single class")
 		("app-info,a","Show info about XML file");
 
 
@@ -407,20 +428,25 @@ int main(int argc, char**argv)
 		version();
 		return 1;
 	}
-	if (vm.count("list")) {
+	if (vm.count("list") || vm.count("class")) {
 		builder.reset(new core::XmlBuilder(l, core::pwThreadBase(), filename, arguments, true ));
 		log::Log l_(std::cout);
 		l_.set_flags(log::info);
 		l_.set_quiet(true);
-		std::string list_what = vm["list"].as<std::string>();
-		if (iequals(list_what,"formats")) list_formats(l_);
-		else if (iequals(list_what,"datagram_sockets") || iequals(list_what,"datagram")) list_dgram_sockets(l_);
-		else if (iequals(list_what,"stream_sockets") || iequals(list_what,"stream")) list_stream_sockets(l_);
-		else if (iequals(list_what,"functions")) list_functions(l_);
-		else if (iequals(list_what,"converters")) list_converters(l_);
-		else if (iequals(list_what,"pipes")) list_pipes(l_);
-		else if (iequals(list_what,"test")) list_test(l_);
-		else list_registered(l_);
+		if (vm.count("class")) {
+			std::string class_name = vm["class"].as<std::string>();
+			list_single_class(l_, class_name);
+		} else {
+			std::string list_what = vm["list"].as<std::string>();
+			if (iequals(list_what,"formats")) list_formats(l_);
+			else if (iequals(list_what,"datagram_sockets") || iequals(list_what,"datagram")) list_dgram_sockets(l_);
+			else if (iequals(list_what,"stream_sockets") || iequals(list_what,"stream")) list_stream_sockets(l_);
+			else if (iequals(list_what,"functions")) list_functions(l_);
+			else if (iequals(list_what,"converters")) list_converters(l_);
+			else if (iequals(list_what,"pipes")) list_pipes(l_);
+			else if (iequals(list_what,"test")) list_test(l_);
+			else list_registered(l_);
+		}
 		return 0;
 	}
 	if (vm.count("app-info")) {
