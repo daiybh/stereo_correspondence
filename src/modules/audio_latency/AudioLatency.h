@@ -31,7 +31,7 @@ private:
 
 	bool first_peak_;
 	size_t peak_dist_;
-	int_fast32_t threshold_;
+	double threshold_;
 	int_fast32_t cooldown_;
 	size_t sample_count_;
 	size_t max_peak_dist_;

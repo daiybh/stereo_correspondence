@@ -25,8 +25,8 @@ core::Parameters AudioLatency::configure()
 {
 	core::Parameters p = core::IOThread::configure();
 	p.set_description("AudioLatency");
-	p["threshold"]["Threshold"] = 16000;
-	p["cooldown"]["cooldown"] = 512;
+	p["threshold"]["Threshold"] = 0.5;
+	p["cooldown"]["cooldown"] = 5120;
 	p["max_peak"]["Maximal peak distance"] = 44100*5;
 	return p;
 }
@@ -50,7 +50,7 @@ core::pFrame AudioLatency::do_special_single_step(const core::pRawAudioFrame& fr
 {
 	const int16_t *data = reinterpret_cast<const int16_t*>(frame->data());
 
-
+	int16_t threshold = std::numeric_limits<int16_t>::max() * threshold_;
 	for (size_t i = 0; i < frame->get_sample_count(); ++i) {
 		if (first_peak_) peak_dist_++;
 		if (peak_dist_ > max_peak_dist_) {
@@ -58,7 +58,7 @@ core::pFrame AudioLatency::do_special_single_step(const core::pRawAudioFrame& fr
 			first_peak_ = false;
 			peak_dist_ = 0;
 		}
-		if (std::abs(*data)>threshold_ && !coolness_[0]) {
+		if (std::abs(*data)>threshold && !coolness_[0]) {
 			log[log::info] << "Left " << sample_count_+i << ": " << *data;
 			coolness_[0]=cooldown_;
 			if (!first_peak_) {
@@ -73,7 +73,7 @@ core::pFrame AudioLatency::do_special_single_step(const core::pRawAudioFrame& fr
 		}
 		if (coolness_[0]) coolness_[0]--;
 		data++;
-		if (std::abs(*data)>threshold_ && !coolness_[1]) {
+		if (std::abs(*data)>threshold && !coolness_[1]) {
 			log[log::info] << "Right " << sample_count_+i << ": " << *data;
 			coolness_[1]=cooldown_;
 			if (!first_peak_) {
@@ -97,13 +97,13 @@ core::pFrame AudioLatency::do_special_single_step(const core::pRawAudioFrame& fr
 bool AudioLatency::set_param(const core::Parameter& param)
 {
 	if (param.get_name() =="threshold") {
-		threshold_ = param.get<int_fast32_t>();
+		threshold_ = param.get<bool>();
 	} else if (param.get_name() == "cooldown") {
 		cooldown_ = param.get<int_fast32_t>();
 	} else if (param.get_name() == "max_peak") {
 		max_peak_dist_ = param.get<size_t>();
-	}
-	return core::IOThread::set_param(param);
+	} else return core::IOThread::set_param(param);
+	return true;
 }
 
 } /* namespace audio_latency */
