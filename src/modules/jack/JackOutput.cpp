@@ -13,14 +13,10 @@
 #include <cstdlib>
 
 namespace yuri {
-namespace jack_output {
+namespace jack {
 
 
 IOTHREAD_GENERATOR(JackOutput)
-
-MODULE_REGISTRATION_BEGIN("jack_output")
-		REGISTER_IOTHREAD("jack_output",JackOutput)
-MODULE_REGISTRATION_END()
 
 core::Parameters JackOutput::configure()
 {
@@ -30,6 +26,7 @@ core::Parameters JackOutput::configure()
 	p["allow_different_frequencies"]["Ignore sampling frequency from input frames"]=false;
 	p["connect_to"]["Specify where to connect the outputs to (e.g. 'system')"]="";
 	p["buffer_size"]["Size of internal buffer"]=1048576;
+	p["client_name"]["Name of the JACK client"]="yuri";
 	return p;
 }
 
@@ -183,7 +180,7 @@ client_name_("yuri_jack"),channels_(2),allow_different_frequencies_(false),buffe
 		ports = jack_get_ports (handle_.get(), connect_to_.c_str(), nullptr, JackPortIsInput);
 	}
 	if (!ports) {
-		log[log::warning] << "No suitable output ports found";
+		log[log::warning] << "No suitable input ports found";
 	} else {
 		for (size_t i=0;i<ports_.size();++i) {
 			if (!ports[i]) break;
@@ -268,6 +265,8 @@ bool JackOutput::set_param(const core::Parameter& param)
 		connect_to_ = param.get<std::string>();
 	} else if (param.get_name() == "buffer_size") {
 		buffer_size_ = param.get<size_t>();
+	} else if (param.get_name() == "client_name") {
+		client_name_ = param.get<std::string>();
 	} else return base_type::set_param(param);
 	return true;
 }

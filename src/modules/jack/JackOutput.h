@@ -15,7 +15,7 @@
 #include <jack/jack.h>
 
 namespace yuri {
-namespace jack_output {
+namespace jack {
 
 template<typename T>
 struct buffer_t {
