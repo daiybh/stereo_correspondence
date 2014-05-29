@@ -38,20 +38,39 @@ base_type(log_,parent,std::string("audio_latency")),first_peak_(false),
 max_peak_dist_(44100*5),last_peak_(false),coolness_(2,0)
 {
 	IOTHREAD_INIT(parameters)
-	set_supported_formats({core::raw_audio_format::signed_16bit});
+	set_supported_formats({	core::raw_audio_format::signed_16bit,
+							core::raw_audio_format::float_32bit});
 
 }
 
 AudioLatency::~AudioLatency() noexcept
 {
 }
+namespace {
+template<typename T>
+T get_threshold(double val);
 
-core::pFrame AudioLatency::do_special_single_step(const core::pRawAudioFrame& frame)
+template<>
+float get_threshold<float>(double val)
 {
-	const int16_t *data = reinterpret_cast<const int16_t*>(frame->data());
+	return static_cast<float>(val);
+}
 
-	int16_t threshold = std::numeric_limits<int16_t>::max() * threshold_;
-	for (size_t i = 0; i < frame->get_sample_count(); ++i) {
+template<typename T>
+T get_threshold(double val)
+{
+	return std::numeric_limits<T>::max() * val;
+}
+
+
+}
+
+template<typename T>
+void AudioLatency::process_latency(const uint8_t* data_ptr, const size_t sample_count, const size_t sampling_frequency, const size_t skip0, const size_t skip1)
+{
+	const T* data = reinterpret_cast<const T*>(data_ptr);
+	T threshold = get_threshold<T>(threshold_);
+	for (size_t i = 0; i < sample_count; ++i) {
 		if (first_peak_) peak_dist_++;
 		if (peak_dist_ > max_peak_dist_) {
 			log[log::warning] << "Max peak distance reached, resetting";
@@ -67,12 +86,13 @@ core::pFrame AudioLatency::do_special_single_step(const core::pRawAudioFrame& fr
 				peak_dist_ = 0;
 			}
 			else if (last_peak_ == false){
-				log[log::info] << "Peak distance " << peak_dist_ << " (" << peak_dist_*1.0e6/frame->get_sampling_frequency() << " us)";
+				log[log::info] << "Peak distance " << peak_dist_ << " (" << peak_dist_*1.0e6/sampling_frequency << " us)";
 				first_peak_=false;
 			}
 		}
 		if (coolness_[0]) coolness_[0]--;
 		data++;
+		data+=skip0;
 		if (std::abs(*data)>threshold && !coolness_[1]) {
 			log[log::info] << "Right " << sample_count_+i << ": " << *data;
 			coolness_[1]=cooldown_;
@@ -82,22 +102,50 @@ core::pFrame AudioLatency::do_special_single_step(const core::pRawAudioFrame& fr
 				peak_dist_ = 0;
 			}
 			else if (last_peak_ == true){
-				log[log::info] << "Peak distance " << peak_dist_ << " (" << peak_dist_*1.0e6/frame->get_sampling_frequency() << " us)";
+				log[log::info] << "Peak distance " << peak_dist_ << " (" << peak_dist_*1.0e6/sampling_frequency << " us)";
 				first_peak_=false;
 			}
 		}
 		if (coolness_[1]) coolness_[1]--;
 		data++;
+		data+=skip1;
 	}
 
+}
 
-
+core::pFrame AudioLatency::do_special_single_step(const core::pRawAudioFrame& frame)
+{
+	using namespace core::raw_audio_format;
+	size_t skip0 = 0;
+	size_t skip1 = 0;
+	const size_t channels = frame->get_channel_count();
+	if (channels < 2) {
+		log[log::warning] << "Input format has only " << channels << " channel...";
+		return {};
+	}
+	if (channels > 2) {
+		skip1 = channels-2;
+	}
+	switch (frame->get_format()) {
+		case signed_16bit:
+			process_latency<int16_t>(frame->data(), frame->get_sample_count(), frame->get_sampling_frequency(), skip0, skip1);
+			break;
+		case signed_32bit:
+			process_latency<int32_t>(frame->data(), frame->get_sample_count(), frame->get_sampling_frequency(), skip0, skip1);
+			break;
+		case float_32bit:
+			process_latency<float>(frame->data(), frame->get_sample_count(), frame->get_sampling_frequency(), skip0, skip1);
+			break;
+		default:
+			log[log::warning] << "Unsupported format";
+			break;
+	}
 	return {};
 }
 bool AudioLatency::set_param(const core::Parameter& param)
 {
 	if (param.get_name() =="threshold") {
-		threshold_ = param.get<bool>();
+		threshold_ = param.get<double>();
 	} else if (param.get_name() == "cooldown") {
 		cooldown_ = param.get<int_fast32_t>();
 	} else if (param.get_name() == "max_peak") {
@@ -108,3 +156,4 @@ bool AudioLatency::set_param(const core::Parameter& param)
 
 } /* namespace audio_latency */
 } /* namespace yuri */
+

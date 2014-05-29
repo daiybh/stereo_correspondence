@@ -28,7 +28,8 @@ private:
 	
 	virtual core::pFrame do_special_single_step(const core::pRawAudioFrame& frame) override;
 	virtual bool set_param(const core::Parameter& param) override;
-
+	template<typename T>
+	void process_latency(const uint8_t* data_ptr, const size_t sample_count, const size_t sampling_frequency, const size_t skip0 = 0, const size_t skip1 = 0);
 	bool first_peak_;
 	size_t peak_dist_;
 	double threshold_;
