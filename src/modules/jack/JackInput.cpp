@@ -73,7 +73,8 @@ int process_audio_wrapper(jack_nframes_t nframes, void *arg)
 
 JackInput::JackInput(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("jack_output")),handle_(nullptr),
-client_name_("yuri_jack"),channels_(2)/*,allow_different_frequencies_(false),buffer_size_(1048576)*/
+client_name_("yuri_jack"),channels_(2),sample_rate_(48000)
+
 {
 	IOTHREAD_INIT(parameters)
 	if (channels_ < 1) {
@@ -131,7 +132,8 @@ client_name_("yuri_jack"),channels_(2)/*,allow_different_frequencies_(false),buf
 		}
 		jack_free (ports);
 	}
-
+	sample_rate_ = jack_get_sample_rate(handle_.get());
+	log[log::info] << "Using sample rate " << sample_rate_ << "Hz";
 	//using namespace core::raw_audio_format;
 	//set_supported_formats({unsigned_8bit, unsigned_16bit, unsigned_32bit, signed_16bit, signed_32bit, float_32bit});
 }
@@ -149,8 +151,10 @@ int JackInput::process_audio(jack_nframes_t nframes)
 {
 	std::unique_lock<std::mutex> lock(data_mutex_);
 //	log[log::info] << "Received " << nframes;
+	// Querying sample rate again in a case it would change (can it ever happen?)
+	sample_rate_ = jack_get_sample_rate(handle_.get());
 	auto frame = core::RawAudioFrame::create_empty(core::raw_audio_format::float_32bit,
-					channels_, 48000, nframes);
+					channels_, sample_rate_, nframes);
 	float* data = reinterpret_cast<float*>(frame->data());
 	for (size_t i=0;i<channels_ /* buffers_.size()*/;++i) {
 		float* data_ptr = data + i;

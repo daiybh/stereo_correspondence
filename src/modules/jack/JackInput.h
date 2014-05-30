@@ -87,6 +87,7 @@ private:
 //	size_t buffer_size_;
 //	std::vector<buffer_t<jack_default_audio_sample_t>> buffers_;
 	std::mutex	data_mutex_;
+	jack_nframes_t sample_rate_;
 
 
 
