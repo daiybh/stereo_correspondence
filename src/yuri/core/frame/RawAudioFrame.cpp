@@ -24,6 +24,12 @@ RawAudioFrame::~RawAudioFrame() noexcept
 {
 
 }
+pRawAudioFrame RawAudioFrame::create_empty(format_t format, size_t channel_count, size_t sampling_frequency, size_t sample_count)
+{
+	pRawAudioFrame frame = make_shared<RawAudioFrame>(format, channel_count, sampling_frequency);
+	frame->set_data(uvector<uint8_t> (sample_count*frame->get_sample_size()/8));
+	return frame;
+}
 pRawAudioFrame RawAudioFrame::create_empty(format_t format, size_t channel_count, size_t sampling_frequency, const uint8_t* data, size_t size)
 {
 	return create_empty(format, channel_count, sampling_frequency, uvector<uint8_t>(data,data+size));
