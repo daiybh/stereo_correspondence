@@ -27,6 +27,7 @@ core::Parameters JackOutput::configure()
 	p["connect_to"]["Specify where to connect the outputs to (e.g. 'system')"]="";
 	p["buffer_size"]["Size of internal buffer"]=1048576;
 	p["client_name"]["Name of the JACK client"]="yuri";
+	p["start_server"]["Start server is it's not running."]=false;
 	return p;
 }
 
@@ -134,14 +135,16 @@ void store_samples(std::vector<buffer_t<Target>>& buffers, const src_fmt* in, si
 
 JackOutput::JackOutput(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("jack_output")),handle_(nullptr),
-client_name_("yuri_jack"),channels_(2),allow_different_frequencies_(false),buffer_size_(1048576)
+client_name_("yuri_jack"),channels_(2),allow_different_frequencies_(false),buffer_size_(1048576),
+start_server_(false)
 {
 	IOTHREAD_INIT(parameters)
 	if (channels_ < 1) {
 		throw exception::InitializationFailed("Invalid number of channels");
 	}
 	jack_status_t status;
-	handle_ = {jack_client_open(client_name_.c_str(), JackNullOption, &status),[](jack_client_t*p){if(p)jack_client_close(p);}};
+	jack_options_t options = start_server_?JackNullOption:JackNoStartServer;
+	handle_ = {jack_client_open(client_name_.c_str(), options, &status),[](jack_client_t*p){if(p)jack_client_close(p);}};
 	if (!handle_) throw exception::InitializationFailed("Failed to connect to JACK server: " + get_error_string(status));
 
 	if (status & JackServerStarted) {
@@ -269,6 +272,8 @@ bool JackOutput::set_param(const core::Parameter& param)
 		buffer_size_ = param.get<size_t>();
 	} else if (param.get_name() == "client_name") {
 		client_name_ = param.get<std::string>();
+	} else if (param.get_name() == "start_server") {
+		start_server_ = param.get<bool>();
 	} else return base_type::set_param(param);
 	return true;
 }

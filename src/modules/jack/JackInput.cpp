@@ -25,6 +25,7 @@ core::Parameters JackInput::configure()
 	p["channels"]["Number of output channels"]=2;
 	p["connect_to"]["Specify where to connect the outputs to (e.g. 'system')"]="";
 	p["client_name"]["Name of the JACK client"]="yuri";
+	p["start_server"]["Start server is it's not running."]=false;
 	return p;
 }
 
@@ -73,7 +74,7 @@ int process_audio_wrapper(jack_nframes_t nframes, void *arg)
 
 JackInput::JackInput(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("jack_output")),handle_(nullptr),
-client_name_("yuri_jack"),channels_(2),sample_rate_(48000)
+client_name_("yuri_jack"),channels_(2),sample_rate_(48000),start_server_(false)
 
 {
 	IOTHREAD_INIT(parameters)
@@ -81,7 +82,8 @@ client_name_("yuri_jack"),channels_(2),sample_rate_(48000)
 		throw exception::InitializationFailed("Invalid number of channels");
 	}
 	jack_status_t status;
-	handle_ = {jack_client_open(client_name_.c_str(), JackNullOption, &status),[](jack_client_t*p){if(p)jack_client_close(p);}};
+	jack_options_t options = start_server_?JackNullOption:JackNoStartServer;
+	handle_ = {jack_client_open(client_name_.c_str(), options, &status),[](jack_client_t*p){if(p)jack_client_close(p);}};
 	if (!handle_) throw exception::InitializationFailed("Failed to connect to JACK server: " + get_error_string(status));
 
 	if (status & JackServerStarted) {
@@ -176,6 +178,8 @@ bool JackInput::set_param(const core::Parameter& param)
 		connect_to_ = param.get<std::string>();
 	} else if (param.get_name() == "client_name") {
 		client_name_ = param.get<std::string>();
+	} else if (param.get_name() == "start_server") {
+		start_server_ = param.get<bool>();
 	} else return base_type::set_param(param);
 	return true;
 }
