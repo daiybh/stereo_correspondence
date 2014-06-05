@@ -21,7 +21,6 @@ namespace yuri {
 namespace ultragrid {
 
 namespace {
-const codec_t VIDEO_CODEC_NONE = static_cast<codec_t>(-1);
 class UVSinkHelper: public core::ThreadBase
 {
 public:

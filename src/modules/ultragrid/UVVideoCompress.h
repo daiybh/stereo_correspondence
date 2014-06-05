@@ -20,13 +20,14 @@ extern "C" {
 
 }
 struct module;
+struct video_compress_params;
 namespace yuri {
 namespace ultragrid {
 
 namespace detail {
-typedef function<void* (char*)>	compress_init_t;
-typedef function<video_frame* (void *, video_frame *, int)> 	compress_t;
-typedef function<tile* (void *, tile *, video_desc*, int)> compress_tile_t;
+typedef function<struct module* (struct module*, const struct video_compress_params *)>	compress_init_t;
+typedef function<video_frame* (struct module *, video_frame *)> 	compress_t;
+typedef function<video_frame* (struct module *, video_frame*)> compress_tile_t;
 
 struct uv_video_compress_params {
 	std::string 			name;
@@ -65,7 +66,7 @@ private:
 
 	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
 	virtual core::pFrame 		do_convert_frame(core::pFrame input_frame, format_t target_format) override;
-	void* encoder_;
+	struct module* encoder_;
 	detail::uv_video_compress_params uv_compress_params_;
 	video_frame_t uv_frame;
 //	unique_ptr<video_frame, void(*)(video_frame*)> uv_frame;

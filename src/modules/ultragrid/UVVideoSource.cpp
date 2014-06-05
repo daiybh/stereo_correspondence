@@ -11,6 +11,7 @@
 #include "UVVideoSource.h"
 #include "yuri/core/Module.h"
 #include "YuriUltragrid.h"
+#include "video_capture.h"
 //#include "yuri/core/frame/raw_frame_params.h"
 //#include "yuri/core/frame/RawVideoFrame.h"
 
@@ -35,7 +36,10 @@ bool UVVideoSource::init_capture(const std::string& params)
 
 	log[log::info] << "Params: '"<<fmt<<"'";
 	if (capt_params_.init_func) {
-		state_ = capt_params_.init_func(fmt, 0);
+                struct vidcap_params *params = vidcap_params_allocate();
+                vidcap_params_set_device(params, fmt);
+		state_ = capt_params_.init_func(params);
+                vidcap_params_free_struct(params);
 	}
 	return state_ != nullptr;
 }
@@ -53,9 +57,6 @@ void UVVideoSource::run()
 			core::pFrame frame = ultragrid::copy_from_from_uv(uv_frame, log);
 			if (frame) push_frame(0, frame);
 		}
-	}
-	if (capt_params_.finish_func) {
-		capt_params_.finish_func(state_);
 	}
 	if (capt_params_.done_func) {
 		capt_params_.done_func(state_);

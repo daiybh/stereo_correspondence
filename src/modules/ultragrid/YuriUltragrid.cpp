@@ -38,8 +38,7 @@ std::unordered_map<codec_t, format_t> uv_to_yuri_raw_formats =
 	{UYVY, core::raw_format::uyvy422},
 	{YUYV, core::raw_format::yuyv422},
 
-	{Vuy2, core::raw_format::uyvy422},
-	{DVS8, core::raw_format::uyvy422},
+	{UYVY, core::raw_format::uyvy422},
 
 };
 
@@ -62,9 +61,6 @@ std::unordered_map<codec_t, std::string> uv_to_strings =
 	{RGB,	"RGB"},
 	{UYVY,	"UYVY"},
 	{YUYV,	"YUYV"},
-
-	{Vuy2,	"VYU2"},
-	{DVS8,	"DVS8"},
 
 	{DXT1,	"DXT1"},
 	{DXT5,	"DXT5"},
@@ -264,8 +260,7 @@ video_frame_t allocate_uv_frame(const core::pFrame& in_frame)
 }
 
 extern "C" {
-void (*exit_uv)(int status);
-void exit_uv_yuri(int ) {
+void exit_uv(int ) {
 	throw std::runtime_error("Ultragrid exit!");
 }
 
@@ -275,7 +270,6 @@ void exit_uv_yuri(int ) {
 void init_uv() {
 	static std::mutex mutex_;
 	std::unique_lock<std::mutex> _(mutex_);
-	if (!exit_uv) exit_uv = exit_uv_yuri;
 }
 
 }

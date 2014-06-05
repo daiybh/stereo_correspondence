@@ -21,7 +21,7 @@ SET(SRC
 	UVVideoCompress.cpp
 	UVVideoCompress.h
 	
-	${UV_BASE}/capture_filter.c
+        #${UV_BASE}/capture_filter.c
 	${UV_BASE}/debug.c
 	${UV_BASE}/host.c
 	${UV_BASE}/lib_common.c
@@ -30,25 +30,25 @@ SET(SRC
 	${UV_BASE}/ntp.c
 	${UV_BASE}/pdb.c
 	${UV_BASE}/tfrc.c
-	${UV_BASE}/tile.c
+        #${UV_BASE}/tile.c
 	${UV_BASE}/transmit.c
 	${UV_BASE}/tv.c
 	${UV_BASE}/video.c
 	${UV_BASE}/video_capture.c
 	${UV_BASE}/video_codec.c
-	${UV_BASE}/video_compress.c
+        ${UV_BASE}/video_compress.cpp
 	${UV_BASE}/video_decompress.c
 	${UV_BASE}/video_display.c
 	#${UV_BASE}/video_frame.c
 	${UV_BASE}/x11_common.c
 	
-	${UV_BASE}/audio/audio.c
+        #${UV_BASE}/audio/audio.c
 	${UV_BASE}/audio/audio_capture.c
 	${UV_BASE}/audio/audio_playback.c
 	${UV_BASE}/audio/codec.c
-	${UV_BASE}/audio/echo.c
+        #${UV_BASE}/audio/echo.c
 	${UV_BASE}/audio/export.c
-	${UV_BASE}/audio/resampler.c
+        #${UV_BASE}/audio/resampler.c
 	${UV_BASE}/audio/utils.c
 	${UV_BASE}/audio/wav_reader.c
 	
@@ -66,7 +66,7 @@ SET(SRC
 	${UV_BASE}/capture_filter/every.c
 	#${UV_BASE}/capture_filter/logo.c
 	
-	#${UV_BASE}/compat/platform_spin.c
+	${UV_BASE}/compat/platform_spin.c
 	
 	${UV_BASE}/crypto/md5.c
 	#${UV_BASE}/crypto/crc_32.c
@@ -75,16 +75,18 @@ SET(SRC
 	${UV_BASE}/crypto/crypt_des.c
 	${UV_BASE}/crypto/random.c
 	
+	${UV_BASE}/module.c
 
 	${UV_BASE}/rtp/audio_decoders.c
-	${UV_BASE}/rtp/decoders.c
+	${UV_BASE}/rtp/video_decoders.cpp
 	${UV_BASE}/rtp/ldgm.cpp
 	${UV_BASE}/rtp/net_udp.c
 	${UV_BASE}/rtp/pbuf.c
 	
 	#${UV_BASE}/rtp/pc.cpp
-	${UV_BASE}/rtp/ll.cpp
+        #${UV_BASE}/rtp/ll.cpp
 	${UV_BASE}/rtp/rtp.c
+        ${UV_BASE}/rtp/rtpenc_h264.c
 	${UV_BASE}/rtp/rtp_callback.c
 	
 	#${UV_BASE}/utils/config_file.c
@@ -95,7 +97,9 @@ SET(SRC
 	${UV_BASE}/utils/ring_buffer.c
 	${UV_BASE}/utils/worker.cpp
 	
-	${UV_BASE}/vo_postprocess.c
+        #${UV_BASE}/vo_postprocess.c
+
+	${UV_BASE}/video_frame.c
 	
 	${UV_BASE}/video_capture/null.c
 	
@@ -115,7 +119,8 @@ SET(LIBS )
 if (X11_FOUND)
     SET(SRC, ${SRC} 
              ${UV_BASE}/x11_common.c)
-    SET(LIBS ${LIBS} ${X11_LIBRARIES} ${X11_Xfixes_LIB})
+    SET(LIBS ${LIBS} ${X11_LIBRARIES})
+    #SET(LIBS ${LIBS} ${X11_Xfixes_LIB})
 endif()
 
 IF(OPENSSL_FOUND)
@@ -203,7 +208,7 @@ IF(GLEW_FOUND)
     SET (SRC ${SRC}
              UVRTDxt.cpp
     		 UVRTDxt.h
-    		 ${UV_BASE}/video_compress/dxt_glsl.c
+    		 ${UV_BASE}/video_compress/dxt_glsl.cpp
     		 ${UV_BASE}/gl_context.c
     		 ${UV_BASE}/glx_common.c
     		 ${UV_BASE}/../dxt_compress/dxt_encoder.c
@@ -227,7 +232,7 @@ if (X11_FOUND)
     SET (SRC ${SRC}
              UVScreen.cpp
     	     UVScreen.h
-    	     ${UV_BASE}/video_capture/screen.c)
+    	     ${UV_BASE}/video_capture/screen_x11.c)
     add_definitions(-DYURI_UV_SCREEN_SUPPORTED)
 ENDIF()
 
@@ -259,7 +264,7 @@ SET (SRC ${SRC}
 SET (SRC ${SRC}
          UVUyvy.cpp
 		 UVUyvy.h
-		 ${UV_BASE}/video_compress/uyvy.c)
+		 ${UV_BASE}/video_compress/uyvy.cpp)
 		 
 # V4L2
 pkg_check_modules(libv4l2 libv4l2)

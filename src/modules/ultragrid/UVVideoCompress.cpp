@@ -12,6 +12,8 @@
 #include "yuri/core/Module.h"
 #include "YuriUltragrid.h"
 
+#include "video_frame.h"
+
 namespace yuri {
 namespace ultragrid {
 UVVideoCompress::UVVideoCompress(const log::Log &log_, core::pwThreadBase parent, const std::string& name, detail::uv_video_compress_params uv_compress_params)
@@ -30,7 +32,9 @@ bool UVVideoCompress::init_compressor(const std::string& params)
 	// Ewwww, this is NOT nice, but init_func shouldn't modify the string...
 	char *fmt = const_cast<char*>(params.c_str());
 	if (uv_compress_params_.init_func) {
-		encoder_ = uv_compress_params_.init_func(fmt);
+                struct video_compress_params params;
+                params.cfg = fmt;
+		encoder_ = uv_compress_params_.init_func(nullptr, &params);
 	}
 	return (encoder_ != nullptr);
 }
@@ -44,23 +48,16 @@ core::pFrame UVVideoCompress::do_special_single_step(const core::pRawVideoFrame&
 	}
 
 	video_frame * out_uv_frame  = nullptr;
-	video_frame tmp_frame;
 	if (uv_compress_params_.compress_func) {
-		out_uv_frame  = uv_compress_params_.compress_func(encoder_, uv_frame.get(), 0);
+		out_uv_frame  = uv_compress_params_.compress_func(encoder_, uv_frame.get());
 	} else if (uv_compress_params_.compress_tile_func) {
-		video_desc desc = video_desc_from_frame(uv_frame.get());
-		tile * out_tile = uv_compress_params_.compress_tile_func(encoder_, &uv_frame->tiles[0], &desc, 0);
-
-		// This smells quite hacky... :)
-		std::copy(uv_frame.get(), uv_frame.get()+1,&tmp_frame);
-		tmp_frame.tiles=out_tile;
-		tmp_frame.tile_count = 1;
-		out_uv_frame = &tmp_frame;
+		out_uv_frame = uv_compress_params_.compress_tile_func(encoder_, uv_frame.get());
 	}
 
 	// Should I clean up out_uv_frame?
 	if (out_uv_frame) {
 		core::pFrame out_frame = ultragrid::copy_from_from_uv(out_uv_frame, log);
+                VIDEO_FRAME_DISPOSE(out_uv_frame);
 		if (out_frame) return {out_frame};
 	}
 	return {};

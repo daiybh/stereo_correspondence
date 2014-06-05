@@ -26,8 +26,4 @@ using video_frame_t = std::shared_ptr<video_frame>;
 #undef max
 #endif
 
-// Replacement for macro representing no codec...
-constexpr codec_t VIDEO_CODEC_NONE = static_cast<codec_t>(-1);
-
-
 #endif /* UV_VIDEO_H_ */

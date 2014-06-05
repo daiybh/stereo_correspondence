@@ -46,9 +46,9 @@ size_t UVUdpSocket::do_receive_datagram(uint8_t* data, size_t size) {
 
 bool UVUdpSocket::do_bind(const std::string& url, core::socket::port_t port) {
 	if (url.empty()) {
-		socket_.reset(udp_init("0.0.0.0",port,0,255,false));
+		socket_.reset(udp_init("0.0.0.0",port,0,255,false, false));
 	} else {
-		socket_.reset(udp_init(url.c_str()/*nullptr*/,port,0,255,false));
+		socket_.reset(udp_init(url.c_str()/*nullptr*/,port,0,255,false, false));
 	}
 	return socket_.get();
 }
