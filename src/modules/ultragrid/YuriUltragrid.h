@@ -26,6 +26,8 @@ codec_t yuri_to_uv(format_t);
 format_t uv_to_yuri(codec_t );
 codec_t yuri_to_uv_compressed(format_t);
 format_t uv_to_yuri_compressed(codec_t );
+interlace_t uv_interlace_to_yuri(::interlacing_t);
+field_order_t uv_fo_to_yuri(::interlacing_t);
 
 std::string uv_to_string(codec_t);
 std::string yuri_to_uv_string(format_t);
@@ -35,6 +37,8 @@ inline core::pFrame copy_from_from_uv(video_frame_t frame, log::Log& log)
 {
 	return copy_from_from_uv(frame.get(), log);
 }
+
+core::pFrame create_yuri_from_uv_desc(const video_desc *, size_t data_len, log::Log&);
 
 bool copy_to_uv_frame(const core::pFrame&, video_frame*);
 bool copy_to_uv_frame(const core::pRawVideoFrame&, video_frame*);

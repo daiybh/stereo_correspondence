@@ -11,11 +11,11 @@
 #define UVRTPRECEIVER_H_
 
 #include "yuri/core/thread/IOThread.h"
+struct pdb;
 struct rtp;
 //struct rx;
 namespace yuri {
 namespace uv_rtp_receiver {
-
 
 
 class UVRtpReceiver: public core::IOThread
@@ -30,7 +30,9 @@ private:
 	virtual void run() override;
 	virtual bool set_param(const core::Parameter& param) override;
 	rtp* rtp_session_;
+        struct pdb *m_participants;
 //	rx* rx_session_;
+        struct timeval m_start_time;
 
 	std::string destination_;
 	uint16_t	rx_port_;

@@ -17,12 +17,6 @@
 #include "yuri/core/utils/array_range.h"
 #include <unordered_map>
 
-extern "C" {
-	#include "host.h"
-}
-//#include "video_frame.h"
-
-
 namespace yuri {
 namespace ultragrid {
 
@@ -37,9 +31,8 @@ std::unordered_map<codec_t, format_t> uv_to_yuri_raw_formats =
 	{RGB, core::raw_format::rgb24},
 	{UYVY, core::raw_format::uyvy422},
 	{YUYV, core::raw_format::yuyv422},
-
 	{UYVY, core::raw_format::uyvy422},
-
+	{v210, core::raw_format::yuv422_v210},
 };
 
 std::unordered_map<codec_t, format_t> uv_to_yuri_compressed_formats =
@@ -67,6 +60,21 @@ std::unordered_map<codec_t, std::string> uv_to_strings =
 	{MJPG,	"MJPEG"},
 	{H264,	"H.264"},
 	{VP8,	"VP8"}
+};
+
+std::unordered_map<::interlacing_t, interlace_t, std::hash<int>> uv_to_yuri_interlace =
+{
+	{PROGRESSIVE, interlace_t::progressive},
+	{UPPER_FIELD_FIRST, interlace_t::segmented_frame},
+	{LOWER_FIELD_FIRST, interlace_t::segmented_frame},
+	{INTERLACED_MERGED, interlace_t::interlaced},
+	{SEGMENTED_FRAME, interlace_t::progressive},
+};
+
+std::unordered_map<::interlacing_t, field_order_t, std::hash<int>> uv_to_yuri_fo =
+{
+	{UPPER_FIELD_FIRST, field_order_t::top_field_first},
+	{LOWER_FIELD_FIRST, field_order_t::bottom_field_first},
 };
 
 void video_frame_deleter(video_frame* frame)
@@ -125,6 +133,15 @@ std::string yuri_to_uv_string(format_t fmt)
 	}
 	return {};
 }
+interlace_t uv_interlace_to_yuri(::interlacing_t x) {
+	auto it = uv_to_yuri_interlace.find(x);
+	return it->second;
+}
+field_order_t uv_fo_to_yuri(::interlacing_t x) {
+	auto it = uv_to_yuri_fo.find(x);
+	if (it==uv_to_yuri_fo.end()) return field_order_t::none;
+	return it->second;
+}
 core::pFrame copy_from_from_uv(const video_frame* uv_frame, log::Log& log)
 {
 	core::pFrame frame;
@@ -151,7 +168,28 @@ core::pFrame copy_from_from_uv(const video_frame* uv_frame, log::Log& log)
 	return frame;
 
 }
+core::pFrame create_yuri_from_uv_desc(const video_desc* uv_desc, size_t data_len, log::Log& log)
+{
+	core::pFrame frame;
+	resolution_t res = {uv_desc->width, uv_desc->height};
+	format_t fmt = ultragrid::uv_to_yuri(uv_desc->color_spec);
+	if (fmt) {
+		log[log::debug] << "Received frame "<<res<<" in format '"<< core::raw_format::get_format_name(fmt) << "' with " << uv_desc->tile_count << " tiles";
+		frame = core::RawVideoFrame::create_empty(fmt,
+					res, true,
+                                        ultragrid::uv_interlace_to_yuri(uv_desc->interlacing),
+                                        ultragrid::uv_fo_to_yuri(uv_desc->interlacing));
+	} else if ((fmt = uv_to_yuri_compressed(uv_desc->color_spec))) {
+		log[log::debug] << "Received compressed frame "<<res<<" in format '"<< core::compressed_frame::get_format_name(fmt) << "' with " << uv_desc->tile_count << " tiles";
+		frame = core::CompressedVideoFrame::create_empty(fmt,
+					res, data_len);
+	} else {
+		log[log::warning] << "Unsupported frame format (" << uv_desc->color_spec <<")";
+	}
+	if (frame) frame->set_duration(1_s/uv_desc->fps);
+	return frame;
 
+}
 bool copy_to_uv_frame(const core::pFrame& frame_in, video_frame* frame_out)
 {
 	if (core::pRawVideoFrame raw_frame = dynamic_pointer_cast<core::RawVideoFrame>(frame_in)) {

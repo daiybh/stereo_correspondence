@@ -9,11 +9,18 @@
 
 #include "UVRtpReceiver.h"
 #include "yuri/core/Module.h"
+#include "yuri/core/frame/CompressedVideoFrame.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "YuriUltragrid.h"
 extern "C" {
-#include "transmit.h"
+#include "debug.h"
+#include "pdb.h"
+#include "rtp/pbuf.h"
 #include "rtp/rtp.h"
+#include "rtp/rtp_callback.h"
+#include "rtp/video_decoders.h"
+#include "tfrc.h"
+#include "tv.h"
 }
 #include "uv_video.h"
 
@@ -44,13 +51,22 @@ core::IOThread(log_,parent,0,1,std::string("uv_rtp_receiver"))
 //		log[log::fatal] << "Failed to prepare tx session";
 //		throw exception::InitializationFailed("Failed to prepare tx session");
 //	}
+        m_participants = pdb_init();
 	if (!(rtp_session_ = rtp_init(destination_.c_str(),
 				rx_port_, tx_port_, ttl_,
-				5000*1048675, 0, nullptr, nullptr,false, true))) {
+				5000*1048675, 0, rtp_recv_callback, (uint8_t *) m_participants, false, true))) {
 		log[log::fatal] << "Failed to prepare rtp session";
 		throw exception::InitializationFailed("Failed to prepare rtp session");
 	}
 
+        rtp_set_option(rtp_session_, RTP_OPT_WEAK_VALIDATION, TRUE);
+        rtp_set_sdes(rtp_session_, rtp_my_ssrc(rtp_session_),
+                        RTCP_SDES_TOOL,
+                        PACKAGE_STRING, strlen(PACKAGE_STRING));
+
+        pdb_add(m_participants, rtp_my_ssrc(rtp_session_));
+
+        gettimeofday(&m_start_time, NULL);
 }
 
 UVRtpReceiver::~UVRtpReceiver() noexcept
@@ -59,7 +75,77 @@ UVRtpReceiver::~UVRtpReceiver() noexcept
 
 void UVRtpReceiver::run()
 {
+        while (still_running()) {
+                struct timeval curr_time;
+                struct timeval timeout;
+                uint32_t ts;
+                int fr = 1;
 
+                /* Housekeeping and RTCP... */
+                gettimeofday(&curr_time, NULL);
+                ts = tv_diff(curr_time, m_start_time) * 90000;
+                rtp_update(rtp_session_, curr_time);
+                rtp_send_ctrl(rtp_session_, ts, 0, curr_time);
+
+                /* Receive packets from the network... The timeout is adjusted */
+                /* to match the video capture rate, so the transmitter works.  */
+                if (fr) {
+                        gettimeofday(&curr_time, NULL);
+                        fr = 0;
+                }
+
+                timeout.tv_sec = 0;
+                //timeout.tv_usec = 999999 / 59.94;
+                timeout.tv_usec = 10000;
+                int ret = rtp_recv_r(rtp_session_, &timeout, ts);
+
+                // timeout
+                if (ret == FALSE) {
+                        // processing is needed here in case we are not receiving any data
+                        //printf("Failed to receive data\n");
+                }
+
+                /* Decode and render for each participant in the conference... */
+                pdb_iter_t it;
+                struct pdb_e *cp = pdb_iter_init(m_participants, &it);
+                while (cp != NULL) {
+                        if (tfrc_feedback_is_due(cp->tfrc_state, curr_time)) {
+                                debug_msg("tfrc rate %f\n",
+                                          tfrc_feedback_txrate(cp->tfrc_state,
+                                                               curr_time));
+                        }
+
+                        yuri_decoder_data decoder_data;
+                        decoder_data.log = (void *) &log;
+                        /// @todo remove ugly taking of raw pointers
+                        auto lambda = [](struct video_desc *desc, size_t size, char **data, void *log) {
+                                core::pFrame frame = ultragrid::create_yuri_from_uv_desc(desc, size, (log::Log &)*log);
+                                auto raw = dynamic_pointer_cast<core::RawVideoFrame>(frame);
+                                if (raw) {
+                                        *data = reinterpret_cast<char *>(PLANE_RAW_DATA(raw, 0));
+                                } else {
+                                                auto compressed = dynamic_pointer_cast<core::CompressedVideoFrame>(frame);
+                                        if (compressed) {
+                                                *data = reinterpret_cast<char *>(compressed->begin());
+                                        }
+                                }
+                                return frame;
+                        };
+                        decoder_data.create_yuri_frame = static_cast<core::pFrame (*)(struct video_desc *, size_t, char **, void *)>(lambda);
+
+                        /* Decode and render video... */
+                        if (pbuf_decode
+                            (cp->playout_buffer, curr_time, decode_yuri_frame, (void *) &decoder_data)) {
+                                gettimeofday(&curr_time, NULL);
+                                fr = 1;
+                                push_frame(0, decoder_data.yuri_frame);
+                        }
+
+                        pbuf_remove(cp->playout_buffer, curr_time);
+                        cp = pdb_iter_next(&it);
+                }
+                pdb_iter_done(&it);
+        }
 }
 bool UVRtpReceiver::set_param(const core::Parameter& param)
 {
