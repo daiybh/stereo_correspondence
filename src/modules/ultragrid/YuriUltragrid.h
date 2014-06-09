@@ -12,15 +12,20 @@
 #define YURIULTRAGRID_H_
 
 #include "yuri/core/utils/new_types.h"
+#include "yuri/core/frame/RawAudioFrame.h"
 #include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/VideoFrame.h"
 #include "yuri/core/forward.h"
 #include "yuri/log/Log.h"
 #include "uv_video.h"
+#include "audio/audio.h"
 
 namespace yuri {
 namespace ultragrid {
 
 void init_uv();
+
+typedef std::shared_ptr<::audio_frame2> audio_frame_t;
 
 codec_t yuri_to_uv(format_t);
 format_t uv_to_yuri(codec_t );
@@ -64,9 +69,12 @@ bool copy_to_uv_frame(const T& frame, video_frame_t uv_frame)
 //}
 
 
+audio_frame_t allocate_uv_frame(const core::pAudioFrame&);
+audio_frame_t allocate_uv_frame(const core::pRawAudioFrame&);
+
+video_frame_t allocate_uv_frame(const core::pVideoFrame&);
 video_frame_t allocate_uv_frame(const core::pRawVideoFrame&);
 video_frame_t allocate_uv_frame(const core::pCompressedVideoFrame&);
-video_frame_t allocate_uv_frame(const core::pFrame&);
 }
 }
 

@@ -10,12 +10,15 @@
 
 
 #include "YuriUltragrid.h"
+#include "yuri/core/frame/AudioFrame.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
 #include "yuri/core/frame/compressed_frame_params.h"
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/utils/array_range.h"
 #include <unordered_map>
+#include "audio/audio.h"
+#include "audio/utils.h"
 
 namespace yuri {
 namespace ultragrid {
@@ -224,6 +227,36 @@ bool copy_to_uv_frame(const core::pCompressedVideoFrame& frame_in, video_frame* 
 	return true;
 }
 
+audio_frame_t allocate_uv_frame(const core::pAudioFrame& in_frame)
+{
+	if (auto raw_frame = dynamic_pointer_cast<core::RawAudioFrame>(in_frame)) {
+		return allocate_uv_frame(raw_frame);
+	}
+	return nullptr;
+
+}
+
+audio_frame_t allocate_uv_frame(const core::pRawAudioFrame& in_frame)
+{
+        audio_frame_t out(audio_frame2_init(), audio_frame2_free);
+
+        audio_frame2_allocate(out.get(), in_frame->get_channel_count(),
+                        in_frame->size() / in_frame->get_channel_count());
+
+        out->bps = in_frame->get_sample_size() / 8 / in_frame->get_channel_count();;
+        out->ch_count = in_frame->get_channel_count();
+        out->sample_rate = in_frame->get_sampling_frequency();
+        out->codec = AC_PCM;
+
+        for (unsigned int i = 0; i < in_frame->get_channel_count(); ++i) {
+                demux_channel(out->data[i], reinterpret_cast<char *>(in_frame->data()), out->bps,
+                                in_frame->size(), in_frame->get_channel_count(), i);
+                out->data_len[i] = in_frame->size() / in_frame->get_channel_count();
+        }
+
+	return out;
+}
+
 video_frame_t allocate_uv_frame(const core::pRawVideoFrame& in_frame)
 {
 	codec_t uv_fmt = yuri_to_uv(in_frame->get_format());
@@ -284,8 +317,7 @@ video_frame_t allocate_uv_frame(const core::pCompressedVideoFrame& in_frame)
 	return out_frame;
 }
 
-
-video_frame_t allocate_uv_frame(const core::pFrame& in_frame)
+video_frame_t allocate_uv_frame(const core::pVideoFrame& in_frame)
 {
 	if (core::pRawVideoFrame raw_frame = dynamic_pointer_cast<core::RawVideoFrame>(in_frame)) {
 		return allocate_uv_frame(raw_frame);

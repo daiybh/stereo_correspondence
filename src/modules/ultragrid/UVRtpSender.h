@@ -10,7 +10,9 @@
 #ifndef UVRTPSENDER_H_
 #define UVRTPSENDER_H_
 
+#include "yuri/core/frame/AudioFrame.h"
 #include "yuri/core/thread/IOFilter.h"
+#include "yuri/core/frame/VideoFrame.h"
 struct rtp;
 struct tx;
 
@@ -27,6 +29,8 @@ public:
 private:
 	
 	virtual core::pFrame do_simple_single_step(const core::pFrame& frame) override;
+	virtual core::pFrame do_special_simple_single_step(const core::pVideoFrame& frame);
+	virtual core::pFrame do_special_simple_single_step(const core::pAudioFrame& frame);
 	virtual bool set_param(const core::Parameter& param);
 	rtp* rtp_session_;
 	tx* tx_session_;
