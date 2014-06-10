@@ -52,8 +52,8 @@ UVAlsaOutput::~UVAlsaOutput() noexcept
 bool UVAlsaOutput::format_changed(const core::pRawAudioFrame& frame)
 {
 	return (format_ != frame->get_format()) ||
-			(frame_.ch_count!= frame->get_channel_count()) ||
-			(frame_.sample_rate != frame->get_sampling_frequency());
+			((size_t) frame_.ch_count!= frame->get_channel_count()) ||
+			((size_t) frame_.sample_rate != frame->get_sampling_frequency());
 }
 namespace {
 using namespace core::raw_audio_format;
@@ -77,7 +77,7 @@ bool UVAlsaOutput::reconfigure(const core::pRawAudioFrame& frame)
 	frame_.ch_count = frame->get_channel_count();
 	frame_.sample_rate = frame->get_sampling_frequency();
 	const auto& fi = core::raw_audio_format::get_format_info(format_);
-	frame_.bps = fi.bits_per_sample;
+	frame_.bps = fi.bits_per_sample / 8;
 	return audio_play_alsa_reconfigure(device_, fi.bits_per_sample, frame_.ch_count, frame_.sample_rate);
 }
 

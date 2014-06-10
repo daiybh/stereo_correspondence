@@ -69,7 +69,7 @@ void UVAlsaInput::run()
 		push_frame(0,out_frame);
 	}
 
-	audio_cap_alsa_finish(device_);
+	audio_cap_alsa_done(device_);
 }
 bool UVAlsaInput::set_param(const core::Parameter& param)
 {
