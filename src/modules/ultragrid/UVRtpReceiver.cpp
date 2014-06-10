@@ -18,7 +18,7 @@ extern "C" {
 #include "rtp/pbuf.h"
 #include "rtp/rtp.h"
 #include "rtp/rtp_callback.h"
-#include "rtp/video_decoders.h"
+#include "rtp/yuri_decoders.h"
 #include "tfrc.h"
 #include "tv.h"
 }
@@ -115,23 +115,7 @@ void UVRtpReceiver::run()
                                                                curr_time));
                         }
 
-                        yuri_decoder_data decoder_data;
-                        decoder_data.log = (void *) &log;
-                        /// @todo remove ugly taking of raw pointers
-                        auto lambda = [](struct video_desc *desc, size_t size, char **data, void *log) {
-                                core::pFrame frame = ultragrid::create_yuri_from_uv_desc(desc, size, (log::Log &)*log);
-                                auto raw = dynamic_pointer_cast<core::RawVideoFrame>(frame);
-                                if (raw) {
-                                        *data = reinterpret_cast<char *>(PLANE_RAW_DATA(raw, 0));
-                                } else {
-                                                auto compressed = dynamic_pointer_cast<core::CompressedVideoFrame>(frame);
-                                        if (compressed) {
-                                                *data = reinterpret_cast<char *>(compressed->begin());
-                                        }
-                                }
-                                return frame;
-                        };
-                        decoder_data.create_yuri_frame = static_cast<core::pFrame (*)(struct video_desc *, size_t, char **, void *)>(lambda);
+                        yuri_decoder_data decoder_data(log);
 
                         /* Decode and render video... */
                         if (pbuf_decode

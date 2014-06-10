@@ -14,6 +14,7 @@
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
 #include "yuri/core/frame/compressed_frame_params.h"
+#include "yuri/core/frame/raw_audio_frame_types.h"
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/utils/array_range.h"
 #include <unordered_map>
@@ -25,6 +26,14 @@ namespace ultragrid {
 
 
 namespace {
+
+std::unordered_map<int, format_t> uv_to_yuri_raw_audio_formats =
+{
+	{8, core::raw_audio_format::unsigned_8bit},
+	{16, core::raw_audio_format::signed_16bit},
+	{24, core::raw_audio_format::signed_24bit},
+	{32, core::raw_audio_format::signed_32bit},
+};
 
 std::unordered_map<codec_t, format_t> uv_to_yuri_raw_formats =
 {
@@ -102,6 +111,12 @@ format_t uv_to_yuri(codec_t x)
 {
 	auto it = uv_to_yuri_raw_formats.find(x);
 	if (it==uv_to_yuri_raw_formats.end()) return core::raw_format::unknown;
+	return it->second;
+}
+format_t audio_uv_to_yuri(int bits_per_sample)
+{
+	auto it = uv_to_yuri_raw_audio_formats.find(bits_per_sample);
+	if (it==uv_to_yuri_raw_audio_formats.end()) return core::raw_format::unknown;
 	return it->second;
 }
 

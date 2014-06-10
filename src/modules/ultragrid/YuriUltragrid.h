@@ -29,6 +29,7 @@ typedef std::shared_ptr<::audio_frame2> audio_frame_t;
 
 codec_t yuri_to_uv(format_t);
 format_t uv_to_yuri(codec_t );
+format_t audio_uv_to_yuri(int bits_per_sample);
 codec_t yuri_to_uv_compressed(format_t);
 format_t uv_to_yuri_compressed(codec_t );
 interlace_t uv_interlace_to_yuri(::interlacing_t);

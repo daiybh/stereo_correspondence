@@ -79,6 +79,7 @@ SET(SRC
 
 	${UV_BASE}/rtp/audio_decoders.c
 	${UV_BASE}/rtp/video_decoders.cpp
+	${UV_BASE}/rtp/yuri_decoders.cpp
 	${UV_BASE}/rtp/ldgm.cpp
 	${UV_BASE}/rtp/net_udp.c
 	${UV_BASE}/rtp/pbuf.c
