@@ -174,6 +174,10 @@ IF (Boost_REGEX_FOUND)
 	add_subdirectory(rawfilesource)
 ENDIF()
 
+find_package(VIDEOMASTER)
+IF (VIDEOMASTER_FOUND)
+    add_subdirectory(delta)
+ENDIF()
 
 
 #### UV #####
