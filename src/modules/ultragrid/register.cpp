@@ -50,6 +50,11 @@
 #include "UVV4l2.h"
 #endif
 
+#if YURI_UV_DELTA_SUPPORTED
+#include "UVDeltaCast.h"
+#include "UVDeltaCastDVI.h"
+#endif
+
 namespace yuri {
 
 
@@ -98,6 +103,12 @@ MODULE_REGISTRATION_BEGIN("ultragrid")
 #if YURI_UV_V4L2_SUPPORTED
 		REGISTER_IOTHREAD("uv_v4l2",uv_v4l2::UVV4l2)
 #endif
+
+#if YURI_UV_DELTA_SUPPORTED
+		REGISTER_IOTHREAD("uv_deltacast",uv_deltacast::UVDeltaCast)
+		REGISTER_IOTHREAD("uv_deltacast_dvi",uv_deltacast::UVDeltaCastDVI)
+#endif
+
 
 		REGISTER_DATAGRAM_SOCKET("uv_udp",uv_udp::UVUdpSocket)
 
