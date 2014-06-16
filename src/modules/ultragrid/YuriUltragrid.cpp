@@ -132,6 +132,10 @@ std::string yuri_to_uv_string(format_t fmt)
 core::pFrame copy_from_from_uv(const video_frame* uv_frame, log::Log& log)
 {
 	core::pFrame frame;
+	if (!uv_frame->tile_count || !uv_frame->tiles) {
+		log[log::error] << "Got frame with not tiles...";
+		return {};
+	}
 	const auto& tile = uv_frame->tiles[0];
 	resolution_t res = {tile.width, tile.height};
 	format_t fmt = ultragrid::uv_to_yuri(uv_frame->color_spec);
