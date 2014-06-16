@@ -37,12 +37,13 @@ ENDIF()
 #################################################################
 # Set up dependencies for libyuri_core
 #################################################################
-SET (YURI_LINK ${YURI_LINK} ${Boost_LIBRARY_DIRS} )
-IF(NOT WIN32)
-SET (YURI_LIBS ${YURI_LIBS}	${Boost_LIBRARIES} )
+IF(Boost_SYSTEM_FOUND)
+    SET (YURI_LINK ${YURI_LINK} ${Boost_LIBRARY_DIRS} )
+    IF(NOT WIN32)
+    SET (YURI_LIBS ${YURI_LIBS}	${Boost_LIBRARIES} )
+    ENDIF()
+    SET (YURI_INCLUDE ${YURI_INCLUDE} ${Boost_INCLUDE_DIRS} )  
 ENDIF()
-SET (YURI_INCLUDE ${YURI_INCLUDE} ${Boost_INCLUDE_DIRS} )  
-
 #################################################################
 # Set up dependencies for helper libraries
 #################################################################
@@ -124,7 +125,7 @@ add_library(${LIBNAME} ${YURI_SRC})
 # Add targets for helper libraries
 #################################################################
 IF(${CORE_CUDA})
-	MESSAGE("Building CUDA helper library!")
+	MESSAGE(STATUS "Building CUDA helper library!")
 	IF(${CORE_X11})
 		SET(YURI_HELPER_CUDA_LIBS ${YURI_HELPER_CUDA_LIBS} ${LIBNAME_HELPER_X11})
 	ENDIF()
@@ -138,7 +139,7 @@ IF(${CORE_CUDA})
 ENDIF()
 
 IF(${CORE_LIBAV})
-	MESSAGE("Building libav helper library!")
+	MESSAGE(STATUS "Building libav helper library!")
 	add_library(${LIBNAME_HELPER_LIBAV} ${YURI_HELPER_LIBAV_SRC})
 	target_link_libraries ( ${LIBNAME_HELPER_LIBAV} ${YURI_HELPER_LIBAV_LIBS})
 	SET_TARGET_PROPERTIES( ${LIBNAME_HELPER_LIBAV} PROPERTIES SOVERSION ${SO_VERSION} VERSION ${YURI_CORE_VERSION} )
@@ -149,7 +150,7 @@ IF(${CORE_LIBAV})
 ENDIF()
 
 IF(${CORE_X11})
-	MESSAGE("Building X11 helper library!")
+	MESSAGE(STATUS "Building X11 helper library!")
 	add_library(${LIBNAME_HELPER_X11} ${YURI_HELPER_X11_SRC})
 	target_link_libraries ( ${LIBNAME_HELPER_X11} ${YURI_HELPER_X11_LIBS})
 	SET_TARGET_PROPERTIES( ${LIBNAME_HELPER_X11} PROPERTIES SOVERSION ${SO_VERSION} VERSION ${YURI_CORE_VERSION} )
