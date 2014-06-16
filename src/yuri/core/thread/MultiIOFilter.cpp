@@ -47,7 +47,7 @@ void MultiIOFilter::resize(position_t inp, position_t outp)
 bool MultiIOFilter::step()
 {
 	bool ready = true;
-	bool change = false;
+//	bool change = false;
 	assert(get_no_in_ports()>0);
 	assert(stored_frames_.size() == static_cast<size_t>(get_no_in_ports()));
 	for (position_t i=0; i< get_no_in_ports(); ++i) {
@@ -56,7 +56,7 @@ bool MultiIOFilter::step()
 			auto f = pop_frame(i);
 			if (f) {
 				stored_frames_[i]=f;
-				change = true;
+//				change = true;
 			}
 		} else if (!stored_frames_[i] || (main_input_>=0 && i!=main_input_)) {
 				auto f = pop_frame(i);//]->pop_frame();
