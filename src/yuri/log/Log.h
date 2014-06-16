@@ -68,12 +68,12 @@ private:
 	int id;
 	yuri::mutex lock;
 	std::string ids;
-	debug_flags flags;
+//	debug_flags flags;
 	int output_flags;
 	bool quiet;
-	void set_flag(debug_flags f);
+//	void set_flag(debug_flags f);
 	std::string print_time();
-	std::string print_level();
+	std::string print_level(debug_flags flags);
 
 };
 
