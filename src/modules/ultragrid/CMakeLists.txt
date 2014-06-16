@@ -287,6 +287,25 @@ IF(VIDEOMASTER_FOUND)
     include_directories(${VIDEOMASTER_INCLUDE_DIRS})
 ENDIF()		 
 
+IF(DECKLINK_FOUND)
+    add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/DeckLinkAPIDispatch.cpp"
+	    	COMMAND ${CMAKE_COMMAND} -E copy_if_different
+	    	"${DECKLINK_INCLUDE_DIR}/DeckLinkAPIDispatch.cpp"
+	    	"${CMAKE_CURRENT_BINARY_DIR}/DeckLinkAPIDispatch.cpp"
+	    )
+    SET (SRC ${SRC}
+        DeckLinkAPIDispatch.cpp
+        UVDecklink.h
+        UVDecklink.cpp
+        ${UV_BASE}/video_capture/decklink.h
+        ${UV_BASE}/video_capture/decklink.cpp
+        )
+    include_directories(${DECKLINK_INCLUDE_DIRS}) 
+    SET(LIBS ${LIBS} ${DECKLINK_LIBRARIES}) 
+    add_definitions(-DYURI_UV_DECKLINK_SUPPORTED)
+
+ENDIF()
+
 add_library(${MODULE} MODULE ${SRC})
 target_link_libraries(${MODULE} ${LIBNAME} ${LIBS})
 SET_TARGET_PROPERTIES(${MODULE} PROPERTIES COMPILE_FLAGS "-DHAVE_CONFIG_H -DUV_IN_YURI -DBUILD_LIBRARIES")
