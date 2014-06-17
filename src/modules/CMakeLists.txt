@@ -1,10 +1,8 @@
-find_package( Boost 1.46 COMPONENTS regex)
-include_directories( ${Boost_INCLUDE_DIRS})
-link_directories (${Boost_LIBRARY_DIRS})
 
 
 add_subdirectory(anaglyph)
 add_subdirectory(audio_noise)
+add_subdirectory(audio_latency)
 add_subdirectory(bayer)
 add_subdirectory(black_white_generator)
 add_subdirectory(color_key)
@@ -28,6 +26,7 @@ add_subdirectory(mix)
 add_subdirectory(mjpeg_to_jpeg)
 add_subdirectory(mosaic)
 add_subdirectory(null)
+add_subdirectory(osc)
 add_subdirectory(overlay)
 add_subdirectory(pad)
 add_subdirectory(repack_audio)
@@ -39,7 +38,6 @@ add_subdirectory(split_frames)
 add_subdirectory(split_planes)
 add_subdirectory(testcard)
 add_subdirectory(yuriconvert)
-add_subdirectory(osc_receiver)
 add_subdirectory(vncclient)
 
 IF(UNIX)
@@ -168,10 +166,18 @@ IF(${X265_FOUND})
     add_subdirectory(x265)
 ENDIF()
 
+find_package( Boost 1.46 COMPONENTS regex)
 IF (Boost_REGEX_FOUND)
+    include_directories( ${Boost_INCLUDE_DIRS})
+    link_directories (${Boost_LIBRARY_DIRS})
+
 	add_subdirectory(rawfilesource)
 ENDIF()
 
+find_package(VIDEOMASTER)
+IF (VIDEOMASTER_FOUND)
+    add_subdirectory(delta)
+ENDIF()
 
 
 #### UV #####

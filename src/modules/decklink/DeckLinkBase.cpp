@@ -103,16 +103,29 @@ progresive_to_psf = {
 {"1080p24", "1080p24PsF"},
 {"1080p2398", "1080p2398PsF"},
 };
+
+template<typename T, typename C>
+std::string make_string_list(const std::map<std::string, T, C>& data, const std::string& separator = ", ")
+{
+	std::string out;
+	for (auto& val: data) {
+		if (!out.empty()) out+=separator;
+		out+=val.first;
+	}
+	return out;
+}
+
 }
 core::Parameters DeckLinkBase::configure()
 {
 	core::Parameters p = IOThread::configure();
 	p.set_description("DeckLink SDK Base");
 	p["device"]["Index of device to use"]=0;
-	p["format"]["Format"]="1080p25";
+	p["format"]["Video format. Accepted values: "+make_string_list(mode_strings)]="1080p25";
 	p["audio"]["Enable audio"]=false;
-	p["pixel_format"]["Select pixel format. Possible values are: (yuv, v210, argb, bgra, r210)"]="yuv";
+	p["pixel_format"]["Select pixel format. Accepted values are: "+make_string_list(pixfmt_strings)]="yuv";
 	p["audio_channels"]["Number of audio channels to process, supported are 2, 8 or 16 channels"]=2;
+	p["connection"]["Connection (input/output). Accepted values are: "+make_string_list(connection_strings)]="SDI";
 	return p;
 }
 

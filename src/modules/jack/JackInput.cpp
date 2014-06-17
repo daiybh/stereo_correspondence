@@ -1,5 +1,5 @@
 /*!
- * @file 		JackOutput.cpp
+ * @file 		JackInput.cpp
  * @author 		Zdenek Travnicek <travnicek@iim.cz>
  * @date		19.03.2014
  * @copyright	Institute of Intermedia, 2013
@@ -7,7 +7,7 @@
  *
  */
 
-#include "JackOutput.h"
+#include "JackInput.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_audio_frame_types.h"
 #include <cstdlib>
@@ -16,16 +16,14 @@ namespace yuri {
 namespace jack {
 
 
-IOTHREAD_GENERATOR(JackOutput)
+IOTHREAD_GENERATOR(JackInput)
 
-core::Parameters JackOutput::configure()
+core::Parameters JackInput::configure()
 {
 	core::Parameters p = base_type::configure();
-	p.set_description("JackOutput");
+	p.set_description("JackInput");
 	p["channels"]["Number of output channels"]=2;
-	p["allow_different_frequencies"]["Ignore sampling frequency from input frames"]=false;
 	p["connect_to"]["Specify where to connect the outputs to (e.g. 'system')"]="";
-	p["buffer_size"]["Size of internal buffer"]=1048576;
 	p["client_name"]["Name of the JACK client"]="yuri";
 	p["start_server"]["Start server is it's not running."]=false;
 	return p;
@@ -67,76 +65,17 @@ std::string get_error_string(jack_status_t err)
 
 int process_audio_wrapper(jack_nframes_t nframes, void *arg)
 {
-	auto j = reinterpret_cast<JackOutput*>(arg);
+	auto j = reinterpret_cast<JackInput*>(arg);
 	return j->process_audio(nframes);
 }
 
-template<typename Target, typename Source>
-Target convert_sample(Source);
-
-
-template<>
-float convert_sample(int16_t value)
-{
-	return static_cast<float>(value)/std::numeric_limits<int16_t>::max();
-}
-template<>
-float convert_sample(int32_t value)
-{
-	return static_cast<float>(value)/std::numeric_limits<int32_t>::max();
-}
-template<>
-float convert_sample(uint8_t value)
-{
-	return 2.0f*static_cast<float>(value)/std::numeric_limits<uint8_t>::max()-1.0;
-}
-template<>
-float convert_sample(uint16_t value)
-{
-	return 2.0f*static_cast<float>(value)/std::numeric_limits<uint16_t>::max()-1.0;
-}
-template<>
-float convert_sample(uint32_t value)
-{
-	return 2.0f*static_cast<float>(value)/std::numeric_limits<uint32_t>::max()-1.0;
-}
-template<>
-float convert_sample(float value)
-{
-	return value;
 }
 
 
-
-
-
-
-template<typename Target, class Source, typename src_fmt>
-void store_samples(std::vector<buffer_t<Target>>& buffers, const src_fmt* in, size_t nframes, size_t in_channels)
-{
-	const Source* in_frames = reinterpret_cast<const Source*>(in);
-	const size_t copy_channels = std::min(in_channels, buffers.size());
-	if (copy_channels < buffers.size()) {
-		for (size_t c=0;c<(buffers.size()-copy_channels);++c) {
-			buffers[c+copy_channels].push_silence(nframes);
-		}
-	}
-	for (size_t i = 0; i< nframes;++i) {
-		for (size_t c=0;c<copy_channels;++c) {
-			buffers[c].push(convert_sample<Target>(*(in_frames+c)));
-		}
-		in_frames+=in_channels;
-	}
-}
-
-
-}
-
-
-JackOutput::JackOutput(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
+JackInput::JackInput(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("jack_output")),handle_(nullptr),
-client_name_("yuri_jack"),channels_(2),allow_different_frequencies_(false),buffer_size_(1048576),
-start_server_(false)
+client_name_("yuri_jack"),channels_(2),sample_rate_(48000),start_server_(false)
+
 {
 	IOTHREAD_INIT(parameters)
 	if (channels_ < 1) {
@@ -156,15 +95,15 @@ start_server_(false)
 	}
 	log[log::info] << "Connected to JACK server";
 
-	buffers_.resize(channels_, buffer_t<jack_default_audio_sample_t>(buffer_size_));
+	//buffers_.resize(channels_, buffer_t<jack_default_audio_sample_t>(buffer_size_));
 
 	if (jack_set_process_callback (handle_.get(), process_audio_wrapper, this)  !=0) {
 		log[log::error] << "Failed to set process callback!";
 	}
 
 	for (size_t i=0;i<channels_;++i) {
-		std::string port_name = "output" + lexical_cast<std::string>(i);
-		auto port = jack_port_register (handle_.get(), port_name.c_str(),  JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+		std::string port_name = "input" + lexical_cast<std::string>(i);
+		auto port = jack_port_register (handle_.get(), port_name.c_str(),  JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0);
 		if (!port) {
 			throw exception::InitializationFailed("Failed to allocate output port");
 		}
@@ -178,16 +117,16 @@ start_server_(false)
 	log[log::info] << "client activated";
 	const char **ports = nullptr;
 	if (connect_to_.empty()) {
-		ports = jack_get_ports (handle_.get(), nullptr, nullptr, JackPortIsPhysical|JackPortIsInput);
+		ports = jack_get_ports (handle_.get(), nullptr, nullptr, JackPortIsPhysical|JackPortIsOutput);
 	} else {
-		ports = jack_get_ports (handle_.get(), connect_to_.c_str(), nullptr, JackPortIsInput);
+		ports = jack_get_ports (handle_.get(), connect_to_.c_str(), nullptr, JackPortIsOutput);
 	}
 	if (!ports) {
-		log[log::warning] << "No suitable input ports found";
+		log[log::warning] << "No suitable output ports found";
 	} else {
 		for (size_t i=0;i<ports_.size();++i) {
 			if (!ports[i]) break;
-			if (jack_connect (handle_.get(), jack_port_name (ports_[i].get()), ports[i])) {
+			if (jack_connect (handle_.get(), ports[i], jack_port_name (ports_[i].get()))) {
 				log[log::warning] << "Failed connect to output port " << i;
 			} else {
 				log[log::info] << "Connected port " << jack_port_name (ports_[i].get()) << " to " << ports[i];
@@ -195,81 +134,48 @@ start_server_(false)
 		}
 		jack_free (ports);
 	}
-
-	using namespace core::raw_audio_format;
-	set_supported_formats({unsigned_8bit, unsigned_16bit, unsigned_32bit, signed_16bit, signed_32bit, float_32bit});
+	sample_rate_ = jack_get_sample_rate(handle_.get());
+	log[log::info] << "Using sample rate " << sample_rate_ << "Hz";
+	//using namespace core::raw_audio_format;
+	//set_supported_formats({unsigned_8bit, unsigned_16bit, unsigned_32bit, signed_16bit, signed_32bit, float_32bit});
 }
 
-JackOutput::~JackOutput() noexcept
+JackInput::~JackInput() noexcept
 {
 }
 
-core::pFrame JackOutput::do_special_single_step(const core::pRawAudioFrame& frame)
+core::pFrame JackInput::do_special_single_step(const core::pRawAudioFrame& /*frame*/)
 {
-	jack_nframes_t sample_rate =  jack_get_sample_rate(handle_.get());
-	if (sample_rate != frame->get_sampling_frequency() && !allow_different_frequencies_) {
-		log[log::warning] << "Frame has different sampling rate ("
-					<<frame->get_sampling_frequency()<<") than JACKd ("
-					<< sample_rate <<"), ignoring";
-		return {};
-	}
-
-	size_t nframes = frame->get_sample_count();
-//	const int16_t * in_frames = reinterpret_cast<const int16_t*>(frame->data());
-
-	const size_t in_channels = frame->get_channel_count();
-
-
-	std::unique_lock<std::mutex> lock(data_mutex_);
-	using namespace core::raw_audio_format;
-	switch (frame->get_format()) {
-		case unsigned_8bit:
-			store_samples<jack_default_audio_sample_t, uint8_t>(buffers_, frame->data(), nframes, in_channels);
-			break;
-		case signed_16bit:
-			store_samples<jack_default_audio_sample_t, int16_t>(buffers_, frame->data(), nframes, in_channels);
-			break;
-		case unsigned_16bit:
-			store_samples<jack_default_audio_sample_t, uint16_t>(buffers_, frame->data(), nframes, in_channels);
-			break;
-		case signed_32bit:
-			store_samples<jack_default_audio_sample_t, int32_t>(buffers_, frame->data(), nframes, in_channels);
-			break;
-		case unsigned_32bit:
-			store_samples<jack_default_audio_sample_t, uint32_t>(buffers_, frame->data(), nframes, in_channels);
-			break;
-		case float_32bit:
-			store_samples<jack_default_audio_sample_t, float>(buffers_, frame->data(), nframes, in_channels);
-			break;
-		default:
-			log[log::warning] << "Unsupported frame format";
-			break;
-	}
-
 	return {};
 }
 
-int JackOutput::process_audio(jack_nframes_t nframes)
+int JackInput::process_audio(jack_nframes_t nframes)
 {
 	std::unique_lock<std::mutex> lock(data_mutex_);
-	size_t copy_count = std::min<size_t>(buffers_[0].size(), nframes);
-	for (size_t i=0;i<buffers_.size();++i) {
+//	log[log::info] << "Received " << nframes;
+	// Querying sample rate again in a case it would change (can it ever happen?)
+	sample_rate_ = jack_get_sample_rate(handle_.get());
+	auto frame = core::RawAudioFrame::create_empty(core::raw_audio_format::float_32bit,
+					channels_, sample_rate_, nframes);
+	float* data = reinterpret_cast<float*>(frame->data());
+	for (size_t i=0;i<channels_ /* buffers_.size()*/;++i) {
+		float* data_ptr = data + i;
 		if (!ports_[i]) continue;
 		jack_default_audio_sample_t* data = reinterpret_cast<jack_default_audio_sample_t *>(jack_port_get_buffer (ports_[i].get(), nframes));
-		buffers_[i].pop(data,copy_count);
+		for (jack_nframes_t i=0;i<nframes;++i) {
+			*data_ptr = *data++;
+			data_ptr+=channels_;
+		}
 	}
+	push_frame(0, frame);
 	return 0;
 }
-bool JackOutput::set_param(const core::Parameter& param)
+bool JackInput::set_param(const core::Parameter& param)
 {
 	if (param.get_name() == "channels") {
 		channels_ = param.get<size_t>();
-	} else if (param.get_name() == "allow_different_frequencies") {
-		allow_different_frequencies_ = param.get<bool>();
 	} else if (param.get_name() == "connect_to") {
 		connect_to_ = param.get<std::string>();
-	} else if (param.get_name() == "buffer_size") {
-		buffer_size_ = param.get<size_t>();
 	} else if (param.get_name() == "client_name") {
 		client_name_ = param.get<std::string>();
 	} else if (param.get_name() == "start_server") {

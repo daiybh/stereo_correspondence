@@ -2,8 +2,11 @@
 SET (MODULE jack_module)
 
 # Set all source files module uses
-SET (SRC JackOutput.cpp
-		 JackOutput.h)
+SET (SRC JackInput.cpp
+		 JackInput.h
+		 JackOutput.cpp
+		 JackOutput.h
+		 register.cpp)
 
 
  

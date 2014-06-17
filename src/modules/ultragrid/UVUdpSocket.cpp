@@ -53,6 +53,15 @@ bool UVUdpSocket::do_bind(const std::string& url, core::socket::port_t port) {
 	return socket_.get();
 }
 
+bool UVUdpSocket::do_connect(const std::string& url, core::socket::port_t port) {
+	if (url.empty()) {
+		socket_.reset(udp_init("0.0.0.0",0,port,255,false));
+	} else {
+		socket_.reset(udp_init(url.c_str()/*nullptr*/,0,port,255,false));
+	}
+	return socket_.get();
+}
+
 bool UVUdpSocket::do_data_available() {
 	if (socket_.get()==nullptr) throw core::socket::socket_not_connected();
 	char c;
@@ -63,8 +72,13 @@ bool UVUdpSocket::do_ready_to_send() {
 	return true; // whatever ;)
 }
 
-bool UVUdpSocket::do_wait_for_data(duration_t /*duration*/) {
-	return true; // TODO: Implement this....
+bool UVUdpSocket::do_wait_for_data(duration_t duration) {
+	udp_fd_r fdr;
+	udp_fd_set_r(socket_.get(), &fdr);
+	timeval timeout = {duration.value/1000000, duration.value%1000000};
+	bool ready = udp_select_r(&timeout, &fdr)>0;
+	udp_fd_zero_r(&fdr);
+	return ready; // TODO: Implement this....
 }
 
 

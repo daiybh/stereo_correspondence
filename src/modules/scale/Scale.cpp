@@ -129,7 +129,7 @@ inline uint8_t get_uv (const dimension_t pixel, const double unscale_x, const ui
 }
 
 struct scale_line_bilinear_yuyv {
-	inline static void eval(uint8_t* it, const uint8_t* top, const uint8_t* bottom, const dimension_t new_width, const dimension_t old_width, const double unscale_x, const double y_ratio) {
+	inline static void eval(uint8_t* it, const uint8_t* top, const uint8_t* bottom, const dimension_t new_width, const dimension_t /*old_width*/, const double unscale_x, const double y_ratio) {
 		const double y_ratio2 = 1.0 - y_ratio;
 		for (dimension_t pixel = 0; pixel < new_width -2; pixel+=2) {
 			*it++=get_y(pixel, unscale_x, top, bottom, y_ratio, y_ratio2);
@@ -144,7 +144,7 @@ struct scale_line_bilinear_yuyv {
 	}
 };
 struct scale_line_bilinear_uyvy {
-	inline static void eval(uint8_t* it, const uint8_t* top, const uint8_t* bottom, const dimension_t new_width, const dimension_t old_width, const double unscale_x, const double y_ratio) {
+	inline static void eval(uint8_t* it, const uint8_t* top, const uint8_t* bottom, const dimension_t new_width, const dimension_t /*old_width*/, const double unscale_x, const double y_ratio) {
 		const double y_ratio2 = 1.0 - y_ratio;
 		for (dimension_t pixel = 0; pixel < new_width -2; pixel+=2) {
 			*it++=get_uv<0>(pixel, unscale_x, top-1, bottom-1, y_ratio, y_ratio2);
@@ -191,7 +191,7 @@ inline uint8_t get_uv_fast (const dimension_t pixel, const uint64_t unscale_x, c
 }
 
 struct scale_line_bilinear_yuyv_fast {
-	inline static void eval(uint8_t* it, const uint8_t* top, const uint8_t* bottom, const dimension_t new_width, const dimension_t old_width, const uint64_t unscale_x, const uint64_t y_ratio) {
+	inline static void eval(uint8_t* it, const uint8_t* top, const uint8_t* bottom, const dimension_t new_width, const dimension_t /*old_width*/, const uint64_t unscale_x, const uint64_t y_ratio) {
 		const uint64_t y_ratio2 = 256 - y_ratio;
 		for (dimension_t pixel = 0; pixel < new_width -2; pixel+=2) {
 			*it++=get_y_fast(pixel, unscale_x, top, bottom, y_ratio, y_ratio2);
@@ -207,7 +207,7 @@ struct scale_line_bilinear_yuyv_fast {
 };
 
 struct scale_line_bilinear_uyvy_fast {
-	inline static void eval(uint8_t* it, const uint8_t* top, const uint8_t* bottom, const dimension_t new_width, const dimension_t old_width, const uint64_t unscale_x, const uint64_t y_ratio) {
+	inline static void eval(uint8_t* it, const uint8_t* top, const uint8_t* bottom, const dimension_t new_width, const dimension_t /*old_width*/, const uint64_t unscale_x, const uint64_t y_ratio) {
 		const uint64_t y_ratio2 = 256 - y_ratio;
 		for (dimension_t pixel = 0; pixel < new_width -2; pixel+=2) {
 			// Using top - 1 and bottom - 1 to reuse methods for yuv

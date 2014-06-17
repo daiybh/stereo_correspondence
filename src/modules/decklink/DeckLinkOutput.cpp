@@ -25,11 +25,12 @@ core::Parameters DeckLinkOutput::configure()
 {
 	core::Parameters p = DeckLinkBase::configure();
 	p.set_description("Outputs input video to BlackMagic Design device (Eclipse, Intensity, ...)");
-	p["format"]["Output format (1080p25, etc)"]="1080p25";
+	// Using default description from DecklinkBase
+//	p["format"]["Output format (1080p25, etc)"]="1080p25";
 	p["prebuffer"]["Number of frames to prefill in the output buffer."
 	                  "Minimal reasonable value is 2. "
 	                  "Setting it to higher values may increase playback fluency, but will increase latency"]=3;
-	p["connection"]["Output connection (HDMI, SDI, SVideo, ...). Please note that enabling one output will also enable other compatible outputs"]=std::string("HDMI");
+//	p["connection"]["Output connection (HDMI, SDI, SVideo, ...). Please note that enabling one output will also enable other compatible outputs"]=std::string("HDMI");
 	p["sync"]["Use synchronous frame display."]=true;
 	p["stereo"]["Output stereo image."]=false;
 	p["format_detection"]["Try to detect video format."]=1;

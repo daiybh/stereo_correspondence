@@ -52,7 +52,7 @@ id(-1),
 #else
 id(0),
 #endif
-ids(""),flags(info),output_flags(info),quiet(false)
+ids(""),output_flags(info),quiet(false)
 {
 }
 
@@ -73,7 +73,7 @@ void Log::set_id(int id)
  * Creates a new Log instance as a copy of @em log.  The instance will get an unique uid.
  * @param log Log instance to copy from
  */
-Log::Log(const Log &log):uid(uids++),out(log.out),id(log.id),ids(""),flags(log.flags),
+Log::Log(const Log &log):uid(uids++),out(log.out),id(log.id),ids(""),
 		output_flags(log.output_flags),quiet(log.quiet)
 {
 	(*this)[verbose_debug] << "Copying logger "	<< log.uid << " -> " << uid;
@@ -94,20 +94,20 @@ void Log::set_label(std::string s)
  */
 LogProxy<char> Log::operator[](debug_flags f)
 {
-	set_flag(f);
-	LogProxy<char> lp(*out,flags > (output_flags & flag_mask));
+//	set_flag(f);
+	LogProxy<char> lp(*out,f /*flags*/ > (output_flags & flag_mask));
 	if (!quiet) {
-		lp << ((output_flags&show_level)?print_level():"") << id << ":" << uid << ": "  << ids << print_time();
+		lp << ((output_flags&show_level)?print_level(f):"") << id << ":" << uid << ": "  << ids << print_time();
 	} else {
 		lp << " ";
 	}
 	return lp;
 }
 
-void Log::set_flag(debug_flags f)
-{
-	flags=f;
-}
+//void Log::set_flag(debug_flags f)
+//{
+//	flags=f;
+//}
 
 
 std::string Log::print_time()
@@ -125,9 +125,9 @@ std::string Log::print_time()
 	return s;
 }
 
-std::string Log::print_level()
+std::string Log::print_level(debug_flags flags)
 {
-	_debug_flags f = static_cast<_debug_flags>(flags&flag_mask);
+	debug_flags f = static_cast<debug_flags>(flags&flag_mask);
 	if (level_names.count(f)) {
 		if ((output_flags&use_colors) && level_colors.count(f)) {
 			return level_colors[f]+level_names[f]+level_colors[info]+" ";

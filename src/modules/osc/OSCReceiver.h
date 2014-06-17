@@ -15,7 +15,7 @@
 #include "yuri/core/socket/DatagramSocket.h"
 
 namespace yuri {
-namespace osc_receiver {
+namespace osc {
 
 class OSCReceiver: public core::IOThread, public event::BasicEventProducer
 {
@@ -28,8 +28,8 @@ private:
 
 	virtual void run() override;
 	virtual bool set_param(const core::Parameter& param) override;
-	template<class Iterator>
-	void process_data(Iterator& first, const Iterator& last);
+//	template<class Iterator>
+//	void process_data(Iterator& first, const Iterator& last);
 	std::shared_ptr<core::socket::DatagramSocket> socket_;
 	uint16_t	port_;
 	std::string socket_type_;

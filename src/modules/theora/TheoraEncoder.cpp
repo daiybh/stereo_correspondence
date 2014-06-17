@@ -167,7 +167,7 @@ bool TheoraEncoder::init_ctx(const core::pRawVideoFrame& frame)
 namespace {
 void set_th_plane(const core::pRawVideoFrame& frame, size_t index, th_img_plane& plane)
 {
-	const format_t fmt = frame->get_format();
+	//const format_t fmt = frame->get_format();
 	const auto res = PLANE_DATA(frame,index).get_resolution();
 	using namespace core::raw_format;
 	plane.width = res.width;

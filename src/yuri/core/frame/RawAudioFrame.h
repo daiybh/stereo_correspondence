@@ -28,6 +28,16 @@ public:
 
 
 	/*!
+	 * Creates an audio frame with uninitilized data
+	 * @param format
+	 * @param channel_count
+	 * @param sampling_frequency
+	 * @param sample_count
+	 * @return
+	 */
+	static pRawAudioFrame create_empty(format_t format, size_t channel_count, size_t sampling_frequency, size_t sample_count);
+
+	/*!
 	 * Creates an audio frame filled with data copied from a buffer
 	 * @param format
 	 * @param channel_count

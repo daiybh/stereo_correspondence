@@ -11,7 +11,7 @@
 #ifndef DeltaInput_H_
 #define DeltaInput_H_
 
-#include "yuri/core/IOThread.h"
+#include "yuri/core/thread/IOThread.h"
 #include "VideoMasterHD_Core.h"
 #include "VideoMasterHD_Sdi.h"
 
@@ -22,13 +22,13 @@ namespace delta {
 class DeltaInput: public yuri::core::IOThread
 {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
-	virtual ~DeltaInput();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+	DeltaInput(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~DeltaInput() noexcept;
 private:
-	DeltaInput(log::Log &log_, core::pwThreadBase parent,core::Parameters &parameters);
-	virtual void run();
-	virtual bool set_param(const core::Parameter& param);
+	virtual void run() override;
+	virtual bool set_param(const core::Parameter& param) override;
 	void throw_call(ULONG res, std::string msg);
 	format_t format;
 

@@ -219,6 +219,7 @@ bool VNCClient::handshake()
 {
 	assert(buffer_free >=13);
 	size_t read = 0;
+	(void)read; // To silence 'unused varible' waring when in non-debug compilation
 	read = read_data_at_least(buffer_pos, 12, 12);
 
 	assert(read==12);
