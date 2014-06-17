@@ -43,7 +43,7 @@ resolution_{800,600},format_(core::raw_format::yuyv422),fps_(25)
 		log[log::fatal] << "Unsupported format requested!";
 		throw exception::InitializationFailed("Failed to initialize testcard device!");
 	}
-	strs << /*"testcard:" <<*/ resolution_.width << ":" << resolution_.height << ":" << fps_ <<":" << codec;
+	strs << "testcard:" << resolution_.width << ":" << resolution_.height << ":" << fps_ <<":" << codec;
 	if (!init_capture(strs.str())) {
 		throw exception::InitializationFailed("Failed to initialize testcard device!");
 	}

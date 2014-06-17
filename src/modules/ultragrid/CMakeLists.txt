@@ -91,7 +91,7 @@ SET(SRC
         ${UV_BASE}/rtp/rtpenc_h264.c
 	${UV_BASE}/rtp/rtp_callback.c
 	
-	#${UV_BASE}/utils/config_file.c
+	${UV_BASE}/utils/config_file.c
 	${UV_BASE}/utils/list.c
 	#${UV_BASE}/utils/message_queue.cpp
 	${UV_BASE}/utils/resource_manager.cpp
@@ -175,7 +175,7 @@ IF(GLUT_FOUND AND GLEW_FOUND)
     		 UVGl.h
     		 ${UV_BASE}/gl_context.c
     		 ${UV_BASE}/glx_common.c
-    		 ${UV_BASE}/video_display/gl.c
+    		 ${UV_BASE}/video_display/gl.cpp
     		 )
     SET(LIBS ${LIBS}  ${GLUT_LIBRARY} ${GLEW_LIBRARY})
     add_definitions(-DYURI_UV_GLUT_SUPPORTED)
@@ -243,7 +243,7 @@ IF(SDL_FOUND)
     SET(SRC ${SRC}
              UVSdl.cpp
     		 UVSdl.h
-    		 ${UV_BASE}/video_display/sdl.c)
+    		 ${UV_BASE}/video_display/sdl.cpp)
     
     SET(LIBS ${LIBS} ${SDL_LIBRARY})
     add_definitions(-DYURI_UV_SDL_SUPPORTED)

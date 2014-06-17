@@ -55,9 +55,9 @@ bool UVUdpSocket::do_bind(const std::string& url, core::socket::port_t port) {
 
 bool UVUdpSocket::do_connect(const std::string& url, core::socket::port_t port) {
 	if (url.empty()) {
-		socket_.reset(udp_init("0.0.0.0",0,port,255,false));
+		socket_.reset(udp_init("0.0.0.0",0,port,255,false,false));
 	} else {
-		socket_.reset(udp_init(url.c_str()/*nullptr*/,0,port,255,false));
+		socket_.reset(udp_init(url.c_str()/*nullptr*/,0,port,255,false,false));
 	}
 	return socket_.get();
 }

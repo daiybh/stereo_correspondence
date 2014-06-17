@@ -34,7 +34,7 @@ fps_(30)
 	IOTHREAD_INIT(parameters)
 
 	std::stringstream strs;
-	strs << /*"screen:"<<*/ "fps=" << fps_;
+	strs << "screen:"<< "fps=" << fps_;
 
 	if (!init_capture(strs.str())) {
 		throw exception::InitializationFailed("Failed to initialize screen capture!");

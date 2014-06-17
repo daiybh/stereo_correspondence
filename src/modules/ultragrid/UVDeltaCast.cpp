@@ -35,6 +35,7 @@ fps_(30)
 
 	std::stringstream strs;
 	//strs << /*"screen:"<<*/ "fps=" << fps_;
+	strs << "deltacast";
 
 	if (!init_capture(strs.str())) {
 		throw exception::InitializationFailed("Failed to initialize screen capture!");

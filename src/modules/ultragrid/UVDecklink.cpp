@@ -36,7 +36,7 @@ device_(0),mode_(-1)
 	IOTHREAD_INIT(parameters)
 
 	std::stringstream strs;
-	strs << /*"decklink:"<< */device_;
+	strs << "decklink:"<< device_;
 	if (mode_ >= 0) {
 		strs << ":"<<mode_<<":2vuy";
 	}

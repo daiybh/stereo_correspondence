@@ -31,15 +31,12 @@ UVVideoSource::~UVVideoSource() noexcept
 }
 bool UVVideoSource::init_capture(const std::string& params)
 {
-	// EWWWW, GROSSS..... why it needs non-const char* ?????
-	char * fmt = const_cast<char*>(params.c_str());
-
-	log[log::info] << "Params: '"<<fmt<<"'";
+	log[log::info] << "Params: '"<<params<<"'";
 	if (capt_params_.init_func) {
-                struct vidcap_params *params = vidcap_params_allocate();
-                vidcap_params_set_device(params, fmt);
-		state_ = capt_params_.init_func(params);
-                vidcap_params_free_struct(params);
+                struct vidcap_params *uv_params = vidcap_params_allocate();
+                vidcap_params_set_device(uv_params, params.c_str());
+		state_ = capt_params_.init_func(uv_params);
+                vidcap_params_free_struct(uv_params);
 	}
 	return state_ != nullptr;
 }
@@ -55,6 +52,7 @@ void UVVideoSource::run()
 				continue;
 			}
 			core::pFrame frame = ultragrid::copy_from_from_uv(uv_frame, log);
+                        VIDEO_FRAME_DISPOSE(uv_frame);
 			if (frame) push_frame(0, frame);
 		}
 	}
