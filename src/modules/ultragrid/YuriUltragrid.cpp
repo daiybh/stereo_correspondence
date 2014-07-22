@@ -74,7 +74,7 @@ std::unordered_map<codec_t, std::string> uv_to_strings =
 	{VP8,	"VP8"}
 };
 
-std::unordered_map<::interlacing_t, interlace_t, std::hash<int>> uv_to_yuri_interlace =
+std::unordered_map< ::interlacing_t, interlace_t, std::hash<int>> uv_to_yuri_interlace =
 {
 	{PROGRESSIVE, interlace_t::progressive},
 	{UPPER_FIELD_FIRST, interlace_t::segmented_frame},
@@ -83,7 +83,7 @@ std::unordered_map<::interlacing_t, interlace_t, std::hash<int>> uv_to_yuri_inte
 	{SEGMENTED_FRAME, interlace_t::progressive},
 };
 
-std::unordered_map<::interlacing_t, field_order_t, std::hash<int>> uv_to_yuri_fo =
+std::unordered_map< ::interlacing_t, field_order_t, std::hash<int>> uv_to_yuri_fo =
 {
 	{UPPER_FIELD_FIRST, field_order_t::top_field_first},
 	{LOWER_FIELD_FIRST, field_order_t::bottom_field_first},
