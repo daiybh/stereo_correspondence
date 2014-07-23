@@ -85,6 +85,7 @@ OPTION (YURI_DISABLE_ASIO "Disable building of boost::asio helpers" ON)
 OPTION (YURI_DISABLE_DECKLINK "Disable building of decklink API helpers" OFF)
 OPTION (YURI_DISABLE_PNG "Disable building of CUDA helpers" OFF)
 OPTION (YURI_DISABLE_BOOST "Disable boost dependencies" OFF)
+OPTION (YURI_DISABLE_GPUJPEG  "Disable GPUJPEG library" ON)
 
 OPTION (YURI_DISABLE_ULTRAGRID "Disable ultragrid helper and modules" ON)
 

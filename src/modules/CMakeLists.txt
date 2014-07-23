@@ -179,6 +179,12 @@ IF (VIDEOMASTER_FOUND)
     add_subdirectory(delta)
 ENDIF()
 
+pkg_check_modules(GPUJPEG libgpujpeg)
+find_package(CUDA)
+IF(NOT YURI_DISABLE_GPUJPEG AND GPUJPEG_FOUND)
+	add_subdirectory(gpujpeg)	
+ENDIF()
+
 
 #### UV #####
 #IF(NOT YURI_DISABLE_ULTRAGRID)
