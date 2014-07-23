@@ -186,7 +186,7 @@ IF(GPUJPEG_FOUND)
     SET (SRC ${SRC}
              UVJpegCompress.cpp
     		 UVJpegCompress.h
-    		 ${UV_BASE}/video_compress/jpeg.c)
+    		 ${UV_BASE}/video_compress/jpeg.cpp)
     		 
     SET(LIBS ${LIBS}  ${JPEG_LIBRARY})
     add_definitions(-DYURI_UV_JPEG_SUPPORTED)
