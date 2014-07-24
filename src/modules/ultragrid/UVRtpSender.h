@@ -38,6 +38,7 @@ private:
 	uint16_t	rx_port_;
 	uint16_t	tx_port_;
 	int			ttl_;
+	double 		fps_;
 
 };
 

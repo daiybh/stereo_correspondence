@@ -32,13 +32,14 @@ core::Parameters UVRtpSender::configure()
 	p["rx_port"]["RX port number"]=5004;
 	p["tx_port"]["TX port number"]=5004;
 	p["ttl"]["TTL"]=255;
+	p["fps"]["Force fps for output video frames. Should not be needed..."]=-1.0;
 	return p;
 }
 
 
 UVRtpSender::UVRtpSender(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOFilter(log_,parent, std::string("uv_rtp_sender")),
-rtp_session_(nullptr),tx_session_(nullptr)
+rtp_session_(nullptr),tx_session_(nullptr),fps_(-1.0)
 {
 	IOTHREAD_INIT(parameters)
 
@@ -73,6 +74,7 @@ core::pFrame UVRtpSender::do_special_simple_single_step(const core::pVideoFrame&
 {
 	auto f = ultragrid::allocate_uv_frame(frame);
 	if (f) {
+		if (fps_>0.0f) f->fps=fps_;
 		tx_send(tx_session_, f.get(), rtp_session_);
 //		vf_free(f);
 	}
@@ -98,6 +100,8 @@ bool UVRtpSender::set_param(const core::Parameter& param)
 		if (tx_port_%2) tx_port_++;
 	} else if (param.get_name() == "ttl") {
 		ttl_=param.get<int>();
+	} else if (param.get_name() == "fps") {
+		fps_=param.get<double>();
 	} else return core::IOFilter::set_param(param);
 	return true;
 }
