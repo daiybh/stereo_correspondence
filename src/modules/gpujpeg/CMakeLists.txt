@@ -6,8 +6,8 @@ SET (SRC GPUJpegBase.cpp
          GPUJpegBase.h
 		 GPUJpegDecoder.cpp
 		 GPUJpegDecoder.h
-		 #GPUJpegEncoder.cpp
-		 #GPUJpegEncoder.h
+		 GPUJpegEncoder.cpp
+		 GPUJpegEncoder.h
 		 register.cpp)
 
 

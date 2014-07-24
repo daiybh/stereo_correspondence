@@ -79,7 +79,7 @@ bool GPUJpegDecoder::init()
 bool GPUJpegDecoder::do_initialize_converter(format_t target_format)
 {
 	out_format = target_format;
-	return int();
+	return init();
 }
 core::pFrame GPUJpegDecoder::do_simple_single_step(const core::pFrame& frame)
 {

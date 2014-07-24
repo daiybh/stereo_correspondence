@@ -6,7 +6,7 @@
  */
 
 #include "GPUJpegDecoder.h"
-//#include "GPUJpegEncoder.h"
+#include "GPUJpegEncoder.h"
 #include "yuri/core/thread/IOThreadGenerator.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/compressed_frame_types.h"
@@ -17,31 +17,17 @@ namespace gpujpeg {
 using namespace yuri::core;
 MODULE_REGISTRATION_BEGIN("gpujpeg")
 		REGISTER_IOTHREAD("gpujpeg_decoder",GPUJpegDecoder)
-//		REGISTER_IOTHREAD("gpujpeg_encoder",JpegEncoder)
+		REGISTER_IOTHREAD("gpujpeg_encoder",GPUJpegEncoder)
 
-		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::rgb24, "jpeg_decoder", 25)
-		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::yuv444, "jpeg_decoder", 20)
-		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::yuyv422, "jpeg_decoder", 20)
-		//REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::y8, "jpeg_decoder", 35)
-#if defined(JCS_EXTENSIONS) && defined(JCS_ALPHA_EXTENSIONS)
-		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::bgr24, "jpeg_decoder", 30)
+		// High values because of it's incompatibility with mjpeg from logitech webcam...
+		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::rgb24, "gpujpeg_decoder", 125)
+		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::yuv444, "gpujpeg_decoder", 120)
+		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::uyvy422, "gpujpeg_decoder", 120)
 
-		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::rgba32, "jpeg_decoder", 30)
-		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::argb32, "jpeg_decoder", 30)
-		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::bgra32, "jpeg_decoder", 30)
-		REGISTER_CONVERTER(compressed_frame::jpeg, raw_format::abgr32, "jpeg_decoder", 30)
-#endif
 
-//		REGISTER_CONVERTER(raw_format::rgb24, compressed_frame::jpeg, "jpeg_encoder", 200)
-#if defined(JCS_EXTENSIONS) && defined(JCS_ALPHA_EXTENSIONS)
-		REGISTER_CONVERTER(raw_format::bgr24, compressed_frame::jpeg, "jpeg_encoder", 200)
-		REGISTER_CONVERTER(raw_format::rgba32, compressed_frame::jpeg, "jpeg_encoder", 200)
-		REGISTER_CONVERTER(raw_format::bgra32, compressed_frame::jpeg, "jpeg_encoder", 200)
-		REGISTER_CONVERTER(raw_format::abgr32, compressed_frame::jpeg, "jpeg_encoder", 200)
-		REGISTER_CONVERTER(raw_format::argb32, compressed_frame::jpeg, "jpeg_encoder", 200)
-#endif
-//		REGISTER_CONVERTER(raw_format::yuv444, compressed_frame::jpeg, "jpeg_encoder", 200)
-//		REGISTER_CONVERTER(raw_format::y8, compressed_frame::jpeg, "jpeg_encoder", 200)
+		REGISTER_CONVERTER(raw_format::rgb24, compressed_frame::jpeg, "gpujpeg_encoder", 150)
+		REGISTER_CONVERTER(raw_format::yuv444, compressed_frame::jpeg, "gpujpeg_encoder", 150)
+		REGISTER_CONVERTER(raw_format::uyvy422, compressed_frame::jpeg, "gpujpeg_encoder", 150)
 
 MODULE_REGISTRATION_END()
 
