@@ -32,7 +32,7 @@ SET(SRC
 	${UV_BASE}/pdb.c
 	${UV_BASE}/tfrc.c
         #${UV_BASE}/tile.c
-	${UV_BASE}/transmit.c
+	${UV_BASE}/transmit.cpp
 	${UV_BASE}/tv.c
 	${UV_BASE}/video.c
 	${UV_BASE}/video_capture.c
@@ -46,11 +46,11 @@ SET(SRC
         #${UV_BASE}/audio/audio.c
 	${UV_BASE}/audio/audio_capture.c
 	${UV_BASE}/audio/audio_playback.c
-	${UV_BASE}/audio/codec.c
+	${UV_BASE}/audio/codec.cpp
         #${UV_BASE}/audio/echo.c
 	${UV_BASE}/audio/export.c
         #${UV_BASE}/audio/resampler.c
-	${UV_BASE}/audio/utils.c
+	${UV_BASE}/audio/utils.cpp
 	${UV_BASE}/audio/wav_reader.c
 	
 	${UV_BASE}/audio/capture/none.c
@@ -78,7 +78,7 @@ SET(SRC
 	
 	${UV_BASE}/module.c
 
-	${UV_BASE}/rtp/audio_decoders.c
+	${UV_BASE}/rtp/audio_decoders.cpp
 	${UV_BASE}/rtp/video_decoders.cpp
 	${UV_BASE}/rtp/yuri_decoders.cpp
 	${UV_BASE}/rtp/ldgm.cpp

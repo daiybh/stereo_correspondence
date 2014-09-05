@@ -133,14 +133,14 @@ core::pFrame PngDecoder::do_special_single_step(const core::pCompressedVideoFram
 				png_set_strip_16(png_ptr);
 				depth = 8;
 			} else if (depth == 8 && req_depth==16) {
-				png_set_expand_16(png_ptr);
+				png_set_expand(png_ptr);
 				depth = 16;
 			}
 
 			size_t req_channels = fi.planes[0].components.size();
 			if (req_channels != channels) {
 				if (req_channels == 1) {
-					png_set_rgb_to_gray(png_ptr, PNG_ERROR_ACTION_WARN, PNG_RGB_TO_GRAY_DEFAULT, PNG_RGB_TO_GRAY_DEFAULT);
+					png_set_rgb_to_gray(png_ptr, 0, 0, 0);
 				} else if (req_channels == 3) {
 					if (channels == 1) {
 						png_set_gray_to_rgb(png_ptr);

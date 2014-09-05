@@ -331,8 +331,8 @@ void RawAVFile::run()
 //			log[log::info] << "Decoded audio";
 //			continue;
 //			auto f = libav::yuri_frame_from_av(*av_frame);
-			size_t data_size = av_frame->nb_samples * av_frame->channels * 2 ;
-			auto f = core::RawAudioFrame::create_empty(audio_formats_out_[idx], av_frame->channels, av_frame->sample_rate, av_frame->data[0], data_size);
+			//size_t data_size = av_frame->nb_samples * av_frame->channels * 2 ;
+			auto f = core::RawAudioFrame::create_empty(audio_formats_out_[idx], 0, av_frame->sample_rate, av_frame->data[0], 0);
 			if (!f) {
 				log[log::warning] << "Failed to convert avframe, probably unsupported pixelformat";
 				continue;
