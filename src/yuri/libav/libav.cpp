@@ -58,8 +58,8 @@ std::unordered_map<format_t, PixelFormat> yuri_pixel_map = {
 		{abgr32,		 			PIX_FMT_ABGR},
 		{rgb48,						PIX_FMT_RGB48},
 		{bgr48,						PIX_FMT_BGR48},
-//{rgba64,					PIX_FMT_RGBA64},
-		//{bgra64,					PIX_FMT_BGRA64},
+		{rgba64,					PIX_FMT_RGBA64},
+		{bgra64,					PIX_FMT_BGRA64},
 
 
 		{y8,						PIX_FMT_GRAY8},

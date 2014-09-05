@@ -49,7 +49,6 @@ struct dynamic_loader {
 dynamic_loader::dynamic_loader(const std::string& path)
 {
 	handle = dlopen(path.c_str(),RTLD_LAZY);
-	if (!handle) std::cerr << dlerror();
 	if (!handle) throw std::runtime_error("Failed to open handle "+path);
 }
 dynamic_loader::~dynamic_loader()
