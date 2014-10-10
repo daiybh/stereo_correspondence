@@ -14,6 +14,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
+#include "yuri/core/frame/RawAudioFrame.h"
 namespace yuri
 {
 namespace dump
@@ -74,6 +75,8 @@ core::pFrame FileDump::do_simple_single_step(const core::pFrame& frame)
 		}
 	} else if (auto f = std::dynamic_pointer_cast<core::CompressedVideoFrame>(frame)) {
 		dump_file.write(reinterpret_cast<const char *>(f->begin()),f->size());
+	} else if (auto f = std::dynamic_pointer_cast<core::RawAudioFrame>(frame)) {
+		dump_file.write(reinterpret_cast<const char *>(f->data()),f->size());
 	}
 	if (seq_chars) {
 		dump_file.close();
