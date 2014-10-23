@@ -22,7 +22,8 @@ const std::unordered_map<format_t, Uint32> yuri_to_sdl_yuv =
 	{{core::raw_format::yuyv422, SDL_YUY2_OVERLAY},
 	 {core::raw_format::yvyu422, SDL_YVYU_OVERLAY},
 	 {core::raw_format::uyvy422, SDL_UYVY_OVERLAY}};
-// TODO: SUpport for planar SDL_YV12_OVERLAY and SDL_IYUV_OVERLAY
+// TODO: Support for planar SDL_YV12_OVERLAY and SDL_IYUV_OVERLAY
+
 
 Uint32 map_yuv_yuri_to_sdl(format_t fmt) {
 	auto it = yuri_to_sdl_yuv.find(fmt);
@@ -30,6 +31,7 @@ Uint32 map_yuv_yuri_to_sdl(format_t fmt) {
 	return it->second;
 }
 
+//! Supported formats for HW overlay
 const std::vector<format_t> supported_formats = {
 	core::raw_format::yuyv422,
 	core::raw_format::yvyu422,
@@ -70,6 +72,8 @@ core::Parameters SDLWindow::configure()
 SDLWindow::SDLWindow(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("sdl_window")),
 resolution_({800,600}),fullscreen_(false),default_keys_(true),use_gl_(false),
+overlay_{nullptr,[](SDL_Overlay*o){if(o) SDL_FreeYUVOverlay(o);}},
+rgb_surface_{nullptr,[](SDL_Surface*s){ if(s) SDL_FreeSurface(s);}},
 sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")")
 {
 	IOTHREAD_INIT(parameters)
@@ -92,6 +96,7 @@ SDLWindow::~SDLWindow() noexcept
 {
 	SDL_Quit();
 }
+
 void SDLWindow::run()
 {
 	print_id();
@@ -99,11 +104,13 @@ void SDLWindow::run()
 	overlay_.reset();
 	rgb_surface_.reset();
 }
+
 bool SDLWindow::step()
 {
 	process_sdl_events();
 	return base_type::step();
 }
+
 core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame)
 {
 	Timer timer;
@@ -118,7 +125,7 @@ core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame
 				overlay_->w != static_cast<int>(res.width) ||
 				overlay_->h != static_cast<int>(res.height) ||
 				overlay_->format != sdl_fmt) {
-			overlay_.reset(SDL_CreateYUVOverlay(res.width, res.height, sdl_fmt, surface_),[](SDL_Overlay*o){SDL_FreeYUVOverlay(o);});
+			overlay_.reset(SDL_CreateYUVOverlay(res.width, res.height, sdl_fmt, surface_));
 		}
 		if (!overlay_) {
 			log[log::error] << "Failed to allocate overlay";
@@ -196,6 +203,7 @@ void SDLWindow::process_sdl_events()
 		}
 	}
 }
+
 void SDLWindow::sdl_resize(resolution_t new_res)
 {
 	resolution_ = new_res;
@@ -205,6 +213,7 @@ void SDLWindow::sdl_resize(resolution_t new_res)
 		if (surface_) surface_ = SDL_SetVideoMode(resolution_.width, resolution_.height, sdl_bpp_, flags);
 	}
 }
+
 bool SDLWindow::prepare_rgb_overlay(const core::pRawVideoFrame& frame)
 {
 	std::tuple<Uint32, Uint32,Uint32, Uint32> masks;
@@ -241,8 +250,7 @@ bool SDLWindow::prepare_rgb_overlay(const core::pRawVideoFrame& frame)
 			rgb_surface_->format->BitsPerPixel != bpp) {
 		log[log::info] << "(Re)creating RGB surface with " << bpp << " bpp.";
 		rgb_surface_.reset(SDL_CreateRGBSurface(SDL_SWSURFACE, res.width, res.height, bpp,
-				std::get<0>(masks), std::get<1>(masks), std::get<2>(masks), std::get<3>(masks)),
-				[](SDL_Surface*s){SDL_FreeSurface(s);});
+				std::get<0>(masks), std::get<1>(masks), std::get<2>(masks), std::get<3>(masks)));
 //		rgb_surface2_.reset(SDL_CreateRGBSurface(SDL_SWSURFACE, resolution_.width, resolution_.height, bpp,
 //				std::get<0>(masks), std::get<1>(masks), std::get<2>(masks), std::get<3>(masks)),
 //				[](SDL_Surface*s){SDL_FreeSurface(s);});

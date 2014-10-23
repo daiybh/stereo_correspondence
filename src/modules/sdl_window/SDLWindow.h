@@ -38,9 +38,8 @@ private:
 	bool			default_keys_;
 	bool			use_gl_;
 	SDL_Surface*	surface_;
-	shared_ptr<SDL_Overlay>	overlay_;
-	shared_ptr<SDL_Surface>	rgb_surface_;
-	shared_ptr<SDL_Surface>	rgb_surface2_;
+	unique_ptr<SDL_Overlay, std::function<void(SDL_Overlay*)>>	overlay_;
+	unique_ptr<SDL_Surface, std::function<void(SDL_Surface*)>>	rgb_surface_;
 	int				sdl_bpp_;
 	std::string		title_;
 };
