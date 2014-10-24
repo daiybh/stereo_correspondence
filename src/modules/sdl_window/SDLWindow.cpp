@@ -74,7 +74,8 @@ core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("sdl_wind
 resolution_({800,600}),fullscreen_(false),default_keys_(true),use_gl_(false),
 overlay_{nullptr,[](SDL_Overlay*o){if(o) SDL_FreeYUVOverlay(o);}},
 rgb_surface_{nullptr,[](SDL_Surface*s){ if(s) SDL_FreeSurface(s);}},
-sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")")
+sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")"),
+gl_(log)
 {
 	IOTHREAD_INIT(parameters)
 	set_latency(1_ms);
@@ -82,13 +83,6 @@ sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")")
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0) {
 		throw exception::InitializationFailed("Failed to initialize SDL");
 	}
-	if (!(surface_ = SDL_SetVideoMode(resolution_.width, resolution_.height, sdl_bpp_,
-		      SDL_HWSURFACE |  SDL_DOUBLEBUF | SDL_RESIZABLE |
-		      (fullscreen_?SDL_FULLSCREEN:0) |
-		      (use_gl_?SDL_OPENGL:0)))) {
-		throw exception::InitializationFailed("Failed to set video mode");
-	}
-	SDL_WM_SetCaption(title_.c_str(), "yuri2");
 	set_supported_formats(supported_formats);
 }
 
@@ -100,6 +94,14 @@ SDLWindow::~SDLWindow() noexcept
 void SDLWindow::run()
 {
 	print_id();
+	if (!(surface_ = SDL_SetVideoMode(resolution_.width, resolution_.height, sdl_bpp_,
+			  SDL_HWSURFACE |  SDL_DOUBLEBUF | SDL_RESIZABLE |
+			  (fullscreen_?SDL_FULLSCREEN:0) |
+			  (use_gl_?SDL_OPENGL:0)))) {
+		throw exception::InitializationFailed("Failed to set video mode");
+	}
+	SDL_WM_SetCaption(title_.c_str(), "yuri2");
+
 	IOThread::run();
 	overlay_.reset();
 	rgb_surface_.reset();
@@ -120,7 +122,14 @@ core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame
 
 	format_t format = frame->get_format();
 	Uint32 sdl_fmt = map_yuv_yuri_to_sdl(format);
-	if (sdl_fmt) {
+	if (use_gl_) {
+		glDrawBuffer(GL_BACK_LEFT);
+		gl_.enable_smoothing();
+		gl_.setup_ortho();
+		gl_.generate_texture(0, frame);
+		gl_.draw_texture(0);
+		gl_.finish_frame();
+	} else if (sdl_fmt) {
 		if (!overlay_ ||
 				overlay_->w != static_cast<int>(res.width) ||
 				overlay_->h != static_cast<int>(res.height) ||
