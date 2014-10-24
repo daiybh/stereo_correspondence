@@ -69,6 +69,8 @@ struct resolution_t {
 	dimension_t	width;
 	dimension_t	height;
 	geometry_t get_geometry() const { return {width, height, 0, 0}; }
+	explicit operator bool() const { return width && height; }
+
 };
 
 inline resolution_t geometry_t::get_resolution() const
