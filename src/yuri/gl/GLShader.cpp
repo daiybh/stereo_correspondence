@@ -21,15 +21,15 @@ using std::ios;
 
 namespace yuri {
 
-namespace graphics {
+namespace gl {
 
-GLShader::GLShader(log::Log &log_, GLenum type):log(log_),type(type),shader_text(0),
+GLShader::GLShader(log::Log &log_, GLenum type):log(log_),type(type),shader_text(nullptr),
 		shader_size(0),shader_object(0)
 {
 	log.set_label("[GLShader] ");
 }
 
-GLShader::~GLShader()
+GLShader::~GLShader() noexcept
 {
 }
 
@@ -55,10 +55,7 @@ bool GLShader::load(std::string text)
 	if (shader_text) delete [] shader_text;
 	shader_text = new GLchar[++shader_size+1];
 	std::fill(shader_text, shader_text+shader_size,0);
-//	memset(shader_text,0,shader_size+1);
 	std::copy_n(text.c_str(), shader_size-1, shader_text);
-//	memcpy(shader_text,text.c_str(),shader_size-1);
-	//std::cerr << "Allocating " << shader_size << endl;
 	shader_text[shader_size] = 0;
 	return true;
 }

@@ -13,7 +13,7 @@
 #include "GLShader.h"
 namespace yuri {
 
-namespace graphics {
+namespace gl {
 
 class GLProgram {
 public:
@@ -28,7 +28,7 @@ public:
 	void bind_attrib(GLuint index, std::string name);
 	GLint get_uniform(std::string name);
 	void set_uniform_sampler(GLint id, GLint value);
-protected:
+private:
 	log::Log log;
 	GLuint program;
 

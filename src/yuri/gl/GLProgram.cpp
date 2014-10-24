@@ -12,7 +12,7 @@
 
 namespace yuri {
 
-namespace graphics {
+namespace gl {
 
 GLProgram::GLProgram(log::Log &log_):log(log_)
 {
@@ -31,14 +31,14 @@ bool GLProgram::attach_shader(GLShader &shader)
 	glAttachShader(program,shader.get_shader());
 	GLenum err = glGetError();
 	if (err) {
-		log[log::error] << "Error " << err << " while attaching shader" << "\n";
+		log[log::error] << "Error " << err << " while attaching shader";
 	}
 	return true;
 }
 
 bool GLProgram::link()
 {
-	log[log::debug] << "Linking program" << "\n";
+	log[log::debug] << "Linking program";
 	glLinkProgram(program);
 	GLint linked;
 	glGetProgramiv(program, GL_LINK_STATUS, &linked);
@@ -47,10 +47,10 @@ bool GLProgram::link()
 		model_matrix = glGetUniformLocation(program,"model_matrix");
 		projection_matrix  = glGetUniformLocation(program,"projection_matrix");
 		cerr << "vm: " << view_matrix << ", mm: " << model_matrix << ", pm: " << projection_matrix << "\n";*/
-		log[log::debug] << "Shader program linked" <<"\n";
+		log[log::debug] << "Shader program linked";
 		return true;
 	}
-	log[log::warning] << "Shader program NOT linked" <<"\n";
+	log[log::warning] << "Shader program NOT linked";
 	GLint blen = 0;
 	GLsizei slen = 0;
 	glGetProgramiv(program, GL_INFO_LOG_LENGTH , &blen);
@@ -58,7 +58,7 @@ bool GLProgram::link()
 	{
 		GLchar* compiler_log = new GLchar[blen];
 		glGetInfoLogARB(program, blen, &slen, compiler_log);
-		log[log::error] << "compiler_log:" <<  compiler_log <<"\n";
+		log[log::error] << "compiler_log:" <<  compiler_log;
 		delete [] compiler_log;
 	}
 	return false;

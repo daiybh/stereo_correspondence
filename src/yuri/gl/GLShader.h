@@ -19,17 +19,17 @@
 
 namespace yuri {
 
-namespace graphics {
+namespace gl {
 
 class GLShader {
 public:
 	GLShader(log::Log &log_,GLenum type);
-	virtual ~GLShader();
+	virtual ~GLShader() noexcept;
 	bool load_file(std::string filename);
 	bool load(std::string text);
 	bool compile();
 	GLuint get_shader();
-protected:
+private:
 	log::Log log;
 	GLenum type;
 	GLchar *shader_text;

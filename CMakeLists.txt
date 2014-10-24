@@ -29,8 +29,8 @@ ENDIF()
 # Add strict warning if building under linux
 #################################################################
 IF (UNIX)
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra -std=c++0x")
-	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -Wextra -std=gnu11")
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra -std=c++0x -ffast-math")
+	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -Wextra -std=gnu11 -ffast-math")
 
 ENDIF ()
 
@@ -51,6 +51,7 @@ SET(LIBNAME 				${LIBNAME_PREFIX}_core)
 SET(LIBNAME_HELPER_LIBAV 	${LIBNAME_PREFIX}_helper_av)
 SET(LIBNAME_HELPER_CUDA 	${LIBNAME_PREFIX}_helper_cuda)
 SET(LIBNAME_HELPER_X11 		${LIBNAME_PREFIX}_helper_x11)
+SET(LIBNAME_HELPER_GL 		${LIBNAME_PREFIX}_helper_gl)
 
 #################################################################
 # Set prefix for modules
@@ -71,6 +72,7 @@ SET (TARGET_MODULE_PATH lib/yuri2/)
 SET(CORE_LIBAV FALSE)
 SET(CORE_CUDA FALSE)
 SET(CORE_X11 FALSE)
+SET(CORE_GL FALSE)
 
 #################################################################
 # Add some options to control build
@@ -80,6 +82,7 @@ OPTION (YURI_DISABLE_CUDA "Disable building of CUDA helpers" ON)
 OPTION (YURI_DISABLE_LIBAV "Disable building of libav helpers and support" OFF)
 OPTION (YURI_DISABLE_SAGE "Disable building of libsage related modules" ON)
 OPTION (YURI_DISABLE_X11 "Explicitly disable building of X11 helpers and related modules" ON)
+OPTION (YURI_DISABLE_OPENGL "Explicitly disable building of opengl helpers and related modules" OFF)
 OPTION (YURI_DISABLE_IEEE1394 "Disable building of IEEE1394 sources" OFF)
 OPTION (YURI_DISABLE_ASIO "Disable building of boost::asio helpers" ON)
 OPTION (YURI_DISABLE_DECKLINK "Disable building of decklink API helpers" OFF)

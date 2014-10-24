@@ -17,16 +17,16 @@
 
 namespace yuri {
 
-namespace graphics {
-mutex GL::big_gpu_lock;
-
-std::string GL::simple_vertex_shader(
+namespace gl {
+	mutex GL::big_gpu_lock;
+namespace {
+std::string simple_vertex_shader(
 		"void main()\n"
 		"{\n"
 		"gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
 		"gl_TexCoord[0] = gl_MultiTexCoord0;\n"
 		"}\n");
-std::string GL::fragment_shader_yuv422_very_lq(
+std::string fragment_shader_yuv422_very_lq(
 		"uniform sampler2D tex0;\n"
 		"void main()\n"
 		"{\n"
@@ -35,7 +35,7 @@ std::string GL::fragment_shader_yuv422_very_lq(
 		"float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;\n"
 		"gl_FragColor = vec4(r, g, b, 1.0);\n"
 		"}\n");
-std::string GL::fragment_shader_uyvy422_very_lq(
+std::string fragment_shader_uyvy422_very_lq(
 		"uniform sampler2D tex0;\n"
 		"void main()\n"
 		"{\n"
@@ -45,52 +45,14 @@ std::string GL::fragment_shader_uyvy422_very_lq(
 		"gl_FragColor = vec4(r, g, b, 1.0);\n"
 		"}\n");
 
-/*
- *
- *std::string GL::simple_vertex_shader =
-	"#version 150\n"
-	"in vec3 position;\n"
-	"in vec3 normal;\n"
-	"in vec2 texCoord;\n"
-
-	"out VertexData {\n"
-	"	vec2 texCoord;\n"
-	"	vec3 normal;\n"
-	"} VertexOut;\n"
-	"void main()\n"
-	"{\n"
-		"VertexOut.texCoord = texCoord;\n"
-		//"VertexOut.normal = normalize(normalMatrix * normal);\n"
-		"gl_Position = vec4(position, 1.0f);\n"
-	"}\n";
-
-
-string GL::fragment_shader_yuv422_very_lq(
-		"#version 150 \n"
-		"uniform sampler2D tex0;\n"
-		"in VertexData {\n"
-		"	vec2 texCoord;\n"
-		"	vec3 normal;\n"
-		"} vertex;\n"
-		"out vec4 color;\n"
-		"void main()\n"
-		"{\n"
-		"vec4 col = texture2D(tex0, vertex.texCoord.st);\n"
-		"float y = col.r - 0.0625 , u = col.g - 0.5, v = col.a - 0.5;\n"
-		"float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;\n"
-		"color = vec4(r, g, b, 1.0);\n"
-		"}\n");
- *
- */
-
-std::string GL::simple_fragment_shader(
+std::string simple_fragment_shader(
 		"uniform sampler2D tex0;\n"
 		"void main()\n"
 		"{\n"
 		"gl_FragColor = texture2D(tex0, gl_TexCoord[0].st);\n"
 		"}\n");
 
-std::string GL::fragment_shader_yuv422_lq(
+std::string fragment_shader_yuv422_lq(
 		"uniform sampler2D tex0, tex1;\n"
 		"void main()\n"
 		"{\n"
@@ -100,7 +62,7 @@ std::string GL::fragment_shader_yuv422_lq(
 		"float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;\n"
 		"gl_FragColor = vec4(r, g, b, 1.0);\n"
 		"}\n");
-std::string GL::fragment_shader_yuv444(
+std::string fragment_shader_yuv444(
 		"uniform sampler2D tex0;\n"
 		"void main()\n"
 		"{\n"
@@ -110,7 +72,7 @@ std::string GL::fragment_shader_yuv444(
 		"gl_FragColor = vec4(r, g, b, 1.0);\n"
 		"}\n");
 /// @bug: This is actually the LQ version....
-std::string GL::fragment_shader_uyvy422_lq(
+std::string fragment_shader_uyvy422_lq(
 		"uniform sampler2D tex0, tex1;\n"
 		"void main()\n"
 		"{\n"
@@ -123,7 +85,7 @@ std::string GL::fragment_shader_uyvy422_lq(
 		"gl_FragColor = vec4(r, g, b, 1.0);\n"
 		"}\n");
 
-std::string GL::fragment_shader_yuv_planar(
+std::string fragment_shader_yuv_planar(
 		"uniform sampler2D tex0;\n"
 		"uniform sampler2D tex1;\n"
 		"uniform sampler2D tex2;\n"
@@ -140,6 +102,7 @@ std::string GL::fragment_shader_yuv_planar(
 		"                 0, 0, 0, 1);\n"
 		"gl_FragColor = col*y2rt;\n"
 		"}\n");
+}
 
 GL::GL(log::Log &log_):log(log_),lq_422(0)
 {
@@ -483,7 +446,7 @@ void GL::setup_ortho(GLdouble left, GLdouble right,	GLdouble bottom,
 	glLoadIdentity();
 }
 
-void GL::draw_texture(index_t tid, shared_ptr<WindowBase> win,  GLdouble width,
+void GL::draw_texture(index_t tid, resolution_t res,  GLdouble width,
 		GLdouble height, GLdouble x, GLdouble y)
 {
 	GLuint &tex = textures[tid].tid[0];
@@ -526,7 +489,7 @@ void GL::draw_texture(index_t tid, shared_ptr<WindowBase> win,  GLdouble width,
 							{x_1, y_1},
 							{x_1, y_0},
 							{x_0, y_0}};
-	if (!keep_aspect || !win) {
+	if (!keep_aspect || !res) {
 		textures[tid].set_tex_coords(tex_coords[0]);
 		glVertex2f(x, y);
 		textures[tid].set_tex_coords(tex_coords[1]);
@@ -537,14 +500,14 @@ void GL::draw_texture(index_t tid, shared_ptr<WindowBase> win,  GLdouble width,
 		glVertex2f(x, height + y);
 	} else {
 		float lx,ly;
-		float h = win->get_width()*textures[tid].ty/textures[tid].tx;
-		if (h < win->get_height()) {
+		float h = res.width*textures[tid].ty/textures[tid].tx;
+		if (h < res.height) {
 			lx = 0.0f;
-			ly= 0.5f - (h/(2.0f*win->get_height()));
+			ly= 0.5f - (h/(2.0f*res.height));
 		} else {
 			ly = 0.0f;
-			h = win->get_height()*textures[tid].tx/textures[tid].ty;
-			lx = 0.5f - (h/(2.0f*win->get_width()));
+			h = res.height*textures[tid].tx/textures[tid].ty;
+			lx = 0.5f - (h/(2.0f*res.width));
 		}
 //		GLdouble vx_0, vx_1, vy_0, vy_1;
 //		vx_0 = x + lx/width;
