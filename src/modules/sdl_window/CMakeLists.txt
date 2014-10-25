@@ -9,6 +9,6 @@ SET (SRC SDLWindow.cpp
  
 add_library(${MODULE} MODULE ${SRC})
 include_directories(${SDL_INCLUDE_DIR})
-target_link_libraries(${MODULE} ${LIBNAME} ${SDL_LIBRARY})
+target_link_libraries(${MODULE} ${LIBNAME} ${SDL_LIBRARY} ${LIBNAME_HELPER_GL})
 
 YURI_INSTALL_MODULE(${MODULE})
