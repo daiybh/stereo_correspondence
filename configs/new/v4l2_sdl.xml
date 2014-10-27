@@ -6,45 +6,47 @@
      [ webcam ] -> [ renderer ]
      
       -->
-<app name="webcam_sdl">
-<description>
-Test application displaying output of v4l2 device
-</description>
-
-<!-- Specify variables for command line substitution -->
-<variable name="resolution" description="Capture resolution.">640x480</variable>
-<variable name="resolution_out" description="Display resolution.">@resolution</variable>
-<variable name="device" description="Path to device node for the v4l2 device." required="1">/dev/video0</variable>
-<variable name="fps" description="Capture framerate">100</variable>
-<variable name="fs" description="Fullscreen display">FALSE</variable>
-<variable name="format" description="Capture format.">YUYV</variable>
-
-
-<!-- General settings -->
-<general>
-<!-- Unlimited run time -->
-  <parameter name="run_limit">-1</parameter>
-<!-- Moderate debug informations -->
-  <parameter name="debug">0</parameter>
-</general>
-
-<!-- Units -->
-<!-- Video4Linux2 device source -->
-<node class="v4l2source" name="webcam">
-  <parameter name="path">@device</parameter>
-  <parameter name="resolution">@resolution</parameter>
-  <parameter name="fps">@fps</parameter>
-  <parameter name="fps_stats">100</parameter>
-  <parameter name="format">@format</parameter>
-</node>
-
-<!-- And finally simple rendering window -->
-<node class="sdl_window" name="sdl">
-  <parameter name="resolution">@resolution_out</parameter>
-  <parameter name="fullscreen">@fs</parameter>
-</node>
-
-<!-- Link specifications -->
-<link name="yuyv_image" class="single" source="webcam:0" target="sdl:0"/>
-
+<app name="webcam_sdl"
+	xmlns="urn:library:yuri:xmlschema:2001"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<description>Test application displaying output of v4l2 device</description>
+	
+	<!-- Specify variables for command line substitution -->
+	<variable name="resolution" description="Capture resolution.">640x480</variable>
+	<variable name="resolution_out" description="Display resolution.">@resolution</variable>
+	<variable name="device" description="Path to device node for the v4l2 device." required="1">/dev/video0</variable>
+	<variable name="fps" description="Capture framerate">100</variable>
+	<variable name="fs" description="Fullscreen display">FALSE</variable>
+	<variable name="format" description="Capture format.">YUYV</variable>
+	<variable name="opengl" description="Use OpenGL.">FALSE</variable>
+	
+	
+	<!-- General settings -->
+	<general>
+		<!-- Unlimited run time -->
+		<parameter name="run_limit">-1</parameter>
+		<!-- Moderate debug informations -->
+		<parameter name="debug">0</parameter>
+	</general>
+	
+	<!-- Units -->
+	<!-- Video4Linux2 device source -->
+	<node class="v4l2source" name="webcam">
+		<parameter name="path">@device</parameter>
+		<parameter name="resolution">@resolution</parameter>
+		<parameter name="fps">@fps</parameter>
+		<parameter name="fps_stats">100</parameter>
+		<parameter name="format">@format</parameter>
+	</node>
+	
+	<!-- And finally simple rendering window -->
+	<node class="sdl_window" name="sdl">
+		<parameter name="resolution">@resolution_out</parameter>
+		<parameter name="fullscreen">@fs</parameter>
+		<parameter name="opengl">@opengl</parameter>
+	</node>
+	
+	<!-- Link specifications -->
+	<link name="yuyv_image" class="single" source="webcam:0" target="sdl:0"/>
+	
 </app>
