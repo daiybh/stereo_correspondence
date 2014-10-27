@@ -11,12 +11,11 @@
 #ifndef GL_H_
 #define GL_H_
 #include <map>
+#include <vector>
 #include "GLProgram.h"
 #include <GL/gl.h>
-#include "yuri/graphics/WindowBase.h"
+#include "yuri/core/forward.h"
 #include "yuri/core/frame/raw_frame_types.h"
-
-//#include "yuri/core/BasicFrame.h"
 
 
 namespace yuri {
