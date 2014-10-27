@@ -600,7 +600,7 @@ namespace {
 			}
 			catch (std::runtime_error& e)
 			{
-				log_er_[log::info] << "BOO: " << e.what();
+				//log_er_[log::info] << "BOO: " << e.what();
 				throw;
 			}
 		}
