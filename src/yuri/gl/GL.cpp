@@ -102,6 +102,38 @@ std::string fragment_shader_yuv_planar(
 		"                 0, 0, 0, 1);\n"
 		"gl_FragColor = col*y2rt;\n"
 		"}\n");
+using namespace core;
+const std::vector<format_t> gl_supported_formats = {
+		raw_format::rgb24,
+		raw_format::rgba32,
+		raw_format::bgr24,
+		raw_format::abgr32,
+		raw_format::yuv444,
+		raw_format::yuyv422,
+		raw_format::uyvy422,
+//		raw_format::yuv422p,
+//		raw_format::yuv444p,
+//		raw_format::r8,
+//		raw_format::g8,
+//		raw_format::b8,
+//		raw_format::y8,
+//		raw_format::u8,
+//		raw_format::v8,
+//		raw_format::depth8,
+//		raw_format::r16,
+//		raw_format::g16,
+//		raw_format::b16,
+//		raw_format::y16,
+//		raw_format::u16,
+//		raw_format::v16,
+//		raw_format::depth16
+};
+
+}
+
+std::vector<format_t> GL::get_supported_formats()
+{
+	return gl_supported_formats;
 }
 
 GL::GL(log::Log &log_):log(log_),lq_422(0)
@@ -109,7 +141,7 @@ GL::GL(log::Log &log_):log(log_),lq_422(0)
 	log.set_label("[GL] ");
 }
 
-GL::~GL() {
+GL::~GL() noexcept {
 
 }
 

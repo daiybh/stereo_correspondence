@@ -105,6 +105,7 @@ public:
 	bool finish_frame();
 	log::Log log;
 	static mutex big_gpu_lock;
+	static std::vector<format_t> get_supported_formats();
 protected:
 //	static std::string simple_vertex_shader, simple_fragment_shader,
 //		fragment_shader_yuv444,
