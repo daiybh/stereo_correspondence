@@ -13,7 +13,9 @@
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "SDL.h"
+#ifdef  YURI_SDL_OPENGL
 #include "yuri/gl/GL.h"
+#endif
 
 namespace yuri {
 namespace sdl_window {
@@ -44,7 +46,9 @@ private:
 	unique_ptr<SDL_Surface, std::function<void(SDL_Surface*)>>	rgb_surface_;
 	int				sdl_bpp_;
 	std::string		title_;
+#ifdef  YURI_SDL_OPENGL
 	gl::GL				gl_;
+#endif
 };
 
 } /* namespace sdl_window */
