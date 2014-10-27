@@ -290,6 +290,56 @@ pBasicEvent	ln(const std::vector<pBasicEvent>& events) {
 	return simple_unary_function_wrapper<EventDouble>("ln",events,std::log);
 }
 
+
+pBasicEvent geometry(const std::vector<pBasicEvent>& events) {
+	if (events.size()==1 && events[0]->get_type() == event_type_t::string_event) {
+		try {
+			return std::make_shared<EventString>(lexical_cast<std::string>(lex_cast_value<geometry_t>(events[0])));
+		}
+		catch (bad_lexical_cast&) {	}
+		try {
+			return std::make_shared<EventString>(lexical_cast<std::string>(lex_cast_value<resolution_t>(events[0]).get_geometry()));
+		}
+		catch (bad_lexical_cast&) {	}
+	} else if (events.size() == 2) {
+			return std::make_shared<EventString>(lexical_cast<std::string>(geometry_t{
+				lex_cast_value<dimension_t>(events[0]),
+				lex_cast_value<dimension_t>(events[1]),
+				0,0}
+				));
+	} else if (events.size() == 4) {
+		return std::make_shared<EventString>(lexical_cast<std::string>(
+				geometry_t{lex_cast_value<dimension_t>(events[0]),
+							lex_cast_value<dimension_t>(events[1]),
+							lex_cast_value<position_t>(events[2]),
+							lex_cast_value<position_t>(events[3])}
+							));
+
+	}
+	throw bad_event_cast("Unsupported type of parameter in geometry()");
+}
+
+pBasicEvent get_width(const std::vector<pBasicEvent>& events) {
+	if (events.size() != 1) throw bad_event_cast("get_width supports only one parameter");
+	switch (events[0]->get_type()) {
+			case event_type_t::integer_event: return events[0];
+
+			case event_type_t::string_event: return std::make_shared<EventInt>(lex_cast_value<geometry_t>(events[0]).width);
+			default:break;
+	}
+	throw bad_event_cast("Unsupported type of parameter in get_width()");
+}
+pBasicEvent get_height(const std::vector<pBasicEvent>& events) {
+	if (events.size() != 1) throw bad_event_cast("get_height supports only one parameter");
+	switch (events[0]->get_type()) {
+			case event_type_t::integer_event: return events[0];
+
+			case event_type_t::string_event: return std::make_shared<EventInt>(lex_cast_value<geometry_t>(events[0]).height);
+			default:break;
+	}
+	throw bad_event_cast("Unsupported type of parameter in get_height()");
+}
+
 }
 
 }
