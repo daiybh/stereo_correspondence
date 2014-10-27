@@ -16,6 +16,14 @@
 namespace yuri {
 namespace core {
 
+/*
+ * Main input policies:
+ * 0 or higher 	- threat input with this index as main input
+ * -1 			- Trigger processing only after there's a new frame on each input
+ * -2			- Trigger processing when there's new frame on any input (other frames are kept)
+ * -3			- Trigger processing when there's new frame on any input (frames are not kept)
+ */
+
 class MultiIOFilter: public IOThread {
 public:
 	static Parameters		configure();

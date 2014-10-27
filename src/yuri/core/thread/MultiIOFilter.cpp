@@ -52,7 +52,7 @@ bool MultiIOFilter::step()
 	assert(stored_frames_.size() == static_cast<size_t>(get_no_in_ports()));
 	for (position_t i=0; i< get_no_in_ports(); ++i) {
 
-		if (main_input_ == -2) {
+		if (main_input_ == -2 || main_input_ == -3) {
 			auto f = pop_frame(i);
 			if (f) {
 				stored_frames_[i]=f;
@@ -64,13 +64,13 @@ bool MultiIOFilter::step()
 		}
 		if (!stored_frames_[i]) ready = false;
 	}
-	if (ready) {
+	if (ready || main_input_ == -3) {
 		auto outframes = single_step(stored_frames_);
 		for (position_t i=0; i< std::min(get_no_out_ports(), static_cast<position_t>(outframes.size())); ++i) {
 			if (outframes[i]) push_frame(i, outframes[i]);
 		}
 
-		if (main_input_ == -2 ) {
+		if (main_input_ == -2 || main_input_ == -3) {
 			// Nothing to do
 		} else if (main_input_ < 0 || main_input_ >= get_no_in_ports()) {
 			// If there's none or invalid main_input, we have to clean everything
