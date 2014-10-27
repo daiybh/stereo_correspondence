@@ -83,7 +83,11 @@ gl_(log)
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0) {
 		throw exception::InitializationFailed("Failed to initialize SDL");
 	}
-	set_supported_formats(supported_formats);
+	if (!use_gl_) {
+		set_supported_formats(supported_formats);
+	} else {
+		set_supported_formats(gl_.get_supported_formats());
+	}
 }
 
 SDLWindow::~SDLWindow() noexcept
@@ -101,7 +105,10 @@ void SDLWindow::run()
 		throw exception::InitializationFailed("Failed to set video mode");
 	}
 	SDL_WM_SetCaption(title_.c_str(), "yuri2");
-
+	if (use_gl_) {
+		gl_.enable_smoothing();
+		gl_.setup_ortho();
+	}
 	IOThread::run();
 	overlay_.reset();
 	rgb_surface_.reset();
@@ -124,11 +131,11 @@ core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame
 	Uint32 sdl_fmt = map_yuv_yuri_to_sdl(format);
 	if (use_gl_) {
 		glDrawBuffer(GL_BACK_LEFT);
-		gl_.enable_smoothing();
-		gl_.setup_ortho();
+
 		gl_.generate_texture(0, frame);
 		gl_.draw_texture(0);
 		gl_.finish_frame();
+		SDL_GL_SwapBuffers();
 	} else if (sdl_fmt) {
 		if (!overlay_ ||
 				overlay_->w != static_cast<int>(res.width) ||
@@ -216,10 +223,13 @@ void SDLWindow::process_sdl_events()
 void SDLWindow::sdl_resize(resolution_t new_res)
 {
 	resolution_ = new_res;
+	Uint32 flags = (surface_->flags & ~SDL_FULLSCREEN) | (fullscreen_?SDL_FULLSCREEN:0);
+	if (surface_) surface_ = SDL_SetVideoMode(resolution_.width, resolution_.height, sdl_bpp_, flags);
 	if (!use_gl_) {
 		overlay_.reset();
-		Uint32 flags = (surface_->flags & ~SDL_FULLSCREEN) | (fullscreen_?SDL_FULLSCREEN:0);
-		if (surface_) surface_ = SDL_SetVideoMode(resolution_.width, resolution_.height, sdl_bpp_, flags);
+	} else {
+		glViewport( 0, 0, new_res.width, new_res.height );
+		gl_.setup_ortho();
 	}
 }
 
