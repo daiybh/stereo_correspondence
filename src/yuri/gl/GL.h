@@ -32,11 +32,12 @@ struct texture_info_t {
 
 	format_t format;
 	GLint texture_units[8];
+	GLint uniform_tx, uniform_ty, uniform_dx, uniform_dy, uniform_flip_x, uniform_flip_y;
 	size_t wh;
 	texture_info_t():tx(0.0f),ty(0.0f),dx(0.0), dy(0.0), flip_x(false),
-			flip_y(false),keep_aspect(false),format(core::raw_format::rgb24),wh(0) {
+			flip_y(false),keep_aspect(false),format(0),wh(0) {
 		for (int i=0;i<8;++i) {
-			tid[i]=(GLuint)-1;
+			tid[i]=static_cast<GLuint>(-1);
 			texture_units[i]=-1;
 		}
 	}
@@ -47,9 +48,14 @@ struct texture_info_t {
 			std::string name = std::string(n);
 			texture_units[i]=shader->get_uniform(name);
 		}
+		uniform_dx = shader->get_uniform("dx");
+		uniform_dy = shader->get_uniform("dy");
+		uniform_tx = shader->get_uniform("tx");
+		uniform_ty = shader->get_uniform("ty");
+		uniform_flip_x = shader->get_uniform("flip_x");
+		uniform_flip_y = shader->get_uniform("flip_y");
 	}
 	void bind_texture_units() {
-//		assert(shader);
 		for (int i=0;i<8;++i) {
 			if (texture_units[i]<0) continue;
 			glActiveTexture(GL_TEXTURE0+i);
@@ -57,22 +63,40 @@ struct texture_info_t {
 			//std::cerr << "setting uniform " << texture_units[i] << " to " << i << endl;
 			shader->set_uniform_sampler(texture_units[i],i);
 		}
+		shader->set_uniform_float(uniform_dx, dx);
+		shader->set_uniform_float(uniform_dy, dy);
+		shader->set_uniform_float(uniform_tx, tx);
+		shader->set_uniform_float(uniform_ty, ty);
+		shader->set_uniform_int(uniform_flip_x, flip_x);
+		shader->set_uniform_int(uniform_flip_y, flip_y);
 	}
+
 	inline void gen_texture(int id) {
-		if (tid[id]==(GLuint)-1) glGenTextures(1,tid+id);
+		if (tid[id]==static_cast<GLuint>(-1)) glGenTextures(1,tid+id);
 	}
+
 	void set_tex_coords(double  *v) {
 		glTexCoord2dv(v);
 		for (int i=0;i<8;++i) {
-			if (tid[i]!=(GLuint)-1) {
+			if (tid[i]!=static_cast<GLuint>(-1)) {
 				glMultiTexCoord2dv(GL_TEXTURE0+i,v);
 			}
 		}
 	}
-	void finish_update(log::Log &log,yuri::format_t fmt,std::string vs,std::string fs){
-		format = fmt;
+
+	bool shader_update_needed(const format_t fmt) const {
+		return !shader || fmt != format;
+	}
+
+	void finish_update(log::Log &log,yuri::format_t fmt,const std::string& vs, const std::string& fs)
+	{
+		if (format != fmt) {
+			format = fmt;
+			shader.reset();
+		}
 		if (!shader) {
-			shader.reset(new GLProgram(log));
+			log[log::debug] << "Loading fs:\n"<<fs << "\nAnd vs:\n"<<vs;
+			shader = std::make_shared<GLProgram>(log);
 			shader->load_shader(GL_VERTEX_SHADER,vs);
 			shader->load_shader(GL_FRAGMENT_SHADER,fs);
 			shader->link();
@@ -97,22 +121,16 @@ public:
 	static void save_state();
 	static void restore_state();
 	void enable_depth();
-	void set_lq422(int q);
 	bool prepare_texture(index_t tid, unsigned texid, uint8_t *data,
 			resolution_t resolution, GLenum tex_mode, GLenum data_mode, bool update,
 			GLenum data_type = GL_UNSIGNED_BYTE);
 	bool finish_frame();
 	log::Log log;
+
+	std::string transform_shader;
+	std::string color_map_shader;
 	static mutex big_gpu_lock;
 	static std::vector<format_t> get_supported_formats();
-protected:
-//	static std::string simple_vertex_shader, simple_fragment_shader,
-//		fragment_shader_yuv444,
-//		fragment_shader_yuv422_lq, fragment_shader_yuv422_very_lq,
-//		fragment_shader_uyvy444,
-//		fragment_shader_uyvy422_lq, fragment_shader_uyvy422_very_lq,
-//		fragment_shader_yuv_planar;
-	int lq_422;
 };
 
 }

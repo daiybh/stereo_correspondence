@@ -13,6 +13,8 @@
 #include "yuri/core/thread/IOThread.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/frame/raw_frame_params.h"
+
+#include "default_shaders.h"
 #include <cassert>
 
 namespace yuri {
@@ -20,113 +22,99 @@ namespace yuri {
 namespace gl {
 	mutex GL::big_gpu_lock;
 namespace {
-std::string simple_vertex_shader(
-		"void main()\n"
-		"{\n"
-		"gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
-		"gl_TexCoord[0] = gl_MultiTexCoord0;\n"
-		"}\n");
-std::string fragment_shader_yuv422_very_lq(
-		"uniform sampler2D tex0;\n"
-		"void main()\n"
-		"{\n"
-		"vec4 col = texture2D(tex0, gl_TexCoord[0].st);\n"
-		"float y = col.r - 0.0625 , u = col.g - 0.5, v = col.a - 0.5;\n"
-		"float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;\n"
-		"gl_FragColor = vec4(r, g, b, 1.0);\n"
-		"}\n");
-std::string fragment_shader_uyvy422_very_lq(
-		"uniform sampler2D tex0;\n"
-		"void main()\n"
-		"{\n"
-		"vec4 col = texture2D(tex0, gl_TexCoord[0].st);\n"
-		"float y = col.g - 0.0625 , u = col.r - 0.5, v = col.b - 0.5;\n"
-		"float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;\n"
-		"gl_FragColor = vec4(r, g, b, 1.0);\n"
-		"}\n");
 
-std::string simple_fragment_shader(
-		"uniform sampler2D tex0;\n"
-		"void main()\n"
-		"{\n"
-		"gl_FragColor = texture2D(tex0, gl_TexCoord[0].st);\n"
-		"}\n");
-
-std::string fragment_shader_yuv422_lq(
-		"uniform sampler2D tex0, tex1;\n"
-		"void main()\n"
-		"{\n"
-		"vec4 col0 = texture2D(tex0, gl_TexCoord[0].st);\n"
-		"vec4 col1 = texture2D(tex1, gl_TexCoord[0].st);\n"
-		"float y = col1.r - 0.0625, u = col0.g - 0.5, v = col0.a - 0.5;\n"
-		"float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;\n"
-		"gl_FragColor = vec4(r, g, b, 1.0);\n"
-		"}\n");
-std::string fragment_shader_yuv444(
-		"uniform sampler2D tex0;\n"
-		"void main()\n"
-		"{\n"
-		"vec4 col0 = texture2D(tex0, gl_TexCoord[0].st);\n"
-		"float y = col0.r - 0.0625, u = col0.g - 0.5, v = col0.b - 0.5;\n"
-		"float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;\n"
-		"gl_FragColor = vec4(r, g, b, 1.0);\n"
-		"}\n");
-/// @bug: This is actually the LQ version....
-std::string fragment_shader_uyvy422_lq(
-		"uniform sampler2D tex0, tex1;\n"
-		"void main()\n"
-		"{\n"
-		"vec4 col0 = texture2D(tex0, gl_TexCoord[0].st);\n"
-		"vec4 col1 = texture2D(tex1, gl_TexCoord[0].st);\n"
-		//"float y = 0.5/*col1.g - 0.0625*/, u = col0.r - 0.5, v = col0.b - 0.5;\n"
-
-		"float y = col0.g - 0.0625 , u = col0.r - 0.5, v = col0.b - 0.5;\n"
-		"float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;\n"
-		"gl_FragColor = vec4(r, g, b, 1.0);\n"
-		"}\n");
-
-std::string fragment_shader_yuv_planar(
-		"uniform sampler2D tex0;\n"
-		"uniform sampler2D tex1;\n"
-		"uniform sampler2D tex2;\n"
-		"void main()\n"
-		"{\n"
-		"vec4 col = vec4(\n"
-		"	texture2D(tex0, gl_TexCoord[0].st).r,\n"
-		"	texture2D(tex1, gl_TexCoord[0].st).r-0.5,\n"
-		"	texture2D(tex2, gl_TexCoord[0].st).r-0.5,\n"
-		"	1.0);\n"
-		"mat4 y2rt = mat4(1, 0, 1.371, 0,\n"
-		"                 1, -.337, -0.698, 0,\n"
-		"                 1, 1.733,0, 0,\n"
-		"                 0, 0, 0, 1);\n"
-		"gl_FragColor = col*y2rt;\n"
-		"}\n");
 using namespace core;
+/*!
+ * Returns texture configuration for specified RGB format
+ * @param fmt input format
+ * @return A tuple containing internal format, input format and internal data type suitable for video frames in @fmt format.
+ */
+std::tuple<GLenum, GLenum, GLenum> get_rgb_format(const format_t fmt)
+{
+	switch (fmt) {
+		case raw_format::rgb24:
+			return std::make_tuple(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE);
+		case raw_format::rgba32:
+			return std::make_tuple(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+		case raw_format::bgr24:
+			return std::make_tuple(GL_BGR, GL_RGB, GL_UNSIGNED_BYTE);
+		case raw_format::bgra32:
+			return std::make_tuple(GL_BGRA, GL_RGBA, GL_UNSIGNED_BYTE);
+		case raw_format::r8:
+		case raw_format::g8:
+		case raw_format::b8:
+		case raw_format::y8:
+		case raw_format::u8:
+		case raw_format::v8:
+		case raw_format::depth8:
+			return std::make_tuple(GL_LUMINANCE, GL_LUMINANCE8, GL_UNSIGNED_BYTE);
+		case raw_format::r16:
+		case raw_format::g16:
+		case raw_format::b16:
+		case raw_format::y16:
+		case raw_format::u16:
+		case raw_format::v16:
+		case raw_format::depth16:
+			return std::make_tuple(GL_LUMINANCE, GL_LUMINANCE16, GL_UNSIGNED_SHORT);
+		case raw_format::rgb16:
+			return std::make_tuple(GL_RGB, GL_RGB5,  GL_UNSIGNED_SHORT_5_6_5_REV);
+
+	}
+	return std::make_tuple(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE);
+}
+
+/*!
+ * Returns correct shader for an yuv type.
+ * @param fmt input format
+ * @return copy of the shader string
+ */
+std::string get_yuv_shader(const format_t fmt)
+{
+	switch (fmt) {
+		case raw_format::yuv444:
+			return shaders::fs_get_yuv444;
+		case raw_format::yuyv422:
+			return shaders::fs_get_yuyv422;
+		case raw_format::yvyu422:
+			return shaders::fs_get_yvyu422;
+		case raw_format::uyvy422:
+			return shaders::fs_get_uyvy422;
+		case raw_format::vyuy422:
+			return shaders::fs_get_vyuy422;
+
+	}
+	return {};
+}
+
 const std::vector<format_t> gl_supported_formats = {
 		raw_format::rgb24,
 		raw_format::rgba32,
 		raw_format::bgr24,
-		raw_format::abgr32,
+		raw_format::bgra32,
 		raw_format::yuv444,
 		raw_format::yuyv422,
+		raw_format::yvyu422,
 		raw_format::uyvy422,
-//		raw_format::yuv422p,
-//		raw_format::yuv444p,
-//		raw_format::r8,
-//		raw_format::g8,
-//		raw_format::b8,
-//		raw_format::y8,
-//		raw_format::u8,
-//		raw_format::v8,
-//		raw_format::depth8,
-//		raw_format::r16,
-//		raw_format::g16,
-//		raw_format::b16,
-//		raw_format::y16,
-//		raw_format::u16,
-//		raw_format::v16,
-//		raw_format::depth16
+		raw_format::vyuy422,
+		raw_format::yuv422p,
+		raw_format::yuv444p,
+		raw_format::yuv420p,
+		raw_format::yuv411p,
+		raw_format::r8,
+		raw_format::g8,
+		raw_format::b8,
+		raw_format::y8,
+		raw_format::u8,
+		raw_format::v8,
+		raw_format::depth8,
+		raw_format::r16,
+		raw_format::g16,
+		raw_format::b16,
+		raw_format::y16,
+		raw_format::u16,
+		raw_format::v16,
+		raw_format::depth16,
+		raw_format::rgb16,
 };
 
 }
@@ -136,7 +124,7 @@ std::vector<format_t> GL::get_supported_formats()
 	return gl_supported_formats;
 }
 
-GL::GL(log::Log &log_):log(log_),lq_422(0)
+GL::GL(log::Log &log_):log(log_)
 {
 	log.set_label("[GL] ");
 }
@@ -150,12 +138,29 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe)
 	using namespace yuri::core;
 	core::pRawVideoFrame frame = dynamic_pointer_cast<RawVideoFrame>(gframe);
 	if (!frame) return;
-//	assert(frame);
 
+	const format_t frame_format = frame->get_format();
+
+	std::string fs_color_get;
 	GLdouble &tx = textures[tid].tx;
 	GLdouble &ty = textures[tid].ty;
+	const resolution_t res = frame->get_resolution();
+	const yuri::size_t w = res.width;
+	const yuri::size_t h = res.height;
 
-	if (textures[tid].tid[0]==(GLuint)-1) {
+	// TODO: This needs clean up!
+	yuri::size_t wh = w > h ? w : h;
+	for (yuri::size_t j = 128; j < 9000; j *= 2) {
+		if (wh <= j) {
+			wh = j;
+			break;
+		}
+	}
+	tx = static_cast<float>(w) / static_cast<float>(wh);
+	ty = static_cast<float>(h) / static_cast<float>(wh);
+
+
+	if (textures[tid].tid[0]==static_cast<GLuint>(-1)) {
 		textures[tid].gen_texture(0);
 		log[log::info] << "Generated texture " << textures[tid].tid[0] <<"\n";
 	}
@@ -176,212 +181,91 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe)
 	glPixelStorei(GL_PACK_SKIP_PIXELS, 0);
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-	resolution_t res = frame->get_resolution();
-	yuri::size_t w = res.width;
-	yuri::size_t h = res.height;
-	yuri::size_t wh = w > h ? w : h;
-	for (yuri::size_t j = 128; j < 9000; j *= 2) {
-		if (wh <= j) {
-			wh = j;
-			break;
-		}
-	}
-//	log[log::info] << "w: " << w << ", h: " <<h<< ", wh: " << wh << "\n";
-	tx = (float) w / (float) wh;
-	ty = (float) h / (float) wh;
+
 	glBindTexture(GL_TEXTURE_2D, tex);
 	glEnable(GL_MULTISAMPLE);
-	glSampleCoverage(0.1,GL_TRUE);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//log[log::info] << "wh: " << wh << ", tx: " << tx << ", format: " << frame->get_format() <<"\n";
-//	FormatInfo_t fi = core::BasicPipe::get_format_info(frame->get_format());
+	glSampleCoverage(0.1f, GL_TRUE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	const raw_format::raw_format_t& fi = raw_format::get_format_info(frame->get_format());
-	size_t plane_count = fi.planes.size();
-	switch (frame->get_format()) {
+	switch (frame_format) {
 		case raw_format::rgb24:
-		case raw_format::rgba32: {
-			assert(plane_count==1);
-			size_t bpp = fi.planes[0].bit_depth.first/fi.planes[0].bit_depth.second;
-			GLenum fmt;
-			switch (bpp) {
-			case 24: fmt=GL_RGB;break;
-			case 32: fmt=GL_RGBA;break;
-			default:log[log::warning] <<"Bad input frame"<<"\n";fmt=GL_RGB;break;
-			}
-			if (wh != textures[tid].wh) {
-				uint8_t *image = new uint8_t[(wh * wh * bpp) >> 3];
-				prepare_texture(tid,0,image, {wh, wh},fmt,fmt,false);
-				delete[] image;
-				textures[tid].wh = wh;
-			}
-			prepare_texture(tid,0,PLANE_RAW_DATA(frame,0), {w, h},fmt,fmt,true);
-			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,simple_fragment_shader);
-		}break;
-		case raw_format::bgr24:{
-			assert(plane_count==1);
-			if (wh != textures[tid].wh) {
-				uint8_t *image = new uint8_t[wh * wh * 3];
-				prepare_texture(tid,0,image, {wh, wh}, GL_RGB,GL_BGR,false);
-				delete[] image;
-				textures[tid].wh = wh;
-			}
-			prepare_texture(tid,0,PLANE_RAW_DATA(frame,0), {w, h} ,GL_RGB,GL_BGR,true);
-			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,simple_fragment_shader);
-		}break;
-		case raw_format::abgr32:{
-			assert(plane_count==1);
-			if (wh != textures[tid].wh) {
-				uint8_t *image = new uint8_t[wh * wh * 4];
-				prepare_texture(tid,0,image, {wh, wh},GL_RGBA,GL_BGRA,false);
-				delete[] image;
-				textures[tid].wh = wh;
-			}
-			prepare_texture(tid,0,PLANE_RAW_DATA(frame,0), {w, h},GL_RGBA,GL_BGRA,true);
-			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,simple_fragment_shader);
-		}break;
-		case raw_format::yuv444:
-		case raw_format::yuyv422:
-		case raw_format::uyvy422:
-		{
-			if (wh != textures[tid].wh) {
-				uint8_t *image;
-				if (!lq_422 || frame->get_format()==raw_format::yuv444) {
-					image = new uint8_t[wh * wh * 3];
-					prepare_texture(tid,0,image, {wh, wh} ,3,GL_RGB,false);
-				} else {
-					image = new uint8_t[wh * wh * 2];
-					prepare_texture(tid,0,image,{wh/2, wh},4,GL_RGBA,false);
-					if (lq_422==1) {
-						prepare_texture(tid,1,image,{wh, wh},GL_LUMINANCE8_ALPHA8,GL_LUMINANCE_ALPHA,false);
-					}
-				}
-				delete[] image;
-				textures[tid].wh = wh;
-			}
-			if (frame->get_format()==raw_format::yuv444) {
-				prepare_texture(tid,0,PLANE_RAW_DATA(frame,0), {w, h},3,GL_RGB,true);
-			} else if (!lq_422 ) {
-				uint8_t *img = new uint8_t [w*h*3];
-				uint8_t *p = PLANE_RAW_DATA(frame,0);
-				uint8_t *ty = img, *tu=img+1, *tv=img+2;
-//				uint8_t y,u,v;
-				if (frame->get_format()==raw_format::yuyv422) {
-					for (int i=0;i<static_cast<int>(w*h/2);++i) {
-						*ty = *p++;
-						ty+=3;
-						*tu = *p;
-						tu+=3;
-						*tu = *p++;
-						tu+=3;
-						*ty = *p++;
-						ty+=3;
-						*tv = *p;
-						tv+=3;
-						*tv = *p++;
-						tv+=3;
-					}
-				} else {
-					for (int i=0;i<static_cast<int>(w*h/2);++i) {
-						*tu = *p;
-						tu+=3;
-						*tu = *p++;
-						tu+=3;
-						*ty = *p++;
-						ty+=3;
-						*tv = *p;
-						tv+=3;
-						*tv = *p++;
-						tv+=3;
-						*ty = *p++;
-						ty+=3;
-
-					}
-				}
-				prepare_texture(tid, 0, img, {w, h}, 3, GL_RGB, true);
-				delete [] img;
-			} else {
-				prepare_texture(tid, 0, PLANE_RAW_DATA(frame,0), {w/2, h}, 4, GL_RGBA, true);
-				if (lq_422==1) {
-					prepare_texture(tid, 1, PLANE_RAW_DATA(frame,0), {w, h}, GL_LUMINANCE8_ALPHA8, GL_LUMINANCE_ALPHA, true);
-				}
-			}
-			std::string fs;
-//			if (frame->get_format()==YURI_FMT_UYVY422) {
-//				if (!lq_422) fs = fragment_shader_uyvy444;
-//				else if (lq_422==1) fs = fragment_shader_uyvy422_lq;
-//				else fs = fragment_shader_uyvy422_very_lq;
-//			} else {
-				if (!lq_422 || frame->get_format()==raw_format::yuv444) fs = fragment_shader_yuv444;
-				else if (lq_422==1) fs = frame->get_format()==raw_format::yuyv422?fragment_shader_yuv422_lq:fragment_shader_uyvy422_lq;
-				else fs = frame->get_format()==raw_format::uyvy422?fragment_shader_yuv422_very_lq:fragment_shader_uyvy422_very_lq;
-//			}
-			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,fs);
-		}break;
-/*
-
-//		case YURI_FMT_YUV420_PLANAR:
-		case raw_format::yuv422p:
-		case raw_format::yuv444p:{
-			assert(fi && fi->planes>=3);
-			if (wh != textures[tid].wh) {
-				uint8_t *image;
-				image = new uint8_t[wh * wh];
-				for (int i=0;i<3;++i) {
-					prepare_texture(tid,i,image,wh/fi->plane_x_subs[i], wh/fi->plane_y_subs[i],GL_LUMINANCE8,GL_LUMINANCE,false);
-				}
-				delete[] image;
-				textures[tid].wh = wh;
-			}
-			for (int i=0;i<3;++i) {
-				prepare_texture(tid,i,PLANE_RAW_DATA(frame,i),w/fi->plane_x_subs[i],
-						h/fi->plane_y_subs[i],GL_LUMINANCE8,GL_LUMINANCE,true);
-			}
-			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,
-					fragment_shader_yuv_planar);
-
-		}break;
+		case raw_format::rgba32:
+		case raw_format::bgr24:
+		case raw_format::abgr32:
 		case raw_format::r8:
 		case raw_format::g8:
 		case raw_format::b8:
 		case raw_format::y8:
 		case raw_format::u8:
 		case raw_format::v8:
-		case raw_format::depth8: {
-			assert(fi && fi->planes==1);
-			if (wh != textures[tid].wh) {
-				uint8_t *image;
-				image = new uint8_t[wh * wh];
-				prepare_texture(tid,0,image,wh, wh,GL_LUMINANCE8,GL_LUMINANCE,false);
-				delete[] image;
-				textures[tid].wh = wh;
-			}
-			prepare_texture(tid,0,PLANE_RAW_DATA(frame,0),w,	h,GL_LUMINANCE8,GL_LUMINANCE,true);
-			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,
-					simple_fragment_shader);
-
-		}break;
+		case raw_format::depth8:
 		case raw_format::r16:
 		case raw_format::g16:
 		case raw_format::b16:
 		case raw_format::y16:
 		case raw_format::u16:
 		case raw_format::v16:
-		case raw_format::depth16: {
-			assert(fi && fi->planes==1);
+		case raw_format::depth16:
+		case raw_format::rgb16:
+		{
+			GLenum fmt_in = GL_RGB;
+			GLenum fmt_out = GL_RGB;
+			GLenum data_type = GL_UNSIGNED_BYTE;
+			std::tie(fmt_in, fmt_out, data_type) = get_rgb_format(frame_format);
+			log[log::info] << "plane size: " << PLANE_SIZE(frame,0);
 			if (wh != textures[tid].wh) {
-				uint8_t *image;
-				image = new uint8_t[wh * wh*2];
-				prepare_texture(tid,0,image,wh, wh,GL_LUMINANCE16,GL_LUMINANCE,false,GL_UNSIGNED_SHORT);
-				delete[] image;
+				prepare_texture(tid, 0, nullptr, {wh, wh},fmt_out, fmt_in,false, data_type);
 				textures[tid].wh = wh;
 			}
-			prepare_texture(tid,0,PLANE_RAW_DATA(frame,0),w,	h,GL_LUMINANCE16,GL_LUMINANCE,true,GL_UNSIGNED_SHORT);
-			textures[tid].finish_update(log,frame->get_format(),simple_vertex_shader,
-					simple_fragment_shader);
+			prepare_texture(tid, 0, PLANE_RAW_DATA(frame,0), {w, h}, fmt_out, fmt_in, true, data_type);
+			fs_color_get = shaders::fs_get_rgb;
+		}break;
+
+		case raw_format::yuv444:
+		case raw_format::yuyv422:
+		case raw_format::yvyu422:
+		case raw_format::uyvy422:
+		case raw_format::vyuy422:
+		{
+			if (wh != textures[tid].wh) {
+				if (frame_format==raw_format::yuv444) {
+					prepare_texture(tid,0,nullptr, {wh, wh} ,3,GL_RGB,false);
+				} else {
+					prepare_texture(tid,0,nullptr,{wh/2, wh},4,GL_RGBA,false);
+					prepare_texture(tid,1,nullptr,{wh, wh},GL_LUMINANCE8_ALPHA8,GL_LUMINANCE_ALPHA,false);
+				}
+				textures[tid].wh = wh;
+			}
+
+			if (frame_format ==raw_format::yuv444) {
+				prepare_texture(tid,0,PLANE_RAW_DATA(frame,0), {w, h},3,GL_RGB,true);
+			} else {
+				prepare_texture(tid, 0, PLANE_RAW_DATA(frame,0), {w/2, h}, 4, GL_RGBA, true);
+				prepare_texture(tid, 1, PLANE_RAW_DATA(frame,0), {w, h}, GL_LUMINANCE8_ALPHA8, GL_LUMINANCE_ALPHA, true);
+			}
+			fs_color_get = std::move(get_yuv_shader(frame_format));
+		}break;
+
+
+		case raw_format::yuv420p:
+		case raw_format::yuv411p:
+		case raw_format::yuv422p:
+		case raw_format::yuv444p:{
+			if (wh != textures[tid].wh) {
+				for (int i=0;i<3;++i) {
+					prepare_texture(tid,i,nullptr,{wh/fi.planes[i].sub_x, wh/fi.planes[i].sub_y} ,GL_LUMINANCE8,GL_LUMINANCE,false);
+				}
+				textures[tid].wh = wh;
+			}
+			for (int i=0;i<3;++i) {
+				prepare_texture(tid,i,PLANE_RAW_DATA(frame,i),{w/fi.planes[i].sub_x,
+						h/fi.planes[i].sub_y},GL_LUMINANCE8,GL_LUMINANCE,true);
+			}
+			fs_color_get = shaders::fs_get_yuv_planar;
 
 		}break;
-		*/
+
 /*
 		case YURI_FMT_DXT1:
 		case YURI_FMT_DXT1_WITH_MIPMAPS:
@@ -451,16 +335,25 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe)
 		} break;
 
 		*/
-	} /*else {
-		log[log::debug] << "Frame with unsupported format! (" <<
-				BasicPipe::get_format_string(frame->get_format()) <<
-				")" <<"\n";
+		default:
+			log[log::warning] << "Frame with unsupported format! (" << fi.name << ")";
 	}
+	/*
 	log[log::debug] << "Generated texture " << wh << "x" << wh << " from image " <<
 			w << "x" << h << " (" << tx << ", " << ty << ")" <<"\n";
 	 */
+
+	if (!fs_color_get.empty()) {
+		if (textures[tid].shader_update_needed(frame->get_format())) {
+			textures[tid].finish_update(log, frame->get_format(),
+								shaders::vs_default,
+								shaders::prepare_fs(fs_color_get, transform_shader, color_map_shader));
+		}
+	}
+
 	glPopClientAttrib();
 }
+
 void GL::generate_empty_texture(index_t tid, yuri::format_t fmt, resolution_t resolution)
 {
 	core::pFrame dummy = core::RawVideoFrame::create_empty(fmt,resolution);
@@ -517,10 +410,14 @@ void GL::draw_texture(index_t tid, resolution_t res,  GLdouble width,
 	}
 	glActiveTexture(GL_TEXTURE0);
 	glBegin(GL_QUADS);
-	double tex_coords[][2]={	{x_0, y_1},
-							{x_1, y_1},
-							{x_1, y_0},
-							{x_0, y_0}};
+//	double tex_coords[][2]={	{x_0, y_1},
+//							{x_1, y_1},
+//							{x_1, y_0},
+//							{x_0, y_0}};
+	double tex_coords[][2]={	{0.0f, 1.0f},
+								{1.0f, 1.0f},
+								{1.0f, 0.f},
+								{0.0f, 0.0f}};
 	if (!keep_aspect || !res) {
 		textures[tid].set_tex_coords(tex_coords[0]);
 		glVertex2f(x, y);
@@ -602,12 +499,6 @@ void GL::restore_state()
  * 		equal to downsampling Y. Fastest method.
  *
  */
-void GL::set_lq422(int q)
-{
-	if (q>2) lq_422=2;
-	else lq_422 = q;
-	log[log::info] << "Rendering in quality " << lq_422 <<"\n";
-}
 bool GL::prepare_texture(index_t tid, unsigned texid, uint8_t *data,
 		resolution_t resolution, GLenum tex_mode, GLenum data_mode, bool update,
 		GLenum data_type)
@@ -653,3 +544,4 @@ bool GL::finish_frame()
 }
 
 }
+

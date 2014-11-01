@@ -5,5 +5,6 @@ SET(YURI_HELPER_GL_SRC ${YURI_HELPER_GL_SRC}
 	gl/GLProgram.h
 	gl/GLShader.cpp
 	gl/GLShader.h
+	gl/default_shaders.h
 	PARENT_SCOPE)
 	
