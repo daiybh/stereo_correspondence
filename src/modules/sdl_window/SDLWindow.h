@@ -50,6 +50,8 @@ private:
 	gl::GL				gl_;
 	std::string			transform_shader_;
 	std::string			color_map_shader_;
+	bool				flip_x_;
+	bool				flip_y_;
 #endif
 };
 

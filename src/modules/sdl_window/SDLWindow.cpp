@@ -68,6 +68,8 @@ core::Parameters SDLWindow::configure()
 #ifdef YURI_SDL_OPENGL
 	p["transform_shader"]["Shader to use for texture transformations"]=std::string();
 	p["color_shader"]["Shader to use for color mapping"]=std::string();
+	p["flip_x"]["Flip around vertical axis"]=false;
+	p["flip_y"]["Flip around horizontal axis"]=false;
 #endif
 	return p;
 }
@@ -151,7 +153,7 @@ core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame
 #ifdef  YURI_SDL_OPENGL
 	if (use_gl_) {
 		glDrawBuffer(GL_BACK_LEFT);
-		gl_.generate_texture(0, frame);
+		gl_.generate_texture(0, frame, flip_x_, flip_y_);
 		gl_.draw_texture(0);
 		gl_.finish_frame();
 		SDL_GL_SwapBuffers();
@@ -221,6 +223,10 @@ bool SDLWindow::set_param(const core::Parameter& param)
 		transform_shader_ = param.get<std::string>();
 	} else if (param.get_name() == "color_shader") {
 		color_map_shader_ = param.get<std::string>();
+	} else if (param.get_name() == "flip_x") {
+		flip_x_ = param.get<bool>();
+	} else if (param.get_name() == "flip_y") {
+		flip_y_ = param.get<bool>();
 #endif
 	} else return base_type::set_param(param);
 	return true;
