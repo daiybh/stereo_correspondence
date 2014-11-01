@@ -510,6 +510,14 @@ bool GL::finish_frame()
 	glFinish();
 	return true;
 }
+core::pFrame GL::read_window(geometry_t geometry)
+{
+	auto frame = core::RawVideoFrame::create_empty(core::raw_format::rgb24, geometry.get_resolution());
+	glReadPixels(geometry.x, geometry.y, geometry.width, geometry.height,
+			GL_RGB, GL_UNSIGNED_BYTE, PLANE_RAW_DATA(frame, 0));
+	return frame;
+}
+
 }
 
 }

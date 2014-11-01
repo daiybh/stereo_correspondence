@@ -124,6 +124,7 @@ public:
 			resolution_t resolution, GLenum tex_mode, GLenum data_mode, bool update,
 			GLenum data_type = GL_UNSIGNED_BYTE);
 	bool finish_frame();
+	core::pFrame read_window(geometry_t geometry);
 	log::Log log;
 
 	std::string transform_shader;
