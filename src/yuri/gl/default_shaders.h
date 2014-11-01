@@ -78,62 +78,83 @@ vec4 get_color(vec2 coord) {
 }
 )XXX";
 
-const std::string fs_get_yuv444 = R"XXX(
+/*
+mat4 y2rt = mat4(1, 0, 1.371, 0,
+	                 1, -.337, -0.698, 0,
+	                 1, 1.733,0, 0,
+	                 0, 0, 0, 1);
+*/
+
+const std::string yuv_to_rgb = R"XXX(
+vec4 convert_yuv_rgb(vec4 col) {
+	mat4 y2rt = mat4(1, 0, 1.28033, 0,
+	                 1, -.21482, -0.38059, 0,
+	                 1, 2.12798,0, 0,
+	                 0, 0, 0, 1);
+	return col*y2rt;
+}
+
+)XXX";
+
+
+
+const std::string fs_get_yuv444 =
+		yuv_to_rgb + R"XXX(
 uniform sampler2D tex0;
 vec4 get_color(vec2 coord) {
 	vec4 col0 = texture2D(tex0, coord);
-	float y = col0.r - 0.0625, u = col0.g - 0.5, v = col0.b - 0.5;
-	float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;
-	return vec4(r, g, b, 1.0);
+	vec4 col = vec4(col0.r - 0.0625, col0.g - 0.5, col0.b - 0.5, 1.0);
+	return convert_yuv_rgb(col);
 }
 )XXX";
 
 
-const std::string fs_get_yuyv422 = R"XXX(
+const std::string fs_get_yuyv422 =
+		yuv_to_rgb + R"XXX(
 uniform sampler2D tex0, tex1;
 vec4 get_color(vec2 coord) {
 	vec4 col0 = texture2D(tex0, coord);
 	vec4 col1 = texture2D(tex1, coord);
-	float y = col1.r - 0.0625, u = col0.g - 0.5, v = col0.a - 0.5;
-	float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;
-	return vec4(r, g, b, 1.0);
+	vec4 yuv = vec4(col1.r - 0.0625, col0.g - 0.5, col0.a - 0.5, 1.0);
+	return convert_yuv_rgb(yuv);	
 }
 )XXX";
 
-const std::string fs_get_yvyu422 = R"XXX(
+const std::string fs_get_yvyu422 =
+		yuv_to_rgb + R"XXX(
 uniform sampler2D tex0, tex1;
 vec4 get_color(vec2 coord) {
 	vec4 col0 = texture2D(tex0, coord);
 	vec4 col1 = texture2D(tex1, coord);
-	float y = col1.r - 0.0625, u = col0.a - 0.5, v = col0.g - 0.5;
-	float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;
-	return vec4(r, g, b, 1.0);
+	vec4 col = vec4(col1.r - 0.0625, col0.a - 0.5, col0.g - 0.5, 1.0);
+	return convert_yuv_rgb(col);
 }
 )XXX";
 
-const std::string fs_get_uyvy422 = R"XXX(
+const std::string fs_get_uyvy422 =
+		yuv_to_rgb + R"XXX(
 uniform sampler2D tex0, tex1;
 vec4 get_color(vec2 coord) {
 	vec4 col0 = texture2D(tex0, coord);
 	vec4 col1 = texture2D(tex1, coord);
-	float y = col1.a - 0.0625, u = col0.r - 0.5, v = col0.b - 0.5;
-	float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;
-	return vec4(r, g, b, 1.0);
+	vec4 col = vec4(col1.a - 0.0625, col0.r - 0.5, col0.b - 0.5, 1.0f);
+	return convert_yuv_rgb(col);
 }
 )XXX";
 
-const std::string fs_get_vyuy422 = R"XXX(
+const std::string fs_get_vyuy422 =
+		yuv_to_rgb + R"XXX(
 uniform sampler2D tex0, tex1;
 vec4 get_color(vec2 coord) {
 	vec4 col0 = texture2D(tex0, coord);
 	vec4 col1 = texture2D(tex1, coord);
-	float y = col1.a - 0.0625, u = col0.b - 0.5, v = col0.r - 0.5;
-	float r = 1.164 * y + 1.596*v, g = 1.164 * y - 0.392* u - 0.813 * v, b = 1.164*y + 2.017 * u;
-	return vec4(r, g, b, 1.0);
+	vec4 col = vec4(col1.a - 0.0625, col0.b - 0.5, col0.r - 0.5, 1.0);
+	return convert_yuv_rgb(col);
 }
 )XXX";
 
-const std::string fs_get_yuv_planar = R"XXX(
+const std::string fs_get_yuv_planar =
+		yuv_to_rgb + R"XXX(
 uniform sampler2D tex0;
 uniform sampler2D tex1;
 uniform sampler2D tex2;
@@ -143,11 +164,7 @@ vec4 get_color(vec2 coord) {
 		texture2D(tex1, coord).r-0.5,
 		texture2D(tex2, coord).r-0.5,
 		1.0);
-	mat4 y2rt = mat4(1, 0, 1.371, 0,
-	                 1, -.337, -0.698, 0,
-	                 1, 1.733,0, 0,
-	                 0, 0, 0, 1);
-	return col*y2rt;
+	return convert_yuv_rgb(col);
 }
 )XXX";
 
