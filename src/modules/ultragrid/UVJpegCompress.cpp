@@ -38,7 +38,7 @@ ultragrid::UVVideoCompress(log_,parent,"uv_jpeg_compress", UV_COMPRESS_DETAIL(jp
 	}
 }
 
-UVJpegCompress::~UVJpegCompress()
+UVJpegCompress::~UVJpegCompress() noexcept
 {
 }
 

@@ -21,7 +21,7 @@ public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
 	UVJpegCompress(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
-	virtual ~UVJpegCompress();
+	virtual ~UVJpegCompress() noexcept;
 private:
 	
 	virtual bool set_param(const core::Parameter& param);
