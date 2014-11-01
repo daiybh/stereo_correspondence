@@ -124,7 +124,11 @@ std::vector<format_t> GL::get_supported_formats()
 	return gl_supported_formats;
 }
 
-GL::GL(log::Log &log_):log(log_)
+GL::GL(log::Log &log_):log(log_),
+		corners{{-1.0f, -1.0f,
+				1.0f, -1.0f,
+				1.0f, 1.0f,
+				-1.0f, 1.0f}}
 {
 	log.set_label("[GL] ");
 }
@@ -133,7 +137,7 @@ GL::~GL() noexcept {
 
 }
 
-void GL::generate_texture(index_t tid, const core::pFrame& gframe)
+void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, bool flip_y)
 {
 	using namespace yuri::core;
 	core::pRawVideoFrame frame = dynamic_pointer_cast<RawVideoFrame>(gframe);
@@ -142,6 +146,9 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe)
 	const format_t frame_format = frame->get_format();
 
 	std::string fs_color_get;
+
+	textures[tid].flip_x = flip_x;
+	textures[tid].flip_y = flip_y;
 	GLdouble &tx = textures[tid].tx;
 	GLdouble &ty = textures[tid].ty;
 	const resolution_t res = frame->get_resolution();
@@ -371,12 +378,14 @@ void GL::setup_ortho(GLdouble left, GLdouble right,	GLdouble bottom,
 	glLoadIdentity();
 }
 
-void GL::draw_texture(index_t tid, resolution_t res,  GLdouble width,
-		GLdouble height, GLdouble x, GLdouble y)
+
+void GL::draw_texture(index_t tid)
 {
 	GLuint &tex = textures[tid].tid[0];
 	if (tex==(GLuint)-1) return;
-	bool &keep_aspect = textures[tid].keep_aspect;
+	if (!textures[tid].shader) return;
+
+//	bool &keep_aspect = textures[tid].keep_aspect;
 
 	glPushAttrib(GL_DEPTH_BUFFER_BIT|GL_ENABLE_BIT|GL_POLYGON_BIT|GL_SCISSOR_BIT|GL_TEXTURE_BIT);
 	glDisable(GL_DEPTH_TEST);
@@ -384,74 +393,34 @@ void GL::draw_texture(index_t tid, resolution_t res,  GLdouble width,
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_SCISSOR_TEST);
 	glDisable(GL_TEXTURE_2D);
-	GLdouble x_0, x_1, y_0, y_1;
-	GLdouble &dx = textures[tid].dx;
-	GLdouble &dy = textures[tid].dy;
-	if (textures[tid].flip_x) {
-		x_0 = textures[tid].tx-(dx>0.0?0.0:-dx);
-		x_1 = (dx>0.0?dx:0.0);
-	} else {
-		x_0 = (dx>0.0?dx:0.0);
-		x_1 = textures[tid].tx-(dx>0.0?0.0:-dx);
-	}
-	if (textures[tid].flip_y) {
-		y_0 = textures[tid].ty;
-		y_1 = (dy>0.0?dy:0.0)-(dy>0.0?0.0:-dy);
-	} else {
-		y_0 = (dy>0.0?dy:0.0);
-		y_1 = textures[tid].ty-(dy>0.0?0.0:-dy);
-	}
-	glBindTexture(GL_TEXTURE_2D, tex);
+
+//	GLdouble &dx = textures[tid].dx;
+//	GLdouble &dy = textures[tid].dy;
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
+
 	if (textures[tid].shader) {
 		textures[tid].shader->use();
 		textures[tid].bind_texture_units();
 	}
 	glActiveTexture(GL_TEXTURE0);
 	glBegin(GL_QUADS);
-//	double tex_coords[][2]={	{x_0, y_1},
-//							{x_1, y_1},
-//							{x_1, y_0},
-//							{x_0, y_0}};
 	double tex_coords[][2]={	{0.0f, 1.0f},
 								{1.0f, 1.0f},
 								{1.0f, 0.f},
 								{0.0f, 0.0f}};
-	if (!keep_aspect || !res) {
-		textures[tid].set_tex_coords(tex_coords[0]);
-		glVertex2f(x, y);
-		textures[tid].set_tex_coords(tex_coords[1]);
-		glVertex2f(width + x, y);
-		textures[tid].set_tex_coords(tex_coords[2]);
-		glVertex2f(width + x, height + y);
-		textures[tid].set_tex_coords(tex_coords[3]);
-		glVertex2f(x, height + y);
-	} else {
-		float lx,ly;
-		float h = res.width*textures[tid].ty/textures[tid].tx;
-		if (h < res.height) {
-			lx = 0.0f;
-			ly= 0.5f - (h/(2.0f*res.height));
-		} else {
-			ly = 0.0f;
-			h = res.height*textures[tid].tx/textures[tid].ty;
-			lx = 0.5f - (h/(2.0f*res.width));
-		}
-//		GLdouble vx_0, vx_1, vy_0, vy_1;
-//		vx_0 = x + lx/width;
-//		vx_1 = x + width - lx/width;
-//		vy_0 = y + ly/height;
-//		vy_1 = y + height- lx/height;
-		glTexCoord2f(x_0, y_1);
-		glVertex2f(lx, ly);
-		glTexCoord2f(x_1, y_1);
-		glVertex2f(1.0f - lx , ly);
-		glTexCoord2f(x_1, y_0);
-		glVertex2f(1.0f - lx, 1.0f - ly);
-		glTexCoord2f(x_0, y_0);
-		glVertex2f(lx, 1.0f -ly);
-	}
+	textures[tid].set_tex_coords(tex_coords[0]);
+//		glTexCoord4d(tex_coords[0][0],tex_coords[0][1],0,1);//corners[2]-corners[0]);
+	glVertex2fv(&corners[0]);
+	textures[tid].set_tex_coords(tex_coords[1]);
+//		glTexCoord4d(tex_coords[1][0],tex_coords[1][1],0,1);//,corners[2]-corners[0]);
+	glVertex2fv(&corners[2]);
+	textures[tid].set_tex_coords(tex_coords[2]);
+//		glTexCoord4d(tex_coords[2][0],tex_coords[2][1],0,1);//,corners[4]-corners[6]);
+	glVertex2fv(&corners[4]);
+	textures[tid].set_tex_coords(tex_coords[3]);
+//		glTexCoord4d(tex_coords[3][0],tex_coords[3][1],0,1);//,corners[4]-corners[6]);
+	glVertex2fv(&corners[6]);
 	glEnd();
 	if (textures[tid].shader) textures[tid].shader->stop();
 	glBindTexture(GL_TEXTURE_2D,0);

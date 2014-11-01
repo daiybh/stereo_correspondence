@@ -110,13 +110,12 @@ public:
 	GL(log::Log &log_);
 	virtual ~GL() noexcept;
 	std::map<uint,texture_info_t> textures;
-	void generate_texture(index_t tid, const core::pFrame& frame);
+	void generate_texture(index_t tid, const core::pFrame& frame, bool flip_x = false, bool flip_y = false);
 	void generate_empty_texture(index_t tid, format_t fmt, resolution_t resolution);
-	void setup_ortho(GLdouble left=0.0, GLdouble right=1.0f,
-			GLdouble bottom=0.0, GLdouble top=1.0,
+	void setup_ortho(GLdouble left=-1.0, GLdouble right=1.0f,
+			GLdouble bottom=-1.0, GLdouble top=1.0,
 			GLdouble near=-100.0, GLdouble far=100.0);
-	void draw_texture(index_t tid, resolution_t res = {0, 0}, GLdouble width=1.0,
-			GLdouble height=1.0, GLdouble x=0.0, GLdouble y=0.0);
+	void draw_texture(index_t tid);
 	static void enable_smoothing();
 	static void save_state();
 	static void restore_state();
@@ -129,8 +128,10 @@ public:
 
 	std::string transform_shader;
 	std::string color_map_shader;
+	std::array<float,8> corners;
 	static mutex big_gpu_lock;
 	static std::vector<format_t> get_supported_formats();
+
 };
 
 }
