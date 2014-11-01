@@ -52,6 +52,7 @@ private:
 	std::string			color_map_shader_;
 	bool				flip_x_;
 	bool				flip_y_;
+	bool				read_back_;
 #endif
 };
 

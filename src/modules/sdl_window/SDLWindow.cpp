@@ -70,6 +70,7 @@ core::Parameters SDLWindow::configure()
 	p["color_shader"]["Shader to use for color mapping"]=std::string();
 	p["flip_x"]["Flip around vertical axis"]=false;
 	p["flip_y"]["Flip around horizontal axis"]=false;
+	p["read_back"]["Read drawn picture back and output it"]=false;
 #endif
 	return p;
 }
@@ -98,6 +99,9 @@ sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")")
 		set_supported_formats(gl_.get_supported_formats());
 		gl_.transform_shader = transform_shader_;
 		gl_.color_map_shader = color_map_shader_;
+		if (read_back_) {
+			resize(1,1);
+		}
 		log[log::info] << "Set ts to:\n"<<transform_shader_;
 	}
 #else
@@ -144,6 +148,7 @@ bool SDLWindow::step()
 core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame)
 {
 	Timer timer;
+	core::pFrame out_frame;
 	const resolution_t res = frame->get_resolution();
 	const dimension_t src_linesize  = PLANE_DATA(frame,0).get_line_size();
 	auto it = PLANE_DATA(frame,0).begin();
@@ -156,6 +161,9 @@ core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame
 		gl_.generate_texture(0, frame, flip_x_, flip_y_);
 		gl_.draw_texture(0);
 		gl_.finish_frame();
+		if (read_back_) {
+			out_frame = gl_.read_window(resolution_.get_geometry());
+		}
 		SDL_GL_SwapBuffers();
 	} else
 #endif
@@ -203,7 +211,7 @@ core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame
 		log[log::warning] << "Unsupported format '" << fi.name << "'";
 	}
 	log[log::debug] << "Processing took " << timer.get_duration();
-	return {};
+	return out_frame;
 }
 bool SDLWindow::set_param(const core::Parameter& param)
 {
@@ -227,6 +235,8 @@ bool SDLWindow::set_param(const core::Parameter& param)
 		flip_x_ = param.get<bool>();
 	} else if (param.get_name() == "flip_y") {
 		flip_y_ = param.get<bool>();
+	} else if (param.get_name() == "read_back") {
+		read_back_ = param.get<bool>();
 #endif
 	} else return base_type::set_param(param);
 	return true;
