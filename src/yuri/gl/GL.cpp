@@ -86,6 +86,35 @@ std::string get_yuv_shader(const format_t fmt)
 	return {};
 }
 
+size_t get_pixel_size(GLenum fmt, GLenum data_type)
+{
+	size_t comp_size = 0;
+	switch (data_type) {
+		case GL_UNSIGNED_SHORT_5_6_5_REV:
+			return 2;
+		case GL_UNSIGNED_BYTE:
+			comp_size = 1;
+			break;
+		case GL_UNSIGNED_SHORT:
+			comp_size = 2;
+			break;
+	}
+
+	switch (fmt) {
+		case GL_RGB:
+		case GL_BGR:
+			return 3*comp_size;
+		case GL_RGBA:
+		case GL_BGRA:
+			return 3*comp_size;
+		case GL_LUMINANCE:
+			return comp_size;
+		case GL_LUMINANCE_ALPHA:
+			return 2*comp_size;
+	}
+	return 0;
+}
+
 const std::vector<format_t> gl_supported_formats = {
 		raw_format::rgb24,
 		raw_format::rgba32,
@@ -220,12 +249,11 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, 
 			GLenum fmt_out = GL_RGB;
 			GLenum data_type = GL_UNSIGNED_BYTE;
 			std::tie(fmt_in, fmt_out, data_type) = get_rgb_format(frame_format);
-			log[log::info] << "plane size: " << PLANE_SIZE(frame,0);
 			if (wh != textures[tid].wh) {
-				prepare_texture(tid, 0, nullptr, {wh, wh},fmt_out, fmt_in,false, data_type);
+				prepare_texture(tid, 0, nullptr, 0, {wh, wh},fmt_out, fmt_in,false, data_type);
 				textures[tid].wh = wh;
 			}
-			prepare_texture(tid, 0, PLANE_RAW_DATA(frame,0), {w, h}, fmt_out, fmt_in, true, data_type);
+			prepare_texture(tid, 0, PLANE_RAW_DATA(frame,0), PLANE_SIZE(frame,0), {w, h}, fmt_out, fmt_in, true, data_type);
 			fs_color_get = shaders::fs_get_rgb;
 		}break;
 
@@ -237,19 +265,19 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, 
 		{
 			if (wh != textures[tid].wh) {
 				if (frame_format==raw_format::yuv444) {
-					prepare_texture(tid,0,nullptr, {wh, wh} ,3,GL_RGB,false);
+					prepare_texture(tid, 0, nullptr, 0, {wh, wh}, GL_RGB, GL_RGB, false);
 				} else {
-					prepare_texture(tid,0,nullptr,{wh/2, wh},4,GL_RGBA,false);
-					prepare_texture(tid,1,nullptr,{wh, wh},GL_LUMINANCE8_ALPHA8,GL_LUMINANCE_ALPHA,false);
+					prepare_texture(tid, 0, nullptr, 0, {wh/2, wh}, GL_RGBA, GL_RGBA, false);
+					prepare_texture(tid, 1, nullptr, 0, {wh, wh}, GL_LUMINANCE8_ALPHA8, GL_LUMINANCE_ALPHA, false);
 				}
 				textures[tid].wh = wh;
 			}
 
 			if (frame_format ==raw_format::yuv444) {
-				prepare_texture(tid,0,PLANE_RAW_DATA(frame,0), {w, h},3,GL_RGB,true);
+				prepare_texture(tid, 0, PLANE_RAW_DATA(frame,0), PLANE_SIZE(frame,0), {w, h},GL_RGB,GL_RGB,true);
 			} else {
-				prepare_texture(tid, 0, PLANE_RAW_DATA(frame,0), {w/2, h}, 4, GL_RGBA, true);
-				prepare_texture(tid, 1, PLANE_RAW_DATA(frame,0), {w, h}, GL_LUMINANCE8_ALPHA8, GL_LUMINANCE_ALPHA, true);
+				prepare_texture(tid, 0, PLANE_RAW_DATA(frame,0), PLANE_SIZE(frame,0), {w/2, h}, GL_RGBA, GL_RGBA, true);
+				prepare_texture(tid, 1, PLANE_RAW_DATA(frame,0), PLANE_SIZE(frame,0), {w, h}, GL_LUMINANCE8_ALPHA8, GL_LUMINANCE_ALPHA, true);
 			}
 			fs_color_get = std::move(get_yuv_shader(frame_format));
 		}break;
@@ -261,12 +289,12 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, 
 		case raw_format::yuv444p:{
 			if (wh != textures[tid].wh) {
 				for (int i=0;i<3;++i) {
-					prepare_texture(tid,i,nullptr,{wh/fi.planes[i].sub_x, wh/fi.planes[i].sub_y} ,GL_LUMINANCE8,GL_LUMINANCE,false);
+					prepare_texture(tid,i,nullptr, 0, {wh/fi.planes[i].sub_x, wh/fi.planes[i].sub_y} ,GL_LUMINANCE8,GL_LUMINANCE,false);
 				}
 				textures[tid].wh = wh;
 			}
 			for (int i=0;i<3;++i) {
-				prepare_texture(tid,i,PLANE_RAW_DATA(frame,i),{w/fi.planes[i].sub_x,
+				prepare_texture(tid,i,PLANE_RAW_DATA(frame,i), PLANE_SIZE(frame,i),{w/fi.planes[i].sub_x,
 						h/fi.planes[i].sub_y},GL_LUMINANCE8,GL_LUMINANCE,true);
 			}
 			fs_color_get = shaders::fs_get_yuv_planar;
@@ -399,10 +427,9 @@ void GL::draw_texture(index_t tid)
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
 
-	if (textures[tid].shader) {
-		textures[tid].shader->use();
-		textures[tid].bind_texture_units();
-	}
+	textures[tid].shader->use();
+	textures[tid].bind_texture_units();
+
 	glActiveTexture(GL_TEXTURE0);
 	glBegin(GL_QUADS);
 	double tex_coords[][2]={	{0.0f, 1.0f},
@@ -468,7 +495,7 @@ void GL::restore_state()
  * 		equal to downsampling Y. Fastest method.
  *
  */
-bool GL::prepare_texture(index_t tid, unsigned texid, uint8_t *data,
+bool GL::prepare_texture(index_t tid, unsigned texid, const uint8_t *data, size_t data_size,
 		resolution_t resolution, GLenum tex_mode, GLenum data_mode, bool update,
 		GLenum data_type)
 {
@@ -481,6 +508,14 @@ bool GL::prepare_texture(index_t tid, unsigned texid, uint8_t *data,
 		log[log::error]<< "Error " << err << " while binding texture" <<"\n";
 		return false;
 	}
+	if (data) {
+		size_t min_image_size = resolution.width*resolution.height*get_pixel_size(data_mode, data_type);
+		if (min_image_size && (data_size < min_image_size)) {
+			log[log::error] << "Not enough data to update texture";
+			return false;
+		}
+	}
+
 	if (!update) {
 		glTexImage2D(GL_TEXTURE_2D, 0, tex_mode, resolution.width, resolution.height, 0, data_mode, data_type, 0);
 	} else {

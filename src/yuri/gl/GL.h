@@ -120,11 +120,11 @@ public:
 	static void save_state();
 	static void restore_state();
 	void enable_depth();
-	bool prepare_texture(index_t tid, unsigned texid, uint8_t *data,
+	bool prepare_texture(index_t tid, unsigned texid, const uint8_t *data, size_t data_size,
 			resolution_t resolution, GLenum tex_mode, GLenum data_mode, bool update,
 			GLenum data_type = GL_UNSIGNED_BYTE);
 	bool finish_frame();
-	core::pFrame read_window(geometry_t geometry);
+	static core::pFrame read_window(geometry_t geometry);
 	log::Log log;
 
 	std::string transform_shader;
