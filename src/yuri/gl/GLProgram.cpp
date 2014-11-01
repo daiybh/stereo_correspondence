@@ -73,7 +73,7 @@ void GLProgram::stop()
 	glUseProgram(0);
 }
 
-bool GLProgram::load_shader_file(GLuint type,std::string source)
+bool GLProgram::load_shader_file(GLuint type, const std::string& source)
 {
 	GLShader shader(log,type);
 	log[log::debug]<<"Loading shader" <<"\n";
@@ -89,7 +89,7 @@ bool GLProgram::load_shader_file(GLuint type,std::string source)
 	return attach_shader(shader);
 }
 
-bool GLProgram::load_shader(GLuint type,std::string source)
+bool GLProgram::load_shader(GLuint type, const std::string& source)
 {
 	GLShader shader(log,type);
 	log[log::debug]<<"Loading shader" << "\n";
@@ -107,11 +107,11 @@ bool GLProgram::load_shader(GLuint type,std::string source)
 	return attach_shader(shader);
 }
 
-void GLProgram::bind_attrib(GLuint index, std::string name)
+void GLProgram::bind_attrib(GLuint index, const std::string& name)
 {
 	glBindAttribLocation(program,index,name.c_str());
 }
-GLint GLProgram::get_uniform(std::string name)
+GLint GLProgram::get_uniform(const std::string& name)
 {
 	return glGetUniformLocation(program,const_cast<const char *>(name.c_str()));
 }
@@ -119,6 +119,15 @@ void GLProgram::set_uniform_sampler(GLint id, GLint value)
 {
 	return glUniform1i(id,value);
 }
+void GLProgram::set_uniform_float(GLint id, GLfloat value)
+{
+	return glUniform1f(id,value);
+}
+void GLProgram::set_uniform_int(GLint id, GLint value)
+{
+	return glUniform1i(id,value);
+}
+
 }
 
 }

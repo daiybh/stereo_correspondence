@@ -25,8 +25,8 @@ class GLShader {
 public:
 	GLShader(log::Log &log_,GLenum type);
 	virtual ~GLShader() noexcept;
-	bool load_file(std::string filename);
-	bool load(std::string text);
+	bool load_file(const std::string& filename);
+	bool load(const std::string& text);
 	bool compile();
 	GLuint get_shader();
 private:

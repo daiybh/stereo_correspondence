@@ -20,14 +20,16 @@ public:
 	GLProgram(log::Log &log_);
 	virtual ~GLProgram();
 	bool attach_shader(GLShader &shader);
-	bool load_shader(GLuint type,std::string source);
-	bool load_shader_file(GLuint type,std::string source);
+	bool load_shader(GLuint type, const std::string& source);
+	bool load_shader_file(GLuint type,const std::string& source);
 	bool link();
 	void use();
 	void stop();
-	void bind_attrib(GLuint index, std::string name);
-	GLint get_uniform(std::string name);
+	void bind_attrib(GLuint index, const std::string& name);
+	GLint get_uniform(const std::string& name);
 	void set_uniform_sampler(GLint id, GLint value);
+	void set_uniform_float(GLint id, GLfloat value);
+	void set_uniform_int(GLint id, GLint value);
 private:
 	log::Log log;
 	GLuint program;

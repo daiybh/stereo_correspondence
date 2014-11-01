@@ -34,7 +34,7 @@ GLShader::~GLShader() noexcept
 }
 
 
-bool GLShader::load_file(std::string filename)
+bool GLShader::load_file(const std::string& filename)
 {
 	ifstream file;
 	file.open(filename.c_str(),ios::binary);
@@ -48,7 +48,7 @@ bool GLShader::load_file(std::string filename)
 	file.read(shader_text, shader_size);
 	return true;
 }
-bool GLShader::load(std::string text)
+bool GLShader::load(const std::string& text)
 {
 	shader_size = text.size();
 	if (!shader_size) return false;
