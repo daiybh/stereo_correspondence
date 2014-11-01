@@ -65,6 +65,10 @@ core::Parameters SDLWindow::configure()
 	p["opengl"]["Use OpenGL for rendering"]=false;
 	p["default_keys"]["Enable default key events. This includes ESC for quit and f for fullscreen toggle."]=true;
 	p["window_title"]["Window title"]=std::string();
+#ifdef YURI_SDL_OPENGL
+	p["transform_shader"]["Shader to use for texture transformations"]=std::string();
+	p["color_shader"]["Shader to use for color mapping"]=std::string();
+#endif
 	return p;
 }
 
@@ -90,9 +94,12 @@ sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")")
 		set_supported_formats(supported_formats);
 	} else {
 		set_supported_formats(gl_.get_supported_formats());
+		gl_.transform_shader = transform_shader_;
+		gl_.color_map_shader = color_map_shader_;
+		log[log::info] << "Set ts to:\n"<<transform_shader_;
 	}
 #else
-	if (!use_gl_) {
+	if (use_gl_) {
 		log[log::warning] << "Enabled OpenGL, but OpenGL support is not enabled. Disabling";
 		use_gl_ = false;
 	}
@@ -209,6 +216,12 @@ bool SDLWindow::set_param(const core::Parameter& param)
 	} else if (iequals(param.get_name(), "window_title")) {
 		std::string new_title = param.get<std::string>();
 		if (!new_title.empty()) title_=std::move(new_title);
+#if YURI_SDL_OPENGL
+	} else if (param.get_name() == "transform_shader") {
+		transform_shader_ = param.get<std::string>();
+	} else if (param.get_name() == "color_shader") {
+		color_map_shader_ = param.get<std::string>();
+#endif
 	} else return base_type::set_param(param);
 	return true;
 }

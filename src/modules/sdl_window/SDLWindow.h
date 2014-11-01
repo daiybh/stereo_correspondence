@@ -48,6 +48,8 @@ private:
 	std::string		title_;
 #ifdef  YURI_SDL_OPENGL
 	gl::GL				gl_;
+	std::string			transform_shader_;
+	std::string			color_map_shader_;
 #endif
 };
 
