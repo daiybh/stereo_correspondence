@@ -59,7 +59,7 @@ vec4 map_color(vec4 color, vec2 coord) {
 
 std::string get_version_string(int version)
 {
-	return "#" + std::to_string(version) + "\n";
+	return "#version " + std::to_string(version) + "\n";
 }
 std::string prepare_vs(int version = 120)
 {
