@@ -53,6 +53,7 @@ private:
 	bool				flip_x_;
 	bool				flip_y_;
 	bool				read_back_;
+	int					shader_version_;
 #endif
 };
 

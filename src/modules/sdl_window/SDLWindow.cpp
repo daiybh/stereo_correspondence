@@ -71,6 +71,7 @@ core::Parameters SDLWindow::configure()
 	p["flip_x"]["Flip around vertical axis"]=false;
 	p["flip_y"]["Flip around horizontal axis"]=false;
 	p["read_back"]["Read drawn picture back and output it"]=false;
+	p["shader_version"]["Version of GLSL. Keep on default version unless you need higher."]=120;
 #endif
 	return p;
 }
@@ -83,7 +84,7 @@ overlay_{nullptr,[](SDL_Overlay*o){if(o) SDL_FreeYUVOverlay(o);}},
 rgb_surface_{nullptr,[](SDL_Surface*s){ if(s) SDL_FreeSurface(s);}},
 sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")")
 #ifdef YURI_SDL_OPENGL
-,gl_(log)
+,gl_(log),flip_x_(false),flip_y_(false),read_back_(false),shader_version_(120)
 #endif
 {
 	IOTHREAD_INIT(parameters)
@@ -99,6 +100,7 @@ sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")")
 		set_supported_formats(gl_.get_supported_formats());
 		gl_.transform_shader = transform_shader_;
 		gl_.color_map_shader = color_map_shader_;
+		gl_.shader_version_ = shader_version_;
 		if (read_back_) {
 			resize(1,1);
 		}
@@ -237,6 +239,8 @@ bool SDLWindow::set_param(const core::Parameter& param)
 		flip_y_ = param.get<bool>();
 	} else if (param.get_name() == "read_back") {
 		read_back_ = param.get<bool>();
+	} else if (param.get_name() == "shader_version") {
+		shader_version_ = param.get<int>();
 #endif
 	} else return base_type::set_param(param);
 	return true;
