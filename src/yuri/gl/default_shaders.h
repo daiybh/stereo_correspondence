@@ -57,10 +57,19 @@ vec4 map_color(vec4 color, vec2 coord) {
 }
 )XXX";
 
-std::string prepare_fs(const std::string& get_color, const std::string& transform, const std::string& color_map)
+std::string get_version_string(int version)
 {
-
-	return 	fs_head +
+	return "#" + std::to_string(version) + "\n";
+}
+std::string prepare_vs(int version = 120)
+{
+	return get_version_string(version) +
+		   vs_default;
+}
+std::string prepare_fs(const std::string& get_color, const std::string& transform, const std::string& color_map, int version = 120)
+{
+	return	get_version_string(version) +
+			fs_head +
 			get_color +
 			(transform.empty()?fs_default_transform:transform) +
 			"\n" +

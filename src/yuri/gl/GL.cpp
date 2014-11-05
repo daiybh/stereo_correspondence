@@ -154,6 +154,7 @@ std::vector<format_t> GL::get_supported_formats()
 }
 
 GL::GL(log::Log &log_):log(log_),
+		shader_version_(120),
 		corners{{-1.0f, -1.0f,
 				1.0f, -1.0f,
 				1.0f, 1.0f,
@@ -372,6 +373,7 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, 
 		*/
 		default:
 			log[log::warning] << "Frame with unsupported format! (" << fi.name << ")";
+			break;
 	}
 	/*
 	log[log::debug] << "Generated texture " << wh << "x" << wh << " from image " <<
@@ -381,8 +383,8 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, 
 	if (!fs_color_get.empty()) {
 		if (textures[tid].shader_update_needed(frame->get_format())) {
 			textures[tid].finish_update(log, frame->get_format(),
-								shaders::vs_default,
-								shaders::prepare_fs(fs_color_get, transform_shader, color_map_shader));
+								shaders::prepare_vs(shader_version_),
+								shaders::prepare_fs(fs_color_get, transform_shader, color_map_shader, shader_version_));
 		}
 	}
 

@@ -130,6 +130,7 @@ public:
 
 	std::string transform_shader;
 	std::string color_map_shader;
+	int shader_version_;
 	std::array<float,8> corners;
 	static mutex big_gpu_lock;
 	static std::vector<format_t> get_supported_formats();
