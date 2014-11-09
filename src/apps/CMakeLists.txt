@@ -7,7 +7,13 @@ ENDIF()
 
 include_directories ( ${Boost_INCLUDE_DIRS})
 link_directories (${Boost_LIBRARY_DIRS})
-add_executable(yuri2 yuri2.cpp)
+
+add_executable(yuri2 	yuri/yuri_listings.cpp 
+						yuri/yuri_listings.h
+						yuri/try_conversion.cpp
+						yuri/try_conversion.h
+						yuri2.cpp)
+
 IF(WIN32)
 target_link_libraries ( yuri2 ${LIBNAME})
 ELSE()
