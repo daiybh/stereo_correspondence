@@ -27,6 +27,10 @@ SET(YURI_SRC ${YURI_SRC}
 	core/utils/DirectoryBrowser.cpp core/utils/DirectoryBrowser.h
 	core/utils/MultiRegister.h
 	
+	core/thread/builder_utils.cpp
+	core/thread/builder_utils.h
+	core/thread/GenericBuilder.cpp
+	core/thread/GenericBuilder.h
 	core/thread/XmlBuilder.cpp
 	core/thread/XmlBuilder.h
 	
