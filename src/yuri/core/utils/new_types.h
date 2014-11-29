@@ -223,6 +223,43 @@ inline std::istream& operator>>(std::istream& is, geometry_t& geo)
 	return is;
 }
 
+struct fraction_t {
+	int64_t num;
+	int64_t denom;
+	constexpr double get_value() const { return static_cast<double>(static_cast<long double>(num)/static_cast<long double>(denom));};
+	constexpr bool valid() const { return denom != 0;};
+};
+
+constexpr fraction_t operator! (const fraction_t& frac) {
+	return {frac.denom, frac.num};
+}
+
+inline std::ostream& operator<<(std::ostream& os, const fraction_t& frac)
+{
+	os << frac.num << "/" << frac.denom;
+	return os;
+}
+inline std::istream& operator>>(std::istream& is, fraction_t& frac)
+{
+	fraction_t f{0,1};
+	char c0;
+	is >> f.num;
+	if (is.fail()) return is;
+	if (is.eof() || is.peek() != '/') {
+		frac = f;
+		return is;
+	}
+	is >> c0;
+	if (is.fail() || c0 != '/') {
+		is.setstate(std::ios::failbit);
+		return is;
+	}
+	is >> f.denom;
+	if (!is.fail()) frac = f;
+	return is;
+}
+
+
 }
 
 
