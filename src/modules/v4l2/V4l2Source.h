@@ -97,7 +97,7 @@ protected:
 	std::vector<int> supported_formats;
 	size_t number_of_inputs;
 
-	size_t fps;
+	fraction_t fps;
 	duration_t frame_duration;
 };
 

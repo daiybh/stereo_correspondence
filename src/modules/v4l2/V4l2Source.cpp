@@ -113,7 +113,7 @@ core::Parameters V4l2Source::configure()
 	p["input"]["Input number to tune"]=0;
 	p["illumination"]["Enable illumination (if present)"]=true;
 	p["combine"]["Combine frames (if camera sends them in chunks)."]=false;
-	p["fps"]["Number of frames per secod requested. The closes LOWER supported value will be selected."]=30;
+	p["fps"]["Number of frames per secod requested. The closes LOWER supported value will be selected."]=fraction_t{30,1};
 	return p;
 }
 
@@ -121,7 +121,7 @@ core::Parameters V4l2Source::configure()
 V4l2Source::V4l2Source(log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters)
 	:core::IOThread(log_,parent,0,1,std::string("v4l2")),resolution({640,480}),
 	 method(METHOD_NONE),buffers(0),no_buffers(0),buffer_free(0),
-	 combine_frames(false),number_of_inputs(0),frame_duration(0)
+	 combine_frames(false),number_of_inputs(0),fps{30,1},frame_duration(0)
 {
 	IOTHREAD_INIT(parameters)
 	try {
@@ -531,7 +531,7 @@ bool V4l2Source::set_param(const core::Parameter &param)
 	} else if (param.get_name() == "combining") {
 		combine_frames = param.get<bool>();
 	} else if (param.get_name() == "fps") {
-		fps= param.get<yuri::size_t>();
+		fps= param.get<yuri::fraction_t>();
 	} else return IOThread::set_param(param);
 	return true;
 
@@ -789,22 +789,23 @@ bool V4l2Source::set_frame_params()
 	strp.parm.capture.readbuffers=0;
 	strp.parm.capture.extendedmode=0;
 	strp.parm.capture.capturemode=0;
-	strp.parm.capture.timeperframe.numerator=1;
-	strp.parm.capture.timeperframe.denominator=fps;
+	// Numerator and denominator are switched because we're changing it from FPS to frame time...
+	strp.parm.capture.timeperframe.numerator=fps.denom;
+	strp.parm.capture.timeperframe.denominator=fps.num;
 	if (xioctl(fd,VIDIOC_S_PARM,&strp)<0) {
-		log[log::error] << "Failed to set frame parameters (FPS)" << std::endl;
+		log[log::error] << "Failed to set frame parameters (FPS)";
 		//throw exception::Exception ("Failed to set input format!");
 		return false;
 	}
 	if (xioctl(fd,VIDIOC_G_PARM,&strp)<0) {
-		log[log::error] << "Failed to verify frame parameters (FPS)" << std::endl;
+		log[log::error] << "Failed to verify frame parameters (FPS)";
 		//throw exception::Exception ("Failed to set input format!");
 		return false;
 	}
-	log[log::info] << "Driver reports current frame interval " << strp.parm.capture.timeperframe.numerator << "/"
-			<< strp.parm.capture.timeperframe.denominator << "s" << std::endl;
-	if (strp.parm.capture.timeperframe.denominator!=0) {
-		frame_duration = 1_s*strp.parm.capture.timeperframe.numerator/strp.parm.capture.timeperframe.denominator;
+	fps = {strp.parm.capture.timeperframe.numerator,strp.parm.capture.timeperframe.denominator};
+	log[log::info] << "Driver reports current frame interval " << !fps << "s";
+	if (fps.valid() || fps.num!=0) {
+		frame_duration = 1_s/fps.get_value();
 	} else {
 		frame_duration = 0_s;
 	}
@@ -893,6 +894,7 @@ bool V4l2Source::enable_iluminator()
 	}
 	return true;
 }
+
 
 }
 }
