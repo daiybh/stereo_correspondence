@@ -201,7 +201,10 @@ IF(libavcodec_FOUND)
     SET (SRC ${SRC} 
              UVLibav.cpp
     		 UVLibav.h
+    		 UVLibavDecompress.cpp
+    		 UVLibavDecompress.h
     		 ${UV_BASE}/video_compress/libavcodec.c
+    		 ${UV_BASE}/video_decompress/libavcodec.c
     #		 ${UV_BASE}/gl_context.c
     #		 ${UV_BASE}/glx_common.c
     		 )
