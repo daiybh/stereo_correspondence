@@ -44,11 +44,16 @@ public:
 	 */
 	bool connect(const std::string& url, port_t port);
 	/*!
-	 * Checks whether there are any data waiting to be read
+	 * Checks whether there are any data waiting to be read. Function returns immediately.
 	 * @return true if subsequent call to receive_datagram() will succeed.
 	 */
 	bool data_available();
 
+	/*!
+	 * Waits for data to become available, for at most @em duration.
+	 * @param duration Maximum time to wait for data
+	 * @return true if there are data available for read, false if timeout occurred before data become available.
+	 */
 	bool wait_for_data(duration_t duration);
 
 	/*!
@@ -57,14 +62,41 @@ public:
 	 */
 	bool ready_to_send();
 
+	/*!
+	 * Sends datagram
+	 * @param data Pinter to data to send
+	 * @param size size of datagram in bytes
+	 * @return number of bytes really sent
+	 */
 	size_t send_datagram(const uint8_t* data, size_t size);
 
+	/*!
+	 * Convenience wrapper for sending datagrams with different underlying type
+	 * @param data Pointer to beginning of data
+	 * @param size Number of elements of type @em T
+	 * @return number of elements really sent
+	 */
 	template<typename T>
 	size_t send_datagram(const T* data, size_t size);
+	/*!
+	 * Convenience wrapper for sending data stored in a std::vector (sends whole vector)
+	 * @param data Vector to be sent
+	 * @return number of elements sent
+	 */
 	template<typename T>
 	size_t send_datagram(const std::vector<T>& data);
+	/*!
+	 * Convenience wrapper for sending data stored in a std::array (sends whole array)
+	 * @param data Array to be sent
+	 * @return number of elements sent
+	 */
 	template<typename T, size_t N>
 	size_t send_datagram(const std::array<T, N>& data);
+	/*!
+	 * Convenience wrapper for sending data stored in a std::basic_string (sends whole string)
+	 * @param data String to send
+	 * @return number of characters sent
+	 */
 	template<typename T>
 	size_t send_datagram(const std::basic_string<T>& data);
 
@@ -76,13 +108,30 @@ public:
 	 */
 	size_t receive_datagram(uint8_t* data, size_t size);
 
+	/*!
+	 * Convenience wrapper, receives datagram into an array with different underlying type
+	 * @param data Beginning of data
+	 * @param size Number of elements available
+	 * @return Number of elements stored
+	 */
 	template<typename T>
 	size_t receive_datagram(T* data, size_t size);
+	/*!
+	 * Convenience wrapper, receives datagram into a std::vector
+	 * Note that the method does NOT modify the length of the vector!
+	 *
+	 * @param data The vector to write to
+	 * @return Number of elements stored
+	 */
 	template<typename T>
 	size_t receive_datagram(std::vector<T>& data);
+	/*!
+	 * Convenience wrapper, receives datagram into a std::array
+	 * @param data The array to write to
+	 * @return Number of elements stored
+	 */
 	template<typename T, size_t N>
 	size_t receive_datagram(std::array<T, N>& data);
-
 
 protected:
 	log::Log	log;
