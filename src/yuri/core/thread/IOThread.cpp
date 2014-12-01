@@ -23,40 +23,10 @@ namespace core
 Parameters IOThread::configure()
 {
 	Parameters p = ThreadBase::configure();//;// = make_shared<Parameters>();
-//	p["cpu"]["Bind thread to cpu"]=-1;
 	p["fps_stats"]["Print out_ current FPS every n frames. Set to 0 to disable."]=0;
-//	p["debug"]["Change debug level. value 0 will keep inherited value from app, lower numbers will reduce verbosity, higher numbers will make output more verbose."]=0;
-//	p["node_name"]["Name of the node. Will be filled automatically by the builder."]="";
 	return p;
 }
 
-
-
-//pBasicFrame IOThread::allocate_frame_from_memory(const yuri::ubyte_t *mem, yuri::size_t size, bool large)
-//{
-//	pBasicFrame f = make_shared<BasicFrame>(1);
-//	if (!large) {
-//		f->set_plane(0,mem,size);
-//	} else {
-//		FixedMemoryAllocator::memory_block_t block = FixedMemoryAllocator::get_block(size);
-//		assert(block.first);
-//		std::copy(mem,mem+size,&block.first[0]);
-//		f->get_plane(0).set(block.first,size,block.second);
-//	}
-//	return f;
-//}
-//pBasicFrame IOThread::allocate_frame_from_memory(const plane_t& mem)
-//{
-//	pBasicFrame f = make_shared<BasicFrame>(1);
-//	f->set_plane(0,mem);
-//	return f;
-//}
-//
-//pBasicFrame IOThread::duplicate_frame(pBasicFrame frame)
-//{
-//	pBasicFrame f = frame->get_copy();
-//	return f;
-//}
 
 IOThread::IOThread(const log::Log &log_,pwThreadBase parent, position_t inp, position_t outp, const std::string& id):
 	ThreadBase(log_, parent, id), in_ports_(inp), out_ports_(outp),latency_(200_ms),
