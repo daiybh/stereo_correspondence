@@ -33,7 +33,6 @@ Delay::Delay(const log::Log &log_, core::pwThreadBase parent, const core::Parame
 core::IOThread(log_,parent,1,1,std::string("delay"))
 {
 	IOTHREAD_INIT(parameters)
-	set_latency(1_ms);
 }
 
 Delay::~Delay() noexcept
@@ -65,7 +64,9 @@ void Delay::run()
 				}
 			}
 		}
-		wait_for(next_wait);
+		if (!pipes_data_available()) {
+			wait_for(next_wait);
+		}
 	}
 }
 
