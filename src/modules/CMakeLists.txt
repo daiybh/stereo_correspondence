@@ -1,4 +1,13 @@
+#################################################################
+# Stable modules
+#################################################################
+ 
 
+#################################################################
+# Unstable modules
+#################################################################
+
+IF(YURI_BUILD_UNSTABLE_MODULES) 
 
 add_subdirectory(anaglyph)
 add_subdirectory(audio_noise)
@@ -126,7 +135,7 @@ IF(${ImageMagick_Magick++_FOUND})
 ENDIF()
 
 pkg_check_modules(OpenCV opencv>=2.3.0)
-IF(${OpenCV_FOUND})
+IF(${OpenCV_FOUND} AND NOT YURI_DISABLE_OPENCV)
 	add_subdirectory(opencv)
 	#add_subdirectory(opencv_calib)
 ENDIF()
@@ -157,6 +166,8 @@ pkg_check_modules(VORBISENC vorbisenc)
 IF(${VORBISENC_FOUND})
     add_subdirectory(vorbis)
 ENDIF()
+
+
 
 pkg_check_modules(X264 x264)
 IF(${X264_FOUND})
@@ -201,6 +212,25 @@ IF(NOT YURI_DISABLE_ULTRAGRID)
 	add_subdirectory(ultragrid)	
 ENDIF()
 #############
+
+
+ENDIF(YURI_BUILD_UNSTABLE_MODULES)
+
+
+#################################################################
+# Experimental modules
+#################################################################
+
+IF(YURI_BUILD_EXPERIMENTAL_MODULES) 
+
+
+ENDIF(YURI_BUILD_EXPERIMENTAL_MODULES)
+
+#################################################################
+#################################################################
+# UNSUPPORTED MODULES, SHOULD NEVER BE COMPILED UNLESS PORTED
+#################################################################
+#################################################################
 
 
 IF(FALSE)
