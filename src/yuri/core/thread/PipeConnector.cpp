@@ -17,7 +17,6 @@ namespace core {
 PipeConnector::PipeConnector(pwPipeNotifiable thread)
 	:notifiable_(thread)
 {
-
 }
 
 PipeConnector::PipeConnector(pPipe pipe, pwPipeNotifiable thread)
@@ -26,13 +25,23 @@ PipeConnector::PipeConnector(pPipe pipe, pwPipeNotifiable thread)
 	set_pipe(pipe);
 }
 
-PipeConnector::PipeConnector(const PipeConnector& orig):
-		notifiable_(orig.notifiable_),pipe_(orig.pipe_)
+PipeConnector::PipeConnector(PipeConnector&& rhs) noexcept:
+		notifiable_(std::move(rhs.notifiable_)),pipe_(std::move(rhs.pipe_))
 {
-
+	rhs.pipe_={};
 }
 PipeConnector::~PipeConnector() noexcept {
 	set_notifications(pwPipeNotifiable());
+}
+
+PipeConnector&	PipeConnector::operator=(PipeConnector&& rhs) noexcept
+{
+	// Disconnect notifications if needed
+	if (pipe_ != rhs.pipe_) set_notifications(pwPipeNotifiable());
+	pipe_ = std::move(rhs.pipe_);
+	notifiable_=std::move(notifiable_);
+	rhs.pipe_={};
+	return *this;
 }
 
 pPipe PipeConnector::operator ->()

@@ -23,8 +23,11 @@ public:
 								PipeConnector() = default;
 								PipeConnector(pwPipeNotifiable thread);
 								PipeConnector(pPipe pipe, pwPipeNotifiable thread);
-								PipeConnector(const PipeConnector& orig);
+								PipeConnector(PipeConnector&& orig) noexcept;
+								PipeConnector(const PipeConnector&) = delete;
 								~PipeConnector() noexcept;
+	PipeConnector&				operator=(PipeConnector&&) noexcept;
+	PipeConnector&				operator=(const PipeConnector&) = delete;
 	pPipe			 			operator->();
 	void 						reset();
 	void 						reset(pPipe pipe);

@@ -106,22 +106,24 @@ void IOThread::do_connect_in(position_t index, pPipe pipe)
 	if (in_[index]) {
 		log[log::debug] << "Disconnecting already connected pipe from in port " << index << "\n";
 	}
-	in_[index]=PipeConnector(pipe,dynamic_pointer_cast<PipeNotifiable>(get_this_ptr()));
+	auto notify_ptr = dynamic_pointer_cast<PipeNotifiable>(get_this_ptr());
+	in_[index]=PipeConnector(pipe,notify_ptr);
 	active_pipes_ = std::accumulate(in_.begin(), in_.end(), 0, [](const size_t& ap, const PipeConnector&p){return ap + (p?1:0);});
-//	set_fds();
-
 }
+
 void IOThread::connect_out(position_t index, pPipe pipe)
 {
 	TRACE_METHOD
 	do_connect_out(index, pipe);
 }
+
 void IOThread::do_connect_out(position_t index, pPipe pipe)
 {
 	TRACE_METHOD
 	if (index < 0 || index >= do_get_no_out_ports()) throw std::out_of_range("Output pipe out of Range");
 	if (out_[index]) log[log::debug] << "Disconnecting already connected pipe from out port " << index << "\n";
-	out_[index]=PipeConnector(pipe,dynamic_pointer_cast<PipeNotifiable>(get_this_ptr()));
+	// Output pipe should NOT send notifications!
+	out_[index]=PipeConnector(pipe,{});
 }
 bool IOThread::push_frame(position_t index, pFrame frame)
 {
