@@ -21,12 +21,14 @@ SET(SRC
 	UVVideoSource.h
 	UVVideoCompress.cpp
 	UVVideoCompress.h
+	UVVideoDecompress.cpp
+	UVVideoDecompress.h
 	
         #${UV_BASE}/capture_filter.c
 	${UV_BASE}/debug.c
 	${UV_BASE}/host.c
 	${UV_BASE}/lib_common.c
-#	${UV_BASE}/messaging.cpp
+	${UV_BASE}/messaging.cpp
 	#${UV_BASE}/module.c
 	${UV_BASE}/ntp.c
 	${UV_BASE}/pdb.c
@@ -94,9 +96,11 @@ SET(SRC
 	${UV_BASE}/utils/config_file.c
 	${UV_BASE}/utils/list.c
 	#${UV_BASE}/utils/message_queue.cpp
+	${UV_BASE}/utils/misc.c
 	${UV_BASE}/utils/resource_manager.cpp
 	${UV_BASE}/utils/packet_counter.cpp
 	${UV_BASE}/utils/ring_buffer.c
+	${UV_BASE}/utils/timed_message.cpp
 	${UV_BASE}/utils/worker.cpp
 	
         #${UV_BASE}/vo_postprocess.c
