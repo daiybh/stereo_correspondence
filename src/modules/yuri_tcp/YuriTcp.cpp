@@ -32,7 +32,11 @@ core::socket::StreamSocket(log_)
 {
 	socket_ = ::socket(AF_INET, SOCK_STREAM, 0);
 }
+YuriTcp::YuriTcp(const log::Log &log_, int sock):
+core::socket::StreamSocket(log_),socket_(sock)
+{
 
+}
 YuriTcp::~YuriTcp() noexcept
 {
 	::close(socket_);
@@ -78,6 +82,17 @@ bool YuriTcp::do_connect(const std::string& address, uint16_t port)
 	auto info = get_addr_info(address, port);
 	if (!info) return false;
 	return ::connect(socket_, info->ai_addr, info->ai_addrlen) == 0;
+}
+
+bool YuriTcp::do_listen()
+{
+	return ::listen(socket_, 10) == 0;
+}
+core::socket::pStreamSocket YuriTcp::do_accept()
+{
+	auto sock = ::accept(socket_, nullptr, 0);
+	if (sock > 0) return std::make_shared<YuriTcp>(log, sock);
+	return {};
 }
 
 bool YuriTcp::do_data_available()

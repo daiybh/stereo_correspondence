@@ -32,6 +32,8 @@ public:
 
 	bool bind(const std::string& url, uint16_t port);
 	bool connect(const std::string& address, uint16_t port);
+	bool listen();
+	pStreamSocket accept();
 
 	size_t send_data(const uint8_t* data, size_t data_size);
 
@@ -88,6 +90,9 @@ private:
 	virtual size_t do_receive_data(uint8_t* data, size_t size) = 0;
 	virtual bool do_bind(const std::string& url, uint16_t port) = 0;
 	virtual bool do_connect(const std::string& address, uint16_t port) = 0;
+	virtual bool do_listen() = 0;
+	virtual pStreamSocket do_accept() = 0;
+
 	virtual bool do_data_available() = 0;
 	virtual bool do_wait_for_data(duration_t duration) = 0;
 
