@@ -8,6 +8,7 @@
  */
 
 #include "WebServer.h"
+#include "WebResource.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/socket/StreamSocketGenerator.h"
 #include "yuri/version.h"
@@ -25,6 +26,7 @@ core::Parameters WebServer::configure()
 	p.set_description("WebServer");
 	p["socket"]["Socket implementation"]="yuri_tcp";
 	p["address"]["Server address"]="0.0.0.0";
+	p["server_name"]["Server name"]="webserver";
 	p["port"]["Server port"]=8080;
 	return p;
 }
@@ -59,19 +61,36 @@ namespace {
 	}
 
 	const std::string crlf = "\r\n";
+
+	std::map<std::string, pwWebServer> active_servers;
+	std::mutex active_servers_mutex;
+	void register_server(const std::string& name, pwWebServer server)
+	{
+		std::unique_lock<std::mutex> _(active_servers_mutex);
+		active_servers[name]=server;
+	}
+}
+
+
+pwWebServer find_webserver(const std::string& name)
+{
+	std::unique_lock<std::mutex> _(active_servers_mutex);
+	auto it = active_servers.find(name);
+	if (it == active_servers.end()) return {};
+	return it->second;
 }
 
 
 WebServer::WebServer(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("webserver")),socket_impl_("yuri_tcp"),
-address_("0.0.0.0"),port_(8080)
+core::IOThread(log_,parent,1,1,std::string("webserver")),server_name_("webserver"),
+socket_impl_("yuri_tcp"),address_("0.0.0.0"),port_(8080)
 {
 	IOTHREAD_INIT(parameters)
 	socket_ = core::StreamSocketGenerator::get_instance().generate(socket_impl_, log);
 	log[log::info] << "Created socket";
 	if (!socket_->bind(address_.c_str(), port_)) {
-		log[log::fatal] << "Failed to bind to port 8080";
-		throw exception::InitializationFailed("Failed to bind to port 8080");
+		log[log::fatal] << "Failed to bind to "+address_+":"+std::to_string(port_);
+		throw exception::InitializationFailed("Failed to bind to port "+address_+":"+std::to_string(port_));
 	}
 	if (!socket_->listen()) {
 		log[log::fatal] << "Failed to start listening";
@@ -85,7 +104,7 @@ WebServer::~WebServer() noexcept
 
 void WebServer::run()
 {
-
+	register_server(server_name_, std::dynamic_pointer_cast<WebServer>(get_this_ptr()));
 	while (still_running()) {
 		if (socket_->wait_for_data(100_ms)) {
 			auto client = socket_->accept();
@@ -94,19 +113,30 @@ void WebServer::run()
 				auto request = read_request(client);
 				if (!still_running()) break;
 				log[log::info] << "Requested URL: " << request.url;
-				response_t response = {
-						http_code::ok,
-						{{"Content-Type", "text/plain"},
-						{"Server", yuri::yuri_version}},
-						yuri::yuri_version};
-				reply_to_client(client, response);
+				response_t response = find_response(request);
+
+				reply_to_client(client, std::move(response));
 			} catch (std::runtime_error& e) {
 				log[log::warning] << "Failed to process connection (" << e.what()<<")";
 			}
 			log[log::info] << "Closing connection";
+			client.reset();
 		}
 	}
 }
+
+
+response_t WebServer::find_response(request_t request)
+{
+	for (const auto& route: routing_) {
+		boost::regex url(route.routing_spec);
+		if (boost::regex_match(request.url.cbegin(), request.url.cend(), url)) {
+			return route.resource->process_request(request);
+		}
+	}
+	return {http_code::not_found,{},{}};
+}
+
 namespace {
 bool data_finished(const std::string& data)
 {
@@ -159,8 +189,22 @@ request_t WebServer::read_request(core::socket::pStreamSocket& client)
 	return request;
 }
 
-bool WebServer::reply_to_client(core::socket::pStreamSocket& client, const response_t& response)
+namespace {
+inline void fill_header_if_needed(response_t& response, const std::string& name, const std::string& value)
 {
+	auto it = response.parameters.find(name);
+	if (it == response.parameters.end()) {
+		response.parameters[name]=value;
+	}
+}
+
+}
+
+bool WebServer::reply_to_client(core::socket::pStreamSocket& client, response_t response)
+{
+	fill_header_if_needed(response,"Content-Length",std::to_string(response.data.size()));
+	fill_header_if_needed(response,"Server",std::string("yuri-")+yuri_version);
+
 	client->send_data(prepare_response_header(response.code));
 	client->send_data(crlf);
 	for (const auto&param: response.parameters) {
@@ -174,6 +218,12 @@ bool WebServer::reply_to_client(core::socket::pStreamSocket& client, const respo
 	return true;
 }
 
+
+bool WebServer::register_resource (const std::string& routing_spec, pWebResource resource)
+{
+	routing_.push_back({routing_spec, std::move(resource)});
+	return true;
+}
 bool WebServer::set_param(const core::Parameter& param)
 {
 	if (param.get_name() == "socket") {

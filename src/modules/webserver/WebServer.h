@@ -51,24 +51,46 @@ struct response_t
 	std::string data;
 };
 
+
+class WebServer;
+using pWebServer = std::shared_ptr<WebServer>;
+using pwWebServer = std::weak_ptr<WebServer>;
+
+class WebResource;
+using pWebResource = std::shared_ptr<WebResource>;
+using pwWebResource= std::weak_ptr<WebResource>;
+
+pwWebServer find_webserver(const std::string& name);
+
+struct route_record {
+	std::string routing_spec;
+	pWebResource resource;
+};
+
 class WebServer: public core::IOThread
 {
 public:
+
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
 	WebServer(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~WebServer() noexcept;
+	bool register_resource (const std::string& routing_spec, pWebResource);
 private:
 	
 	virtual void run();
 	virtual bool set_param(const core::Parameter& param);
 
 	request_t read_request(core::socket::pStreamSocket& socket);
-	bool reply_to_client(core::socket::pStreamSocket& socket, const response_t& response);
+	bool reply_to_client(core::socket::pStreamSocket& socket, response_t response);
+	response_t find_response(request_t request);
+	std::string server_name_;
 	std::string socket_impl_;
 	std::string address_;
 	uint16_t port_;
+
 	core::socket::pStreamSocket socket_;
+	std::vector<route_record> routing_;
 
 
 };

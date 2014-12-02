@@ -4,7 +4,12 @@ SET (MODULE webserver)
 # Set all source files module uses
 SET (SRC WebServer.cpp
 		 WebServer.h
-		 register.cpp)
+		 WebResource.cpp
+		 WebResource.h
+		 WebStaticResource.cpp
+		 WebStaticResource.h
+		 register.cpp
+		 )
 
 
  
