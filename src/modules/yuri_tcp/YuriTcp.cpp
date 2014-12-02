@@ -31,6 +31,8 @@ YuriTcp::YuriTcp(const log::Log &log_):
 core::socket::StreamSocket(log_)
 {
 	socket_ = ::socket(AF_INET, SOCK_STREAM, 0);
+	int i = 1;
+	setsockopt(socket_,SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i));
 }
 YuriTcp::YuriTcp(const log::Log &log_, int sock):
 core::socket::StreamSocket(log_),socket_(sock)
@@ -39,6 +41,7 @@ core::socket::StreamSocket(log_),socket_(sock)
 }
 YuriTcp::~YuriTcp() noexcept
 {
+	::shutdown(socket_,2);
 	::close(socket_);
 }
 
