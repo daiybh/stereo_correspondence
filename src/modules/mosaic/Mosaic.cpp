@@ -86,7 +86,7 @@ void process_mosaic(const uint8_t* data_in, uint8_t* data_out, size_t linesize, 
 			if (corner.y > img.y) continue;
 			if (corner.x + tile_size < 0) continue;
 			if (corner.y + tile_size < 0) continue;
-			coordinates_t dest_lu {std::max(corner.x, 0L), std::max(corner.y, 0L)};
+			coordinates_t dest_lu {std::max<position_t>(corner.x, 0L), std::max<position_t>(corner.y, 0L)};
 			coordinates_t dest_rb {std::min<position_t>(corner.x+ tile_size, img.x), std::min<position_t>(corner.y + tile_size, img.y)};
 
 			switch (bpp) {
