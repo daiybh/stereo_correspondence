@@ -135,7 +135,7 @@ IF(${ImageMagick_Magick++_FOUND})
 ENDIF()
 
 pkg_check_modules(OpenCV opencv>=2.3.0)
-IF(${OpenCV_FOUND} AND NOT YURI_DISABLE_OPENCV)
+IF(OpenCV_FOUND AND NOT YURI_DISABLE_OPENCV)
 	add_subdirectory(opencv)
 	#add_subdirectory(opencv_calib)
 ENDIF()
