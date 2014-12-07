@@ -12,7 +12,9 @@
 
 #include "yuri/core/thread/IOThread.h"
 #include "yuri/core/socket/StreamSocket.h"
-
+#include <future>
+#include <deque>
+#include <condition_variable>
 namespace yuri {
 namespace webserver {
 
@@ -42,6 +44,7 @@ struct request_t
 {
 	std::string url;
 	parameters_t parameters;
+	core::socket::pStreamSocket client;
 };
 
 struct response_t
@@ -51,6 +54,11 @@ struct response_t
 	std::string data;
 };
 
+
+struct client_info_t {
+	core::socket::pStreamSocket socket_;
+	std::future<response_t> response_;
+};
 
 class WebServer;
 using pWebServer = std::shared_ptr<WebServer>;
@@ -67,6 +75,8 @@ struct route_record {
 	pWebResource resource;
 };
 
+using f_request_t = std::future<request_t>;
+
 class WebServer: public core::IOThread
 {
 public:
@@ -81,9 +91,14 @@ private:
 	virtual void run();
 	virtual bool set_param(const core::Parameter& param);
 
-	request_t read_request(core::socket::pStreamSocket& socket);
+	request_t read_request(core::socket::pStreamSocket socket);
 	bool reply_to_client(core::socket::pStreamSocket& socket, response_t response);
 	response_t find_response(request_t request);
+
+	void response_thread();
+	void push_request(f_request_t request);
+	f_request_t pop_request();
+
 	std::string server_name_;
 	std::string socket_impl_;
 	std::string address_;
@@ -92,6 +107,10 @@ private:
 	core::socket::pStreamSocket socket_;
 	std::vector<route_record> routing_;
 
+	std::deque<f_request_t> requests_;
+	std::mutex request_mutex_;
+
+	std::condition_variable request_notify_;
 
 };
 

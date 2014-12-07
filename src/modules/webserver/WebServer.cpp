@@ -52,6 +52,19 @@ namespace {
 		{http_code::service_unavailable, "Service Unavailable"}
 	};
 
+	const std::string default_header =
+R"XXX(	<head>
+		<meta name="generator" constent="yuri"/>
+	</head>
+)XXX";
+	const std::string default_footer = std::string{"powered by yuri-"}+yuri_version;
+
+
+	const std::map<http_code, std::string> default_contents = {
+			{http_code::not_found, std::string{"<html>\n"}+default_header+"<body>\n<h1>Not found</h1>\n"+default_footer+"\n</html>"},
+			{http_code::server_error, std::string{"<html>\n"}+default_header+"<body>\n<h1>Not found</h1>\n"+default_footer+"\n</html>"},
+	};
+
 	std::string prepare_response_header(http_code code)
 	{
 		std::string header = "HTTP/1.1 " + std::to_string(static_cast<int>(code)) + " ";
@@ -60,6 +73,14 @@ namespace {
 		return header + it->second;
 	}
 
+	std::string get_default_contents(http_code code)
+	{
+		auto it = default_contents.find(code);
+		if (it == default_contents.end()) {
+			return R"XXX()XXX";
+		}
+		return it->second;
+	}
 	const std::string crlf = "\r\n";
 
 	std::map<std::string, pwWebServer> active_servers;
@@ -105,24 +126,18 @@ WebServer::~WebServer() noexcept
 void WebServer::run()
 {
 	register_server(server_name_, std::dynamic_pointer_cast<WebServer>(get_this_ptr()));
+	log[log::info] << "Starting worker thread";
+	auto req_thread = std::thread{[&](){response_thread();}};
+
 	while (still_running()) {
-		if (socket_->wait_for_data(100_ms)) {
+		if (socket_->wait_for_data(get_latency())) {
 			auto client = socket_->accept();
 			log[log::info] << "Connection accepted";
-			try {
-				auto request = read_request(client);
-				if (!still_running()) break;
-				log[log::info] << "Requested URL: " << request.url;
-				response_t response = find_response(request);
-
-				reply_to_client(client, std::move(response));
-			} catch (std::runtime_error& e) {
-				log[log::warning] << "Failed to process connection (" << e.what()<<")";
-			}
-			log[log::info] << "Closing connection";
-			client.reset();
+			push_request(std::async(std::launch::async, [=]()mutable{return read_request(client);}));
 		}
 	}
+	log[log::info] << "Joining worker thread";
+	req_thread.join();
 }
 
 
@@ -131,11 +146,70 @@ response_t WebServer::find_response(request_t request)
 	for (const auto& route: routing_) {
 		boost::regex url(route.routing_spec);
 		if (boost::regex_match(request.url.cbegin(), request.url.cend(), url)) {
-			return route.resource->process_request(request);
+			try {
+				return route.resource->process_request(request);
+			}
+			catch (std::runtime_error& e) {
+				log[log::info] << "Returning 500 for URL " << request.url << " ("<<e.what()<<")";
+				return {http_code::server_error,{},get_default_contents(http_code::not_found)};
+			}
 		}
 	}
-	return {http_code::not_found,{},{}};
+	log[log::info] << "Returning 404 for URL " << request.url;
+	return {http_code::not_found,{},get_default_contents(http_code::not_found)};
 }
+
+void WebServer::response_thread()
+{
+	log[log::info] << "Helper thread started";
+	while(still_running()) {
+		auto fr = pop_request();
+		if (fr.valid()) {
+			try {
+				auto status = fr.wait_for(std::chrono::microseconds(get_latency()));
+				if (status != std::future_status::ready) {
+					push_request(std::move(fr));
+				} else {
+					auto request = fr.get();
+					log[log::info] << "Requested URL: " << request.url;
+					response_t response = find_response(request);
+					reply_to_client(request.client, std::move(response));
+				}
+			} catch (std::runtime_error& e) {
+				log[log::warning] << "Failed to process connection (" << e.what()<<")";
+			}
+		}
+	}
+	log[log::info] << "Helper thread ending";
+}
+
+void WebServer::push_request(f_request_t request)
+{
+	std::unique_lock<std::mutex> _(request_mutex_);
+	requests_.push_back(std::move(request));
+	// This could be sub-optimal, but it makes the logic easier...
+	request_notify_.notify_all();
+}
+f_request_t WebServer::pop_request()
+{
+	std::unique_lock<std::mutex> lock(request_mutex_);
+	// Don't wait for variable, if there's data ready...
+	if (!requests_.empty()) {
+		auto r = std::move(requests_.front());
+		requests_.pop_front();
+		return std::move(r);
+	}
+	// No data available, so wait for a notification or timeout
+	request_notify_.wait_for(lock, std::chrono::microseconds(get_latency()));
+	if (!requests_.empty()) {
+		auto r = std::move(requests_.front());
+		requests_.pop_front();
+		return std::move(r);
+	}
+	// No data even after timeout, nothing to return
+	return {};
+}
+
 
 namespace {
 bool data_finished(const std::string& data)
@@ -151,16 +225,17 @@ bool data_finished(const std::string& data)
 
 
 }
-request_t WebServer::read_request(core::socket::pStreamSocket& client)
+request_t WebServer::read_request(core::socket::pStreamSocket client)
 {
-	request_t request;
+	request_t request {{},{},client};
 	std::vector<char> data(0);
 	data.resize(1024);
 	std::string request_string;
 
 	while(!data_finished(request_string) && still_running()) {
-		if (client->wait_for_data(10_ms)) {
+		if (client->wait_for_data(get_latency())) {
 			auto read = client->receive_data(data);
+			if (!read) throw std::runtime_error("Failed to read data");
 			request_string.append(data.begin(), data.begin()+read);
 		}
 	}
