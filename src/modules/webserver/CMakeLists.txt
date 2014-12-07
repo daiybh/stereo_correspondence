@@ -4,6 +4,8 @@ SET (MODULE webserver)
 # Set all source files module uses
 SET (SRC WebServer.cpp
 		 WebServer.h
+		 WebPageGenerator.cpp
+		 WebPageGenerator.h
 		 WebResource.cpp
 		 WebResource.h
 		 WebStaticResource.cpp

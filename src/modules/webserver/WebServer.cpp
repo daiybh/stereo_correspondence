@@ -9,6 +9,7 @@
 
 #include "WebServer.h"
 #include "WebResource.h"
+#include "WebPageGenerator.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/socket/StreamSocketGenerator.h"
 #include "yuri/version.h"
@@ -32,55 +33,6 @@ core::Parameters WebServer::configure()
 }
 
 namespace {
-	const std::map<http_code, std::string> common_codes = {
-		{http_code::continue_ , "Continue"},
-		{http_code::ok, "OK"},
-		{http_code::created, "Created"},
-		{http_code::accepted, "Accepted"},
-		{http_code::no_content, "No content"},
-		{http_code::partial, "Partial"},
-		{http_code::moved, "Moved Permanently"},
-		{http_code::found, "Found"},
-		{http_code::see_other, "See Other"},
-		{http_code::not_modified, "Not Modified"},
-		{http_code::bad_request, "Bad Request"},
-		{http_code::unauthorized, "Unauthorized"},
-		{http_code::forbidden, "Forbidden"},
-		{http_code::not_found, "Not Found"},
-		{http_code::gone, "Gone"},
-		{http_code::server_error, "Internal Server Error"},
-		{http_code::service_unavailable, "Service Unavailable"}
-	};
-
-	const std::string default_header =
-R"XXX(	<head>
-		<meta name="generator" constent="yuri"/>
-	</head>
-)XXX";
-	const std::string default_footer = std::string{"powered by yuri-"}+yuri_version;
-
-
-	const std::map<http_code, std::string> default_contents = {
-			{http_code::not_found, std::string{"<html>\n"}+default_header+"<body>\n<h1>Not found</h1>\n"+default_footer+"\n</html>"},
-			{http_code::server_error, std::string{"<html>\n"}+default_header+"<body>\n<h1>Not found</h1>\n"+default_footer+"\n</html>"},
-	};
-
-	std::string prepare_response_header(http_code code)
-	{
-		std::string header = "HTTP/1.1 " + std::to_string(static_cast<int>(code)) + " ";
-		auto it = common_codes.find(code);
-		if (it == common_codes.end()) return header + "UNKNOWN";
-		return header + it->second;
-	}
-
-	std::string get_default_contents(http_code code)
-	{
-		auto it = default_contents.find(code);
-		if (it == default_contents.end()) {
-			return R"XXX()XXX";
-		}
-		return it->second;
-	}
 	const std::string crlf = "\r\n";
 
 	std::map<std::string, pwWebServer> active_servers;
@@ -151,12 +103,12 @@ response_t WebServer::find_response(request_t request)
 			}
 			catch (std::runtime_error& e) {
 				log[log::info] << "Returning 500 for URL " << request.url << " ("<<e.what()<<")";
-				return {http_code::server_error,{},get_default_contents(http_code::not_found)};
+				return get_default_response(http_code::server_error);
 			}
 		}
 	}
 	log[log::info] << "Returning 404 for URL " << request.url;
-	return {http_code::not_found,{},get_default_contents(http_code::not_found)};
+	return get_default_response(http_code::not_found);
 }
 
 void WebServer::response_thread()
