@@ -121,8 +121,9 @@ public:
 private:
 	virtual pBasicEventProducer find_producer(const std::string& name) = 0;
 	virtual pBasicEventConsumer find_consumer(const std::string& name) = 0;
-	virtual bool 				do_process_event(const std::string& event_name, const event::pBasicEvent& event);
+
 protected:
+	virtual bool 				do_process_event(const std::string& event_name, const event::pBasicEvent& event);
 	bool 						parse_routes(const std::string& text);
 	pBasicEvent 				parse_const(const std::string& text);
 
