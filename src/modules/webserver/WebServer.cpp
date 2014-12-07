@@ -97,17 +97,17 @@ response_t WebServer::find_response(request_t request)
 {
 	for (const auto& route: routing_) {
 		boost::regex url(route.routing_spec);
-		if (boost::regex_match(request.url.cbegin(), request.url.cend(), url)) {
+		if (boost::regex_match(request.url.path.cbegin(), request.url.path.cend(), url)) {
 			try {
 				return route.resource->process_request(request);
 			}
 			catch (std::runtime_error& e) {
-				log[log::info] << "Returning 500 for URL " << request.url << " ("<<e.what()<<")";
+				log[log::info] << "Returning 500 for URL " << request.url.path << " ("<<e.what()<<")";
 				return get_default_response(http_code::server_error, e.what());
 			}
 		}
 	}
-	log[log::info] << "Returning 404 for URL " << request.url;
+	log[log::info] << "Returning 404 for URL " << request.url.path;
 	return get_default_response(http_code::not_found);
 }
 
@@ -123,7 +123,7 @@ void WebServer::response_thread()
 					push_request(std::move(fr));
 				} else {
 					auto request = fr.get();
-					log[log::info] << "Requested URL: " << request.url;
+					log[log::info] << "Requested URL: " << request.url.path;
 					response_t response = find_response(request);
 					reply_to_client(request.client, std::move(response));
 				}
@@ -198,7 +198,7 @@ request_t WebServer::read_request(core::socket::pStreamSocket client)
 	auto start = request_string.cbegin();
 	const auto end = request_string.cend();
 	if (regex_search(start, end, what, url_line, boost::match_default)) {
-		request.url=std::string(what[1].first, what[1].second);
+		request.url=parse_url(std::string(what[1].first, what[1].second));
 		start = what[0].second;
 		boost::regex param_line("([^:]+):([^\r\n]*)\r?\n");
 		boost::sregex_iterator i(start, end, param_line, boost::match_default);

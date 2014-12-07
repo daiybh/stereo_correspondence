@@ -31,6 +31,7 @@ std::string get_page_content(webpage_t);
 webpage_t get_default_page_stub();
 response_t get_default_response (http_code code, const std::string& reason = {});
 
+url_t parse_url(const std::string& uri, const std::string& host = {});
 
 /* ****************************************************
  *                      Tags                          *

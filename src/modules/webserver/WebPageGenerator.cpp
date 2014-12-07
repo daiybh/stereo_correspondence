@@ -7,6 +7,7 @@
 
 #include "WebPageGenerator.h"
 #include "yuri/version.h"
+#include <boost/regex.hpp>
 namespace yuri {
 namespace webserver {
 
@@ -98,6 +99,38 @@ response_t get_default_response (http_code code, const std::string& reason)
 
 }
 
+
+url_t parse_url(const std::string& uri, const std::string& host)
+{
+	url_t url;
+	url.host = host;
+	boost::regex url_line("^([^?&#]+)");
+
+	boost::smatch what;
+	auto start = uri.cbegin();
+	const auto end = uri.cend();
+	if (regex_search(start, end, what, url_line, boost::match_default)) {
+		url.path = std::string(what[1].first, what[1].second);
+		auto next = what[0].second;
+		boost::regex param_line ("[?&]([^&=#]+)(=([^&#]+))?");
+		boost::sregex_iterator i(next, end, param_line, boost::match_default);
+		boost::sregex_iterator j;
+		while (i != j) {
+			const auto& res = *i;
+			const std::string param_name (res[1].first, res[1].second);
+			url.params[param_name]=std::string(res[3].first,res[3].second);
+//			for (auto p:res) {
+//				std::cout << "match: " <<std::string(p.first,p.second) << "\n";
+//			}
+			++i;
+		}
+
+
+	}
+
+
+	return url;
+}
 
 
 namespace tag {

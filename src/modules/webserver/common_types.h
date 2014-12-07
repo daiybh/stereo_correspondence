@@ -35,9 +35,17 @@ enum class http_code {
 
 
 using parameters_t = std::map<std::string, std::string>;
+
+struct url_t {
+	std::string path;
+	std::string host;
+	parameters_t params;
+	std::string anchor;
+};
+
 struct request_t
 {
-	std::string url;
+	url_t url;
 	parameters_t parameters;
 	core::socket::pStreamSocket client;
 };
@@ -48,6 +56,8 @@ struct response_t
 	parameters_t parameters;
 	std::string data;
 };
+
+
 
 }
 }
