@@ -14,14 +14,6 @@ namespace yuri {
 namespace webserver {
 
 
-//core::Parameters WebResource::configure()
-//{
-//	core::Parameters p = core::IOThread::configure();
-//	p.set_description("WebResource");
-//	p["server"]["Server name"]="webserver";
-//	return p;
-//}
-//
 WebResource::WebResource(const log::Log &log_):log_res(log_),registered_(false)
 {
 }
@@ -43,12 +35,7 @@ bool WebResource::register_to_server(const std::string& server_name, const std::
 
 webserver::response_t WebResource::process_request(const webserver::request_t& request)
 {
-	try {
-		return do_process_request(request);
-	}
-	catch (std::exception& e) {
-		return {http_code::server_error,{},e.what()};
-	}
+	return do_process_request(request);
 }
 
 } /* namespace webresource */

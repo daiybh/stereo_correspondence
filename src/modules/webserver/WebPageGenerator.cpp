@@ -83,12 +83,15 @@ webpage_t get_default_page_stub()
 	};
 	return page;
 }
-response_t get_default_response (http_code code)
+response_t get_default_response (http_code code, const std::string& reason)
 {
 	response_t response {code,{},{}};
 	webpage_t page = get_default_page_stub();
 	page.title=get_code_name(code)+" ("+yuri_version_full+")";
 	page.body=tag::header(std::to_string(http_code_to_int(code))+" "+get_code_name(code));
+	if (!reason.empty()) {
+		page.body += tag::line_break()+reason+tag::line_break();
+	}
 
 	response.data=get_page_content(std::move(page));
 	return response;
@@ -110,6 +113,10 @@ std::string gen_tag(const std::string& tag, const std::string& text)
 std::string gen_inline_tag(const std::string& tag, const std::string& text)
 {
 	return "<"+tag+">"+text+"</"+tag+">\n";
+}
+std::string gen_empty_tag(const std::string& tag)
+{
+	return "</"+tag+">\n";
 }
 
 std::string indent(const std::string& text, const std::string& ind)
@@ -160,6 +167,11 @@ std::string small(const std::string& text)
 {
 	return gen_inline_tag("small",text);
 }
+std::string line_break()
+{
+	return gen_empty_tag("br");
+}
+
 
 }
 

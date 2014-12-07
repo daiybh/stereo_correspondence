@@ -103,7 +103,7 @@ response_t WebServer::find_response(request_t request)
 			}
 			catch (std::runtime_error& e) {
 				log[log::info] << "Returning 500 for URL " << request.url << " ("<<e.what()<<")";
-				return get_default_response(http_code::server_error);
+				return get_default_response(http_code::server_error, e.what());
 			}
 		}
 	}
