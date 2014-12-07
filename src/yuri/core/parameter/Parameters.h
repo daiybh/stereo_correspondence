@@ -25,7 +25,9 @@ public:
 
 								Parameters(const std::string& description = std::string()):description_(description) {}
 								Parameters(Parameters&& rhs):params_(std::move(rhs.params_)),description_(std::move(rhs.description_)){}
+								Parameters(const Parameters& rhs):params_(rhs.params_),description_(rhs.description_){}
 	Parameters&					operator=(Parameters&& rhs) {params_=std::move(rhs.params_);description_ = std::move(rhs.description_);return *this;}
+	Parameters&					operator=(const Parameters& rhs) {params_=rhs.params_;description_ = rhs.description_;return *this;}
 								~Parameters() noexcept {}
 	Parameters&					merge(const Parameters& rhs);
 	Parameters&					merge(Parameters&& rhs);
