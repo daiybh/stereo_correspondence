@@ -26,7 +26,7 @@ template<
 class BasicIOThreadGenerator: public core::BasicGenerator<T, KeyType,
 		core::Parameters,
 		core::generator::DefaultErrorPolicy,
-		function<shared_ptr<T> (yuri::log::Log &log, yuri::core::pwThreadBase parent, const core::Parameters& params)>>
+		std::function<std::shared_ptr<T> (yuri::log::Log &log, yuri::core::pwThreadBase parent, const core::Parameters& params)>>
 {
 public:
 	BasicIOThreadGenerator(){}

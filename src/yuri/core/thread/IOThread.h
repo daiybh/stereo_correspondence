@@ -38,7 +38,7 @@ namespace core
 #define IOTHREAD_GENERATOR(cls) yuri::core::pIOThread cls::generate(yuri::log::Log &log,yuri::core::pwThreadBase parent, const yuri::core::Parameters& parameters)\
 { \
 	try { \
-		return make_shared<cls>(log,parent,parameters); \
+		return std::make_shared<cls>(log,parent,parameters); \
 	} \
 	catch (std::exception &e) { \
 		throw yuri::exception::InitializationFailed(std::string(#cls) + " constructor failed: " + e.what()); \
