@@ -8,6 +8,8 @@ SET (SRC WebServer.cpp
 		 WebPageGenerator.h
 		 WebResource.cpp
 		 WebResource.h
+		 WebImageResource.cpp
+		 WebImageResource.h
 		 WebStaticResource.cpp
 		 WebStaticResource.h
 		 register.cpp
