@@ -1,8 +1,11 @@
-/*
- * base64.cpp
+/*!
+ * @file 		base64.cpp
+ * @author 		Zdenek Travnicek <travnicek@cesnet.cz>
+ * @date		08.12.2014
+ * @copyright	CESNET, z.s.p.o, 2014
+ * 				Distributed under modified BSD or GPL License,
+ * 				see /doc/LICENSE.txt for details
  *
- *  Created on: 8. 12. 2014
- *      Author: neneko
  */
 
 #include "base64.h"

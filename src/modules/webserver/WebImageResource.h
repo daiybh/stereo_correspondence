@@ -1,8 +1,11 @@
-/*
- * WebImageResource.h
+/*!
+ * @file 		WebImageResource.h
+ * @author 		Zdenek Travnicek <travnicek@cesnet.cz>
+ * @date		07.12.2014
+ * @copyright	CESNET, z.s.p.o, 2014
+ * 				Distributed under modified BSD or GPL License,
+ * 				see /doc/LICENSE.txt for details
  *
- *  Created on: Dec 7, 2014
- *      Author: neneko
  */
 
 #ifndef SRC_MODULES_WEBSERVER_WEBIMAGERESOURCE_H_

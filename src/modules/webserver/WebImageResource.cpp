@@ -3,10 +3,10 @@
  * @author 		Zdenek Travnicek <travnicek@cesnet.cz>
  * @date		07.12.2014
  * @copyright	CESNET, z.s.p.o, 2014
- * 				Distributed BSD License
+ * 				Distributed under modified BSD or GPL License,
+ * 				see /doc/LICENSE.txt for details
  *
  */
-
 #include "WebImageResource.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/compressed_frame_types.h"

@@ -1,8 +1,11 @@
-/*
- * base64.h
+/*!
+ * @file 		base64.h
+ * @author 		Zdenek Travnicek <travnicek@cesnet.cz>
+ * @date		08.12.2014
+ * @copyright	CESNET, z.s.p.o, 2014
+ * 				Distributed under modified BSD or GPL License,
+ * 				see /doc/LICENSE.txt for details
  *
- *  Created on: 8. 12. 2014
- *      Author: neneko
  */
 
 #ifndef SRC_MODULES_WEBSERVER_BASE64_H_

@@ -1,8 +1,11 @@
-/*
- * register.cpp
+/*!
+ * @file 		register.cpp
+ * @author 		Zdenek Travnicek <travnicek@cesnet.cz>
+ * @date		01.12.2014
+ * @copyright	CESNET, z.s.p.o, 2014
+ * 				Distributed under modified BSD or GPL License,
+ * 				see /doc/LICENSE.txt for details
  *
- *  Created on: 1. 12. 2014
- *      Author: neneko
  */
 
 #include "WebServer.h"
