@@ -59,16 +59,22 @@ private:
 
 	request_t read_request(core::socket::pStreamSocket socket);
 	bool reply_to_client(core::socket::pStreamSocket& socket, response_t response);
+	response_t auth_response(request_t request);
 	response_t find_response(request_t request);
 
 	void response_thread();
 	void push_request(f_request_t request);
 	f_request_t pop_request();
+	bool authentication_needed();
+	bool verify_authentication(const request_t&);
 
 	std::string server_name_;
 	std::string socket_impl_;
 	std::string address_;
 	uint16_t port_;
+	std::string realm_;
+	std::string user_;
+	std::string pass_;
 
 	core::socket::pStreamSocket socket_;
 	std::vector<route_record> routing_;

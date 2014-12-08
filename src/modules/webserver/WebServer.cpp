@@ -10,6 +10,7 @@
 #include "WebServer.h"
 #include "WebResource.h"
 #include "WebPageGenerator.h"
+#include "base64.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/socket/StreamSocketGenerator.h"
 #include "yuri/version.h"
@@ -29,6 +30,9 @@ core::Parameters WebServer::configure()
 	p["address"]["Server address"]="0.0.0.0";
 	p["server_name"]["Server name"]="webserver";
 	p["port"]["Server port"]=8080;
+	p["realm"]["Realm for HTTP authentication"]="";
+	p["username"]["Username for HTTP authentication"]="";
+	p["password"]["Password for HTTP authentication"]="";
 	return p;
 }
 
@@ -92,9 +96,22 @@ void WebServer::run()
 	req_thread.join();
 }
 
+response_t WebServer::auth_response(request_t request)
+{
+	if (authentication_needed()) {
+		if (!verify_authentication(request)) {
+			auto response = get_default_response(http_code::unauthorized);
+			response.parameters["WWW-Authenticate"]="Basic realm=\"" + realm_ + "\"";
+			return response;
+		}
+	}
+	return find_response(request);
+}
+
 
 response_t WebServer::find_response(request_t request)
 {
+
 	for (const auto& route: routing_) {
 		boost::regex url(route.routing_spec);
 		if (boost::regex_match(request.url.path.cbegin(), request.url.path.cend(), url)) {
@@ -124,7 +141,8 @@ void WebServer::response_thread()
 				} else {
 					auto request = fr.get();
 					log[log::info] << "Requested URL: " << request.url.path;
-					response_t response = find_response(request);
+					//response_t response = find_response(request);
+					response_t response = auth_response(request);
 					reply_to_client(request.client, std::move(response));
 				}
 			} catch (std::runtime_error& e) {
@@ -251,6 +269,47 @@ bool WebServer::register_resource (const std::string& routing_spec, pWebResource
 	routing_.push_back({routing_spec, std::move(resource)});
 	return true;
 }
+
+bool WebServer::authentication_needed()
+{
+	return !realm_.empty();
+}
+bool WebServer::verify_authentication(const request_t& request)
+{
+	auto it = request.parameters.find("Authorization");
+	if (it == request.parameters.end()) return false;
+	boost::regex auth_line ("Basic ([a-zA-Z0-9+/=]+)");
+	boost::smatch what;
+	if (regex_search(it->second.cbegin(), it->second.cend(), what, auth_line, boost::match_default)) {
+		const auto auth_str = std::string(what[1].first, what[1].second);
+		const auto decoded = base64::decode(auth_str);
+		auto idx = decoded.find(':');
+		const auto name = decoded.substr(0,idx);
+		const auto pass = decoded.substr(idx+1);
+//		log[log::info] << "User: " << name << ", pass: " << pass;
+		if (!user_.empty()) {
+			if (user_ != name) {
+				log[log::warning] << "Wrong username!";
+				return false;
+			}
+		}
+		if (!pass_.empty()) {
+			if (pass_ != pass) {
+				log[log::warning] << "Wrong password!";
+				return false;
+			}
+		}
+		if (user_.empty()) {
+			log[log::info] << "Authenticated anonymous user";
+		} else {
+			log[log::info] << "Authenticated user " + user_;
+		}
+		return true;
+	}
+	log[log::warning] << "Failed to parse AUthentication header";
+	return false;
+}
+
 bool WebServer::set_param(const core::Parameter& param)
 {
 	if (param.get_name() == "socket") {
@@ -259,6 +318,12 @@ bool WebServer::set_param(const core::Parameter& param)
 		address_ = param.get<std::string>();
 	} else if (param.get_name() == "port") {
 		port_ = param.get<uint16_t>();
+	} else if (param.get_name() == "username") {
+		user_ = param.get<std::string>();
+	} else if (param.get_name() == "password") {
+		pass_ = param.get<std::string>();
+	} else if (param.get_name() == "realm") {
+		realm_ = param.get<std::string>();
 	} else return core::IOThread::set_param(param);
 	return true;
 }
