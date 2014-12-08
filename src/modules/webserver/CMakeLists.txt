@@ -6,6 +6,8 @@ SET (SRC WebServer.cpp
 		 WebServer.h
 		 WebPageGenerator.cpp
 		 WebPageGenerator.h
+		 base64.cpp
+		 base64.h
 		 WebResource.cpp
 		 WebResource.h
 		 WebImageResource.cpp
