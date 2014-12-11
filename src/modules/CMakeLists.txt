@@ -187,6 +187,10 @@ IF(NOT YURI_DISABLE_GPUJPEG AND GPUJPEG_FOUND)
 	add_subdirectory(gpujpeg)	
 ENDIF()
 
+IF(Boost_REGEX_FOUND)
+    add_subdirectory(artnet)
+ENDIF()
+
 
 #### UV #####
 #IF(NOT YURI_DISABLE_ULTRAGRID)
