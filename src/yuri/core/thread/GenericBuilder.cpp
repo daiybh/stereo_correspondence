@@ -76,13 +76,17 @@ bool GenericBuilder::start_links()
 			return false;
 		}
 		try {
-//			log[log::info] << "Connectin source";
 			source->connect_out(record.source_index, record.pipe);
-//			log[log::info] << "Connectin target";
+		}
+		catch (std::out_of_range& ) {
+			log[log::error] << "Output pipe index out of range: " << record.source_node << ":" << record.source_index;
+			return false;
+		}
+		try {
 			target->connect_in(record.target_index, record.pipe);
 		}
 		catch (std::out_of_range& ) {
-			log[log::error] << "Pipe index out of range";
+			log[log::error] << "Input pipe index out of range: " << record.target_node << ":" << record.target_index;
 			return false;
 		}
 		log[log::debug] << "Pipe " << name << " created successfully";
