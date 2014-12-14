@@ -1,8 +1,8 @@
 /*!
  * @file 		Select.cpp
- * @author 		<Your name>
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
  * @date		15.03.2014
- * @copyright	Institute of Intermedia, 2013
+ * @copyright	Institute of Intermedia, 2014
  * 				Distributed BSD License
  *
  */
@@ -17,14 +17,11 @@ namespace select {
 
 IOTHREAD_GENERATOR(Select)
 
-MODULE_REGISTRATION_BEGIN("select")
-		REGISTER_IOTHREAD("select",Select)
-MODULE_REGISTRATION_END()
 
 core::Parameters Select::configure()
 {
 	core::Parameters p = base_type::configure();
-	p.set_description("Select");
+	p.set_description("Select has single output and multiple inputs. Parameter or event 'index' selects, which input will be passed through.");
 	p["index"]["input to pass through"]=0;
 	return p;
 }
