@@ -80,6 +80,7 @@ private:
 
 	core::socket::pStreamSocket socket_;
 	std::vector<route_record> routing_;
+	std::mutex routing_mutex_;
 
 	std::deque<f_request_t> requests_;
 	std::mutex request_mutex_;

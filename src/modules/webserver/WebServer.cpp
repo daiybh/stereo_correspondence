@@ -112,7 +112,7 @@ response_t WebServer::auth_response(request_t request)
 
 response_t WebServer::find_response(request_t request)
 {
-
+	std::unique_lock<std::mutex> _(routing_mutex_);
 	for (const auto& route: routing_) {
 		boost::regex url(route.routing_spec);
 		if (boost::regex_match(request.url.path.cbegin(), request.url.path.cend(), url)) {
@@ -271,6 +271,7 @@ bool WebServer::reply_to_client(core::socket::pStreamSocket& client, response_t 
 
 bool WebServer::register_resource (const std::string& routing_spec, pWebResource resource)
 {
+	std::unique_lock<std::mutex> _(routing_mutex_);
 	routing_.push_back({routing_spec, std::move(resource)});
 	return true;
 }
