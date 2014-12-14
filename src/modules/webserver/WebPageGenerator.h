@@ -33,6 +33,7 @@ std::string prepare_response_header(http_code code);
 std::string get_page_content(webpage_t);
 webpage_t get_default_page_stub();
 response_t get_default_response (http_code code, const std::string& reason = {});
+response_t get_redirect_response (http_code code, const std::string& location);
 
 url_t parse_url(const std::string& uri, const std::string& host = {});
 
@@ -43,7 +44,7 @@ namespace tag {
 std::string doctype();
 
 std::string gen_tag(const std::string& tag, const std::string& text);
-std::string gen_inline_tag(const std::string& tag, const std::string& text);
+std::string gen_inline_tag(const std::string& tag, const std::string& text, std::map<std::string, std::string> = {});
 std::string gen_empty_tag(const std::string& tag);
 
 std::string indent(const std::string& text, const std::string& ind = "\t");
@@ -57,6 +58,7 @@ std::string title(const std::string& text);
 std::string header(const std::string& text);
 std::string center(const std::string& text);
 std::string small(const std::string& text);
+std::string anchor(const std::string& text);
 
 std::string line_break();
 

@@ -119,6 +119,10 @@ response_t WebServer::find_response(request_t request)
 			try {
 				return route.resource->process_request(request);
 			}
+			catch (redirect_to& redirect) {
+				log[log::info] << "Redirecting to " << redirect.get_location();
+				return get_redirect_response(redirect.get_code(), redirect.get_location());
+			}
 			catch (std::runtime_error& e) {
 				log[log::info] << "Returning 500 for URL " << request.url.path << " ("<<e.what()<<")";
 				return get_default_response(http_code::server_error, e.what());

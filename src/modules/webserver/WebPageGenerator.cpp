@@ -102,6 +102,19 @@ response_t get_default_response (http_code code, const std::string& reason)
 
 }
 
+response_t get_redirect_response (http_code code, const std::string& location)
+{
+	response_t response {code,{},{}};
+	webpage_t page = get_default_page_stub();
+	page.title=get_code_name(code)+" ("+yuri_version_full+")";
+	page.body=tag::header(std::to_string(http_code_to_int(code))+" "+get_code_name(code));
+	if (!location.empty()) {
+		page.body += tag::line_break()+tag::anchor(location)+tag::line_break();
+	}
+	response.parameters["Location"]=location;
+	response.data=get_page_content(std::move(page));
+	return response;
+}
 
 url_t parse_url(const std::string& uri, const std::string& host)
 {
@@ -146,9 +159,13 @@ std::string gen_tag(const std::string& tag, const std::string& text)
 {
 	return "<"+tag+">\n"+indent(text)+"</"+tag+">\n";
 }
-std::string gen_inline_tag(const std::string& tag, const std::string& text)
+std::string gen_inline_tag(const std::string& tag, const std::string& text, std::map<std::string, std::string> params)
 {
-	return "<"+tag+">"+text+"</"+tag+">\n";
+	std::string res = "<"+tag;
+	for (const auto& p: params) {
+		res+=" "+p.first+"=\""+p.second+"\"";
+	}
+	return res+">"+text+"</"+tag+">\n";
 }
 std::string gen_empty_tag(const std::string& tag)
 {
@@ -202,6 +219,10 @@ std::string center(const std::string& text)
 std::string small(const std::string& text)
 {
 	return gen_inline_tag("small",text);
+}
+std::string anchor(const std::string& text)
+{
+	return gen_inline_tag("small",text,{{"href",text}});
 }
 std::string line_break()
 {

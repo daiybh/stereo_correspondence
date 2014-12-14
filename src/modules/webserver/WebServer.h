@@ -14,6 +14,7 @@
 #include "yuri/core/thread/IOThread.h"
 #include "yuri/core/socket/StreamSocket.h"
 #include "common_types.h"
+#include "web_exceptions.h"
 #include <future>
 #include <deque>
 #include <condition_variable>
