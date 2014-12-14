@@ -123,6 +123,8 @@ namespace {
 		if (*first == '@') {
 			node = "@";
 			++first;
+			// We allow both @param and @:param
+			if (*first==':') ++first;
 		} else {
 			node = find_id(first,last);
 			if (node.empty()) return p_token();
