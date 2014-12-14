@@ -96,7 +96,7 @@ struct XmlBuilder::builder_pimpl_t{
 	TiXmlElement* root {nullptr};
 	std::string name;
 	std::string description;
-	std::vector<std::string> routing_info;
+//	std::vector<std::string> routing_info;
 
 
 	std::vector<std::string> module_dirs;
@@ -105,6 +105,7 @@ struct XmlBuilder::builder_pimpl_t{
 	std::map<std::string, event::pBasicEvent> input_events;
 	std::map<std::string, node_record_t> nodes;
 	std::map<std::string, link_record_t> links;
+	std::string routing;
 };
 
 #define VALID(x,msg) if (!(x)) { log[log::error] << msg; throw exception::InitializationFailed(msg); }
@@ -280,7 +281,8 @@ void XmlBuilder::builder_pimpl_t::process_routing()
 	TiXmlElement * node = nullptr;
 	if((node = dynamic_cast<TiXmlElement*>(root->IterateChildren(event_tag, node)))) {
 		const char* text = node->GetText();
-		if (text) routing_info.push_back(text);
+		//if (text) routing_info.push_back(text);
+		if (text) routing.append(text);
 	}
 }
 
@@ -334,7 +336,7 @@ XmlBuilder::XmlBuilder(const log::Log& log_, pwThreadBase parent, const Paramete
 	pimpl_->process_links(); // TODO process all links
 	pimpl_->verify_links();
 	log[log::info] << "File seems to be parsed successfully";
-	set_graph(pimpl_->nodes, pimpl_->links);
+	set_graph(pimpl_->nodes, pimpl_->links, pimpl_->routing);
 
 }
 XmlBuilder::XmlBuilder(const log::Log& log_, pwThreadBase parent, const std::string& filename, const std::vector<std::string>& argv, bool parse_only)
@@ -361,7 +363,7 @@ XmlBuilder::XmlBuilder(const log::Log& log_, pwThreadBase parent, const std::str
 	pimpl_->process_links(); // TODO process all links
 	pimpl_->verify_links();
 	log[log::info] << "File seems to be parsed successfully";
-	set_graph(pimpl_->nodes, pimpl_->links);
+	set_graph(pimpl_->nodes, pimpl_->links, pimpl_->routing);
 }
 
 XmlBuilder::~XmlBuilder() noexcept {}

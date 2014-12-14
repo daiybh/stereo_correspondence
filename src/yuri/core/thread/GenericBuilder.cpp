@@ -30,10 +30,11 @@ void GenericBuilder::run()
 	IOThread::run();
 }
 
-void GenericBuilder::set_graph(node_map nodes, link_map links)
+void GenericBuilder::set_graph(node_map nodes, link_map links, std::string routing)
 {
 	nodes_ = std::move(nodes);
 	links_ = std::move(links);
+	routing_=std::move(routing);
 }
 
 bool GenericBuilder::prepare_nodes()
@@ -90,10 +91,7 @@ bool GenericBuilder::start_links()
 }
 bool GenericBuilder::prepare_routing()
 {
-
-//	for (auto& ri: routing_info) {
-//		if (!parse_routes(ri)) log[log::warning] << "Failed to parse routes";
-//	}
+	if (!routing_.empty() && !parse_routes(routing_)) log[log::warning] << "Failed to parse routes ("<<routing_<<")";
 	return true;
 }
 

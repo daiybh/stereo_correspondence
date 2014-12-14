@@ -51,11 +51,12 @@ public:
 	virtual bool 				do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 
 protected:
-	void set_graph(node_map nodes, link_map links);
+	void set_graph(node_map nodes, link_map links, std::string routing = {});
 
 private:
 	node_map nodes_;
 	link_map links_;
+	std::string routing_;
 
 	bool start_links();
 	bool prepare_nodes();
