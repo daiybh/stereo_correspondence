@@ -16,6 +16,9 @@
 namespace yuri {
 namespace webserver {
 
+/*!
+ * Class representing HTTP redirect
+ */
 class redirect_to: public std::runtime_error
 {
 public:
@@ -28,6 +31,19 @@ private:
 	const std::string location_;
 	const http_code code_;
 };
+
+
+/*!
+ * Class representing http not found (404).
+ * WebResources whould use this to signal web server that they can't process the request
+ */
+class not_found: public std::runtime_error
+{
+public:
+	not_found(const std::string& url)
+		:runtime_error(url+" not found") {}
+};
+
 
 }
 }

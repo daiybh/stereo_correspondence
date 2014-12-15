@@ -123,6 +123,10 @@ response_t WebServer::find_response(request_t request)
 				log[log::info] << "Redirecting to " << redirect.get_location();
 				return get_redirect_response(redirect.get_code(), redirect.get_location());
 			}
+			catch (not_found&) {
+				// This isn't fatal, there may be another resource publishing this path.
+				continue;
+			}
 			catch (std::runtime_error& e) {
 				log[log::info] << "Returning 500 for URL " << request.url.path << " ("<<e.what()<<")";
 				return get_default_response(http_code::server_error, e.what());
