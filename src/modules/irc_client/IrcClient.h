@@ -49,6 +49,7 @@ private:
 	irc_message					parse_response(const std::string& resp);
 	void						process_incomming_message(const std::string& msg);
 	core::socket::pStreamSocket	socket_;
+	std::string					socket_impl_;
 	std::string					server_;
 	uint16_t					port_;
 	std::string					nickname_;
