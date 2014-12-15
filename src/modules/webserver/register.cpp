@@ -11,6 +11,7 @@
 #include "WebServer.h"
 #include "WebStaticResource.h"
 #include "WebImageResource.h"
+#include "WebControlResource.h"
 #include "yuri/core/Module.h"
 
 namespace yuri {
@@ -22,6 +23,7 @@ MODULE_REGISTRATION_BEGIN("webserver")
 		REGISTER_IOTHREAD("webserver",WebServer)
 		REGISTER_IOTHREAD("web_static",WebStaticResource)
 		REGISTER_IOTHREAD("web_image",WebImageResource)
+		REGISTER_IOTHREAD("web_control",WebControlResource)
 
 MODULE_REGISTRATION_END()
 
