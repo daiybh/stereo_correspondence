@@ -16,6 +16,8 @@ SET (SRC WebServer.cpp
 		 WebStaticResource.h
 		 WebControlResource.cpp
 		 WebControlResource.h
+		 WebDirectoryResource.cpp
+		 WebDirectoryResource.h
 		 web_exceptions.h
 		 register.cpp
 		 )

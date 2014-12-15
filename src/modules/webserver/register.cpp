@@ -8,6 +8,7 @@
  *
  */
 
+#include <modules/webserver/WebDirectoryResource.h>
 #include "WebServer.h"
 #include "WebStaticResource.h"
 #include "WebImageResource.h"
@@ -24,6 +25,7 @@ MODULE_REGISTRATION_BEGIN("webserver")
 		REGISTER_IOTHREAD("web_static",WebStaticResource)
 		REGISTER_IOTHREAD("web_image",WebImageResource)
 		REGISTER_IOTHREAD("web_control",WebControlResource)
+		REGISTER_IOTHREAD("web_directory",WebDirectoryResource)
 
 MODULE_REGISTRATION_END()
 
