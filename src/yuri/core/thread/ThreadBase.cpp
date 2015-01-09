@@ -233,12 +233,13 @@ void ThreadBase::do_join_thread(pwThreadBase child, bool /*check*/) noexcept
 	TRACE_METHOD
 	log[debug] << "Joining child (" <<children_.size() << ")" << "\n";
 //	if (check) {
-	if (children_.find(child)==children_.end()) {
+	auto&& it = children_.find(child);
+	if (it == children_.end()) {
 		log[warning] << "Trying to join unregistered child. " << "\n";
 		//delete thread;
 		return;
 	}
-	auto& child_ref = children_[child];
+	auto& child_ref = it->second;
 	if (!child_ref.finished) {
 		do_finish_thread(child,false);
 	}
