@@ -102,7 +102,7 @@ bool ImageMagickSource::set_param(const core::Parameter& param)
 {
 	if (param.get_name() == "format") {
 		format_ = core::raw_format::parse_format(param.get<std::string>());
-		if (yuri_to_magick_format.find(format_)==yuri_to_magick_format.end()) {
+		if (!contains(yuri_to_magick_format, format_)) {
 			log[log::warning] << "Specified format is not currently supported. Falling back to RGB";
 			format_ = core::raw_format::rgb24;
 		}
