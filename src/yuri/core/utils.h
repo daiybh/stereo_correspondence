@@ -104,6 +104,11 @@ bool iless(const std::basic_string<Char, traits>& a, const Char *b)
 	return iless(a, std::basic_string<Char, traits>(b));
 }
 
+template<class Container, class Value>
+bool contains(Container& container, const Value& value) {
+	return container.find(value) != container.end();
+}
+
 
 template<class T>
 class SingletonBase: public T {

@@ -23,23 +23,23 @@ namespace log
 int Log::uids=0;
 
 namespace {
-std::map<_debug_flags, std::string> level_names=map_list_of<_debug_flags, std::string>
-	(fatal,"FATAL ERROR")
-	(error,"ERROR")
-	(warning,"WARNING")
-	(info,"INFO")
-	(debug,"DEBUG")
-	(verbose_debug,"VERBOSE_DEBUG")
-	(trace,"TRACE");
+std::map<_debug_flags, std::string> level_names= {
+	{fatal,"FATAL ERROR"},
+	{error,"ERROR"},
+	{warning,"WARNING"},
+	{info,"INFO"},
+	{debug,"DEBUG"},
+	{verbose_debug,"VERBOSE_DEBUG"},
+	{trace,"TRACE"}};
 
-std::map<_debug_flags, std::string> level_colors=map_list_of<_debug_flags, std::string>
-(fatal,"\033[4;31;42m") // Red, underscore, bg
-(error,"\033[31m") // Red
-(warning,"\033[35m")
-(info,"\033[00m")
-(debug,"\033[35m")
-(verbose_debug,"\033[36m")
-(trace,"\033[4;36m");
+std::map<_debug_flags, std::string> level_colors = {
+{fatal,"\033[4;31;42m"}, // Red, underscore, bg
+{error,"\033[31m"}, // Red
+{warning,"\033[35m"},
+{info,"\033[00m"},
+{debug,"\033[35m"},
+{verbose_debug,"\033[36m"},
+{trace,"\033[4;36m"}};
 }
 
 /**
