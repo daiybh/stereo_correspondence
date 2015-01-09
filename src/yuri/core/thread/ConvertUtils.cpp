@@ -59,12 +59,9 @@ std::pair<convert::path_list, size_t> find_conversion(format_t format_in, format
 		starts.emplace(k.first, k); // Prepare all convertors
 		auto vals = conv.find_value(k); // Select the best convertor for each format pair
 		for (const auto& v: vals) {
-			if (best_convertor.find(k) == best_convertor.end()) {
+			auto&& it = best_convertor.find(k);
+			if (it == best_convertor.end() || (v.second < it->second.second)) {
 				best_convertor[k]=v;
-			} else {
-				if (v.second < best_convertor[k].second) {
-					best_convertor[k]=v;
-				}
 			}
 		}
 	}
