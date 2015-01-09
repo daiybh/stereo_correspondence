@@ -54,9 +54,9 @@ ColorKey::~ColorKey() noexcept
 }
 namespace {
 
-std::map<std::string, diff_types_> diff_type_strings = map_list_of<std::string, diff_types_>
-("linear", 		linear)
-("quadratic",	quadratic);
+std::map<std::string, diff_types_> diff_type_strings = {
+		{"linear", 		linear},
+		{"quadratic",	quadratic}};
 
 inline uint8_t diff(uint8_t a, uint8_t b)
 {
