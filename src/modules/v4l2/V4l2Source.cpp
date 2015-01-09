@@ -802,7 +802,7 @@ bool V4l2Source::set_frame_params()
 		//throw exception::Exception ("Failed to set input format!");
 		return false;
 	}
-	fps = {strp.parm.capture.timeperframe.numerator,strp.parm.capture.timeperframe.denominator};
+	fps = {strp.parm.capture.timeperframe.denominator,strp.parm.capture.timeperframe.numerator};
 	log[log::info] << "Driver reports current frame interval " << !fps << "s";
 	if (fps.valid() || fps.num!=0) {
 		frame_duration = 1_s/fps.get_value();
