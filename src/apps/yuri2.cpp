@@ -53,6 +53,10 @@ void sigHandler(int sig, siginfo_t */*siginfo*/, void */*context*/)
 		return;
 	}
 #endif
+	if (sig==SIGPIPE) {
+		// Sigpipe needs to be ignored, otherwise application may get killed randomly
+		return;
+	}
 	if (builder)
 		builder->request_end(yuri::core::yuri_exit_interrupted);
 	act.sa_handler = SIG_DFL;
@@ -241,6 +245,7 @@ int main(int argc, char**argv)
 	act.sa_sigaction = &sigHandler;
 	act.sa_flags = SA_SIGINFO;
 	sigaction(SIGINT,&act,0);
+	sigaction(SIGPIPE,&act,0);
 #if !defined YURI_APPLE
 	sigaction(SIGRTMIN,&act,0);
 #endif
