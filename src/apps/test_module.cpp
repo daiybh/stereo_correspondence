@@ -16,20 +16,15 @@
 #include <windows.h>
 #endif
 
-
-int main(int argc, char** argv)
+bool test_file(const std::string& filename)
 {
-	if (argc < 2) {
-		std::cerr << "Usage " << argv[0] <<" <path-to-module>\n";
-		return 1;
-	}
 #if defined __linux__
-	void *handle=dlopen(argv[1],RTLD_NOW|RTLD_GLOBAL);
+	void *handle=dlopen(filename.c_str(),RTLD_NOW|RTLD_GLOBAL);
 #elif defined _WIN32
 	HINSTANCE handle = LoadLibrary(argv[1]);
 #endif
 	if (!handle) {
-		std::cerr << "Failed to open file " << argv[1] 
+		std::cerr << "Failed to open file " << filename
 #if defined __linux__
 			<<": " << dlerror() 
 #endif
@@ -73,6 +68,19 @@ int main(int argc, char** argv)
 		return 1;
 	}
 	return 0;
+}
+
+int main(int argc, char** argv)
+{
+	if (argc < 2) {
+		std::cerr << "Usage " << argv[0] <<" <path-to-module> <path-to-module> ...\n";
+		return 1;
+	}
+	int res = 0;
+	for (int i=1;i<argc;++i) {
+		res |= test_file(argv[i]);
+	}
+	return res;
 }
 
 
