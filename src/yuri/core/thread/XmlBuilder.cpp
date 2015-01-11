@@ -164,25 +164,19 @@ void XmlBuilder::builder_pimpl_t::load_builtin_modules()
 void XmlBuilder::builder_pimpl_t::process_argv(const std::vector<std::string>& var)
 {
 	for (const std::string& param_pair: var) {
-//		log[log::info] << "Checking " << param_pair;
 		auto idx = param_pair.find('=');
-//		log[log::info] << "idx: " << idx;
 		if (idx == param_pair.npos) continue;
 		const std::string& val = param_pair.substr(idx+1);
 		Parameter p(param_pair.substr(0,idx));
 		if (event::pBasicEvent event = event::BasicEventParser::parse_expr(log, val,{})) {
-//			log[log::info] << "Got event" ;
 			p.set_value(event);
 		} else {
-//			log[log::info] << "No event, assuming a string" ;
 			p=val;
 		}
 		argv[p.get_name()]=std::move(p);
 	}
-//	for (const auto&p: argv) {
-//		log[log::info] << "Found parameter " << p.first << ": " << p.second.get<std::string>();
-//	}
 }
+
 void XmlBuilder::builder_pimpl_t::process_variables()
 {
 	TiXmlElement * node = nullptr;
@@ -313,6 +307,7 @@ Parameters XmlBuilder::configure()
 {
 	Parameters p = IOThread::configure();
 	p["filename"]["Path to  XML file."]="";
+	p["run_limit"]["Runtime limit in seconds"]=0.0;
 	return p;
 }
 
@@ -373,6 +368,9 @@ bool XmlBuilder::set_param(const Parameter& parameter)
 {
 	if (parameter.get_name() == "filename") {
 		filename_ = parameter.get<std::string>();
+	} else if (parameter.get_name() == "run_limit") {
+		auto time_val = parameter.get<double>();
+		max_run_time_ = 1_s * time_val;
 	} else return IOThread::set_param(parameter);
 	return true;
 }
@@ -394,6 +392,25 @@ std::vector<variable_info_t> XmlBuilder::get_variables() const
 	}
 	return vars;
 }
+
+void XmlBuilder::run()
+{
+	start_time_ = timestamp_t{};
+	GenericBuilder::run();
+	log[log::info] << "Finishing run after " << (timestamp_t{} - start_time_);
+}
+bool XmlBuilder::step()
+{
+	if (max_run_time_ > 1_ms) {
+		const auto& delta = timestamp_t{} - start_time_;
+		if (delta > max_run_time_) {
+			log[log::warning] << "Max run time reached ("<<delta<<"). Quitting";
+			request_end();
+		}
+	}
+	return GenericBuilder::step();
+}
+
 }
 }
 
