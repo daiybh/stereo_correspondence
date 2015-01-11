@@ -285,10 +285,15 @@ void XmlBuilder::builder_pimpl_t::verify_links()
 	using map_elem = std::pair<std::string, position_t>;
 	std::map<map_elem, std::string> used_sources, used_targets;
 	for (const auto& link: links) {
-		auto s = nodes.find(link.second.source_node);
-		auto t = nodes.find(link.second.target_node);
-		VALID(s != nodes.end(),"Unknown source node " + link.second.source_node + " in link " +link.first)
-		VALID(t != nodes.end(),"Unknown target node " + link.second.target_node + " in link " +link.first)
+		const auto& src_node = link.second.source_node;
+		const auto& tgt_node = link.second.target_node;
+
+//		auto s = nodes.find(link.second.source_node);
+//		auto t = nodes.find(link.second.target_node);
+		VALID(is_special_link_target(src_node) || contains(nodes, src_node)
+				,"Unknown source node " + link.second.source_node + " in link " +link.first)
+		VALID(is_special_link_target(tgt_node) || contains(nodes, tgt_node)
+				,"Unknown target node " + link.second.target_node + " in link " +link.first)
 		map_elem selem {link.second.source_node, link.second.source_index};
 		map_elem telem {link.second.target_node, link.second.target_index};
 		auto s2 = used_sources.find(selem);

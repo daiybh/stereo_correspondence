@@ -38,6 +38,8 @@ using link_map = std::map<std::string, link_record_t>;
 class GenericBuilder;
 using pGenericBuilder = std::shared_ptr<GenericBuilder>;
 
+bool is_special_link_target(const std::string& name);
+
 class GenericBuilder: public IOThread, public event::BasicEventParser {
 public:
 
@@ -52,8 +54,11 @@ public:
 
 protected:
 	void set_graph(node_map nodes, link_map links, std::string routing = {});
-
 private:
+	virtual	void do_connect_in(position_t position, pPipe pipe) override;
+	virtual	void do_connect_out(position_t position, pPipe pipe) override;
+
+
 	node_map nodes_;
 	link_map links_;
 	std::string routing_;

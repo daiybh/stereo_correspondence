@@ -10,9 +10,18 @@
 #include "GenericBuilder.h"
 #include "yuri/core/thread/IOThreadGenerator.h"
 #include "yuri/core/pipe/PipeGenerator.h"
-
+#include "yuri/core/utils/irange.h"
 namespace yuri {
 namespace core {
+
+namespace {
+	const std::string target_builder {"@"};
+}
+
+bool is_special_link_target(const std::string& name)
+{
+	return name == target_builder;
+}
 
 GenericBuilder::GenericBuilder(const log::Log& log_, pwThreadBase parent, const std::string& name)
 :IOThread(log_, parent, 0, 0, name),BasicEventParser(log)
@@ -147,12 +156,7 @@ bool GenericBuilder::do_process_event(const std::string& event_name, const event
 		log[log::info] << "Received stop event. Quitting builder.";
 		request_end();
 	}
-
-
 	return BasicEventParser::do_process_event(event_name, event);
-//	receive_event(event_name, event);
-	return true;
-//	return pimpl_->do_process_event(event_name, event);
 }
 
 
@@ -160,8 +164,27 @@ bool GenericBuilder::step()
 {
 	process_events();
 	run_routers();
+	for (auto i: irange(0,get_no_in_ports())) {
+		push_frame(i, pop_frame(i));
+	}
 	return true;
 }
+
+void GenericBuilder::do_connect_in(position_t position, pPipe pipe)
+{
+	if (position >= do_get_no_in_ports()) {
+		resize(position+1, -1);
+	}
+	return IOThread::do_connect_in(position, pipe);
+}
+void GenericBuilder::do_connect_out(position_t position, pPipe pipe)
+{
+	if (position >= do_get_no_out_ports()) {
+		resize(-1, position+1);
+	}
+	return IOThread::do_connect_out(position, pipe);
+}
+
 
 }
 }
