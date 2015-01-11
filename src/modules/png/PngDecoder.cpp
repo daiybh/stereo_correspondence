@@ -14,6 +14,11 @@
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include <png.h>
+
+#if PNG_LIBPNG_VER_MAJOR == 1 && PNG_LIBPNG_VER_MINOR >= 6
+#define PNG_VERSION_1_6
+#endif
+
 namespace yuri {
 namespace png {
 
@@ -132,16 +137,21 @@ core::pFrame PngDecoder::do_special_single_step(const core::pCompressedVideoFram
 			if (depth == 16 && req_depth == 8) {
 				png_set_strip_16(png_ptr);
 				depth = 8;
-			} else if (depth == 8 && req_depth==16) {
+			}
+#ifdef PNG_VERSION_1_6
+			else if (depth == 8 && req_depth==16) {
 				png_set_expand_16(png_ptr);
 				depth = 16;
 			}
-
+#endif
 			size_t req_channels = fi.planes[0].components.size();
 			if (req_channels != channels) {
+#ifdef PNG_VERSION_1_6
 				if (req_channels == 1) {
 					png_set_rgb_to_gray(png_ptr, PNG_ERROR_ACTION_WARN, PNG_RGB_TO_GRAY_DEFAULT, PNG_RGB_TO_GRAY_DEFAULT);
-				} else if (req_channels == 3) {
+				} else
+#endif
+				if (req_channels == 3) {
 					if (channels == 1) {
 						png_set_gray_to_rgb(png_ptr);
 					} else {
