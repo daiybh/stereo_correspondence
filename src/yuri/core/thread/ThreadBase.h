@@ -28,10 +28,6 @@ typedef int pid_t;
 #endif
 
 
-//#define YURI_EXIT_OK				0
-//#define YURI_EXIT_USER_BREAK		1
-//#define YURI_EXIT_FINISHED			2
-
 #define TRACE_METHOD log[log::trace] << __PRETTY_FUNCTION__ << " @ " << __FILE__ << ":" << __LINE__;
 
 namespace yuri
@@ -53,33 +49,80 @@ public:
 	void						operator=(const ThreadBase&) = delete;
 	void						operator=(ThreadBase&&) = delete;
 
+	/*!
+	 * Executes main thread loop.
+	 * Should not be called directly
+	 */
 	void 						operator()();
 
+	/*!
+	 * Notification for the thread that one of it's childs is ending.
+	 * Should not be called directly
+	 *
+	 * @param child				weak pointer to the ending child
+	 * @param code				Return code (reason for ending).
+	 */
 	void 						child_ends(pwThreadBase child, int code);
+	/*!
+	 * Signal for the thread to quit.
+	 * User can call this method to request termination.
+	 */
 	void 						finish() noexcept;
+	/*!
+	 * Method for the thread itself to request to be ended.
+	 *
+	 * @param code				Optional return code
+	 */
 	void	 					request_end(int code = yuri_exit_finished);
 
 //	virtual pid_t 				get_tid();
 	/*!
 	 * Returns true if the thread is currently running
 	 * This basically means, that the 'operator()' method is executing
+	 * This should be used for external entities to check whether this thread is still active.
+	 *
 	 * @return true while the thread is running
 	 */
 	bool						running() const noexcept { return running_;}
 private:
+	/*!
+	 * Implementation of the main loop.
+	 * Has to be implemented in child classes.
+	 */
 	virtual void 				run() = 0;
 protected:
-	//! Returns false if the thread should quit, true otherwise.
-	//! The method also processes events and should be called occasionally
+	/*!
+	 * Returns true while the thread should continue running.
+	 * The method also processes events and should be called regularly
+	 *
+	 * @return false if the thread should quit, true otherwise.
+	 */
 	bool 						still_running();
-	//! Returns pointer to @em this.
+
+	/*!
+	 * Returns shared_ptr for this instance
+	 * @return pointer to @em this.
+	 */
 	pThreadBase					get_this_ptr();
-	//! Returns pointer to @em this.
+
+	/*!
+	 * Returns shared_ptr for this instance (const)
+	 * @return pointer to @em this.
+	 */
 	pcThreadBase				get_this_ptr() const;
 
-	//! Adds and spawns new child thread
+	/*!
+	 * Adds a new child thread and spawns it as new thread
+	 *
+	 * @param thread			Child to spawn as a new child
+	 */
 	bool 						spawn_thread(pThreadBase  thread);
-	//! Adds new child thread without spawning it
+
+	/*!
+	 * Adds a new child without spawning it.
+	 *
+	 * @param thread			Child to add as a new child
+	 */
 	bool		 				add_child(pThreadBase  thread);
 
 
@@ -142,6 +185,9 @@ private:
 	std::string					node_name_;
 
 public:
+	/*!
+	 * Sleep
+	 */
 	static void 				sleep (const duration_t& us);
 };
 
