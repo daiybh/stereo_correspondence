@@ -11,6 +11,7 @@
 #ifndef FILEDUMP_H_
 #define FILEDUMP_H_
 #include "yuri/core/thread/IOFilter.h"
+#include "yuri/event/BasicEventProducer.h"
 #include <fstream>
 #include <string>
 
@@ -20,7 +21,7 @@ namespace dump
 {
 
 
-class FileDump: public core::IOFilter
+class FileDump: public core::IOFilter, public event::BasicEventProducer
 {
 public:
 	FileDump(log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters);

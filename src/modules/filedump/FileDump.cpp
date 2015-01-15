@@ -38,6 +38,7 @@ core::Parameters FileDump::configure()
 
 FileDump::FileDump(log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters):
 	IOFilter(log_,parent,"Dump"),
+	event::BasicEventProducer(log),
 	dump_file(),filename(),seq_chars(0),seq_number(0),dumped_frames(0),
 	dump_limit(0)
 {
@@ -66,8 +67,11 @@ core::pFrame FileDump::do_simple_single_step(const core::pFrame& frame)
 		if (dot_index != std::string::npos) {
 			ss << filename.substr(dot_index);
 		}
-		dump_file.open(ss.str().c_str(), std::ios::binary | std::ios::out);
+		const auto seq_filename = ss.str();
+		dump_file.open(seq_filename.c_str(), std::ios::binary | std::ios::out);
+		emit_event("filename",seq_filename);
 	}
+	bool written = true;
 	if (auto f = std::dynamic_pointer_cast<core::RawVideoFrame>(frame)) {
 		log[log::debug]<<"Dumping " << f->get_planes_count() << " planes";
 		for (yuri::size_t i=0; i<f->get_planes_count();++i) {
@@ -77,10 +81,19 @@ core::pFrame FileDump::do_simple_single_step(const core::pFrame& frame)
 		dump_file.write(reinterpret_cast<const char *>(f->begin()),f->size());
 	} else if (auto f = std::dynamic_pointer_cast<core::RawAudioFrame>(frame)) {
 		dump_file.write(reinterpret_cast<const char *>(f->data()),f->size());
+	} else {
+		written=false;
 	}
 	if (seq_chars) {
 		dump_file.close();
+		if (written) {
+			emit_event("sequence",seq_number);
+		}
 	}
+	if (written) {
+		emit_event("frame");
+	}
+
 	// The comparison is evaluated FIRST in order to have dumped_frames counted even if dump_limit is zero
 	if (++dumped_frames >= dump_limit && dump_limit) {
 		log[log::debug] << "Maximal number of frames reached, quitting.";
