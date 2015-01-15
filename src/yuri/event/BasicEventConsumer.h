@@ -31,13 +31,15 @@ public:
 	virtual						~BasicEventConsumer();
 	bool 						receive_event(const std::string& event_name, const pBasicEvent& event);
 protected:
-	event_record_t 				fetch_event();
+	//event_record_t 				fetch_event();
 	bool 						process_events(ssize_t max_count = -1);
 	size_t						pending_events() const;
 	bool						wait_for_events(duration_t timeout);
+	event_record_t				get_pending_event();
 private:
 	bool 						do_receive_event(const std::string& event_name, const pBasicEvent& event);
-	bool 						do_process_events(ssize_t max_count);
+
+//	bool 						do_process_events(ssize_t max_count);
 	virtual bool 				do_process_event(const std::string& event_name, const pBasicEvent& event) = 0;
 	std::deque<event_record_t> 	incomming_events_;
 	mutable mutex				incomming_mutex_;

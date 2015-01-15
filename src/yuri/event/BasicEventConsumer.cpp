@@ -41,26 +41,48 @@ bool BasicEventConsumer::do_receive_event(const std::string& event_name, const p
 }
 bool BasicEventConsumer::process_events(ssize_t max_count)
 {
-	lock_t _(incomming_mutex_);
-	return do_process_events(max_count);
-}
 
-bool BasicEventConsumer::do_process_events(ssize_t max_count)
-{
-	while (incomming_events_.size() && max_count!=0) {
-		auto rec = incomming_events_.front();
-		incomming_events_.pop_front();
+	for(;;) {
+		auto rec = get_pending_event();
+		if (!rec.second) break;
 
 		try {
 			//if (!do_process_event(rec.first, rec.second)) return false;
 			do_process_event(rec.first, rec.second);
 		}
 		catch (std::runtime_error& e) {
-			log_c_[log::debug] << "Error while processing incomming event '" << rec.first <<"': "<< e.what();
+			log_c_[log::debug] << "Error while processing incoming event '" << rec.first <<"': "<< e.what();
 		}
+		if (max_count == 0) break;
+		if (max_count > 0) max_count--;
 	}
 	return true;
 }
+
+event_record_t BasicEventConsumer::get_pending_event()
+{
+	lock_t lock(incomming_mutex_);
+	if (incomming_events_.empty()) return {{},{}};
+	auto event = incomming_events_.front();
+	incomming_events_.pop_front();
+	return event;
+}
+//bool BasicEventConsumer::do_process_events(ssize_t max_count)
+//{
+//	while (incomming_events_.size() && max_count!=0) {
+//		auto rec = incomming_events_.front();
+//		incomming_events_.pop_front();
+//
+//		try {
+//			//if (!do_process_event(rec.first, rec.second)) return false;
+//			do_process_event(rec.first, rec.second);
+//		}
+//		catch (std::runtime_error& e) {
+//			log_c_[log::debug] << "Error while processing incoming event '" << rec.first <<"': "<< e.what();
+//		}
+//	}
+//	return true;
+//}
 size_t	BasicEventConsumer::pending_events() const
 {
 	lock_t _(incomming_mutex_);
