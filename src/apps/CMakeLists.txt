@@ -1,5 +1,5 @@
 IF(NOT YURI_DISABLE_BOOST)
-	find_package( Boost 1.46 COMPONENTS program_options)
+	find_package( Boost 1.46 COMPONENTS program_options regex)
 	IF(Boost_PROGRAM_OPTIONS_FOUND)
 		add_definitions(-DHAVE_BOOST_PROGRAM_OPTIONS)
 	ENDIF()
@@ -29,3 +29,10 @@ install(TARGETS yuri_test_module RUNTIME DESTINATION bin)
 #target_link_libraries (yuri_wrapper ${LIBNAME} )
 #YURI_INSTALL_EXE_LIB(yuri_wrapper)
 
+IF(Boost_REGEX_FOUND)
+add_executable(yuri_simple 	
+						yuri_simple.cpp
+						simple/SimpleBuilder.h
+						simple/SimpleBuilder.cpp)
+target_link_libraries ( yuri_simple ${LIBNAME} ${Boost_REGEX_LIBRARY})
+ENDIF()
