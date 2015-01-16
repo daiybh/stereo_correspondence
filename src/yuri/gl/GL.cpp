@@ -119,7 +119,7 @@ const std::vector<format_t> gl_supported_formats = {
 		raw_format::rgb24,
 		raw_format::rgba32,
 		raw_format::bgr24,
-		raw_format::bgra32,
+		raw_format::abgr32,
 		raw_format::yuv444,
 		raw_format::yuyv422,
 		raw_format::yvyu422,
