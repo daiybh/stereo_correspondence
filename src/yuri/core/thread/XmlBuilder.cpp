@@ -168,12 +168,18 @@ void XmlBuilder::builder_pimpl_t::process_argv(const std::vector<std::string>& v
 		if (idx == param_pair.npos) continue;
 		const std::string& val = param_pair.substr(idx+1);
 		Parameter p(param_pair.substr(0,idx));
-		if (event::pBasicEvent event = event::BasicEventParser::parse_expr(log, val,{})) {
+		/*if (event::pBasicEvent event = event::BasicEventParser::parse_expr(log, val, input_events)) {
 			p.set_value(event);
+			input_events[p.get_name()]=event;
 		} else {
 			p=val;
-		}
+			input_events[p.get_name()]=val;
+		}*/
+		auto event = parse_expression(val);
+		p.set_value(event);
+		input_events[p.get_name()]=event;
 		argv[p.get_name()]=std::move(p);
+
 	}
 }
 
@@ -327,7 +333,14 @@ XmlBuilder::XmlBuilder(const log::Log& log_, pwThreadBase parent, const Paramete
 
 	pimpl_->process_modules();
 	pimpl_->process_module_dirs();
-//	pimpl_->process_argv(argv);
+
+	// Emulate argv from params
+	std::vector<std::string> argv;
+	for (const auto& param: parameters) {
+		argv.push_back(param.first+"="+param.second.get<std::string>());
+	}
+	pimpl_->process_argv(argv);
+
 	pimpl_->process_variables();
 	Parameters general = pimpl_->process_general();
 	IOTHREAD_INIT(general.merge(parameters)); //TODO Shouldn't this be the other way round? general won't be used at all if used like this...
@@ -403,6 +416,7 @@ void XmlBuilder::run()
 	start_time_ = timestamp_t{};
 	GenericBuilder::run();
 	log[log::info] << "Finishing run after " << (timestamp_t{} - start_time_);
+	finish_all_threads();
 }
 bool XmlBuilder::step()
 {
