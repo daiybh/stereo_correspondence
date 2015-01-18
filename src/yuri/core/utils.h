@@ -15,10 +15,14 @@
 #include <sstream>
 #include <cctype>
 #include <mutex>
+#include <iterator>
+#include <algorithm>
 namespace yuri {
 
 /*!
  * @brief Ancillary class for initializing std::map
+ *
+ * These clases were made obsolete by C++11 and initializer lists, both will be removed in near future.
  *
  * Usage std::map<A, B> name_of_map = map_list_of<A, B>(a0, b0)(a1, b1)(a2, b2);
  */
@@ -104,9 +108,16 @@ bool iless(const std::basic_string<Char, traits>& a, const Char *b)
 	return iless(a, std::basic_string<Char, traits>(b));
 }
 
-template<class Container, class Value>
-bool contains(Container& container, const Value& value) {
+template<class Key, class Type, class Value>
+bool contains(std::map<Key, Type>& container, const Value& value)
+{
 	return container.find(value) != container.end();
+}
+
+template<class Type, class Value>
+bool contains(std::vector<Type>& container, const Value& value) {
+	return std::find(std::begin(container), std::end(container), value) != std::end(container);
+	//return container.find(value) != container.end();
 }
 
 
