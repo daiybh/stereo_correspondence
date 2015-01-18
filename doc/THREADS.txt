@@ -1,0 +1,118 @@
+!!!!! THIS DOCUMENT IS DRAFT, NOT FINAL VERSION !!!!!
+
+Yuri threads
+--------------
+
+This document describes how thread hierarchy is done in Yuri.
+
+
+
+1. Threads and the program structure
+The threading model is implemented by the class TreadBase.
+Any class participating in the thread hierarchy should inherit from ThreadBase.
+
+A 'Thread' in this document means a single package of work (typically a node 
+in yuri graph) represented by a functor. Although the name Thread is used 
+in the document and in the code, these Threads can provide a synchronous API and
+doesn't necessarily need to be executed in separate OS threads. 
+The threading model can manage their lifetimes nevertheless.
+
+In the rest of the document I will use 'Thread' with capital T for yuri Threads
+and 'thread' in lowercase for OS threads.
+
+
+
+Every Thread has a reference to it's parent (of type yuri::core::pwThreadBase), 
+thus there's a tree hierarchy of all program Threads.
+Obviously the root of the tree is an exception and has an empty parent.
+
+Every Thread has also list of all it's child Threads.
+
+
+2. ThreadBase API
+Class ThreadBase provides interface to manage Thread's lifetime and child Threads.
+
+2.1
+Protected API (only for subclassed of ThreadBase)
+- ThreadBase::still_running() - returns false when the Thread should finish, true otherwise.
+
+- ThreadBase::spawn_thread(Thread) - registers a Thread as a child and executes it in a separate thread.
+
+- ThreadBase::add_child(Thread) - registers a Thread as a child without executing it.
+
+- ThreadBase::request_end(code) - a Thread should call this method to end itself and notify parent about it.
+					It also sets an exit code. 
+					Exit code yuri::core::yuri_exit_finished (default) means normal finish of the application.
+					yuri::core::interrupted means exit caused by user or external event.
+2.2
+Public API
+- ThreadBase::finish() - an external entity can tell a Thread to finish.
+
+3. Thread states
+A Thread can be in several states:
+Possible states and how to query them:
+
+- stopped - A Thread is not executing it's ::run() method - it either already finished 
+		or was never executes (for example, it was used only synchronously 
+		without spawning separate thread)
+- running - Thread is executing it's ::run() method. This means the thread is active.
+    call to ::running() method will return true
+    A running thread can have 2 substates (meaningfull only inside the Thread)
+	- active - Thread is running and working.
+	    call to ::still_running() method returns true
+	- ending - Thread initiated a shut down. 
+	    call to ::still_running() method returns false
+	    
+  
+A running Thread should periodically check ::still_running() and determine 
+whether it's still active. When it find itself in ending state, 
+it should immediately stop execution and return from ::run() method. 
+ 
+4. Shutdown sequence:
+4.1 Initiated by an external entity
+- 1. Thread's ::finish() method is called
+- 2. Thread calls ::finish() on all it's childs (thru finish_all_threads)
+- 3. Thread enters interrupted state
+1-3 happens in context on calling thread
+- 4. Thread in an interrupted state calls own ::request_end(yuri_exit_interrupted)
+	during ::process_pending_requests()
+4 happens in context of Thread's thread
+
+4.2 Initiated by the Thread itself
+A Thread can shut itself down by calling request_end() with an appropriate return code.
+
+- 1. sets thread to ending state
+- 2. parent is notified about the shutdown
+  - 3. parents ::child_ends() method is called
+  - 4. parent executes ::child_ends_hook() to respond to it. 
+  		Default action is to call request end on itself when childs return code
+  		is yuri_exit_interrupted or the child was the last child.
+  - 5. Parent adds child to a list of ending childs
+  
+Actions 1-5 all happen in the context of Thread's thread
+
+
+- 6. Parent calls ::process_pending_requests() (this should happen automatically 
+		from a ::still_running() call)
+- 7. Parent calls finish_thread to finish the thread.
+- 8. Parent calls ::finish() method on the Thread
+
+6-8 happens in context of parent's thread
+
+  
+   
+
+
+ 
+
+
+ThreadBase {
+	parent;
+	childs[];
+}
+
+ 
+
+
+
+
