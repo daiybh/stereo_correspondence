@@ -72,8 +72,8 @@ private:
 	int output_flags;
 	bool quiet;
 //	void set_flag(debug_flags f);
-	std::string print_time();
-	std::string print_level(debug_flags flags);
+	std::string print_time() const;
+	std::string print_level(debug_flags flags) const ;
 
 };
 

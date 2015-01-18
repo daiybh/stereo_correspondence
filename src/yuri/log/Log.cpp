@@ -23,7 +23,7 @@ namespace log
 int Log::uids=0;
 
 namespace {
-std::map<_debug_flags, std::string> level_names= {
+const std::map<_debug_flags, std::string> level_names= {
 	{fatal,"FATAL ERROR"},
 	{error,"ERROR"},
 	{warning,"WARNING"},
@@ -32,7 +32,7 @@ std::map<_debug_flags, std::string> level_names= {
 	{verbose_debug,"VERBOSE_DEBUG"},
 	{trace,"TRACE"}};
 
-std::map<_debug_flags, std::string> level_colors = {
+const std::map<_debug_flags, std::string> level_colors = {
 {fatal,"\033[4;31;42m"}, // Red, underscore, bg
 {error,"\033[31m"}, // Red
 {warning,"\033[35m"},
@@ -110,7 +110,7 @@ LogProxy<char> Log::operator[](debug_flags f)
 //}
 
 
-std::string Log::print_time()
+std::string Log::print_time() const
 {
 	std::string s;
 	std::stringstream ss;
@@ -125,16 +125,26 @@ std::string Log::print_time()
 	return s;
 }
 
-std::string Log::print_level(debug_flags flags)
+std::string Log::print_level(debug_flags flags) const
 {
 	debug_flags f = static_cast<debug_flags>(flags&flag_mask);
-	if (level_names.count(f)) {
-		if ((output_flags&use_colors) && level_colors.count(f)) {
-			return level_colors[f]+level_names[f]+level_colors[info]+" ";
-		}
-		return level_names[f]+" ";
+	auto it = level_names.find(f);
+//	if (level_names.count(f)) {
+	if (it == level_names.end()) {
+		return {};
 	}
-	return std::string();
+	const auto& name = it->second;
+
+	if (output_flags&use_colors) {
+		auto it_col = level_colors.find(f);
+		auto it_col2 = level_colors.find(info);
+		if (it_col!=level_colors.end() && it_col2 != level_colors.end()) {
+			const auto& color1 = it_col->second;
+			const auto& color2 = it_col2->second;
+			return color1 +  name + color2 +" ";
+		}
+	}
+	return name+" ";
 }
 }
 }
