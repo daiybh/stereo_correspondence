@@ -129,19 +129,23 @@ bool IOThread::push_frame(position_t index, pFrame frame)
 {
 	TRACE_METHOD
 	if (!frame) return true;
-	if (index >= 0 && index < get_no_out_ports() && out_[index])
-		if(out_[index]->push_frame(frame)) {
-			if (fps_stats_ && ++streamed_frames_[index]>=fps_stats_) {
-				const size_t frames = streamed_frames_[index];
-				const timestamp_t start = first_frame_[index];
-				const timestamp_t now;
-				const duration_t dur = now-start;
-				log[log::info] << "Streamed " << frames << " in " << dur << ", that's " << (frames*1e6/dur.value) << " fps.";
-				first_frame_[index] = now;
-				streamed_frames_[index] = 0;
-			}
-			return true;
+	if (index >= 0 && index < get_no_out_ports() && out_[index]) {
+		while (!out_[index]->push_frame(frame)) {
+			// TODO: This is obviously bad...
+			sleep(get_latency());
+			if (!still_running()) return false;
 		}
+		if (fps_stats_ && ++streamed_frames_[index]>=fps_stats_) {
+			const size_t frames = streamed_frames_[index];
+			const timestamp_t start = first_frame_[index];
+			const timestamp_t now;
+			const duration_t dur = now-start;
+			log[log::info] << "Streamed " << frames << " in " << dur << ", that's " << (frames*1e6/dur.value) << " fps.";
+			first_frame_[index] = now;
+			streamed_frames_[index] = 0;
+		}
+		return true;
+	}
 	return false;
 }
 
