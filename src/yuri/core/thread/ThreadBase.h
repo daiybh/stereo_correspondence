@@ -163,6 +163,7 @@ protected:
 	log::Log					log;
 	pwThreadBase 				parent_;
 	std::atomic<bool>			ending_;
+	std::atomic<bool>			interrupted_;
 //	bool					end_requested;
 //	mutex 					end_lock;
 	mutex						finish_lock;
@@ -179,6 +180,7 @@ protected:
 //	pid_t 						own_tid;
 private:
 	std::vector<pwThreadBase>	ending_childs_;
+	mutex						ending_childs_mutex_;
 	position_t	 				cpu_affinity_;
 	std::atomic<bool>			running_;
 	std::string 				node_id_;
