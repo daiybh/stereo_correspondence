@@ -107,6 +107,7 @@ bool RawFileSource::read_chunk()
 				if (sequence_pos) {
 					log[log::info] << "Resetting sequence to the beginning";
 					sequence_pos=0;
+					loop_number++;
 				}
 				return true;
 			}
@@ -151,7 +152,7 @@ bool RawFileSource::read_chunk()
 				file.read(reinterpret_cast<char*>(PLANE_RAW_DATA(rframe,i)),std::min(plane_length, PLANE_DATA(rframe,i).size()));
 				if (static_cast<yuri::size_t>(file.gcount()) != plane_length ) {
 					if (first_read) {
-						if (!sequence || sequence_pos==0) {
+						if (!sequence || sequence_pos == 0) {
 							failed_read=true;
 							log[log::warning]<< "Wrong length of the file (read " << file.gcount() << ", expected " << plane_length << ")";
 						} else {
@@ -170,7 +171,7 @@ bool RawFileSource::read_chunk()
 			file.read(reinterpret_cast<char*>(cframe->get_data().data()), length);
 			if (static_cast<yuri::size_t>(file.gcount()) != length ) {
 				if (first_read) {
-					if (!sequence || sequence_pos==0) {
+					if (!sequence || sequence_pos == 0) {
 						failed_read=true;
 						log[log::warning]<< "Wrong length of the file (read " << file.gcount() << ", expected " << length << ")";
 					} else {
@@ -228,7 +229,6 @@ bool RawFileSource::set_param(const core::Parameter &parameter)
 		} else {
 			frame_type_ = frame_type_t::unknown;
 		}
-		log[log::info] << "output format " << output_format << std::endl;
 	} else if (parameter.get_name() == "path") {
 		path=parameter.get<std::string>();
 		if (path.find("%")!=std::string::npos) {
