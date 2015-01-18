@@ -12,6 +12,7 @@
 #include "yuri/core/utils/platform.h"
 #include "yuri/core/utils/make_unique.h"
 #include "yuri/core/utils/DirectoryBrowser.h"
+#include "yuri/core/utils.h"
 #include <stdexcept>
 #include <iostream>
 
@@ -35,9 +36,24 @@ const std::string module_register = "yuri2_8_module_register";
 struct dynamic_loader {
 	dynamic_loader(const std::string& path);
 	~dynamic_loader();
-	void reset() { handle = 0;}
+	dynamic_loader(const dynamic_loader&) = delete;
+	dynamic_loader(dynamic_loader&& rhs) noexcept
+		:handle(std::move(rhs.handle))
+	{
+		rhs.reset();
+	}
+	dynamic_loader& operator=(const dynamic_loader&) = delete;
+	dynamic_loader& operator=(dynamic_loader&& rhs) noexcept
+	{
+		handle=std::move(rhs.handle);
+		rhs.reset();
+		return *this;
+	}
+	void delete_handle();
+	void reset() { handle = nullptr;}
 	template<typename T>
 	T load_symbol(const std::string& symbol);
+private:
 #if defined YURI_POSIX
 	void* handle;
 #elif defined YURI_WINDOWS
@@ -53,7 +69,12 @@ dynamic_loader::dynamic_loader(const std::string& path)
 }
 dynamic_loader::~dynamic_loader()
 {
+	delete_handle();
+}
+void dynamic_loader::delete_handle()
+{
 	if (handle) dlclose(handle);
+	reset();
 }
 template<typename T>
 T dynamic_loader::load_symbol(const std::string& symbol)
@@ -68,7 +89,12 @@ dynamic_loader::dynamic_loader(const std::string& path)
 }
 dynamic_loader::~dynamic_loader()
 {
+	delete_handle();
+}
+void dynamic_loader::delete_handle()
+{
 	if (handle) FreeLibrary(handle);
+	reset();
 }
 template<typename T>
 T dynamic_loader::load_symbol(const std::string& symbol)
@@ -109,18 +135,21 @@ using register_module_t = int (*)(void);
 
 bool load_module(const std::string& path)
 {
+	static std::mutex loader_mutex;
+	lock_t _(loader_mutex);
+	static std::map<std::string, dynamic_loader> loaded_files;
+	if (contains(loaded_files, path)) return true;
 	try {
 		get_name_t get_name = nullptr;
 		register_module_t register_module = nullptr;
 
 		dynamic_loader loader (path);
 
-		// The ugly cast to uintptr_t is here for the sole purpose of silencing g++ warnings.
 		get_name = loader.load_symbol<get_name_t>(module_get_name);
 		register_module = loader.load_symbol<register_module_t>(module_register);
 
 		if (get_name && register_module && register_module() == 0) {
-			loader.reset(); // Effectively, we're leaking the handle here. Otherwise, it would be nearly impossible to prevent segfaults from released handles...
+			loaded_files.insert(std::make_pair(path,std::move(loader)));
 			return true;
 		}
 	}
