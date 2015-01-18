@@ -79,6 +79,7 @@ core::Parameters SDLWindow::configure()
 
 SDLWindow::SDLWindow(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("sdl_window")),
+BasicEventConsumer(log),
 resolution_({800,600}),fullscreen_(false),default_keys_(true),use_gl_(false),
 overlay_{nullptr,[](SDL_Overlay*o){if(o) SDL_FreeYUVOverlay(o);}},
 rgb_surface_{nullptr,[](SDL_Surface*s){ if(s) SDL_FreeSurface(s);}},
@@ -149,6 +150,7 @@ bool SDLWindow::step()
 
 core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame)
 {
+	BasicEventConsumer::process_events();
 	Timer timer;
 	core::pFrame out_frame;
 	const resolution_t res = frame->get_resolution();
@@ -160,6 +162,7 @@ core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame
 #ifdef  YURI_SDL_OPENGL
 	if (use_gl_) {
 		glDrawBuffer(GL_BACK_LEFT);
+		gl_.clear();
 		gl_.generate_texture(0, frame, flip_x_, flip_y_);
 		gl_.draw_texture(0);
 		gl_.finish_frame();
@@ -327,6 +330,41 @@ bool SDLWindow::prepare_rgb_overlay(const core::pRawVideoFrame& frame)
 		sdl_bpp_ = bpp;
 		sdl_resize(resolution_);
 	}
+	return true;
+}
+
+bool SDLWindow:: do_process_event(const std::string& event_name, const event::pBasicEvent& event)
+{
+#ifdef YURI_SDL_OPENGL
+	if (event->get_type() == event::event_type_t::vector_event) {
+		if (auto event_vec = dynamic_pointer_cast<event::EventVector>(event)) {
+			auto& vec = *event_vec;
+			double x = event::lex_cast_value<double>(vec[0]);
+			double y = event::lex_cast_value<double>(vec[1]);
+			if (event_name == "corner0") {
+				gl_.corners[0]=x;
+				gl_.corners[1]=y;
+			} else if (event_name == "corner1") {
+				gl_.corners[2]=x;
+				gl_.corners[3]=y;
+			} else if (event_name == "corner2") {
+				gl_.corners[4]=x;
+				gl_.corners[5]=y;
+			} else if (event_name == "corner3") {
+				gl_.corners[6]=x;
+				gl_.corners[7]=y;
+			}
+		}
+	} else {
+		if (event_name.size() > 1 && (event_name[0]=='x' || event_name[0]=='y')) {
+			int offset = event_name[0]-'x'; // This can return only 0 and 1
+			int idx = event_name[1]-'0';
+			if (idx >= 0 && idx < 4) {
+				gl_.corners[idx*2+offset]=event::lex_cast_value<double>(event);
+			}
+		}
+	}
+#endif
 	return true;
 }
 } /* namespace sdl_window */

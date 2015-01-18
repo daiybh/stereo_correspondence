@@ -12,6 +12,7 @@
 
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/event/BasicEventConsumer.h"
 #include "SDL.h"
 #ifdef  YURI_SDL_OPENGL
 #include "yuri/gl/GL.h"
@@ -20,7 +21,8 @@
 namespace yuri {
 namespace sdl_window {
 
-class SDLWindow: public core::SpecializedIOFilter<core::RawVideoFrame>
+class SDLWindow: public core::SpecializedIOFilter<core::RawVideoFrame>,
+public event::BasicEventConsumer
 {
 	using base_type = core::SpecializedIOFilter<core::RawVideoFrame>;
 public:
@@ -37,6 +39,7 @@ private:
 	void process_sdl_events();
 	void sdl_resize(resolution_t);
 	bool prepare_rgb_overlay(const core::pRawVideoFrame& frame);
+	bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 	resolution_t	resolution_;
 	bool			fullscreen_;
 	bool			default_keys_;
