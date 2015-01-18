@@ -22,7 +22,7 @@ core::Parameters OSCReceiver::configure()
 {
 	core::Parameters p = core::IOThread::configure();
 	p.set_description("OSCReceiver");
-	p["socket_type"]="uv_udp";
+	p["socket_type"]="yuri_udp";
 	p["port"]=57120;
 	//p->set_max_pipes(0,0);
 	return p;
@@ -31,7 +31,7 @@ core::Parameters OSCReceiver::configure()
 
 OSCReceiver::OSCReceiver(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOThread(log_,parent,0,0,std::string("osc_receiver")),
-event::BasicEventProducer(log),port_(2000),socket_type_("uv_udp")
+event::BasicEventProducer(log),port_(2000),socket_type_("yuri_udp")
 {
 	IOTHREAD_INIT(parameters)
 
@@ -77,7 +77,6 @@ void OSCReceiver::run()
 				} else {
 					emit_event(std::get<0>(events_pair), make_shared<event::EventVector>(std::move(events)));
 				}
-
 			}
 		}
 	}
