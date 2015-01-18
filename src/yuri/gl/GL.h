@@ -77,10 +77,10 @@ struct texture_info_t {
 	}
 
 	void set_tex_coords(double  *v) {
-		glTexCoord2dv(v);
+		glTexCoord4dv(v);
 		for (int i=0;i<8;++i) {
 			if (tid[i]!=static_cast<GLuint>(-1)) {
-				glMultiTexCoord2dv(GL_TEXTURE0+i,v);
+				glMultiTexCoord4dv(GL_TEXTURE0+i,v);
 			}
 		}
 	}
@@ -120,6 +120,7 @@ public:
 	static void enable_smoothing();
 	static void save_state();
 	static void restore_state();
+	static void clear();
 	void enable_depth();
 	bool prepare_texture(index_t tid, unsigned texid, const uint8_t *data, size_t data_size,
 			resolution_t resolution, GLenum tex_mode, GLenum data_mode, bool update,
