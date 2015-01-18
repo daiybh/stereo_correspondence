@@ -348,7 +348,7 @@ XmlBuilder::XmlBuilder(const log::Log& log_, pwThreadBase parent, const Paramete
 	pimpl_->process_nodes(); // TODO process all nodes
 	pimpl_->process_links(); // TODO process all links
 	pimpl_->verify_links();
-	log[log::info] << "File seems to be parsed successfully";
+	log[log::debug] << "File seems to be parsed successfully";
 	set_graph(pimpl_->nodes, pimpl_->links, pimpl_->routing);
 
 }
@@ -375,7 +375,7 @@ XmlBuilder::XmlBuilder(const log::Log& log_, pwThreadBase parent, const std::str
 	pimpl_->process_nodes(); // TODO process all nodes
 	pimpl_->process_links(); // TODO process all links
 	pimpl_->verify_links();
-	log[log::info] << "File seems to be parsed successfully";
+	log[log::debug] << "File seems to be parsed successfully";
 	set_graph(pimpl_->nodes, pimpl_->links, pimpl_->routing);
 }
 
@@ -389,7 +389,8 @@ bool XmlBuilder::set_param(const Parameter& parameter)
 	} else if (parameter.get_name() == "run_limit") {
 		auto time_val = parameter.get<double>();
 		max_run_time_ = 1_s * time_val;
-	} else return IOThread::set_param(parameter);
+	} else IOThread::set_param(parameter);
+	// Return always true so pass-through parameters work without warnings
 	return true;
 }
 
@@ -424,7 +425,7 @@ bool XmlBuilder::step()
 		const auto& delta = timestamp_t{} - start_time_;
 		if (delta > max_run_time_) {
 			log[log::warning] << "Max run time reached ("<<delta<<"). Quitting";
-			request_end();
+			request_end(core::yuri_exit_interrupted);
 		}
 	}
 	return GenericBuilder::step();
