@@ -141,6 +141,7 @@ core::pFrame Pad::do_special_single_step(const core::pRawVideoFrame& frame)
 {
 //	const core::pRawVideoFrame frame= 	dynamic_pointer_cast<core::RawVideoFrame>(frame_in);
 	const resolution_t resolution	= frame->get_resolution();
+	if (resolution == resolution_) return frame;
 	const yuri::size_t height_in	= resolution.height;
 	const yuri::size_t width_in		= resolution.width;
 	const format_t format 			= frame->get_format();
