@@ -154,8 +154,9 @@ bool GenericBuilder::do_process_event(const std::string& event_name, const event
 {
 	if (event_name == "stop") {
 		log[log::info] << "Received stop event. Quitting builder.";
-		request_end();
+		request_end(yuri_exit_interrupted);
 	}
+	emit_event(event_name, event);
 	return BasicEventParser::do_process_event(event_name, event);
 }
 
