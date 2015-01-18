@@ -22,7 +22,11 @@ Pipe::Pipe(const std::string& name, const log::Log& log_):log(log_),name_(name),
 
 Pipe::~Pipe() noexcept
 {
-	log[log::info] << "Processed " << frames_passed_ << " frames, " << frames_dropped_ << " dropped.";
+	try {
+		log[log::info] << "Processed " << frames_passed_ << " frames, " << frames_dropped_ << " dropped.";
+	}
+	// We have to prevent any exception getting out
+	catch (...) {}
 }
 
 pFrame Pipe::pop_frame()
@@ -60,8 +64,7 @@ size_t Pipe::get_size() const {
 }
 
 void Pipe::notify() {
-	if (!notifiable_.expired()) {
-		auto n = notifiable_.lock();
+	if (auto n = notifiable_.lock()) {
 		n->notify();
 	}
 }
