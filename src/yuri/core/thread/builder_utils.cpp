@@ -38,7 +38,7 @@ size_t load_modules(log::Log& l_, const std::vector<std::string>& modules)
 	size_t loaded = 0;
 	for (const auto& module: modules) {
 		if (module_loader::load_module(module)) {
-			l_[log::info] << "Loaded module " << module;
+			l_[log::debug] << "Loaded module " << module;
 			++loaded;
 		} else {
 			l_[log::warning] << "Failed to load module " << module;
