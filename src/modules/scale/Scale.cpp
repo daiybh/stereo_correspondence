@@ -300,6 +300,8 @@ core::pRawVideoFrame scale_image_fast(const core::pRawVideoFrame& frame, const r
 
 core::pFrame Scale::do_special_single_step(const core::pRawVideoFrame& frame)
 {
+	if (frame->get_resolution() == resolution_)
+		return frame;
 	using namespace core::raw_format;
 	if (fast_) {
 		switch (frame->get_format()) {
