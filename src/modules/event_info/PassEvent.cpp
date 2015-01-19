@@ -29,7 +29,7 @@ core::IOThread(log_,parent,0,0,std::string("event_info")),
 event::BasicEventConsumer(log),event::BasicEventProducer(log)
 {
 	IOTHREAD_INIT(parameters);
-	set_latency(1_ms);
+	set_latency(50_ms);
 }
 
 PassEvent::~PassEvent() noexcept

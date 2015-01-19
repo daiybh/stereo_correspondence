@@ -30,7 +30,7 @@ core::IOThread(log_,parent,0,0,std::string("event_info")),
 event::BasicEventConsumer(log),enabled_(true)
 {
 	IOTHREAD_INIT(parameters);
-	set_latency(1_ms);
+	set_latency(100_ms);
 }
 
 EventInfo::~EventInfo() noexcept
