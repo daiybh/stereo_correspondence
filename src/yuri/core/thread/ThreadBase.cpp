@@ -55,6 +55,10 @@ ThreadBase::~ThreadBase() noexcept
 void ThreadBase::operator()()
 {
 	TRACE_METHOD
+#ifdef YURI_LINUX
+	auto pname = std::string(node_id_).substr(0,15);
+    pthread_setname_np(pthread_self(), pname.c_str());
+#endif
 	running_ = true;
 	log[verbose_debug] << "Starting thread" << "\n";
 	run();
