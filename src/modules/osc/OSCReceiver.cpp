@@ -33,6 +33,7 @@ OSCReceiver::OSCReceiver(const log::Log &log_, core::pwThreadBase parent, const 
 core::IOThread(log_,parent,0,0,std::string("osc_receiver")),
 event::BasicEventProducer(log),port_(2000),socket_type_("yuri_udp")
 {
+	set_latency(100_ms);
 	IOTHREAD_INIT(parameters)
 
 
@@ -59,10 +60,7 @@ void OSCReceiver::run()
 	std::vector<uint8_t> buffer(65536);
 	ssize_t read_bytes=0;
 	while(still_running()) {
-		if (!socket_->data_available()) {
-			socket_->wait_for_data(100_ms);
-			continue;
-		} else {
+		if (socket_->wait_for_data(get_latency())) {
 			log[log::verbose_debug] << "reading data";
 			read_bytes = socket_->receive_datagram(&buffer[0],buffer.size());
 			if (read_bytes > 0) {
