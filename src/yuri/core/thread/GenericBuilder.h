@@ -57,7 +57,7 @@ protected:
 private:
 	virtual	void do_connect_in(position_t position, pPipe pipe) override;
 	virtual	void do_connect_out(position_t position, pPipe pipe) override;
-
+	virtual void receive_event_hook() noexcept override;
 
 	node_map nodes_;
 	link_map links_;

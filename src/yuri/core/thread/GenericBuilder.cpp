@@ -188,6 +188,10 @@ void GenericBuilder::do_connect_out(position_t position, pPipe pipe)
 	return IOThread::do_connect_out(position, pipe);
 }
 
+void GenericBuilder::receive_event_hook() noexcept
+{
+	notify();
+}
 
 }
 }
