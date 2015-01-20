@@ -44,8 +44,14 @@ pFrame Pipe::pop_frame()
 bool Pipe::push_frame(const pFrame &frame)
 {
 	lock_t _(frame_lock_);
+	const bool was_empty = is_empty();
 	if (!closed_ && do_push_frame(frame)) {
-		notify();
+		// It should be optimal to send notifications only
+		// for pipes that were originally empty.
+		// the condition should be removed if causing problems.
+		if (was_empty) {
+			notify();
+		}
 		return true;
 	}
 	return false;
