@@ -47,7 +47,10 @@ bool SizeLimitedPolicy<false>::impl_push_frame(const pFrame &frame)
 template<>
 bool SizeLimitedPolicy<true>::impl_push_frame(const pFrame &frame)
 {
-	if ((actual_size_ + frame->get_size()) > max_size_) return false;
+	if ((actual_size_ + frame->get_size()) > max_size_) {
+		last_was_full_ = true;
+		return false;
+	}
 	frames_.push_back(frame);
 	actual_size_+=frame->get_size();
 	return true;

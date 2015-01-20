@@ -21,8 +21,8 @@ class EXPORT PipeConnector {
 
 public:
 								PipeConnector() = default;
-								PipeConnector(pwPipeNotifiable thread);
-								PipeConnector(pPipe pipe, pwPipeNotifiable thread);
+								PipeConnector(pwPipeNotifiable thread, pwPipeNotifiable thread_src);
+								PipeConnector(pPipe pipe, pwPipeNotifiable thread, pwPipeNotifiable thread_src);
 								PipeConnector(PipeConnector&& orig) noexcept;
 								PipeConnector(const PipeConnector&) = delete;
 								~PipeConnector() noexcept;
@@ -36,8 +36,9 @@ public:
 	pPipe  						get() const;
 private:
 	void 						set_pipe(pPipe pipe);
-	void						set_notifications(pwPipeNotifiable) noexcept;
+	void						set_notifications(pwPipeNotifiable, pwPipeNotifiable) noexcept;
 	pwPipeNotifiable			notifiable_;
+	pwPipeNotifiable			notifiable_src_;
 	pPipe				 		pipe_;
 
 

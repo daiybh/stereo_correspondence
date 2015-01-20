@@ -32,8 +32,12 @@ Pipe::~Pipe() noexcept
 pFrame Pipe::pop_frame()
 {
 	lock_t _(frame_lock_);
+	const bool was_full = do_is_full();
 	pFrame f = do_pop_frame();
 	if (f) frames_passed_++;
+	if (was_full && is_blocking()) {
+		notify_source();
+	}
 	return f;
 }
 
@@ -68,12 +72,22 @@ void Pipe::notify() {
 		n->notify();
 	}
 }
+void Pipe::notify_source() {
+	if (auto n = notifiable_source_.lock()) {
+		n->notify();
+	}
+}
 bool Pipe::is_empty() const {
 	return get_size() == 0;
 }
 void Pipe::set_notifiable(pwPipeNotifiable notifiable) noexcept
 {
 	notifiable_ = notifiable;
+}
+
+void Pipe::set_notifiable_source(pwPipeNotifiable notifiable) noexcept
+{
+	notifiable_source_ = notifiable;
 }
 } /* namespace core */
 } /* namespace yuri */

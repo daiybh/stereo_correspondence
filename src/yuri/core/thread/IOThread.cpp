@@ -107,7 +107,7 @@ void IOThread::do_connect_in(position_t index, pPipe pipe)
 		log[log::debug] << "Disconnecting already connected pipe from in port " << index << "\n";
 	}
 	auto notify_ptr = dynamic_pointer_cast<PipeNotifiable>(get_this_ptr());
-	in_[index]=PipeConnector(pipe,notify_ptr);
+	in_[index]=PipeConnector(pipe,notify_ptr, {});
 	active_pipes_ = std::accumulate(in_.begin(), in_.end(), 0, [](const size_t& ap, const PipeConnector&p){return ap + (p?1:0);});
 }
 
@@ -122,8 +122,9 @@ void IOThread::do_connect_out(position_t index, pPipe pipe)
 	TRACE_METHOD
 	if (index < 0 || index >= do_get_no_out_ports()) throw std::out_of_range("Output pipe out of Range");
 	if (out_[index]) log[log::debug] << "Disconnecting already connected pipe from out port " << index << "\n";
-	// Output pipe should NOT send notifications!
-	out_[index]=PipeConnector(pipe,{});
+	auto notify_ptr = dynamic_pointer_cast<PipeNotifiable>(get_this_ptr());
+	// Output pipe should send source notifications!
+	out_[index]=PipeConnector(pipe,{}, notify_ptr);
 }
 bool IOThread::push_frame(position_t index, pFrame frame)
 {
@@ -131,8 +132,7 @@ bool IOThread::push_frame(position_t index, pFrame frame)
 	if (!frame) return true;
 	if (index >= 0 && index < get_no_out_ports() && out_[index]) {
 		while (!out_[index]->push_frame(frame)) {
-			// TODO: This is obviously bad...
-			sleep(get_latency());
+			wait_for(latency_);
 			if (!still_running()) return false;
 		}
 		if (fps_stats_ && ++streamed_frames_[index]>=fps_stats_) {

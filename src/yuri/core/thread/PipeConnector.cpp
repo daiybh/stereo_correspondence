@@ -14,32 +14,34 @@ namespace yuri {
 
 namespace core {
 
-PipeConnector::PipeConnector(pwPipeNotifiable thread)
-	:notifiable_(thread)
+PipeConnector::PipeConnector(pwPipeNotifiable thread, pwPipeNotifiable thread_src)
+	:notifiable_(thread),notifiable_src_(thread_src)
 {
 }
 
-PipeConnector::PipeConnector(pPipe pipe, pwPipeNotifiable thread)
-	:notifiable_(thread)
+PipeConnector::PipeConnector(pPipe pipe, pwPipeNotifiable thread, pwPipeNotifiable thread_src)
+	:notifiable_(thread),notifiable_src_(thread_src)
 {
 	set_pipe(pipe);
 }
 
 PipeConnector::PipeConnector(PipeConnector&& rhs) noexcept:
-		notifiable_(std::move(rhs.notifiable_)),pipe_(std::move(rhs.pipe_))
+		notifiable_(std::move(rhs.notifiable_)),notifiable_src_(std::move(rhs.notifiable_src_)),
+		pipe_(std::move(rhs.pipe_))
 {
 	rhs.pipe_={};
 }
 PipeConnector::~PipeConnector() noexcept {
-	set_notifications(pwPipeNotifiable());
+	set_notifications({}, {});
 }
 
 PipeConnector&	PipeConnector::operator=(PipeConnector&& rhs) noexcept
 {
 	// Disconnect notifications if needed
-	if (pipe_ != rhs.pipe_) set_notifications(pwPipeNotifiable());
+	if (pipe_ != rhs.pipe_) set_notifications({}, {});
 	pipe_ = std::move(rhs.pipe_);
-	notifiable_=std::move(notifiable_);
+	notifiable_=std::move(rhs.notifiable_);
+	notifiable_src_=std::move(rhs.notifiable_src_);
 	rhs.pipe_={};
 	return *this;
 }
@@ -51,7 +53,7 @@ pPipe PipeConnector::operator ->()
 
 void PipeConnector::reset()
 {
-	set_notifications(pwPipeNotifiable());
+	set_notifications({}, {});
 	pipe_.reset();
 }
 
@@ -72,13 +74,14 @@ void PipeConnector::reset(pPipe pipe)
 
 void PipeConnector::set_pipe(pPipe pipe)
 {
-	set_notifications(pwPipeNotifiable());
+	set_notifications({}, {});
 	pipe_ = pipe;
-	set_notifications(notifiable_);
+	set_notifications(notifiable_, notifiable_src_);
 }
-void PipeConnector::set_notifications(pwPipeNotifiable notifiable) noexcept
+void PipeConnector::set_notifications(pwPipeNotifiable notifiable, pwPipeNotifiable notifiable_src) noexcept
 {
-	if (pipe_) pipe_->set_notifiable(notifiable);
+	if (pipe_ && !notifiable_.expired()) pipe_->set_notifiable(notifiable);
+	if (pipe_ && !notifiable_src_.expired()) pipe_->set_notifiable_source(notifiable_src);
 }
 pPipe PipeConnector::get() const
 {
