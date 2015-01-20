@@ -37,6 +37,7 @@ bool BasicEventConsumer::do_receive_event(const std::string& event_name, const p
 		incomming_events_.pop_front();
 	}
 	incomming_notification_.notify_all();
+	receive_event_hook();
 	return true;
 }
 bool BasicEventConsumer::process_events(ssize_t max_count)

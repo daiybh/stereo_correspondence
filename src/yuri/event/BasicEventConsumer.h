@@ -36,6 +36,7 @@ protected:
 	size_t						pending_events() const;
 	bool						wait_for_events(duration_t timeout);
 	event_record_t				get_pending_event();
+	virtual void 				receive_event_hook() noexcept {};
 private:
 	bool 						do_receive_event(const std::string& event_name, const pBasicEvent& event);
 
