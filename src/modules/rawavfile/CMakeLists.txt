@@ -7,6 +7,11 @@ SET (SRC RawAVFile.cpp
 
 
 
+check_library_exists(avcodec av_frame_get_channels ${libavcodec_LIBDIR} HAVE_FRAME_GET_CHANNELS)
+if (NOT HAVE_FRAME_GET_CHANNELS)
+    add_definitions(-DBROKEN_FFMPEG)
+endif()
+
 # You shouldn't need to edit anything below this line 
 add_library(${MODULE} MODULE ${SRC})
 target_link_libraries(${MODULE} ${LIBNAME}  ${LIBNAME_HELPER_LIBAV} ${libavformat_LIBRARIES})
