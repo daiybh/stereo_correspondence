@@ -166,7 +166,9 @@ bool GenericBuilder::step()
 	process_events();
 	run_routers();
 	for (auto i: irange(0,get_no_in_ports())) {
-		push_frame(i, pop_frame(i));
+		while (auto frame = pop_frame(i)) {
+			push_frame(i, frame);
+		}
 	}
 	return true;
 }
