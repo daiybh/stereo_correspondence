@@ -49,6 +49,7 @@ private:
 	unique_ptr<SDL_Surface, std::function<void(SDL_Surface*)>>	rgb_surface_;
 	int				sdl_bpp_;
 	std::string		title_;
+	bool			decorations_;
 #ifdef  YURI_SDL_OPENGL
 	gl::GL				gl_;
 	std::string			transform_shader_;

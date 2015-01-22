@@ -65,6 +65,7 @@ core::Parameters SDLWindow::configure()
 	p["opengl"]["Use OpenGL for rendering"]=false;
 	p["default_keys"]["Enable default key events. This includes ESC for quit and f for fullscreen toggle."]=true;
 	p["window_title"]["Window title"]=std::string();
+	p["decorations"]["Window decorations"]=true;
 #ifdef YURI_SDL_OPENGL
 	p["transform_shader"]["Shader to use for texture transformations"]=std::string();
 	p["color_shader"]["Shader to use for color mapping"]=std::string();
@@ -83,7 +84,7 @@ BasicEventConsumer(log),
 resolution_({800,600}),fullscreen_(false),default_keys_(true),use_gl_(false),
 overlay_{nullptr,[](SDL_Overlay*o){if(o) SDL_FreeYUVOverlay(o);}},
 rgb_surface_{nullptr,[](SDL_Surface*s){ if(s) SDL_FreeSurface(s);}},
-sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")")
+sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")"),decorations_(true)
 #ifdef YURI_SDL_OPENGL
 ,gl_(log),flip_x_(false),flip_y_(false),read_back_(false),shader_version_(120)
 #endif
@@ -126,6 +127,7 @@ void SDLWindow::run()
 	print_id();
 	if (!(surface_ = SDL_SetVideoMode(resolution_.width, resolution_.height, sdl_bpp_,
 			  SDL_HWSURFACE |  SDL_DOUBLEBUF | SDL_RESIZABLE |
+			  (decorations_?0:SDL_NOFRAME) |
 			  (fullscreen_?SDL_FULLSCREEN:0) |
 			  (use_gl_?SDL_OPENGL:0)))) {
 		throw exception::InitializationFailed("Failed to set video mode");
@@ -231,6 +233,8 @@ bool SDLWindow::set_param(const core::Parameter& param)
 	} else if (iequals(param.get_name(), "window_title")) {
 		std::string new_title = param.get<std::string>();
 		if (!new_title.empty()) title_=std::move(new_title);
+	} else if (param.get_name() == "decorations") {
+			decorations_ = param.get<bool>();
 #if YURI_SDL_OPENGL
 	} else if (param.get_name() == "transform_shader") {
 		transform_shader_ = param.get<std::string>();
