@@ -227,6 +227,10 @@ IF (Boost_REGEX_FOUND)
 	add_subdirectory(webserver)
 ENDIF()
 
+find_library(JSONCPP_LIBRARY jsoncpp)
+IF(NOT "${JSONCPP_LIBRARY}" STREQUAL "")
+	add_subdirectory(json_config)
+ENDIF()
 ENDIF(YURI_BUILD_EXPERIMENTAL_MODULES)
 
 #################################################################
