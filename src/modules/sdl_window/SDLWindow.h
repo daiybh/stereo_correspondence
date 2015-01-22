@@ -50,6 +50,7 @@ private:
 	int				sdl_bpp_;
 	std::string		title_;
 	bool			decorations_;
+	coordinates_t	position_;
 #ifdef  YURI_SDL_OPENGL
 	gl::GL				gl_;
 	std::string			transform_shader_;

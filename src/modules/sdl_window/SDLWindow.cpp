@@ -14,6 +14,11 @@
 #include "yuri/version.h"
 #include "yuri/core/utils/Timer.h"
 #include <unordered_map>
+#ifdef YURI_LINUX
+#include "SDL_syswm.h"
+
+#endif
+
 namespace yuri {
 namespace sdl_window {
 
@@ -66,6 +71,7 @@ core::Parameters SDLWindow::configure()
 	p["default_keys"]["Enable default key events. This includes ESC for quit and f for fullscreen toggle."]=true;
 	p["window_title"]["Window title"]=std::string();
 	p["decorations"]["Window decorations"]=true;
+	p["position"]["Window position"]=coordinates_t{-1,-1};
 #ifdef YURI_SDL_OPENGL
 	p["transform_shader"]["Shader to use for texture transformations"]=std::string();
 	p["color_shader"]["Shader to use for color mapping"]=std::string();
@@ -84,7 +90,8 @@ BasicEventConsumer(log),
 resolution_({800,600}),fullscreen_(false),default_keys_(true),use_gl_(false),
 overlay_{nullptr,[](SDL_Overlay*o){if(o) SDL_FreeYUVOverlay(o);}},
 rgb_surface_{nullptr,[](SDL_Surface*s){ if(s) SDL_FreeSurface(s);}},
-sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")"),decorations_(true)
+sdl_bpp_(32),title_(std::string("Yuri2 (")+yuri_version+")"),decorations_(true),
+position_(coordinates_t{-1, -1})
 #ifdef YURI_SDL_OPENGL
 ,gl_(log),flip_x_(false),flip_y_(false),read_back_(false),shader_version_(120)
 #endif
@@ -132,6 +139,18 @@ void SDLWindow::run()
 			  (use_gl_?SDL_OPENGL:0)))) {
 		throw exception::InitializationFailed("Failed to set video mode");
 	}
+#ifdef YURI_LINUX
+	if (position_.x != -1 && position_.y != -1) {
+		SDL_SysWMinfo info;
+		SDL_VERSION(&info.version);
+		if (SDL_GetWMInfo(&info) > 0 && info.subsystem == SDL_SYSWM_X11) {
+		info.info.x11.lock_func();
+		XMoveWindow(info.info.x11.display, info.info.x11.wmwindow, position_.x, position_.y);
+		XMapRaised(info.info.x11.display, info.info.x11.wmwindow);
+		info.info.x11.unlock_func();
+		}
+	}
+#endif
 	SDL_WM_SetCaption(title_.c_str(), "yuri2");
 #ifdef YURI_SDL_OPENGL
 	if (use_gl_) {
@@ -234,7 +253,9 @@ bool SDLWindow::set_param(const core::Parameter& param)
 		std::string new_title = param.get<std::string>();
 		if (!new_title.empty()) title_=std::move(new_title);
 	} else if (param.get_name() == "decorations") {
-			decorations_ = param.get<bool>();
+		decorations_ = param.get<bool>();
+	} else if (param.get_name() == "position") {
+		position_ = param.get<coordinates_t>();
 #if YURI_SDL_OPENGL
 	} else if (param.get_name() == "transform_shader") {
 		transform_shader_ = param.get<std::string>();
