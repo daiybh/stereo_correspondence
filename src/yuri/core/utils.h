@@ -120,6 +120,11 @@ bool contains(const std::vector<Type>& container, const Value& value) {
 	//return container.find(value) != container.end();
 }
 
+template<typename T, typename T2>
+T clip_value(T value, T2 min_value, T2 max_value)
+{
+	return std::min<T>(std::max<T>(value, min_value), max_value);
+}
 
 template<class T>
 class SingletonBase: public T {
