@@ -411,9 +411,10 @@ void GL::setup_ortho(GLdouble left, GLdouble right,	GLdouble bottom,
 
 void GL::draw_texture(index_t tid)
 {
-	GLuint &tex = textures[tid].tid[0];
+	auto& texture = textures[tid];
+	GLuint &tex = texture.tid[0];
 	if (tex==(GLuint)-1) return;
-	if (!textures[tid].shader) return;
+	if (!texture.shader) return;
 
 //	bool &keep_aspect = textures[tid].keep_aspect;
 
@@ -429,8 +430,8 @@ void GL::draw_texture(index_t tid)
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
 
-	textures[tid].shader->use();
-	textures[tid].bind_texture_units();
+	texture.shader->use();
+	texture.bind_texture_units();
 
 	glActiveTexture(GL_TEXTURE0);
 	glBegin(GL_QUADS);
@@ -439,63 +440,64 @@ void GL::draw_texture(index_t tid)
 								{1.0f, 0.f, 0.0f, 1.0f},
 								{0.0f, 0.0f, 0.0f, 1.0f}};
 
-// Calculate homogeneous coordinated
-// Based on: http://www.bitlush.com/posts/arbitrary-quadrilaterals-in-opengl-es-2-0
+	if (texture.projection_type == projection_t::perspective) {
+	// Calculate homogeneous coordinated
+	// Based on: http://www.bitlush.com/posts/arbitrary-quadrilaterals-in-opengl-es-2-0
 
-	double ax = corners[4] - corners[0];
-	double ay = corners[5] - corners[1];
+		const double ax = corners[4] - corners[0];
+		const double ay = corners[5] - corners[1];
 
-	double bx = corners[6] - corners[2];
-	double by = corners[7] - corners[3];
+		const double bx = corners[6] - corners[2];
+		const double by = corners[7] - corners[3];
 
-	double cross = ax * by - ay * bx;
-	if (std::abs(cross) > 0.0001) {
-		double cx = corners[0] - corners[2];
-		double cy = corners[1] - corners[3];
+		const double cross = ax * by - ay * bx;
+		if (std::abs(cross) > 0.0001) {
+			const double cx = corners[0] - corners[2];
+			const double cy = corners[1] - corners[3];
 
-		double s = (ax * cy - ay * cx) / cross;
-		if (s > 0 && s < 1) {
-			double t = (bx * cy - by * cx) / cross;
-			if (t > 0 && t < 1) {
-				double q0 = 1 / (1 - t);
-				double q1 = 1 / (1 - s);
-				double q2 = 1 / t;
-				double q3 = 1 / s;
-				tex_coords[0][0]*=q0;
-				tex_coords[0][1]*=q0;
-				tex_coords[0][3]=q0;
+			const double s = (ax * cy - ay * cx) / cross;
+			if (s > 0 && s < 1) {
+				const double t = (bx * cy - by * cx) / cross;
+				if (t > 0 && t < 1) {
+					double q0 = 1 / (1 - t);
+					double q1 = 1 / (1 - s);
+					double q2 = 1 / t;
+					double q3 = 1 / s;
+					tex_coords[0][0]*=q0;
+					tex_coords[0][1]*=q0;
+					tex_coords[0][3]=q0;
 
-				tex_coords[1][0]*=q1;
-				tex_coords[1][1]*=q1;
-				tex_coords[1][3]=q1;
+					tex_coords[1][0]*=q1;
+					tex_coords[1][1]*=q1;
+					tex_coords[1][3]=q1;
 
-				tex_coords[2][0]*=q2;
-				tex_coords[2][1]*=q2;
-				tex_coords[2][3]=q2;
+					tex_coords[2][0]*=q2;
+					tex_coords[2][1]*=q2;
+					tex_coords[2][3]=q2;
 
-				tex_coords[3][0]*=q3;
-				tex_coords[3][1]*=q3;
-				tex_coords[3][3]=q3;
+					tex_coords[3][0]*=q3;
+					tex_coords[3][1]*=q3;
+					tex_coords[3][3]=q3;
+				}
 			}
 		}
 	}
 
 
 
-
-	textures[tid].set_tex_coords(tex_coords[0]);
+	texture.set_tex_coords(tex_coords[0]);
 	glVertex2fv(&corners[0]);
 
-	textures[tid].set_tex_coords(tex_coords[1]);
+	texture.set_tex_coords(tex_coords[1]);
 	glVertex2fv(&corners[2]);
 
-	textures[tid].set_tex_coords(tex_coords[2]);
+	texture.set_tex_coords(tex_coords[2]);
 	glVertex2fv(&corners[4]);
 
-	textures[tid].set_tex_coords(tex_coords[3]);
+	texture.set_tex_coords(tex_coords[3]);
 	glVertex2fv(&corners[6]);
 	glEnd();
-	if (textures[tid].shader) textures[tid].shader->stop();
+	if (texture.shader) texture.shader->stop();
 	glBindTexture(GL_TEXTURE_2D,0);
 	glPopAttrib();
 

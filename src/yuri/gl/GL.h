@@ -24,6 +24,12 @@ namespace yuri {
 namespace gl {
 //typedef yuri::shared_ptr<class WindowBase> pWindowBase;
 
+enum class projection_t {
+	none,
+	perspective,
+//	quadlinerar
+};
+
 struct texture_info_t {
 	GLuint tid[8];
 	GLdouble tx, ty, dx, dy;
@@ -35,8 +41,10 @@ struct texture_info_t {
 	GLint texture_units[8];
 	GLint uniform_tx, uniform_ty, uniform_dx, uniform_dy, uniform_flip_x, uniform_flip_y;
 	size_t wh;
+	projection_t projection_type;
 	texture_info_t():tx(0.0f),ty(0.0f),dx(0.0), dy(0.0), flip_x(false),
-			flip_y(false),keep_aspect(false),format(0),wh(0) {
+			flip_y(false),keep_aspect(false),format(0),wh(0),
+			projection_type(projection_t::perspective) {
 		for (int i=0;i<8;++i) {
 			tid[i]=static_cast<GLuint>(-1);
 			texture_units[i]=-1;
