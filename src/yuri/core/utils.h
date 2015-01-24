@@ -109,13 +109,13 @@ bool iless(const std::basic_string<Char, traits>& a, const Char *b)
 }
 
 template<class Key, class Type, class Value>
-bool contains(std::map<Key, Type>& container, const Value& value)
+bool contains(const std::map<Key, Type>& container, const Value& value)
 {
 	return container.find(value) != container.end();
 }
 
 template<class Type, class Value>
-bool contains(std::vector<Type>& container, const Value& value) {
+bool contains(const std::vector<Type>& container, const Value& value) {
 	return std::find(std::begin(container), std::end(container), value) != std::end(container);
 	//return container.find(value) != container.end();
 }
