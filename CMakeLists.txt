@@ -92,6 +92,8 @@ OPTION (YURI_DISABLE_GPUJPEG  "Disable GPUJPEG library" ON)
 OPTION (YURI_DISABLE_OPENCV "Disable OpenCV modules" OFF)
 OPTION (YURI_DISABLE_ULTRAGRID "Disable ultragrid helper and modules" ON)
 
+OPTION (YURI_DISABLE_GRABBER "Disable node fb_grabber in GL helper" OFF)
+
 OPTION (YURI_BUILD_UNSTABLE_MODULES "Enable building of unstable modules" ON)
 OPTION (YURI_BUILD_EXPERIMENTAL_MODULES "Enable building of experimental modules" ON)
 
