@@ -147,25 +147,29 @@ template<>
 void convert_line<core::raw_format::bgra32, core::raw_format::argb32>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
-	rgba_bgra(src, dest, width);
+//	rgba_bgra(src, dest, width);
+	rgba_abgr(src, dest, width);
 }
 template<>
 void convert_line<core::raw_format::argb32, core::raw_format::bgra32>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
-	rgba_bgra(src, dest, width);
+//	rgba_bgra(src, dest, width);
+	rgba_abgr(src, dest, width);
 }
 template<>
 void convert_line<core::raw_format::abgr32, core::raw_format::rgba32>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
-	rgba_bgra(src, dest, width);
+//	rgba_bgra(src, dest, width);
+	rgba_abgr(src, dest, width);
 }
 template<>
 void convert_line<core::raw_format::rgba32, core::raw_format::abgr32>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
-	rgba_bgra(src, dest, width);
+//	rgba_bgra(src, dest, width);
+	rgba_abgr(src, dest, width);
 }
 
 void rgba_argb(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
