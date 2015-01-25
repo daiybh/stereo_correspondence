@@ -230,6 +230,11 @@ find_library(JSONCPP_LIBRARY jsoncpp)
 IF(JSONCPP_LIBRARY)
 	add_subdirectory(json_config)
 ENDIF()
+
+find_package(GLEW)
+IF(X11_FOUND AND GLEW_FOUND)
+	add_subdirectory(glx_window)
+ENDIF()
 ENDIF(YURI_BUILD_EXPERIMENTAL_MODULES)
 
 #################################################################
