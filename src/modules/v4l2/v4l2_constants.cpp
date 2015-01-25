@@ -1,11 +1,11 @@
-/*
- * v4l2_constants.cpp
+/*!
+ * @file 		v4l2_constants.cpp
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
+ * @date		25.1.2015
+ * @copyright	Institute of Intermedia, CTU in Prague, 2015
+ * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
- *  Created on: 24. 1. 2015
- *      Author: neneko
  */
-//#include <linux/v4l2-controls.h>
-
 
 
 namespace {

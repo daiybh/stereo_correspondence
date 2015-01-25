@@ -1,9 +1,9 @@
 /*!
  * @file 		V4l2Source.h
- * @author 		Zdenek Travnicek
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
  * @date 		17.5.2009
- * @date		16.2.2013
- * @copyright	Institute of Intermedia, CTU in Prague, 2009 - 2013
+ * @date		25.1.2015
+ * @copyright	Institute of Intermedia, CTU in Prague, 2009 - 2015
  * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
  */

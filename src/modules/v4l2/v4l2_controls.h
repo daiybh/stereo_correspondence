@@ -1,8 +1,10 @@
-/*
- * v4l2_controls.h
+/*!
+ * @file 		v4l2_controls.h
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
+ * @date		25.1.2015
+ * @copyright	Institute of Intermedia, CTU in Prague, 2009 - 2015
+ * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
- *  Created on: 24. 1. 2015
- *      Author: neneko
  */
 
 #ifndef V4L2_CONTROLS_H_
