@@ -18,6 +18,7 @@
 // Include this only for being able to define convert_format_map here (needed for register.cpp)
 #include "yuri/core/frame/raw_frame_types.h"
 #include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/imgproc/types_c.h"
 
 namespace yuri {
 namespace opencv {
