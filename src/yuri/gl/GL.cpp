@@ -56,8 +56,10 @@ std::tuple<GLenum, GLenum, GLenum> get_rgb_format(const format_t fmt)
 		case raw_format::v16:
 		case raw_format::depth16:
 			return std::make_tuple(GL_LUMINANCE, GL_LUMINANCE16, GL_UNSIGNED_SHORT);
+		case raw_format::rgb8:
+			return std::make_tuple(GL_RGB, GL_R3_G3_B2,  GL_UNSIGNED_BYTE_3_3_2);
 		case raw_format::rgb16:
-			return std::make_tuple(GL_RGB, GL_RGB5,  GL_UNSIGNED_SHORT_5_6_5_REV);
+			return std::make_tuple(GL_RGB, GL_RGB5,  GL_UNSIGNED_SHORT_5_6_5);
 
 	}
 	return std::make_tuple(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE);
@@ -90,6 +92,10 @@ size_t get_pixel_size(GLenum fmt, GLenum data_type)
 {
 	size_t comp_size = 0;
 	switch (data_type) {
+		case GL_UNSIGNED_BYTE_3_3_2:
+			return 1;
+		case GL_UNSIGNED_SHORT_5_6_5:
+			return 2;
 		case GL_UNSIGNED_SHORT_5_6_5_REV:
 			return 2;
 		case GL_UNSIGNED_BYTE:
@@ -143,6 +149,7 @@ const std::vector<format_t> gl_supported_formats = {
 		raw_format::u16,
 		raw_format::v16,
 		raw_format::depth16,
+		raw_format::rgb8,
 		raw_format::rgb16,
 };
 
@@ -244,6 +251,7 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, 
 		case raw_format::u16:
 		case raw_format::v16:
 		case raw_format::depth16:
+		case raw_format::rgb8:
 		case raw_format::rgb16:
 		{
 			GLenum fmt_in = GL_RGB;
