@@ -35,7 +35,7 @@ public:
 
 private:
 	struct context_info_t {
-		context_info_t(GLXContext context, position_t index, geometry_t geometry = {}):
+		context_info_t(GLXContext context, position_t index, geometry_t geometry = {0, 0, 0, 0}):
 			context(context),index(index),geometry(geometry) {}
 		context_info_t(const context_info_t&) = delete;
 		context_info_t(context_info_t && rhs) noexcept :
