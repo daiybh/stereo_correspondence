@@ -24,6 +24,7 @@ core::Parameters OSCReceiver::configure()
 	p.set_description("OSCReceiver");
 	p["socket_type"]="yuri_udp";
 	p["port"]=57120;
+	p["address"]="0.0.0.0";
 	//p->set_max_pipes(0,0);
 	return p;
 }
@@ -51,7 +52,7 @@ void OSCReceiver::run()
 	log[log::info] << "Initializing socket of type '"<< socket_type_ << "'";
 	socket_ = core::DatagramSocketGenerator::get_instance().generate(socket_type_,log,"");
 	log[log::info] << "Binding socket";
-	if (!socket_->bind("",port_)) {
+	if (!socket_->bind(address_,port_)) {
 		log[log::fatal] << "Failed to bind socket!";
 		request_end(core::yuri_exit_interrupted);
 		return;
@@ -85,6 +86,8 @@ bool OSCReceiver::set_param(const core::Parameter& param)
 {
 	if (param.get_name() == "socket_type") {
 		socket_type_ = param.get<std::string>();
+	} else if (param.get_name() == "address") {
+		address_ = param.get<std::string>();
 	} else if (param.get_name() == "port") {
 		port_ = param.get<uint16_t>();
 	} else return core::IOThread::set_param(param);

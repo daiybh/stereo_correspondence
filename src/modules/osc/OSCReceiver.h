@@ -33,6 +33,7 @@ private:
 	std::shared_ptr<core::socket::DatagramSocket> socket_;
 	uint16_t	port_;
 	std::string socket_type_;
+	std::string address_;
 };
 
 } /* namespace osc_receiver */
