@@ -72,6 +72,7 @@ core::Parameters SDLWindow::configure()
 	p["window_title"]["Window title"]=std::string();
 	p["decorations"]["Window decorations"]=true;
 	p["position"]["Window position"]=coordinates_t{-1,-1};
+	p["display"]["Display for the window. Warning: It may affect other threads behavior as well."]="";
 #ifdef YURI_SDL_OPENGL
 	p["transform_shader"]["Shader to use for texture transformations"]=std::string();
 	p["color_shader"]["Shader to use for color mapping"]=std::string();
@@ -98,7 +99,10 @@ position_(coordinates_t{-1, -1})
 {
 	IOTHREAD_INIT(parameters)
 	set_latency(1_ms);
-
+	if (!display_.empty()) {
+		display_str_ = "DISPLAY="+display_;
+		::putenv(const_cast<char*>(display_str_.c_str()));
+	}
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0) {
 		throw exception::InitializationFailed("Failed to initialize SDL");
 	}
@@ -256,6 +260,8 @@ bool SDLWindow::set_param(const core::Parameter& param)
 		decorations_ = param.get<bool>();
 	} else if (param.get_name() == "position") {
 		position_ = param.get<coordinates_t>();
+	} else if (param.get_name() == "display") {
+		display_ = param.get<std::string>();
 #if YURI_SDL_OPENGL
 	} else if (param.get_name() == "transform_shader") {
 		transform_shader_ = param.get<std::string>();

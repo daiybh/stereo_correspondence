@@ -51,6 +51,8 @@ private:
 	std::string		title_;
 	bool			decorations_;
 	coordinates_t	position_;
+	std::string		display_;
+	std::string		display_str_;
 #ifdef  YURI_SDL_OPENGL
 	gl::GL				gl_;
 	std::string			transform_shader_;
