@@ -21,9 +21,13 @@
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/frame/compressed_frame_params.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
+
+#include <errno.h>
+#include <sys/ioctl.h>
+
 namespace yuri {
 
-namespace io {
+namespace v4l2 {
 
 
 
@@ -33,59 +37,33 @@ MODULE_REGISTRATION_BEGIN("v4l2source")
 MODULE_REGISTRATION_END()
 
 namespace {
-	using namespace yuri::core::raw_format;
-	using namespace yuri::core::compressed_frame;
-	std::map<yuri::format_t, uint32_t> formats_map= {
-
-			{rgb24,		V4L2_PIX_FMT_RGB24},
-			{argb32, 	V4L2_PIX_FMT_RGB32},
-			{bgr24, 	V4L2_PIX_FMT_BGR24},
-			{bgra32, 	V4L2_PIX_FMT_BGR32},
-			{rgb15,		V4L2_PIX_FMT_RGB555},
-			{rgb16,		V4L2_PIX_FMT_RGB565},
-			{yuyv422, 	V4L2_PIX_FMT_YUYV},
-			{yvyu422, 	V4L2_PIX_FMT_YVYU},
-			{uyvy422, 	V4L2_PIX_FMT_UYVY},
-			{vyuy422, 	V4L2_PIX_FMT_VYUY},
-			//{yuv420p, V4L2_PIX_FMT_YUV420},
-//			{YURI_VIDEO_DV, V4L2_PIX_FMT_DV},
-			{bayer_bggr,V4L2_PIX_FMT_SBGGR8},
-			{bayer_rggb,V4L2_PIX_FMT_SRGGB8},
-			{bayer_grbg,V4L2_PIX_FMT_SGRBG8},
-			{bayer_gbrg,V4L2_PIX_FMT_SGBRG8},
-
-			{mjpg, 		V4L2_PIX_FMT_MJPEG},
-			{jpeg, 		V4L2_PIX_FMT_JPEG}};
-
-
-
-	std::map<std::string, uint32_t> special_formats = {
-		{"S920", V4L2_PIX_FMT_SN9C20X_I420},
-		{"BA81", V4L2_PIX_FMT_SBGGR8}};
-
-	/** Converts yuri::format_t to v4l2 format
-	 * \param fmt V4l2 pixel format
-	 * \return yuri::format_t for the specified format.
-	 */
-	static uint32_t yuri_format_to_v4l2(yuri::format_t fmt)
+	int xioctl(int fd, unsigned long int request, void *arg)
 	{
-		if (formats_map.count(fmt)) return formats_map[fmt];
-		return 0;
-//		throw exception::Exception("Unknown format");
-	}
-	/** Converts v4l2 format to yuri::format_t
-	 * \param fmt Pixel format as yuri::format_t
-	 * \return v4l2 pixel format for the specified format.
-	 */
-	static yuri::format_t v4l2_format_to_yuri(uint32_t fmt)
-	{
-		for (const auto& f: formats_map) {
-			if (f.second==fmt) return f.first;
+		int r;
+		while((r = ioctl (fd, request, arg)) < 0) {
+			if (r==-1 && errno==EINTR) continue;
+			break;
 		}
-		return core::raw_format::unknown;
-		//	case V4L2_PIX_FMT_SN9C20X_I420:	return YURI_FMT_YUV420_PLANAR;
-//		throw exception::Exception("Unknown format");
+		return r;
 	}
+
+}
+
+
+#include "v4l2_constants.cpp"
+
+namespace {
+//void list_controls(int fd, log::Log& log)
+//{
+//	log[log::info] << "Supported controls:";
+//	for (const auto& ctrl: user_controls) {
+//		auto state = is_control_supported(fd, ctrl.first, log);
+//		if (state.supported == control_support_t::supported) {
+//			log[log::info] << "control '" << ctrl.second << ", value: " << state.value << ", range: <" << state.min_value << ", " << state.max_value << ">";
+//		}
+//	}
+//}
+
 }
 
 core::Parameters V4l2Source::configure()
@@ -116,7 +94,9 @@ core::Parameters V4l2Source::configure()
 
 
 V4l2Source::V4l2Source(log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters)
-	:core::IOThread(log_,parent,0,1,std::string("v4l2")),resolution({640,480}),
+	:core::IOThread(log_,parent,0,1,std::string("v4l2")),
+	 event::BasicEventConsumer(log),
+	 resolution({640,480}),
 	 method(METHOD_NONE),buffers(0),no_buffers(0),buffer_free(0),
 	 combine_frames(false),number_of_inputs(0),fps{30,1},frame_duration(0)
 {
@@ -143,6 +123,9 @@ V4l2Source::V4l2Source(log::Log &log_,core::pwThreadBase parent, const core::Par
 		initialize_capture();
 		// Enable illuminator, if requested by user
 		enable_iluminator();
+
+		enum_controls();
+
 
 	}
 	catch (exception::Exception &e)
@@ -173,8 +156,13 @@ void V4l2Source::run()
 		sleep(get_latency());
 		if (!still_running()) break;
 	}
+//	set_control(fd, V4L2_CID_AUTO_WHITE_BALANCE, false, log);
+//	set_control(fd, V4L2_CID_EXPOSURE_AUTO, 0, log);
+//	set_control(fd, V4L2_CID_EXPOSURE_ABSOLUTE, 2, log);
+//	set_control(fd, V4L2_CID_BRIGHTNESS, -64, log);
 //	int frames=0;
 	while (/*frames++<1000 &&*/ still_running()) {
+		process_events();
 		FD_ZERO(&set);
 		FD_SET(fd,&set);
 		tv.tv_sec=0;
@@ -198,10 +186,6 @@ void V4l2Source::run()
 //	IO_THREAD_POST_RUN
 }
 
-bool V4l2Source::step()
-{
-	return false;
-}
 bool V4l2Source::init_mmap()
 {
 	struct v4l2_requestbuffers req;
@@ -474,15 +458,7 @@ bool V4l2Source::stop_capture()
 	}
 }
 
-int V4l2Source::xioctl(int fd, unsigned long int request, void *arg)
-{
-	int r;
-	while((r = ioctl (fd, request, arg)) < 0) {
-		if (r==-1 && errno==EINTR) continue;
-		break;
-	}
-	return r;
-}
+
 
 
 bool V4l2Source::set_param(const core::Parameter &param)
@@ -858,40 +834,31 @@ bool V4l2Source::initialize_capture()
  */
 bool V4l2Source::enable_iluminator()
 {
-	if (illumination) {
-		struct v4l2_queryctrl queryctrl;
-		struct v4l2_control control;
-		memset (&queryctrl, 0, sizeof (queryctrl));
-		queryctrl.id=V4L2_CID_ILLUMINATORS_1;
+	return controls::set_control(fd, "iluminator", illumination, log);
+}
 
-		if (xioctl (fd, VIDIOC_QUERYCTRL, &queryctrl)<0) {
-		        log[log::error] << "Illuminator is not supported" << std::endl;
-		} else if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED) {
-			log[log::error] << "Illuminator is disabled" << std::endl;
-		} else {
-			log[log::debug] << "Trying to enable illuminator " << queryctrl.name << std::endl;
-			memset (&control, 0, sizeof (control));
-			control.id = V4L2_CID_ILLUMINATORS_1;
-			control.value = queryctrl.maximum;
-			if (xioctl (fd, VIDIOC_S_CTRL, &control)<0) {
-				log[log::error]<< "Failed to enable illuminator" << std::endl;
-			} else {
-				control.value = 0;
-				if (xioctl (fd, VIDIOC_G_CTRL, &control)>=0) {
-					if (control.value) {
-						log[log::info] << "Illuminator enabled." <<std::endl;
-					} else {
-						log[log::error] << "Illuminator set, but camera reports it's not..." << std::endl;
-					}
-				} else {
-					log[log::info]<<"Illuminator enabled, but failed to query it's status."<<std::endl;
-				}
-			}
-		}
+bool V4l2Source::enum_controls()
+{
+	controls_ = controls::get_control_list(fd, log);
+	log[log::info] << "Supported controls:";
+	for (const auto& c: controls_) {
+		log[log::info] << "\t'" << c.name << "' (" << c.short_name
+				<< "), value: " << c.value
+				<< ", range: <" << c.min_value<<", "<<c.max_value<<">";
 	}
 	return true;
 }
 
+bool V4l2Source::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
+{
+	auto it = std::find_if(controls_.cbegin(), controls_.cend(), [&event_name](const controls::control_info&info){return iequals(info.name, event_name);});
+	if (it != controls_.cend()) {
+		controls::set_control(fd, it->id, event, log);
+	} else if (!controls::set_control(fd, event_name, event, log)) {
+//		log[log::warning] << "set control failed " << event_name;
+	}
+	return true;
+}
 
 }
 }
