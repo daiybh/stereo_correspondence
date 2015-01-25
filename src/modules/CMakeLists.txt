@@ -51,8 +51,7 @@ add_subdirectory(yuriconvert)
 add_subdirectory(vncclient)
 
 IF(UNIX)
-	add_subdirectory(yuri_tcp)
-	add_subdirectory(yuri_udp)
+	add_subdirectory(sockets)
 ENDIF()
 
 CHECK_INCLUDE_FILE_CXX (linux/videodev2.h HAVE_VIDEODEV2_H)
