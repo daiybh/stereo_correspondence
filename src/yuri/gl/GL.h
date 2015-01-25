@@ -16,6 +16,7 @@
 #include "GLProgram.h"
 #include <GL/gl.h>
 #include "yuri/core/forward.h"
+#include "yuri/core/frame/VideoFrame.h"
 #include "yuri/core/frame/raw_frame_types.h"
 
 
@@ -134,7 +135,7 @@ public:
 			resolution_t resolution, GLenum tex_mode, GLenum data_mode, bool update,
 			GLenum data_type = GL_UNSIGNED_BYTE);
 	bool finish_frame();
-	static core::pFrame read_window(geometry_t geometry);
+	static core::pVideoFrame read_window(geometry_t geometry, format_t format = core::raw_format::rgb24);
 	log::Log log;
 
 	std::string transform_shader;

@@ -606,12 +606,172 @@ bool GL::finish_frame()
 	glFinish();
 	return true;
 }
-core::pFrame GL::read_window(geometry_t geometry)
+
+namespace {
+using namespace core::raw_format;
+
+template<format_t fmt, GLenum gl_format, GLenum data_type>
+core::pVideoFrame read_win_generic(geometry_t geometry)
 {
-	auto frame = core::RawVideoFrame::create_empty(core::raw_format::rgb24, geometry.get_resolution());
+	auto frame = core::RawVideoFrame::create_empty(fmt, geometry.get_resolution());
 	glReadPixels(geometry.x, geometry.y, geometry.width, geometry.height,
-			GL_RGB, GL_UNSIGNED_BYTE, PLANE_RAW_DATA(frame, 0));
+				gl_format, data_type, PLANE_RAW_DATA(frame, 0));
 	return frame;
+}
+
+
+template<format_t fmt>
+core::pVideoFrame read_win(geometry_t /* geometry */)
+{
+	return {};
+}
+
+template<>
+core::pVideoFrame read_win<rgb24>(geometry_t geometry)
+{
+	return read_win_generic<rgb24, GL_RGB, GL_UNSIGNED_BYTE>(geometry);
+}
+
+template<>
+core::pVideoFrame read_win<rgba32>(geometry_t geometry)
+{
+	return read_win_generic<rgba32, GL_RGBA, GL_UNSIGNED_BYTE>(geometry);
+}
+
+template<>
+core::pVideoFrame read_win<bgr24>(geometry_t geometry)
+{
+	return read_win_generic<bgr24, GL_BGR, GL_UNSIGNED_BYTE>(geometry);
+}
+
+template<>
+core::pVideoFrame read_win<bgra32>(geometry_t geometry)
+{
+	return read_win_generic<bgra32, GL_BGRA, GL_UNSIGNED_BYTE>(geometry);
+}
+template<>
+core::pVideoFrame read_win<depth8>(geometry_t geometry)
+{
+	return read_win_generic<depth8, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE>(geometry);
+}
+template<>
+core::pVideoFrame read_win<depth16>(geometry_t geometry)
+{
+	return read_win_generic<depth16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT>(geometry);
+}
+template<>
+core::pVideoFrame read_win<r8>(geometry_t geometry)
+{
+	return read_win_generic<r8, GL_RED, GL_UNSIGNED_BYTE>(geometry);
+}
+template<>
+core::pVideoFrame read_win<g8>(geometry_t geometry)
+{
+	return read_win_generic<g8, GL_GREEN, GL_UNSIGNED_BYTE>(geometry);
+}
+template<>
+core::pVideoFrame read_win<b8>(geometry_t geometry)
+{
+	return read_win_generic<b8, GL_BLUE, GL_UNSIGNED_BYTE>(geometry);
+}
+template<>
+core::pVideoFrame read_win<y8>(geometry_t geometry)
+{
+	return read_win_generic<y8, GL_LUMINANCE, GL_UNSIGNED_BYTE>(geometry);
+}
+template<>
+core::pVideoFrame read_win<alpha8>(geometry_t geometry)
+{
+	return read_win_generic<alpha8, GL_ALPHA, GL_UNSIGNED_BYTE>(geometry);
+}
+
+template<>
+core::pVideoFrame read_win<r16>(geometry_t geometry)
+{
+	return read_win_generic<r16, GL_RED, GL_UNSIGNED_SHORT>(geometry);
+}
+template<>
+core::pVideoFrame read_win<g16>(geometry_t geometry)
+{
+	return read_win_generic<g16, GL_GREEN, GL_UNSIGNED_SHORT>(geometry);
+}
+template<>
+core::pVideoFrame read_win<b16>(geometry_t geometry)
+{
+	return read_win_generic<b16, GL_BLUE, GL_UNSIGNED_SHORT>(geometry);
+}
+template<>
+core::pVideoFrame read_win<y16>(geometry_t geometry)
+{
+	return read_win_generic<y16, GL_LUMINANCE, GL_UNSIGNED_SHORT>(geometry);
+}
+template<>
+core::pVideoFrame read_win<alpha16>(geometry_t geometry)
+{
+	return read_win_generic<alpha16, GL_ALPHA, GL_UNSIGNED_SHORT>(geometry);
+}
+
+template<>
+core::pVideoFrame read_win<rgb8>(geometry_t geometry)
+{
+	return read_win_generic<rgb8, GL_RGB, GL_UNSIGNED_BYTE_3_3_2>(geometry);
+}
+template<>
+core::pVideoFrame read_win<rgb16>(geometry_t geometry)
+{
+	return read_win_generic<rgb16, GL_RGB, GL_UNSIGNED_SHORT_5_6_5>(geometry);
+}
+
+}
+
+core::pVideoFrame GL::read_window(geometry_t geometry, format_t format)
+{
+	using namespace core::raw_format;
+	switch (format) {
+		case rgb24:
+			return read_win<rgb24>(geometry);
+		case rgba32:
+			return read_win<rgba32>(geometry);
+		case bgr24:
+			return read_win<bgr24>(geometry);
+		case bgra32:
+			return read_win<bgra32>(geometry);
+
+
+		case depth8:
+			return read_win<depth8>(geometry);
+		case depth16:
+			return read_win<depth16>(geometry);
+
+		case r8:
+			return read_win<r8>(geometry);
+		case g8:
+			return read_win<g8>(geometry);
+		case b8:
+			return read_win<b8>(geometry);
+		case alpha8:
+			return read_win<alpha8>(geometry);
+		case y8:
+			return read_win<y8>(geometry);
+		case r16:
+			return read_win<r16>(geometry);
+		case g16:
+			return read_win<g16>(geometry);
+		case b16:
+			return read_win<b16>(geometry);
+		case alpha16:
+			return read_win<alpha16>(geometry);
+		case y16:
+			return read_win<y16>(geometry);
+
+		case rgb8:
+			return read_win<rgb8>(geometry);
+		case rgb16:
+			return read_win<rgb16>(geometry);
+		default:
+			break;
+	};
+	return {};
 }
 
 }
