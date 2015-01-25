@@ -25,9 +25,16 @@ add_executable(yuri_test_module test_module.cpp)
 target_link_libraries (yuri_test_module ${LIBNAME} )
 install(TARGETS yuri_test_module RUNTIME DESTINATION bin)
 
-#add_library(yuri_wrapper MODULE wrapper.cpp)
-#target_link_libraries (yuri_wrapper ${LIBNAME} )
-#YURI_INSTALL_EXE_LIB(yuri_wrapper)
+IF(UNIX)
+add_library(yuri_wrapper MODULE 
+		wrapper.cpp
+		wrapper/WrapperLoader.h
+		wrapper/WrapperLoader.cpp
+		)
+
+target_link_libraries (yuri_wrapper ${LIBNAME} ${LIBNAME_HELPER_GL} )
+YURI_INSTALL_EXE_LIB(yuri_wrapper)
+ENDIF()
 
 IF(Boost_REGEX_FOUND)
 add_executable(yuri_simple 	
