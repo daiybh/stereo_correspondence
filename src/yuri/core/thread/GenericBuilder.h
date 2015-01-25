@@ -44,7 +44,7 @@ class GenericBuilder: public IOThread, public event::BasicEventParser {
 public:
 
 	GenericBuilder(const log::Log& log_, pwThreadBase parent, const std::string& name);
-	~GenericBuilder() noexcept = default;
+	~GenericBuilder() noexcept {};
 	virtual void run() override;
 	virtual bool step() override;
 	pIOThread get_node(const std::string& name);
