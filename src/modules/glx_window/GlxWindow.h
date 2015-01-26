@@ -72,6 +72,7 @@ private:
 							frames_;
 	core::pConvert			converter_;
 	std::vector<format_t>	supported_formats_;
+	bool 					swap_eyes_;
 };
 
 } /* namespace glx_window */

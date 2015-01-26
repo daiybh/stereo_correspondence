@@ -33,6 +33,7 @@ core::Parameters GlxWindow::configure()
 	p["resolution"]["Window resoluton"]=resolution_t{800,600};
 	p["position"]["Window position"]=coordinates_t{0,0};
 	p["decorations"]["Show window decorations"]=false;
+	p["swap_eyes"]["Swap stereo eyes"]=false;
 	return p;
 }
 
@@ -71,7 +72,8 @@ core::IOThread(log_,parent,2,1,std::string("glx_window")),gl_(log),
 screen_{":0"},display_(nullptr,[](Display*d) { XCloseDisplay(d);}),
 screen_number_{0},attributes_{GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None},
 geometry_{800,600,0,0},visual_{nullptr},flip_x_{false},flip_y_{false},
-read_back_{false},stereo_mode_{stereo_mode_t::none},decorations_{false}
+read_back_{false},stereo_mode_{stereo_mode_t::none},decorations_{false},
+swap_eyes_{false}
 {
 	set_latency(10_ms);
 	IOTHREAD_INIT(parameters)
@@ -277,14 +279,24 @@ bool GlxWindow::swap_buffers()
 	return true;
 }
 
+namespace {
+// Swaps 0 and 1
+	inline int swapped_value(bool swap_needed, int i) {
+		return swap_needed?i:1-i;
+	}
+}
 bool GlxWindow::fetch_frames()
 {
 	// This should depend on policy
 	auto needed = stereo_frames_needed(stereo_mode_);
 	frames_.resize(needed);
+	const bool swap_needed = swap_eyes_ && (needed == 2);
 	for (auto i: irange(0, needed)) {
 		if (!frames_[i]) {
-			frames_[i] = converter_->convert_to_cheapest(pop_frame(i), supported_formats_);
+			frames_[i] = converter_->convert_to_cheapest(
+							pop_frame(
+									swapped_value(swap_needed, i)
+							), supported_formats_);
 		}
 	}
 	for (const auto& f: frames_) {
@@ -364,6 +376,8 @@ bool GlxWindow::set_param(const core::Parameter& param)
 		stereo_mode_ = get_mode(param.get<std::string>());
 	} else if (param.get_name() == "decorations") {
 		decorations_ = param.get<bool>();
+	} else if (param.get_name() == "swap_eyes") {
+		swap_eyes_ = param.get<bool>();
 	} else return core::IOThread::set_param(param);
 	return true;
 }
