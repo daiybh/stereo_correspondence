@@ -34,7 +34,6 @@ public:
 private:
 
 	virtual void run() override;
-	virtual bool step() override;
 	virtual bool set_param(const core::Parameter& param);
 	bool create_window();
 	bool create_glx_context();

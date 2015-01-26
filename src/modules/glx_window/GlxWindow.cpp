@@ -120,15 +120,6 @@ void GlxWindow::run()
 	}
 }
 
-bool GlxWindow::step()
-{
-	core::pFrame frame = pop_frame(0);
-	if (frame) {
-		push_frame(0, frame);
-	}
-	return true;
-}
-
 bool GlxWindow::create_window()
 {
 	display_.reset(XOpenDisplay(screen_.c_str()));
