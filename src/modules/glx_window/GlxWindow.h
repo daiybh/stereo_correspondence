@@ -70,6 +70,8 @@ private:
 	bool 					decorations_;
 	std::vector<core::pFrame>
 							frames_;
+	core::pConvert			converter_;
+	std::vector<format_t>	supported_formats_;
 };
 
 } /* namespace glx_window */

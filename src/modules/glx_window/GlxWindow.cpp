@@ -11,6 +11,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/utils/irange.h"
 #include <X11/Xatom.h>
+#include "yuri/core/thread/Convert.h"
 namespace yuri {
 namespace glx_window {
 
@@ -81,6 +82,7 @@ read_back_{false},stereo_mode_{stereo_mode_t::none},decorations_{false}
 		throw exception::InitializationFailed("Failed to create window");
 	}
 
+	supported_formats_ = gl_.get_supported_formats();
 //	set_supported_formats(gl_.get_supported_formats());
 
 }
@@ -98,6 +100,10 @@ void GlxWindow::run()
 		show_decorations(decorations_);
 		show_window();
 		move_window({geometry_.x, geometry_.y});
+
+		// Let's keep local converter until MultiIOThread supports this behaviour.
+		converter_.reset(new core::Convert(log, get_this_ptr(), core::Convert::configure()));
+		add_child(converter_);
 
 	}
 	while (still_running()) {
@@ -278,7 +284,7 @@ bool GlxWindow::fetch_frames()
 	frames_.resize(needed);
 	for (auto i: irange(0, needed)) {
 		if (!frames_[i]) {
-			frames_[i] = pop_frame(i);
+			frames_[i] = converter_->convert_to_cheapest(pop_frame(i), supported_formats_);
 		}
 	}
 	for (const auto& f: frames_) {
