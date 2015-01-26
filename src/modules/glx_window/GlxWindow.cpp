@@ -12,6 +12,7 @@
 #include "yuri/core/utils/irange.h"
 #include <X11/Xatom.h>
 #include "yuri/core/thread/Convert.h"
+#include "yuri/event/EventHelpers.h"
 namespace yuri {
 namespace glx_window {
 
@@ -78,7 +79,9 @@ int stereo_frames_needed(stereo_mode_t mode) {
 }
 
 GlxWindow::GlxWindow(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,2,1,std::string("glx_window")),gl_(log),
+core::IOThread(log_,parent,2,1,std::string("glx_window")),
+BasicEventConsumer(log),
+gl_(log),
 screen_{":0"},display_(nullptr,[](Display*d) { XCloseDisplay(d);}),
 screen_number_{0},attributes_{GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None},
 geometry_{800,600,0,0},visual_{nullptr},flip_x_{false},flip_y_{false},
@@ -120,6 +123,7 @@ void GlxWindow::run()
 
 	}
 	while (still_running()) {
+		process_events();
 		process_x11_events();
 		wait_for(get_latency());
 		if (display_frames()) {
@@ -399,5 +403,14 @@ bool GlxWindow::set_param(const core::Parameter& param)
 	return true;
 }
 
+bool GlxWindow::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
+{
+	if (event_name == "dx" || event_name == "delta_x") {
+		delta_x_ = event::lex_cast_value<float>(event);
+	} else if (event_name == "dy" || event_name == "delta_y") {
+		delta_y_ = event::lex_cast_value<float>(event);
+	}
+	return true;
+}
 } /* namespace glx_window */
 } /* namespace yuri */

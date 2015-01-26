@@ -11,6 +11,7 @@
 #define GLXWINDOW_H_
 
 #include "yuri/core/thread/IOThread.h"
+#include "yuri/event/BasicEventConsumer.h"
 #include "GL/glx.h"
 #include "yuri/gl/GL.h"
 namespace yuri {
@@ -24,7 +25,7 @@ enum class stereo_mode_t {
 	top_bottom,
 };
 
-class GlxWindow: public core::IOThread
+class GlxWindow: public core::IOThread, public event::BasicEventConsumer
 {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
@@ -34,7 +35,8 @@ public:
 private:
 
 	virtual void run() override;
-	virtual bool set_param(const core::Parameter& param);
+	virtual bool set_param(const core::Parameter& param) override;
+	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 	bool create_window();
 	bool create_glx_context();
 	bool show_window(bool show = true);
