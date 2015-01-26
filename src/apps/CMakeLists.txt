@@ -1,7 +1,14 @@
+
+
+SET(LIBS ${LIBNAME})
+
 IF(NOT YURI_DISABLE_BOOST)
 	find_package( Boost 1.46 COMPONENTS program_options regex)
 	IF(Boost_PROGRAM_OPTIONS_FOUND)
 		add_definitions(-DHAVE_BOOST_PROGRAM_OPTIONS)
+		include_directories ( ${Boost_INCLUDE_DIRS})
+        link_directories (${Boost_LIBRARY_DIRS})
+        SET(LIBS ${LIBS} ${Boost_LIBRARIES})
 	ENDIF()
 ENDIF()
 
