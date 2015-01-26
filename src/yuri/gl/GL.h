@@ -18,7 +18,7 @@
 #include "yuri/core/forward.h"
 #include "yuri/core/frame/VideoFrame.h"
 #include "yuri/core/frame/raw_frame_types.h"
-
+#include <cmath>
 
 namespace yuri {
 
@@ -73,10 +73,10 @@ struct texture_info_t {
 			//std::cerr << "setting uniform " << texture_units[i] << " to " << i << endl;
 			shader->set_uniform_sampler(texture_units[i],i);
 		}
-		shader->set_uniform_float(uniform_dx, dx);
-		shader->set_uniform_float(uniform_dy, dy);
-		shader->set_uniform_float(uniform_tx, tx);
-		shader->set_uniform_float(uniform_ty, ty);
+		shader->set_uniform_float(uniform_dx, dx>0?dx*tx:0);
+		shader->set_uniform_float(uniform_dy, dy>0?dy*ty:0);
+		shader->set_uniform_float(uniform_tx, tx * (1.0 - std::fabs(dx)));
+		shader->set_uniform_float(uniform_ty, ty * (1.0 - std::fabs(dy)));
 		shader->set_uniform_int(uniform_flip_x, flip_x);
 		shader->set_uniform_int(uniform_flip_y, flip_y);
 	}
@@ -136,6 +136,9 @@ public:
 			GLenum data_type = GL_UNSIGNED_BYTE);
 	bool finish_frame();
 	static core::pVideoFrame read_window(geometry_t geometry, format_t format = core::raw_format::rgb24);
+
+
+	void set_texture_delta(index_t tid, float dx, float dy);
 	log::Log log;
 
 	std::string transform_shader;

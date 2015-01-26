@@ -39,7 +39,7 @@ void main()
 {
 	vec2 mapped_coords = transform_coords(gl_TexCoord[0].st / gl_TexCoord[0].w * 2.0f - vec2(1.0f, 1.0f));
 	mapped_coords = mapped_coords * vec2(1.0f -2.0f * flip_x, 1.0f - 2.0f * flip_y); 	 
-	vec2 coord = (mapped_coords*0.5f+vec2(0.5f, 0.5f)) * vec2(tx, ty);
+	vec2 coord = (mapped_coords*0.5f+vec2(0.5f, 0.5f)) * vec2(tx, ty) + vec2(dx, dy);
 	vec4 color = get_color(coord);
 	gl_FragColor = map_color(color, coord);
 }

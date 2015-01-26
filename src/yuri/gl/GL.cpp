@@ -13,7 +13,7 @@
 #include "yuri/core/thread/IOThread.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/frame/raw_frame_params.h"
-
+#include "yuri/core/utils.h"
 #include "default_shaders.h"
 #include <cassert>
 
@@ -772,6 +772,15 @@ core::pVideoFrame GL::read_window(geometry_t geometry, format_t format)
 			break;
 	};
 	return {};
+}
+
+void GL::set_texture_delta(index_t tid, float dx, float dy)
+{
+	auto it = textures.find(tid);
+	if (it != textures.end()) {
+		it->second.dx = clip_value(dx, -1.0, 1.0);
+		it->second.dy = clip_value(dy, -1.0, 1.0);
+	}
 }
 
 }
