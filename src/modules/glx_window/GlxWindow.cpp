@@ -63,6 +63,14 @@ stereo_mode_t get_mode(const std::string& name) {
 	if (it == mode_names.end()) return stereo_mode_t::none;
 	return it->second;
 }
+
+std::string get_mode_name(stereo_mode_t mode)
+{
+	for (const auto& m: mode_names) {
+		if (mode == m.second) return m.first;
+	}
+	return "Unknown";
+}
 int stereo_frames_needed(stereo_mode_t mode) {
 	if (mode == stereo_mode_t::none) return 1;
 	return 2;
@@ -108,6 +116,7 @@ void GlxWindow::run()
 		// Let's keep local converter until MultiIOThread supports this behaviour.
 		converter_.reset(new core::Convert(log, get_this_ptr(), core::Convert::configure()));
 		add_child(converter_);
+		log[log::info] << "Stereo method: " << get_mode_name(stereo_mode_);
 
 	}
 	while (still_running()) {
