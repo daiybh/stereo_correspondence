@@ -173,11 +173,6 @@ IF(${X264_FOUND})
     add_subdirectory(x264)
 ENDIF()
 
-pkg_check_modules(X265 x265)
-IF(${X265_FOUND})
-    add_subdirectory(x265)
-ENDIF()
-
 find_package( Boost 1.46 COMPONENTS regex)
 IF (Boost_REGEX_FOUND)
     include_directories( ${Boost_INCLUDE_DIRS})
@@ -222,6 +217,9 @@ ENDIF(YURI_BUILD_UNSTABLE_MODULES)
 
 IF(YURI_BUILD_EXPERIMENTAL_MODULES) 
 
+find_package( Boost 1.46 COMPONENTS regex)
+
+
 IF (Boost_REGEX_FOUND)
 	add_subdirectory(webserver)
 ENDIF()
@@ -235,6 +233,11 @@ find_package(GLEW)
 IF(X11_FOUND AND GLEW_FOUND)
 	add_subdirectory(glx_window)
 ENDIF()
+pkg_check_modules(X265 x265)
+IF(${X265_FOUND})
+    add_subdirectory(x265)
+ENDIF()
+
 ENDIF(YURI_BUILD_EXPERIMENTAL_MODULES)
 
 #################################################################
