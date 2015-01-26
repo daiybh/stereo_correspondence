@@ -301,7 +301,7 @@ bool GlxWindow::swap_buffers()
 namespace {
 // Swaps 0 and 1
 	inline int swapped_value(bool swap_needed, int i) {
-		return swap_needed?i:1-i;
+		return swap_needed?1-i:i;
 	}
 }
 bool GlxWindow::fetch_frames()
