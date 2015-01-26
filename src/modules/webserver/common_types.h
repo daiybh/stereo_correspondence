@@ -40,6 +40,9 @@ enum class http_code {
 using parameters_t = std::map<std::string, std::string>;
 
 struct url_t {
+	url_t(std::string path={}, std::string host={}, parameters_t params={}, std::string anchor={}):
+		path(std::move(path)),host(std::move(host)),params(std::move(params)),anchor(std::move(anchor)) {}
+	~url_t() noexcept = default;
 	std::string path;
 	std::string host;
 	parameters_t params;
