@@ -63,9 +63,10 @@ int main(int argc, char** argv)
 		arguments.push_back(s);
 	}
 
-	builder = std::make_shared<yuri::simple::SimpleBuilder> (l, yuri::core::pwThreadBase{}, arguments);
+
 	int ret = 0;
 	try {
+		builder = std::make_shared<yuri::simple::SimpleBuilder> (l, yuri::core::pwThreadBase{}, arguments);
 		(*builder)();
 		l[yuri::log::info] << "Application successfully finished";
 		builder.reset();
@@ -78,7 +79,7 @@ int main(int argc, char** argv)
 		l[yuri::log::fatal] << "An error occurred during execution: " << e.what();
 		ret = 1;
 	}
-
+	if (builder) builder.reset();
 	auto mp = yuri::core::FixedMemoryAllocator::clear_all();
 	l[yuri::log::info] << "Memory pool cleared ("<< mp.first << " blocks, " << mp.second << " bytes)";
 	return ret;
