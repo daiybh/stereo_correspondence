@@ -86,7 +86,7 @@ screen_{":0"},display_(nullptr,[](Display*d) { XCloseDisplay(d);}),
 screen_number_{0},attributes_{GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None},
 geometry_{800,600,0,0},visual_{nullptr},flip_x_{false},flip_y_{false},
 read_back_{false},stereo_mode_{stereo_mode_t::none},decorations_{false},
-swap_eyes_{false},delta_x_{0.0},delta_y_{0.0}
+swap_eyes_{false},delta_x_{0.0},delta_y_{0.0},needs_move_{false}
 {
 	set_latency(10_ms);
 	IOTHREAD_INIT(parameters)
@@ -115,7 +115,6 @@ void GlxWindow::run()
 		show_decorations(decorations_);
 		show_window();
 		move_window({geometry_.x, geometry_.y});
-
 		// Let's keep local converter until MultiIOThread supports this behaviour.
 		converter_.reset(new core::Convert(log, get_this_ptr(), core::Convert::configure()));
 		add_child(converter_);
@@ -124,6 +123,11 @@ void GlxWindow::run()
 	}
 	while (still_running()) {
 		process_events();
+		if (needs_move_) {
+			resize_window(geometry_.get_resolution());
+			move_window({geometry_.x, geometry_.y});
+			needs_move_ = false;
+		}
 		process_x11_events();
 		wait_for(get_latency());
 		if (display_frames()) {
@@ -409,6 +413,18 @@ bool GlxWindow::do_process_event(const std::string& event_name, const event::pBa
 		delta_x_ = event::lex_cast_value<float>(event);
 	} else if (event_name == "dy" || event_name == "delta_y") {
 		delta_y_ = event::lex_cast_value<float>(event);
+	} else if (event_name == "x") {
+		geometry_.x = event::lex_cast_value<position_t>(event);
+		needs_move_ = true;
+	} else if (event_name == "y") {
+		geometry_.y = event::lex_cast_value<position_t>(event);
+		needs_move_ = true;
+	} else if (event_name == "width") {
+		geometry_.width = event::lex_cast_value<dimension_t>(event);
+		needs_move_ = true;
+	} else if (event_name == "height") {
+		geometry_.height = event::lex_cast_value<dimension_t>(event);
+		needs_move_ = true;
 	}
 	return true;
 }

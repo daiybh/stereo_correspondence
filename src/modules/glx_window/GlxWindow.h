@@ -77,6 +77,7 @@ private:
 	bool 					swap_eyes_;
 	float					delta_x_;
 	float					delta_y_;
+	bool 					needs_move_;
 };
 
 } /* namespace glx_window */
