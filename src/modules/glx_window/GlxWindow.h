@@ -73,6 +73,8 @@ private:
 	core::pConvert			converter_;
 	std::vector<format_t>	supported_formats_;
 	bool 					swap_eyes_;
+	float					delta_x_;
+	float					delta_y_;
 };
 
 } /* namespace glx_window */

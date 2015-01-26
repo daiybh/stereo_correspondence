@@ -34,6 +34,8 @@ core::Parameters GlxWindow::configure()
 	p["position"]["Window position"]=coordinates_t{0,0};
 	p["decorations"]["Show window decorations"]=false;
 	p["swap_eyes"]["Swap stereo eyes"]=false;
+	p["delta_x"]["Horizontal correction (-1.0, 1.0)"]=0.0f;
+	p["delta_y"]["Vertical correction (-1.0, 1.0)"]=0.0f;
 	return p;
 }
 
@@ -73,7 +75,7 @@ screen_{":0"},display_(nullptr,[](Display*d) { XCloseDisplay(d);}),
 screen_number_{0},attributes_{GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None},
 geometry_{800,600,0,0},visual_{nullptr},flip_x_{false},flip_y_{false},
 read_back_{false},stereo_mode_{stereo_mode_t::none},decorations_{false},
-swap_eyes_{false}
+swap_eyes_{false},delta_x_{0.0},delta_y_{0.0}
 {
 	set_latency(10_ms);
 	IOTHREAD_INIT(parameters)
@@ -321,6 +323,8 @@ bool GlxWindow::display_frames()
 	if (!fetch_frames()) return false;
 	glDrawBuffer(GL_BACK_LEFT);
 	gl_.clear();
+	gl_.set_texture_delta(0,  delta_x_,  delta_y_);
+	gl_.set_texture_delta(1, -delta_x_, -delta_y_);
 	switch(stereo_mode_) {
 		case stereo_mode_t::none:
 			draw_part(gl_, 0, frames_[0], flip_x_, flip_y_);
@@ -378,6 +382,10 @@ bool GlxWindow::set_param(const core::Parameter& param)
 		decorations_ = param.get<bool>();
 	} else if (param.get_name() == "swap_eyes") {
 		swap_eyes_ = param.get<bool>();
+	} else if (param.get_name() == "delta_x") {
+		delta_x_ = param.get<float>();
+	} else if (param.get_name() == "delta_y") {
+		delta_y_ = param.get<float>();
 	} else return core::IOThread::set_param(param);
 	return true;
 }
