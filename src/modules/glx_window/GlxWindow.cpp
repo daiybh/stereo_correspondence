@@ -10,7 +10,7 @@
 #include "GlxWindow.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/utils/irange.h"
-
+#include <X11/Xatom.h>
 namespace yuri {
 namespace glx_window {
 
@@ -31,6 +31,7 @@ core::Parameters GlxWindow::configure()
 	p["read_back"]["Read drawn picture back and output it"]=false;
 	p["resolution"]["Window resoluton"]=resolution_t{800,600};
 	p["position"]["Window position"]=coordinates_t{0,0};
+	p["decorations"]["Show window decorations"]=false;
 	return p;
 }
 
@@ -69,7 +70,7 @@ core::IOThread(log_,parent,2,1,std::string("glx_window")),gl_(log),
 screen_{":0"},display_(nullptr,[](Display*d) { XCloseDisplay(d);}),
 screen_number_{0},attributes_{GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None},
 geometry_{800,600,0,0},visual_{nullptr},flip_x_{false},flip_y_{false},
-read_back_{false},stereo_mode_{stereo_mode_t::none}
+read_back_{false},stereo_mode_{stereo_mode_t::none},decorations_{false}
 {
 	set_latency(10_ms);
 	IOTHREAD_INIT(parameters)
@@ -94,7 +95,10 @@ void GlxWindow::run()
 		log[log::warning] << "Failed to create GLX context";
 		request_end(core::yuri_exit_interrupted);
 	} else {
+		show_decorations(decorations_);
 		show_window();
+		move_window({geometry_.x, geometry_.y});
+
 	}
 	while (still_running()) {
 		process_x11_events();
@@ -237,6 +241,31 @@ bool GlxWindow::process_x11_events()
 		}
 		return false;
 }
+namespace {
+typedef struct
+{
+    unsigned long   flags;
+    unsigned long   functions;
+    unsigned long   decorations;
+    long            input_mode;
+    unsigned long   status;
+} wm_hints;
+}
+bool GlxWindow::show_decorations(bool decorations)
+{
+	wm_hints hints;
+	Atom mh = None;
+	mh=XInternAtom(display_.get(),"_MOTIF_WM_HINTS",0);
+	hints.flags = 2;//MWM_HINTS_DECORATIONS;
+	hints.decorations = decorations?1:0;
+	hints.functions = 0;
+	hints.input_mode = 0;
+	hints.status = 0;
+	int r = XChangeProperty(display_.get(), win_, mh, mh, 32, PropModeReplace,
+			(unsigned char *) &hints, 5);
+	log[log::info] << "XChangeProperty returned " << r;
+	return true;
+}
 
 bool GlxWindow::resize_event(geometry_t geometry)
 {
@@ -327,8 +356,11 @@ bool GlxWindow::set_param(const core::Parameter& param)
 	} else if (param.get_name() == "position") {
 		auto pos = param.get<coordinates_t>();
 		geometry_.x = pos.x; geometry_.y = pos.y;
+		log[log::info] << "Geometry " << geometry_;
 	} else if (param.get_name() == "stereo") {
 		stereo_mode_ = get_mode(param.get<std::string>());
+	} else if (param.get_name() == "decorations") {
+		decorations_ = param.get<bool>();
 	} else return core::IOThread::set_param(param);
 	return true;
 }

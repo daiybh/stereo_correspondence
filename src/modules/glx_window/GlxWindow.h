@@ -42,7 +42,7 @@ private:
 	bool show_cursor(bool show = false);
 	void move_window(coordinates_t coord);
 	void resize_window(resolution_t res);
-
+	bool show_decorations(bool decorations);
 	bool process_x11_events();
 	bool resize_event(geometry_t geometry);
 	bool swap_buffers();
@@ -68,6 +68,7 @@ private:
 	bool					flip_y_;
 	bool					read_back_;
 	stereo_mode_t			stereo_mode_;
+	bool 					decorations_;
 	std::vector<core::pFrame>
 							frames_;
 };
