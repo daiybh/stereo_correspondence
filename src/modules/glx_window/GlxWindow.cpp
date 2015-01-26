@@ -314,6 +314,12 @@ bool GlxWindow::display_frames()
 				gl_.clear();
 				draw_part(gl_, 1, frames_[1], flip_x_, flip_y_);
 			}; break;
+		case stereo_mode_t::anaglyph:
+				glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
+				draw_part(gl_, 0, frames_[0], flip_x_, flip_y_);
+				glColorMask(GL_FALSE, GL_TRUE, GL_TRUE, GL_FALSE);
+				draw_part(gl_, 1, frames_[1], flip_x_, flip_y_);
+				break;
 
 		case stereo_mode_t::side_by_side:
 			{
