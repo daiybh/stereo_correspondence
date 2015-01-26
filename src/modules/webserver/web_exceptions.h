@@ -44,6 +44,16 @@ public:
 		:runtime_error(url+" not found") {}
 };
 
+/*!
+ * Class representing http not modified(304).
+ * WebResources whould use this to signal web server that no new data is needed
+ */
+class not_modified: public std::runtime_error
+{
+public:
+	not_modified(const std::string& url)
+		:runtime_error(url+" not modified") {}
+};
 
 }
 }
