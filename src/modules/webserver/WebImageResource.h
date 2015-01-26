@@ -14,7 +14,7 @@
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
 #include "WebResource.h"
-
+#include <random>
 
 namespace yuri {
 namespace webserver {
@@ -37,6 +37,11 @@ private:
 	std::string path_;
 	core::pCompressedVideoFrame last_frame_;
 	std::mutex frame_lock_;
+
+	std::random_device random_device_;
+	std::mt19937 rnd_generator_;
+	std::uniform_int_distribution<uint64_t> distribution_;
+	uint64_t etag_;
 };
 
 

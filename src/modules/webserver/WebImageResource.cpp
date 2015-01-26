@@ -30,7 +30,8 @@ core::Parameters WebImageResource::configure()
 
 WebImageResource::WebImageResource(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("web_static")),WebResource(log_),
-server_name_("webserver"),path_("/image")
+server_name_("webserver"),path_("/image"),rnd_generator_(random_device_()),
+distribution_(0,1e10L)
 {
 	IOTHREAD_INIT(parameters)
 	set_supported_formats({core::compressed_frame::jpeg, core::compressed_frame::png});
@@ -53,15 +54,23 @@ core::pFrame WebImageResource::do_special_single_step(const core::pCompressedVid
 	{
 		std::unique_lock<std::mutex> _(frame_lock_);
 		last_frame_ = frame;
+		etag_ = distribution_(rnd_generator_);
 	}
 	return frame;
 }
 
-webserver::response_t WebImageResource::do_process_request(const webserver::request_t& /*request*/)
+webserver::response_t WebImageResource::do_process_request(const webserver::request_t& request)
 {
 	core::pCompressedVideoFrame frame;
+	auto it = request.parameters.find("If-None-Match");
+	uint64_t req_etag = (it!=request.parameters.end())?lexical_cast<uint64_t>(it->second):0UL;
+
 	{
 		std::unique_lock<std::mutex> _(frame_lock_);
+		if (req_etag == etag_) {
+			log[log::info] << "Returning 304, server already hs the latest image";
+
+		}
 		frame = last_frame_;
 	}
 
@@ -71,7 +80,12 @@ webserver::response_t WebImageResource::do_process_request(const webserver::requ
 	const std::string mime = fi.mime_types.empty()?"image/jpeg":fi.mime_types[0];
 	return {
 		http_code::ok,
-		{{"Content-Encoding",mime}},
+		{{"Content-Encoding",mime},
+		 {"Etag",std::to_string(etag_)},
+		 {"Cache-Control", "must-revalidate, no-cache"},//, no-store, must-revalidate"},
+		 {"Pragma", "no-cache"},
+		 {"Expires", "0"}
+		},
 		std::string(frame->begin(),frame->end())
 	};
 }
