@@ -16,6 +16,14 @@
 namespace yuri {
 namespace glx_window {
 
+enum class stereo_mode_t {
+	none,
+	quadbuffer,
+	anaglyph,
+	side_by_side,
+	top_bottom,
+};
+
 class GlxWindow: public core::IOThread
 {
 public:
@@ -24,6 +32,7 @@ public:
 	GlxWindow(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~GlxWindow() noexcept;
 private:
+
 	virtual void run() override;
 	virtual bool step() override;
 	virtual bool set_param(const core::Parameter& param);
@@ -37,6 +46,9 @@ private:
 	bool process_x11_events();
 	bool resize_event(geometry_t geometry);
 	bool swap_buffers();
+	bool fetch_frames();
+	bool display_frames();
+
 private:
 	gl::GL					gl_;
 	using display_deleter = std::function<void(Display*)>;
@@ -51,9 +63,13 @@ private:
 	XVisualInfo*			visual_;
 	GLXContext				glx_context_;
 
+
 	bool					flip_x_;
 	bool					flip_y_;
 	bool					read_back_;
+	stereo_mode_t			stereo_mode_;
+	std::vector<core::pFrame>
+							frames_;
 };
 
 } /* namespace glx_window */

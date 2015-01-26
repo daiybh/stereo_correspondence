@@ -9,7 +9,7 @@
 
 #include "GlxWindow.h"
 #include "yuri/core/Module.h"
-
+#include "yuri/core/utils/irange.h"
 
 namespace yuri {
 namespace glx_window {
@@ -25,7 +25,7 @@ core::Parameters GlxWindow::configure()
 {
 	core::Parameters p = core::IOThread::configure();
 	p.set_description("GlxWindow");
-	p["stereo"]["Stereoscopic method (not implemented yet)"]="none";
+	p["stereo"]["Stereoscopic method (none, anaglyph, quadbuffer, side_by_side, top_bottom)"]="none";
 	p["flip_x"]["Flip around vertical axis"]=false;
 	p["flip_y"]["Flip around horizontal axis"]=false;
 	p["read_back"]["Read drawn picture back and output it"]=false;
@@ -45,20 +45,37 @@ void add_attribute(int attrib, std::vector<int>& attributes)
 	attributes.push_back(None);
 }
 
+const std::map<std::string, stereo_mode_t> mode_names = {
+		{"none", stereo_mode_t::none},
+		{"quadbuffer", stereo_mode_t::quadbuffer},
+		{"anaglyph", stereo_mode_t::anaglyph},
+		{"side_by_side", stereo_mode_t::side_by_side},
+		{"top_bottom", stereo_mode_t::top_bottom},
+};
+
+stereo_mode_t get_mode(const std::string& name) {
+	auto it = mode_names.find(name);
+	if (it == mode_names.end()) return stereo_mode_t::none;
+	return it->second;
+}
+int stereo_frames_needed(stereo_mode_t mode) {
+	if (mode == stereo_mode_t::none) return 1;
+	return 2;
+}
 }
 
 GlxWindow::GlxWindow(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("glx_window")),gl_(log),
+core::IOThread(log_,parent,2,1,std::string("glx_window")),gl_(log),
 screen_{":0"},display_(nullptr,[](Display*d) { XCloseDisplay(d);}),
 screen_number_{0},attributes_{GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None},
 geometry_{800,600,0,0},visual_{nullptr},flip_x_{false},flip_y_{false},
-read_back_{false}
+read_back_{false},stereo_mode_{stereo_mode_t::none}
 {
 	set_latency(10_ms);
 	IOTHREAD_INIT(parameters)
-//	if (stereo_) {
-//		add_attribute(GLX_STEREO, attributes_);
-//	}
+	if (stereo_mode_ == stereo_mode_t::quadbuffer) {
+		add_attribute(GLX_STEREO, attributes_);
+	}
 	if (!create_window()) {
 		throw exception::InitializationFailed("Failed to create window");
 	}
@@ -82,17 +99,18 @@ void GlxWindow::run()
 	while (still_running()) {
 		process_x11_events();
 		wait_for(get_latency());
-
-		if (auto frame = pop_frame(0)) {
-
-			glDrawBuffer(GL_BACK_LEFT);
-			gl_.clear();
-			gl_.generate_texture(0, frame, flip_x_, flip_y_);
-			gl_.draw_texture(0);
-			gl_.finish_frame();
-//			if (read_back_) {
-//				gl_.read_window(resolution_.get_geometry());
-//			}
+		if (display_frames()) {
+			if (read_back_) {
+				glReadBuffer(GL_BACK_LEFT);
+				const auto res = geometry_.get_resolution();
+				auto left = gl_.read_window(res.get_geometry());
+				if (stereo_mode_ == stereo_mode_t::quadbuffer) {
+					glReadBuffer(GL_BACK_RIGHT);
+					auto right = gl_.read_window(res.get_geometry());
+					push_frame(1, right);
+				}
+				push_frame(0, left);
+			}
 			swap_buffers();
 		}
 	}
@@ -233,6 +251,68 @@ bool GlxWindow::swap_buffers()
 	return true;
 }
 
+bool GlxWindow::fetch_frames()
+{
+	// This should depend on policy
+	auto needed = stereo_frames_needed(stereo_mode_);
+	frames_.resize(needed);
+	for (auto i: irange(0, needed)) {
+		if (!frames_[i]) {
+			frames_[i] = pop_frame(i);
+		}
+	}
+	for (const auto& f: frames_) {
+		if (!f) return false;
+	}
+	return true;
+}
+
+namespace {
+void draw_part(gl::GL& gl_, int i, core::pFrame frame, bool fx, bool fy, float x0 = -1.0, float y0 = -1.0, float x1 = 1.0, float y1 = 1.0)
+{
+	gl_.corners = {{x0, y0, x1, y0, x1, y1, x0, y1}};
+	gl_.generate_texture(i, frame, fx, fy);
+	gl_.draw_texture(i);
+	gl_.finish_frame();
+
+}
+}
+
+bool GlxWindow::display_frames()
+{
+	if (!fetch_frames()) return false;
+	glDrawBuffer(GL_BACK_LEFT);
+	gl_.clear();
+	switch(stereo_mode_) {
+		case stereo_mode_t::none:
+			draw_part(gl_, 0, frames_[0], flip_x_, flip_y_);
+			break;
+		case stereo_mode_t::quadbuffer:
+			{
+				draw_part(gl_, 0, frames_[0], flip_x_, flip_y_);
+				glDrawBuffer(GL_BACK_RIGHT);
+				gl_.clear();
+				draw_part(gl_, 1, frames_[1], flip_x_, flip_y_);
+			}; break;
+
+		case stereo_mode_t::side_by_side:
+			{
+				draw_part(gl_, 0, frames_[0], flip_x_, flip_y_, -1.0, -1.0, 0.0, 1.0);
+				draw_part(gl_, 1, frames_[1], flip_x_, flip_y_,  0.0, -1.0, 1.0, 1.0);
+			}; break;
+		case stereo_mode_t::top_bottom:
+			{
+				draw_part(gl_, 0, frames_[0], flip_x_, flip_y_, -1.0, -1.0, 1.0, 0.0);
+				draw_part(gl_, 1, frames_[1], flip_x_, flip_y_,  -1.0, 0.0, 1.0, 1.0);
+			}; break;
+		default:break;
+	}
+	for (auto& f: frames_) {
+		f.reset();
+	}
+	return true;
+}
+
 bool GlxWindow::set_param(const core::Parameter& param)
 {
 	if (param.get_name() == "flip_x") {
@@ -247,6 +327,8 @@ bool GlxWindow::set_param(const core::Parameter& param)
 	} else if (param.get_name() == "position") {
 		auto pos = param.get<coordinates_t>();
 		geometry_.x = pos.x; geometry_.y = pos.y;
+	} else if (param.get_name() == "stereo") {
+		stereo_mode_ = get_mode(param.get<std::string>());
 	} else return core::IOThread::set_param(param);
 	return true;
 }
