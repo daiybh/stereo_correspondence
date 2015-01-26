@@ -18,6 +18,7 @@
 #include <future>
 #include <deque>
 #include <condition_variable>
+#include <tuple>
 namespace yuri {
 namespace webserver {
 
@@ -43,7 +44,7 @@ struct route_record {
 	pWebResource resource;
 };
 
-using f_request_t = std::future<request_t>;
+using f_request_t = std::future<bool>;
 
 class WebServer: public core::IOThread
 {
@@ -70,6 +71,7 @@ private:
 	bool authentication_needed();
 	bool verify_authentication(const request_t&);
 
+	bool process_request(core::socket::pStreamSocket client);
 	std::string server_name_;
 	std::string socket_impl_;
 	std::string address_;

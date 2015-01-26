@@ -90,7 +90,7 @@ void WebServer::run()
 		if (socket_->wait_for_data(get_latency())) {
 			auto client = socket_->accept();
 			log[log::info] << "Connection accepted";
-			push_request(std::async(std::launch::async, [=]()mutable{return read_request(client);}));
+			push_request(std::async(std::launch::async, [=]()mutable{return process_request(client);}));
 		}
 	}
 	log[log::info] << "Joining worker thread";
@@ -112,25 +112,37 @@ response_t WebServer::auth_response(request_t request)
 
 response_t WebServer::find_response(request_t request)
 {
-	std::unique_lock<std::mutex> _(routing_mutex_);
-	for (const auto& route: routing_) {
-		boost::regex url(route.routing_spec);
-		if (boost::regex_match(request.url.path.cbegin(), request.url.path.cend(), url)) {
-			try {
-				return route.resource->process_request(request);
+	std::vector<route_record> viable_routes;
+	{
+		std::unique_lock<std::mutex> _(routing_mutex_);
+		for (const auto& route: routing_) {
+			boost::regex url(route.routing_spec);
+			if (boost::regex_match(request.url.path.cbegin(), request.url.path.cend(), url)) {
+				viable_routes.push_back(route);
 			}
-			catch (redirect_to& redirect) {
-				log[log::info] << "Redirecting to " << redirect.get_location();
-				return get_redirect_response(redirect.get_code(), redirect.get_location());
-			}
-			catch (not_found&) {
-				// This isn't fatal, there may be another resource publishing this path.
-				continue;
-			}
-			catch (std::runtime_error& e) {
-				log[log::info] << "Returning 500 for URL " << request.url.path << " ("<<e.what()<<")";
-				return get_default_response(http_code::server_error, e.what());
-			}
+		}
+	}
+	for (const auto& route: viable_routes) {
+		try {
+			return route.resource->process_request(request);
+		}
+		catch (redirect_to& redirect) {
+			log[log::info] << "Redirecting to " << redirect.get_location();
+			return get_redirect_response(redirect.get_code(), redirect.get_location());
+		}
+		catch (not_found&) {
+			// This isn't fatal, there may be another resource publishing this path.
+			continue;
+		}
+		catch (not_modified& redirect) {
+//				log[log::info] << "Returning 304 for resource";
+			return {http_code::not_modified,{},{}};
+
+		}
+		catch (std::runtime_error& e) {
+			const std::string msg = e.what();
+			log[log::info] << "Returning 500 for URL " << request.url.path << " ("<<msg<<")";
+			return get_default_response(http_code::server_error, msg);
 		}
 	}
 	log[log::info] << "Returning 404 for URL " << request.url.path;
@@ -148,11 +160,10 @@ void WebServer::response_thread()
 				if (status != std::future_status::ready) {
 					push_request(std::move(fr));
 				} else {
-					auto request = fr.get();
-					log[log::info] << "Requested URL: " << request.url.path;
-					//response_t response = find_response(request);
-					response_t response = auth_response(request);
-					reply_to_client(request.client, std::move(response));
+					auto res = fr.get();
+					if (!res) {
+						log[log::warning] << "Failed to process connection";
+					}
 				}
 			} catch (std::runtime_error& e) {
 				log[log::warning] << "Failed to process connection (" << e.what()<<")";
@@ -160,6 +171,16 @@ void WebServer::response_thread()
 		}
 	}
 	log[log::info] << "Helper thread ending";
+}
+
+bool WebServer::process_request(core::socket::pStreamSocket client)
+{
+	auto request = read_request(client);
+	log[log::info] << "Requested URL: " << request.url.path;
+
+	response_t response = auth_response(request);
+	reply_to_client(request.client, std::move(response));
+	return true;
 }
 
 void WebServer::push_request(f_request_t request)
