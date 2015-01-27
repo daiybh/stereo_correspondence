@@ -341,7 +341,7 @@ bool YuriConvertor::set_param(const core::Parameter &p)
 		} else if (iequals(clr,"BT2020") || iequals(clr,"REC2020") || iequals(clr,"BT.2020") || iequals(clr,"REC.2020")) {
 			colorimetry_=YURI_COLORIMETRY_REC2020;
 		} else {
-			log[log::warning] << "Unrecognized colorimetry type " << clr << ". Falling back to REC.709" << std::endl;
+			log[log::warning] << "Unrecognized colorimetry type " << clr << ". Falling back to REC.709";// << std::endl;
 			colorimetry_=YURI_COLORIMETRY_REC709;
 		}
 	} else if (iequals(p.get_name(),"format")) {
