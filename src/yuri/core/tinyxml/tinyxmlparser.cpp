@@ -21,6 +21,11 @@ must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any source 
 distribution.
 */
+#include "yuri/core/utils/platform.h"
+#ifdef YURI_WIN
+// Disable "declaration of xxx hides class member
+#pragma warning( disable : 4458)
+#endif
 
 #include <ctype.h>
 #include <stddef.h>
