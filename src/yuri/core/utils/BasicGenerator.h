@@ -18,14 +18,14 @@
 
 #ifdef YURI_MODULE_IN_TREE
 	#define MODULE_REGISTRATION_BEGIN(name)
-	#define MODULE_REGISTRATION_END(name)
+	#define MODULE_REGISTRATION_END()
 #else
 	#define MODULE_REGISTRATION_BEGIN(name) extern "C" {\
-		const char* yuri2_8_module_get_name() { \
+		MODULE_EXPORT const char* yuri2_8_module_get_name() { \
 			return name; \
 		}\
-		int yuri2_8_module_register() {
-	#define MODULE_REGISTRATION_END(name)  \
+		MODULE_EXPORT int yuri2_8_module_register() {
+	#define MODULE_REGISTRATION_END() \
 			return 0;\
 		}\
 	}
@@ -54,7 +54,7 @@ protected:
 
 };
 template<class T, class KeyType, class Param>
-class FatalErrorPolicy {
+class EXPORT FatalErrorPolicy {
 	FatalErrorPolicy() = default;
 	virtual ~FatalErrorPolicy() noexcept {};
 	typedef shared_ptr<T> ptr_type;

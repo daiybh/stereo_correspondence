@@ -35,6 +35,7 @@
 		#define EXPORT 			__declspec(dllimport)
 		#define IMPORT 			__declspec(dllexport)
 	#endif
+	#define MODULE_EXPORT			__declspec(dllexport)
 	// Disable bad macros from windows.h
 	#define WIN32_MEAN_AND_LEAN
 	#define NOMINMAX
@@ -43,6 +44,7 @@
 	#define YURI_POSIX 1
 	#define EXPORT
 	#define IMPORT
+	#define MODULE_EXPORT
 	#define PACK_START
 	#define PACK_END			__attribute__((packed))
 	#define DEPRECATED			__attribute__((deprecated))
@@ -54,6 +56,7 @@
 	#define YURI_POSIX 1
 	#define EXPORT
 	#define IMPORT
+	#define MODULE_EXPORT
 	#define PACK_START
 	#define PACK_END			__attribute__((packed))
 	#define DEPRECATED			__attribute__((deprecated))
