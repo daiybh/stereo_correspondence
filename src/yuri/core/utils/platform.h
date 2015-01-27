@@ -28,7 +28,7 @@
 	#define PACK_START			__pragma(pack(push,1))
 	#define PACK_END			__pragma(pack(pop))
 	#define DEPRECATED
-	#ifdef yuri_core_EXPORTS
+	#ifdef yuri2_8_core_EXPORTS
 		#define EXPORT			__declspec(dllexport)
 		#define IMPORT			__declspec(dllimport)
 	#else
