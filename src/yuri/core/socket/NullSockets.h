@@ -12,7 +12,7 @@
 
 #include "DatagramSocket.h"
 #include "StreamSocket.h"
-
+#include "yuri/core/thread/ThreadBase.h"
 
 namespace yuri {
 namespace core {
@@ -27,8 +27,8 @@ private:
 	EXPORT virtual size_t do_send_datagram(const uint8_t*, size_t size) override {
 		return size;
 	}
-	EXPORT virtual size_t do_receive_datagram(uint8_t*, size_t size) override {
-		return size;
+	EXPORT virtual size_t do_receive_datagram(uint8_t*, size_t) override {
+		return 0;
 	}
 	EXPORT virtual bool do_bind(const std::string&, port_t) override
 	{
@@ -38,13 +38,14 @@ private:
 		return true;
 	}
 	EXPORT virtual bool do_data_available() override {
-		return true;
+		return false;
 	}
 	EXPORT virtual bool do_ready_to_send() override {
-		return true;
+		return false;
 	}
 	EXPORT virtual bool do_wait_for_data(duration_t duration) override {
-		return true;
+		core::ThreadBase::sleep(duration);
+		return false;
 	}
 
 };
@@ -56,15 +57,32 @@ public:
 	EXPORT NullStreamSocket(const log::Log& log_);
 	EXPORT virtual ~NullStreamSocket() noexcept {}
 private:
-	EXPORT virtual size_t do_send_data(const uint8_t*, size_t size) override { return size; }
-	EXPORT virtual size_t do_receive_data(uint8_t* , size_t size) override { return size; }
-	EXPORT virtual bool do_bind(const std::string& , uint16_t port) override { return true; }
-	EXPORT virtual bool do_connect(const std::string&, uint16_t port) override { return true; }
-	EXPORT virtual bool do_listen() override { return true; }
-	EXPORT virtual pStreamSocket do_accept() override { return{}; }
+	EXPORT virtual size_t do_send_data(const uint8_t*, size_t size) override {
+		return size;
+	}
+	EXPORT virtual size_t do_receive_data(uint8_t* , size_t) override {
+		return 0;
+	}
+	EXPORT virtual bool do_bind(const std::string& , uint16_t) override  {
+		return true;
+	}
+	EXPORT virtual bool do_connect(const std::string&, uint16_t) override {
+		return true;
+	}
+	EXPORT virtual bool do_listen() override {
+		return true;
+	}
+	EXPORT virtual pStreamSocket do_accept() override {
+		return{};
+	}
 
-	EXPORT virtual bool do_data_available() override { return true; }
-	EXPORT virtual bool do_wait_for_data(duration_t duration) override { return true; }
+	EXPORT virtual bool do_data_available() override {
+		return false;
+	}
+	EXPORT virtual bool do_wait_for_data(duration_t duration) override {
+		core::ThreadBase::sleep(duration);
+		return false;
+	}
 
 
 };
