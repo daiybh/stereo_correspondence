@@ -9,6 +9,7 @@ IF(NOT YURI_DISABLE_BOOST)
 		include_directories ( ${Boost_INCLUDE_DIRS})
         link_directories (${Boost_LIBRARY_DIRS})
         SET(LIBS ${LIBS} ${Boost_LIBRARIES})
+		add_definitions(-DBOOST_PROGRAM_OPTIONS_DYN_LINK)
 	ENDIF()
 ENDIF()
 
@@ -21,11 +22,9 @@ add_executable(yuri2 	yuri/yuri_listings.cpp
 						yuri/try_conversion.h
 						yuri2.cpp)
 
-IF(WIN32)
+
 target_link_libraries ( yuri2 ${LIBNAME})
-ELSE()
-target_link_libraries ( yuri2 ${LIBNAME} ${Boost_LIBRARIES} )
-ENDIF()
+
 install(TARGETS yuri2 RUNTIME DESTINATION bin)
 
 add_executable(yuri_test_module test_module.cpp)
