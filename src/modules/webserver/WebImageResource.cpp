@@ -78,7 +78,7 @@ webserver::response_t WebImageResource::do_process_request(const webserver::requ
 	log[log::info] << "Responding";
 	const auto& fi = core::compressed_frame::get_format_info(frame->get_format());
 	const std::string mime = fi.mime_types.empty()?"image/jpeg":fi.mime_types[0];
-	return {
+	return response_t{
 		http_code::ok,
 		{{"Content-Encoding",mime},
 		 {"Etag",std::to_string(etag_)},

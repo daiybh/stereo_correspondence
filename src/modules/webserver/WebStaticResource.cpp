@@ -62,7 +62,7 @@ void WebStaticResource::run()
 webserver::response_t WebStaticResource::do_process_request(const webserver::request_t& /*request*/)
 {
 	log[log::info] << "Responding";
-	return {
+	return response_t{
 		http_code::ok,
 		{{"Content-Encoding",mime_type_}},
 		data_string_
