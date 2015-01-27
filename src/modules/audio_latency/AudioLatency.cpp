@@ -59,7 +59,7 @@ float get_threshold<float>(double val)
 template<typename T>
 T get_threshold(double val)
 {
-	return std::numeric_limits<T>::max() * val;
+	return static_cast<T>(std::numeric_limits<T>::max() * val);
 }
 
 
