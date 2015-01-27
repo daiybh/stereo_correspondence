@@ -11,6 +11,7 @@
 #ifndef NEW_TYPES_H_
 #define NEW_TYPES_H_
 
+#include "platform.h"
 #include <chrono>
 #include <memory>
 #include <mutex>
@@ -20,12 +21,13 @@
 #include <ios>
 #include <ostream>
 #include <istream>
-#include "platform.h"
+#include <algorithm>
+
 
 namespace yuri {
 
 typedef ::size_t 		size_t;
-#if defined YURI_APPLE
+#if defined YURI_APPLE || YURI_WIN
 typedef int64_t			ssize_t;
 #else
 typedef ::ssize_t 		ssize_t;
