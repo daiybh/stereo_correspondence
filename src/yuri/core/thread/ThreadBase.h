@@ -102,27 +102,21 @@ protected:
 	 *
 	 * @return false if the thread should quit, true otherwise.
 	 */
-	EXPORT bool 						still_running();
+	EXPORT bool 				still_running();
 
 	/*!
 	 * Returns shared_ptr for this instance
 	 * @return pointer to @em this.
 	 */
-	EXPORT pThreadBase					get_this_ptr();
+	EXPORT pThreadBase			get_this_ptr();
 
 	/*!
 	 * Returns shared_ptr for this instance (const)
 	 * @return pointer to @em this.
 	 */
-	EXPORT pcThreadBase				get_this_ptr() const;
+	EXPORT pcThreadBase			get_this_ptr() const;
 	//! Returns false if the thread should quit, true otherwise.
 	//! The method also processes events and should be called occasionally
-	EXPORT bool 				still_running();
-	//! Returns pointer to @em this.
-	EXPORT pThreadBase			get_this_ptr();
-	//! Returns pointer to @em this.
-	EXPORT pcThreadBase			get_this_ptr() const;
-
 	/*!
 	 * Adds a new child thread and spawns it as new thread
 	 *

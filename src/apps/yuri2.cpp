@@ -49,7 +49,7 @@ void sigHandler(int sig, siginfo_t */*siginfo*/, void */*context*/)
 {
 #if !defined YURI_APPLE
 	if (sig==SIGRTMIN) {
-		l[yuri::log::warning] << "Realtime signal 0! Ignoring...";
+		logger[yuri::log::warning] << "Realtime signal 0! Ignoring...";
 		return;
 	}
 #endif

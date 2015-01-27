@@ -23,7 +23,7 @@ add_executable(yuri2 	yuri/yuri_listings.cpp
 						yuri2.cpp)
 
 
-target_link_libraries ( yuri2 ${LIBNAME})
+target_link_libraries ( yuri2 ${LIBS})
 
 install(TARGETS yuri2 RUNTIME DESTINATION bin)
 
