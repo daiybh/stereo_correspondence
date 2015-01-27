@@ -2,6 +2,7 @@
 # Core library can use boost filessytem 
 #################################################################
 IF(NOT YURI_DISABLE_BOOST)
+	set( Boost_USE_STATIC_LIBS OFF )
 	find_package( Boost 1.49 COMPONENTS filesystem system)
 	IF(Boost_FILESYSTEM_FOUND)
 		add_definitions(-DHAVE_BOOST_FILESYSTEM)
@@ -41,9 +42,9 @@ ENDIF()
 #################################################################
 IF(Boost_SYSTEM_FOUND)
     SET (YURI_LINK ${YURI_LINK} ${Boost_LIBRARY_DIRS} )
-    IF(NOT WIN32)
+    #IF(NOT WIN32)
     SET (YURI_LIBS ${YURI_LIBS}	${Boost_LIBRARIES} )
-    ENDIF()
+    #ENDIF()
     SET (YURI_INCLUDE ${YURI_INCLUDE} ${Boost_INCLUDE_DIRS} )  
 ENDIF()
 #################################################################
@@ -70,7 +71,11 @@ ENDIF()
 #################################################################
 # Adding CXXFLAGS and LDFLAGS for libyuri_core
 #################################################################
+IF(WIN32)
+add_definitions("-DYURI_MODULE_IN_TREE")
+else()
 add_definitions("-DYURI_MODULE_IN_TREE -DINSTALL_PREFIX=\\\"${CMAKE_INSTALL_PREFIX}\\\"")
+endif()
 link_directories ( ${YURI_LINK} ${YURI_HELPER_LIBAV_LINK} ${YURI_HELPER_X11_LINK})
 include_directories ( ${YURI_INCLUDE} ${YURI_HELPER_LIBAV_INCLUDE} ${YURI_HELPER_X11_INCLUDE})
 
