@@ -11,7 +11,7 @@
 #include "Log.h"
 #include <map>
 #include "yuri/core/utils.h"
-#if !defined YURI_ANDROID
+#if !defined YURI_ANDROID && !defined(YURI_WIN)
 #include <boost/date_time/posix_time/posix_time.hpp>
 #endif
 namespace yuri
@@ -33,13 +33,17 @@ const std::map<_debug_flags, std::string> level_names= {
 	{trace,"TRACE"}};
 
 const std::map<_debug_flags, std::string> level_colors = {
+std::map<_debug_flags, std::string> level_colors = {
+#ifdef YURI_LINUX
 {fatal,"\033[4;31;42m"}, // Red, underscore, bg
 {error,"\033[31m"}, // Red
 {warning,"\033[35m"},
 {info,"\033[00m"},
 {debug,"\033[35m"},
 {verbose_debug,"\033[36m"},
-{trace,"\033[4;36m"}};
+{trace,"\033[4;36m"}
+#endif
+};
 }
 
 /**
@@ -64,9 +68,9 @@ Log::~Log() noexcept
 	(*this)[verbose_debug] << "Destroying logger " << uid;
 }
 
-void Log::set_id(int id)
+void Log::set_id(int new_id)
 {
-	this->id=id;
+	id=new_id;
 }
 
 /**
@@ -114,7 +118,7 @@ std::string Log::print_time() const
 {
 	std::string s;
 	std::stringstream ss;
-#ifndef YURI_ANDROID
+#if !defined(YURI_ANDROID) && !defined(YURI_WIN)
 	if (output_flags & show_thread_id) {
 //		 ss << yuri::get_id();
 		 s += std::string(" ") + ss.str();
