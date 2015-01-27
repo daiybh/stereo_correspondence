@@ -15,13 +15,14 @@
 #elif defined _WIN32
 #include <windows.h>
 #endif
+#include <string>
 
 bool test_file(const std::string& filename)
 {
 #if defined __linux__
 	void *handle=dlopen(filename.c_str(),RTLD_NOW|RTLD_GLOBAL);
 #elif defined _WIN32
-	HINSTANCE handle = LoadLibrary(argv[1]);
+	HINSTANCE handle = LoadLibrary(filename.c_str());
 #endif
 	if (!handle) {
 		std::cerr << "Failed to open file " << filename
