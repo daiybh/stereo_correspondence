@@ -279,15 +279,15 @@ pBasicEvent	max(const std::vector<pBasicEvent>& events) {
 pBasicEvent	abs(const std::vector<pBasicEvent>& events) {
 	return generic_unary_oper2<std::logical_not, EventInt, EventDouble>("abs",events);
 }
-
+typedef long double(*double_function_t)(long double);
 pBasicEvent	exp(const std::vector<pBasicEvent>& events) {
-	return simple_unary_function_wrapper<EventDouble>("exp",events,std::exp);
+	return simple_unary_function_wrapper<EventDouble>("exp", events, static_cast<double_function_t>(std::exp));
 }
 pBasicEvent	pow(const std::vector<pBasicEvent>& events) {
 	return generic_binary_oper2<pow_wrapper, EventDouble, EventDouble>("pow",events);
 }
 pBasicEvent	ln(const std::vector<pBasicEvent>& events) {
-	return simple_unary_function_wrapper<EventDouble>("ln",events,std::log);
+	return simple_unary_function_wrapper<EventDouble>("ln",events, static_cast<double_function_t>(std::log));
 }
 
 
