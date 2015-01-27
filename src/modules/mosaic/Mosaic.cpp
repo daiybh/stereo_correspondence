@@ -37,7 +37,7 @@ namespace {
 inline position_t get_distance(coordinates_t a, coordinates_t b) {
 	position_t x = a.x - b.x;
 	position_t y = a.y - b.y;
-	return std::sqrt(x*x + y*y);
+	return static_cast<position_t>(std::sqrt(x*x + y*y));
 }
 template<size_t size, class dist_func>
 void apply_mosaic(const uint8_t* data_in, uint8_t* data_out, size_t linesize, const coordinates_t& dest_lu, const coordinates_t& dest_rb, dist_func dist)
