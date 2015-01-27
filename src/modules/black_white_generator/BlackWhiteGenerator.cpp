@@ -109,7 +109,7 @@ core::pFrame prepare_white_frame(format_t format, resolution_t resolution)
 }
 
 BlackWhiteGenerator::BlackWhiteGenerator(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("black_white_generator")),duration_(40_ms),format_(core::raw_format::yuyv422),resolution_{1920,1080}
+core::IOThread(log_,parent,1,1,std::string("black_white_generator")),duration_(40_ms),format_(core::raw_format::yuyv422),resolution_(resolution_t{1920,1080})
 {
 	IOTHREAD_INIT(parameters)
 	if (!format_) throw exception::InitializationFailed("Output format not specified or unsupported");
