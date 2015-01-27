@@ -120,16 +120,16 @@ namespace {
 	{
 		std::string node{}, name{};
 		trim_string(first,last);
-		if (*first == '@') {
+		if (first != last && *first == '@') {
 			node = "@";
 			++first;
 			// We allow both @param and @:param
-			if (*first==':') ++first;
+			if (first != last && *first==':') ++first;
 		} else {
 			node = find_id(first,last);
 			if (node.empty()) return p_token();
 			trim_string(first,last);
-			if (*first != ':') return p_token();
+			if (first == last || *first != ':') return p_token();
 			++first;
 		}
 		trim_string(first,last);
@@ -137,7 +137,7 @@ namespace {
 		if (name.empty()) return p_token();
 		auto spec = make_shared<spec_token>(node,name);
 		trim_string(first,last);
-		if (*first == '|') {
+		if (first != last && *first == '|') {
 			++first;
 			spec->init = parse_arg(first,last);
 		}
@@ -174,7 +174,7 @@ namespace {
 		int64_t number=0;
 		size_t digits = 0;
 		bool negative = false;
-		if (*first=='-') {
+		if (first != last && *first=='-') {
 			negative = true;
 			++first;
 		}
@@ -187,7 +187,7 @@ namespace {
 				break;
 			}
 		}
-		if (*first!='.') {
+		if (first == last || *first!='.') {
 			if (digits) return make_shared<int_const_token>(number*(negative?-1:1));
 			return p_token();
 		}
@@ -212,7 +212,7 @@ namespace {
 	{
 		trim_string(first,last);
 		std::string val;
-		if (*first != '"') return p_token();
+		if (first == last || *first != '"') return p_token();
 		++first;
 		while (first!=last) {
 			if (*first=='"') break;
@@ -227,7 +227,7 @@ namespace {
 	p_token parse_dict(Iterator& first, const Iterator& last)
 	{
 		trim_string(first,last);
-		if (*first != '{') return p_token();
+		if (first == last || *first != '{') return p_token();
 		++first;
 		auto dict = make_shared<dict_const_token>();
 		while(first!=last) {
@@ -235,16 +235,16 @@ namespace {
 			auto id = find_id(first,last);
 			if (id.empty()) break;// return p_token();
 			trim_string(first,last);
-			if (*first!=':') return p_token();
+			if (first == last || *first!=':') return p_token();
 			++first;
 			auto p = parse_arg(first,last);
 			if (!p) return p_token();
 			dict->members.insert(std::make_pair(id,p));
 			trim_string(first,last);
-			if (*first != ',') break;
+			if (first == last || *first != ',') break;
 			++first;
 		}
-		if (*first != '}') return p_token();
+		if (first == last || *first != '}') return p_token();
 		++first;
 		return dict;
 	}
@@ -284,7 +284,7 @@ namespace {
 	p_token parse_vector(Iterator& first, const Iterator& last)
 	{
 		trim_string(first,last);
-		if (*first != '[') return p_token();
+		if (first == last || *first != '[') return p_token();
 		++first;
 		auto vec = make_shared<vector_const_token>();
 		while(first!=last) {
@@ -293,7 +293,7 @@ namespace {
 			if (!p) break;//return p_token();
 			vec->members.push_back(p);
 			trim_string(first,last);
-			if (*first != ',') break;
+			if (first == last || *first != ',') break;
 			++first;
 		}
 		if (*first != ']') return p_token();
@@ -370,7 +370,7 @@ namespace {
 		fname = find_id(first,last);
 		if (fname.empty()) return p_token();
 		trim_string(first,last);
-		if (*first != '(') return p_token();
+		if (first == last || *first != '(') return p_token();
 		++first;
 		auto func = make_shared<func_token>(fname);
 		trim_string(first,last);
@@ -414,13 +414,13 @@ namespace {
 		if ((f2 = find_substr(first, last, route_lex))!=first) {
 			first = f2;
 			trim_string(first,last);
-			if (*first != '(') return p_token();
+			if (first == last || *first != '(') return p_token();
 			++first;
 			auto route = make_shared<route_token>();
 			route->expr = parse_expr(first, last);
 			if (!route->expr) return p_token();
 			trim_string(first,last);
-			if (*first != ')') return p_token();
+			if (first == last || *first != ')') return p_token();
 			++first;
 			trim_string(first,last);
 			Iterator f3 = find_substr(first,last,std::string("->"));
@@ -431,11 +431,11 @@ namespace {
 				if (!spec) return p_token();
 				route->output.push_back(spec);
 				trim_string(first,last);
-				if (*first==';') {
+				if (first != last || *first==';') {
 					++first;
 					break;
 				}
-				if (*first!=',') return p_token();
+				if (first == last || *first!=',') return p_token();
 				++first;
 			}
 			return route;
@@ -600,7 +600,7 @@ namespace {
 //				log_er_[log::info] << "GE";
 				return provider->get_value(*this);
 			}
-			catch (std::runtime_error& e)
+			catch (std::runtime_error& /* e */)
 			{
 				//log_er_[log::info] << "BOO: " << e.what();
 				throw;
@@ -797,7 +797,7 @@ bool BasicEventParser::parse_routes(const std::string& text)
 				routers_.push_back(f);
 
 			}
-			catch (std::runtime_error& e)
+			catch (std::runtime_error& /* e */)
 			{
 //				std::cout << "Error: " << e.what() << "\n";
 			}
