@@ -35,7 +35,7 @@ namespace po = boost::program_options;
 
 // Defined as global variables, so these can be used in signal handler.
 yuri::shared_ptr<yuri::core::XmlBuilder> builder;
-yuri::log::Log l(std::clog);
+yuri::log::Log logger(std::clog);
 
 
 #if defined YURI_LINUX || defined YURI_APPLE
@@ -70,7 +70,7 @@ void sigHandler(int sig, siginfo_t */*siginfo*/, void */*context*/)
 void usage(const po::options_description& options)
 {
 	//l.set_quiet(true);
-	l[yuri::log::fatal]
+	logger[yuri::log::fatal]
 			<< "Usage:	yuri [options] [-i] <file> [[-p] params...]\n\n"
 			<< options;
 }
@@ -79,7 +79,7 @@ void usage(const po::options_description& options)
 
 void version()
 {
-	l[yuri::log::fatal] << "libyuri version " << yuri::yuri_version;
+	logger[yuri::log::fatal] << "libyuri version " << yuri::yuri_version;
 
 }
 int main(int argc, char**argv)
@@ -89,8 +89,8 @@ int main(int argc, char**argv)
 	int verbosity = 0;
 	std::string filename;
 	std::vector<std::string> arguments;
-	l.set_label("[YURI2] ");
-	l.set_flags(log::info|log::show_level|log::use_colors);
+	logger.set_label("[YURI2] ");
+	logger.set_flags(log::info|log::show_level|log::use_colors);
 	bool show_info = false;
 #ifdef HAVE_BOOST_PROGRAM_OPTIONS
 	po::options_description options("General options");
@@ -119,7 +119,7 @@ int main(int argc, char**argv)
 		po::notify(vm);
 	}
 	catch (po::error &e) {
-		l[log::fatal] << "Wrong options specified (" << e.what() <<")";
+		logger[log::fatal] << "Wrong options specified (" << e.what() <<")";
 		usage(options);
 		return 1;
 	}
@@ -129,23 +129,23 @@ int main(int argc, char**argv)
 	if (vm.count("quiet")) verbosity=-1;
 	else if (vm.count("verbose")) verbosity=1;
 
-	int log_params = l.get_flags()&~log::flag_mask;
+	int log_params = logger.get_flags()&~log::flag_mask;
 	//cout << "Verbosity: " << verbosity << std::endl;
-	if (verbosity >=0)	l.set_flags((log::info<<(verbosity))|log_params);
-	else l.set_flags((log::info>>(-verbosity))|log_params);
+	if (verbosity >=0)	logger.set_flags((log::info<<(verbosity))|log_params);
+	else logger.set_flags((log::info>>(-verbosity))|log_params);
 	//cout << "Verbosity: " << verbosity << ", flags: " << (l.get_flags()&flag_mask)<<std::endl;
 	if (vm.count("help")) {
-		l.set_quiet(true);
+		logger.set_quiet(true);
 		usage(options);
 		return -1;
 	}
 	if (vm.count("version")) {
-		l.set_quiet(true);
+		logger.set_quiet(true);
 		version();
 		return 1;
 	}
 	if (vm.count("list") || vm.count("class")) {
-		builder.reset(new core::XmlBuilder(l, core::pwThreadBase(), filename, arguments, true ));
+		builder.reset(new core::XmlBuilder(logger, core::pwThreadBase(), filename, arguments, true ));
 		log::Log l_(std::cout);
 		l_.set_flags(log::info);
 		l_.set_quiet(true);
@@ -159,14 +159,14 @@ int main(int argc, char**argv)
 		return 0;
 	}
 	if (vm.count("convert")) {
-		builder.reset(new core::XmlBuilder(l, core::pwThreadBase(), filename, arguments, true ));
+		builder.reset(new core::XmlBuilder(logger, core::pwThreadBase(), filename, arguments, true ));
 		log::Log l_(std::cout);
 		l_.set_flags(log::info);
 		l_.set_quiet(true);
 		std::string fmts = vm["convert"].as<std::string>();
 		auto idx = fmts.find(':');
 		if (idx == std::string::npos) {
-			l[log::fatal] << "Formats specified wrongly";
+			logger[log::fatal] << "Formats specified wrongly";
 		} else {
 			yuri::app::try_conversion(l_, fmts.substr(0,idx), fmts.substr(idx+1));
 		}
@@ -174,8 +174,8 @@ int main(int argc, char**argv)
 	}
 	if (vm.count("app-info")) {
 		show_info=true;
-		l.set_flags(log::fatal);
-		l.set_quiet(true);
+		logger.set_flags(log::fatal);
+		logger.set_quiet(true);
 	}
 #else
 	for (int i=1;i<argc;++i) {
@@ -201,42 +201,42 @@ int main(int argc, char**argv)
 #endif
 
 	if (filename.empty()) {
-		l[log::fatal] << "No input file specified";
+		logger[log::fatal] << "No input file specified";
 #ifdef HAVE_BOOST_PROGRAM_OPTIONS
 		usage(options);
 #endif
 		return -1;
 	}
 
-	l[log::debug] << "Loading file " << filename;
+	logger[log::debug] << "Loading file " << filename;
 	try {
-		builder.reset( new core::XmlBuilder (l, core::pwThreadBase(),filename, arguments, show_info));
+		builder.reset( new core::XmlBuilder (logger, core::pwThreadBase(),filename, arguments, show_info));
 	}
 	catch (exception::Exception &e) {
-		l[log::fatal] << "failed to initialize application: " << e.what();
+		logger[log::fatal] << "failed to initialize application: " << e.what();
 		return 1;
 	}
 	catch (std::exception &e) {
-		l[log::fatal] << "An error occurred during initialization: " << e.what();
+		logger[log::fatal] << "An error occurred during initialization: " << e.what();
 		return 1;
 	}
-
+	
 	if (show_info) {
 		const auto& vars = builder->get_variables();
-		l[log::fatal] << "Application " << builder->get_app_name();
-		l[log::fatal] << "  ";
+		logger[log::fatal] << "Application " << builder->get_app_name();
+		logger[log::fatal] << "  ";
 		const std::string desc = builder->get_description();
-		if (!desc.empty()) l[log::fatal] << "Description: " << desc;
+		if (!desc.empty()) logger[log::fatal] << "Description: " << desc;
 		std::string reqs;
-		l[log::fatal] << "Usage: " << argv[0] << " " << filename << reqs;
-		l[log::fatal] <<"  ";
-		l[log::fatal] << "Variables:";
+		logger[log::fatal] << "Usage: " << argv[0] << " " << filename << reqs;
+		logger[log::fatal] <<"  ";
+		logger[log::fatal] << "Variables:";
 		for (const auto& var: vars) {
 			std::string filler(20-var.name.size(),' ');
-			l[log::fatal] << var.name << ":" << filler << var.description
+			logger[log::fatal] << var.name << ":" << filler << var.description
 					<< " [value: " << var.value << "]";
 		}
-		l[log::fatal] <<"  ";
+		logger[log::fatal] <<"  ";
 		return 0;
 	}
 
@@ -252,20 +252,20 @@ int main(int argc, char**argv)
 #endif
 	try {
 		(*builder)();
-		l[log::info] << "Application successfully finished";
+		logger[log::info] << "Application successfully finished";
 	}
 	catch (yuri::exception::Exception &e) {
-		l[log::fatal] << "Application failed to start: " << e.what();
+		logger[log::fatal] << "Application failed to start: " << e.what();
 	}
 	catch(std::exception &e) {
-		l[log::fatal] << "An error occurred during execution: " << e.what();
+		logger[log::fatal] << "An error occurred during execution: " << e.what();
 	}
 	// Explicit release of resources is needed here, so the destruction can take place before main ends
 	// Otherwise it would be destroyed among global variables and this could lead to segfaults.
 	builder.reset();
-	l[log::info] << "Application successfully destroyed";
+	logger[log::info] << "Application successfully destroyed";
 	auto mp = yuri::core::FixedMemoryAllocator::clear_all();
-	l[log::info] << "Memory pool cleared ("<< mp.first << " blocks, " << mp.second << " bytes)";
+	logger[log::info] << "Memory pool cleared ("<< mp.first << " blocks, " << mp.second << " bytes)";
 	return 0;
 }
 
