@@ -33,7 +33,7 @@ core::Parameters Scale::configure()
 
 Scale::Scale(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("scale")),
-resolution_{800,600},fast_(true)
+resolution_(resolution_t{800,600}),fast_(true)
 {
 	IOTHREAD_INIT(parameters)
 	using namespace core::raw_format;
@@ -54,7 +54,7 @@ struct scale_line_bilinear {
 	inline static void eval(uint8_t* it, const uint8_t* top, const uint8_t* bottom, const dimension_t new_width, const dimension_t old_width, const double unscale_x, const double y_ratio) {
 		const double y_ratio2 = 1.0 - y_ratio;
 		for (dimension_t pixel = 0; pixel < new_width -1; ++pixel) {
-			const dimension_t left = pixel*unscale_x;
+			const dimension_t left = static_cast<dimension_t>(pixel*unscale_x);
 			const dimension_t right = left + 1;
 			const double x_ratio = pixel*unscale_x - left;
 			const double x_ratio2 = 1.0 - x_ratio;
@@ -100,7 +100,7 @@ struct scale_line_bilinear_fast {
 };
 inline uint8_t get_y (const dimension_t pixel, const double unscale_x, const uint8_t* top, const uint8_t* bottom, const double y_ratio, const double y_ratio2)
 {
-	const dimension_t left = pixel*unscale_x;
+	const dimension_t left = static_cast<dimension_t>(pixel*unscale_x);
 	const dimension_t right = left + 1;
 
 	const double x_ratio = pixel*unscale_x - left;
@@ -114,7 +114,7 @@ inline uint8_t get_y (const dimension_t pixel, const double unscale_x, const uin
 template<size_t adjust>
 inline uint8_t get_uv (const dimension_t pixel, const double unscale_x, const uint8_t* top, const uint8_t* bottom, const double y_ratio, const double y_ratio2)
 {
-	const dimension_t left0 = pixel*unscale_x;
+	const dimension_t left0 = static_cast<dimension_t>(pixel*unscale_x);
 	const dimension_t left = (left0&~1) + adjust;
 	const dimension_t right = left + 2;
 
@@ -237,7 +237,7 @@ core::pRawVideoFrame scale_image(const core::pRawVideoFrame& frame, const resolu
 	uint8_t* it = PLANE_RAW_DATA(outframe,0);
 
 	for (dimension_t line = 0; line < new_resolution.height -1 ; ++line) {
-		const dimension_t top = line*unscale_y;
+		const dimension_t top = static_cast<dimension_t>(line*unscale_y);
 		const dimension_t bottom = top+1;
 		const double y_ratio = line*unscale_y - top;
 		kernel::eval(it,
