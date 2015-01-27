@@ -14,7 +14,15 @@
 #include "yuri/core/utils/ModuleLoader.h"
 #include "builder_utils.h"
 #define TIXML_USE_STL
+#ifdef YURI_WIN
+#pragma warning( push )
+// Disable "declaration of xxx hides class member
+#pragma warning( disable : 4458)
+#endif
 #include "yuri/core/tinyxml/tinyxml.h"
+#ifdef YURI_WIN
+#pragma warning(pop)
+#endif
 #ifdef YURI_CYGWIN
 #include <cstdlib>
 #endif
@@ -145,13 +153,13 @@ void XmlBuilder::builder_pimpl_t::process_module_dirs()
 {
 //	log[log::verbose_debug] << "Loading <module_dir>s";
 	TiXmlElement * node = nullptr;
-	std::vector<std::string> module_dirs;
+	std::vector<std::string> module_dirs_local;
 	while((node = dynamic_cast<TiXmlElement*>(root->IterateChildren(module_dir_tag, node)))) {
 		std::string path;
 		if (node->QueryValueAttribute(path_attrib, &path)!=TIXML_SUCCESS) continue;
-		module_dirs.push_back(std::move(path));
+		module_dirs_local.push_back(std::move(path));
 	}
-	for (const auto& m: module_dirs) {
+	for (const auto& m: module_dirs_local) {
 		builder::load_module_dir(log, m);
 	}
 }
@@ -190,19 +198,19 @@ void XmlBuilder::builder_pimpl_t::process_variables()
 		input_events[av.first]=av.second.get_value();
 	}
 	while((node = dynamic_cast<TiXmlElement*>(root->IterateChildren(variable_tag, node)))) {
-		std::string name;
-		if (node->QueryValueAttribute(name_attrib, &name)!=TIXML_SUCCESS) continue;
+		std::string node_name;
+		if (node->QueryValueAttribute(name_attrib, &node_name)!=TIXML_SUCCESS) continue;
 //		log[log::info] << "Checking variable " << name;
 		std::string desc;
 		node->QueryValueAttribute(description_attrib, &desc);// This is optional
-		auto it = input_events.find(name);
+		auto it = input_events.find(node_name);
 		if (it != input_events.end()){
-			variables[name][desc].set_value(it->second);
+			variables[node_name][desc].set_value(it->second);
 		} else {
 			const char* text = node->GetText();
 			if (!text) text = "";
-			variables[name][desc]=parse_expression(text);
-			input_events[name]=variables[name].get_value();
+			variables[node_name][desc]=parse_expression(text);
+			input_events[node_name]=variables[node_name].get_value();
 		}
 	}
 //	for (const auto&p: variables) {
@@ -232,11 +240,11 @@ Parameters XmlBuilder::builder_pimpl_t::parse_parameters(const TiXmlElement* ele
 	if (element) {
 		const TiXmlElement * node = nullptr;
 		while((node = dynamic_cast<const TiXmlElement*>(element->IterateChildren(parameter_tag, node)))) {
-			std::string name;
-			if (node->QueryValueAttribute(name_attrib, &name)!=TIXML_SUCCESS) continue;
+			std::string node_name;
+			if (node->QueryValueAttribute(name_attrib, &node_name)!=TIXML_SUCCESS) continue;
 			const char* text = node->GetText();
 			if (!text) text = "";
-			params[name]=parse_expression(text);
+			params[node_name]=parse_expression(text);
 		}
 	}
 	return params;

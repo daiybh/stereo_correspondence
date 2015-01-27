@@ -68,12 +68,13 @@ std::pair<convert::path_list, size_t> find_conversion(format_t format_in, format
 
 	// Populate stack with initial edges
 	visited[format_in] = true;
-	auto er = starts.equal_range(format_in);
-	auto it = er.first;
-	while(it!=er.second) {
-		stack.emplace(it++->second);
+	{
+		auto er = starts.equal_range(format_in);
+		auto it = er.first;
+		while (it != er.second) {
+			stack.emplace(it++->second);
+		}
 	}
-
 
 //	std::cout << "Looking up " << format_in << " -> " << format_out << "\n";
 //	std::cout << "Prepared " << best_convertor.size() << " convertors\n";

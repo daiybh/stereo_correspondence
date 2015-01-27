@@ -63,12 +63,22 @@ lexical_cast(const U& val)
 	return outval;
 }
 
+#ifdef YURI_WIN
+#pragma warning ( push )
+// THis seems to bethe only wan to disable C4800
+#pragma warning ( disable: 4800)
+#endif
+
 template<class T, class U>
 typename std::enable_if<std::is_convertible<U, T>::value, T>::type
 lexical_cast(const U& val)
 {
-	return val;
+	return static_cast<T>(val);
 }
+
+#ifdef YURI_WIN
+#pragma warning ( pop)
+#endif
 
 template<class Char, class traits>
 bool iequals(const std::basic_string<Char, traits>& a, const std::basic_string<Char, traits>& b)

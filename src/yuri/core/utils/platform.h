@@ -39,6 +39,10 @@
 	// Disable bad macros from windows.h
 	#define WIN32_MEAN_AND_LEAN
 	#define NOMINMAX
+	// Disable warnings about "insecure" calls 
+	#ifndef _SCL_SECURE_NO_WARNINGS
+		#define _SCL_SECURE_NO_WARNINGS
+	#endif
 #elif defined __CYGWIN__
 	#define YURI_CYGWIN 1
 	#define YURI_POSIX 1

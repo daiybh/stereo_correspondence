@@ -14,6 +14,7 @@
 #include "yuri/core/pipe/Pipe.h"
 #include <algorithm>
 #include <stdexcept>
+#include <numeric>
 
 namespace yuri
 {
@@ -108,7 +109,7 @@ void IOThread::do_connect_in(position_t index, pPipe pipe)
 	}
 	auto notify_ptr = dynamic_pointer_cast<PipeNotifiable>(get_this_ptr());
 	in_[index]=PipeConnector(pipe,notify_ptr, {});
-	active_pipes_ = std::accumulate(in_.begin(), in_.end(), 0, [](const size_t& ap, const PipeConnector&p){return ap + (p?1:0);});
+	active_pipes_ = std::accumulate(in_.begin(), in_.end(), size_t{}, [](const size_t& ap, const PipeConnector&p) {return ap + (p ? 1 : 0); });
 }
 
 void IOThread::connect_out(position_t index, pPipe pipe)

@@ -12,6 +12,11 @@
 #define EVENTHELPERS_H_
 #include "BasicEvent.h"
 #include "yuri/core/utils.h"
+#ifdef YURI_WIN
+#pragma warning ( push )
+// Disable warning "Forcing value to bool ...
+#pragma warning ( disable: 4800)
+#endif
 namespace yuri {
 namespace event {
 class bad_event_cast: public std::runtime_error
@@ -66,4 +71,7 @@ T 					lex_cast_value(const pBasicEvent& src) {
 }
 
 
+#ifdef YURI_WIN
+#pragma warning ( pop )
+#endif
 #endif /* EVENTHELPERS_H_ */

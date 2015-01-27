@@ -80,7 +80,7 @@ pBasicEvent call(const std::string& fname, const std::vector<pBasicEvent>& event
 					auto p = implicit_conversion(events[i], ptypes[i]);
 					converted_events.push_back(p);
 				}
-				catch (bad_event_cast& e) {
+				catch (bad_event_cast& ) {
 					ok = false;
 					break;
 				}
