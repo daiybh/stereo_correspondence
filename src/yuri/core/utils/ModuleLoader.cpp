@@ -19,7 +19,7 @@
 
 #if defined YURI_POSIX
 #include <dlfcn.h>
-#elif defined YURI_WINDOWS
+#elif defined YURI_WIN
 #include <windows.h>
 #else
 #error Runtime object loading not supported on this platform
@@ -56,7 +56,7 @@ struct dynamic_loader {
 private:
 #if defined YURI_POSIX
 	void* handle;
-#elif defined YURI_WINDOWS
+#elif defined YURI_WIN
 	HINSTANCE handle;
 #endif
 };
@@ -81,7 +81,7 @@ T dynamic_loader::load_symbol(const std::string& symbol)
 {
 	return reinterpret_cast<T>(reinterpret_cast<uintptr_t>(dlsym(handle,symbol.c_str())));
 }
-#elif defined YURI_WINDOWS
+#elif defined YURI_WIN
 dynamic_loader::dynamic_loader(const std::string& path)
 {
 	handle = LoadLibrary(path.c_str());
@@ -107,6 +107,7 @@ namespace {
 std::vector<std::string> built_in_paths = {
 		"./modules",
 		"./bin/modules",
+		"../modules",
 #ifdef INSTALL_PREFIX
 		INSTALL_PREFIX "/lib/yuri2/",
 #else
