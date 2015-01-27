@@ -98,9 +98,12 @@ amplitude_(1.0),sampling_frequency_(48000),channels_(2)
 		case signed_32bit:
 			generator_=make_unique<int_noise_generator<int32_t, signed_32bit>>(amplitude_,channels_,sampling_frequency_);
 			break;
+#ifndef YURI_WIN
+			// Windows doesn's support uniform_int_distribution for uin8_t...
 		case unsigned_8bit:
 			generator_=make_unique<int_noise_generator<uint8_t, unsigned_8bit>>(amplitude_,channels_,sampling_frequency_);
 			break;
+#endif
 		case unsigned_16bit:
 			generator_=make_unique<int_noise_generator<uint16_t, unsigned_16bit>>(amplitude_,channels_,sampling_frequency_);
 			break;
