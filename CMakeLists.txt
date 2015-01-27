@@ -31,8 +31,10 @@ ENDIF()
 IF (UNIX)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra -std=c++0x -ffast-math")
 	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -Wextra -std=gnu11 -ffast-math")
-
 ENDIF ()
+IF(WIN32)
+	add_definitions( -DBOOST_ALL_NO_LIB )
+ENDIF()
 
 add_definitions("-DYURI_USE_CXX11") 
 #################################################################
@@ -65,7 +67,12 @@ include_directories( ${CMAKE_SOURCE_DIR}/src )
 SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 SET (MODULE_DIR ${EXECUTABLE_OUTPUT_PATH}/modules)
 SET (TARGET_MODULE_PATH lib/yuri2/)
-
+IF(WIN32)
+	SET (ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+	SET (RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+	SET (LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+	SET (LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+ENDIF()
 #################################################################
 # Initially disable all helpers
 #################################################################
