@@ -41,7 +41,7 @@ core::Parameters TestCard::configure()
 
 
 TestCard::TestCard(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("testcard")),resolution_{800, 600},
+core::IOThread(log_,parent,1,1,std::string("testcard")),resolution_(resolution_t{800, 600}),
 fps_(25.0),format_(core::raw_format::yuyv422)
 {
 	IOTHREAD_INIT(parameters)

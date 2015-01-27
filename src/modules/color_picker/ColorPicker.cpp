@@ -36,7 +36,7 @@ core::Parameters ColorPicker::configure()
 ColorPicker::ColorPicker(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("color_picker")),BasicEventConsumer(log),
 event::BasicEventProducer(log),
-geometry_{10,10,0,0},show_color_(true)
+geometry_(geometry_t{10,10,0,0}),show_color_(true)
 {
 	IOTHREAD_INIT(parameters)
 	using namespace core::raw_format;

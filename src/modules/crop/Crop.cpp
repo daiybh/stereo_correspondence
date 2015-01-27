@@ -54,7 +54,7 @@ std::vector<format_t> get_supported_fmts(log::Log& log) {
 
 }
 Crop::Crop(log::Log &log_, core::pwThreadBase parent,const core::Parameters &parameters):
-	base_type(log_,parent,"Crop"),event::BasicEventConsumer(log),geometry_{800,600,0,0}
+	base_type(log_,parent,"Crop"),event::BasicEventConsumer(log),geometry_(geometry_t{800,600,0,0})
 {
 	IOTHREAD_INIT(parameters)
 	set_supported_formats(get_supported_fmts(log));

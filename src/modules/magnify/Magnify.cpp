@@ -35,7 +35,7 @@ core::Parameters Magnify::configure()
 Magnify::Magnify(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("magnify")),
 event::BasicEventConsumer(log),
-geometry_{50,50,0,0},zoom_(5)
+geometry_(geometry_t{50,50,0,0}),zoom_(5)
 {
 	IOTHREAD_INIT(parameters)
 	set_supported_formats({core::raw_format::rgb24});
