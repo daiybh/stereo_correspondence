@@ -74,8 +74,8 @@ namespace {
 template<typename T>
 void invert_line(const T* start, const T*end, T* out_end)
 {
-	constexpr T t_max = std::numeric_limits<T>::max();
-	std::transform(start,end,out_end,[](const T& v){return v^t_max;});
+	/* constexpr */ T t_max = std::numeric_limits<T>::max();
+	std::transform(start,end,out_end,[t_max](const T& v){return v^t_max;});
 }
 
 template<typename T, class T2>
