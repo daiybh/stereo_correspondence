@@ -32,9 +32,9 @@ public:
 typedef utils::Singleton<BasicDatagramSocketGenerator<core::socket::DatagramSocket, std::string>> DatagramSocketGenerator;
 
 #ifdef YURI_MODULE_IN_TREE
-#define REGISTER_DATAGRAM_SOCKET(name, type) namespace { bool reg_ ## type = yuri::core::DatagramSocketGenerator::get_instance().register_generator(name,[](const yuri::log::Log& log, const std::string& url){return make_shared<type>(log, url);}, function<void(void)>()); }
+#define REGISTER_DATAGRAM_SOCKET(name, type) namespace { bool reg_ ## type = yuri::core::DatagramSocketGenerator::get_instance().register_generator(name,[](const yuri::log::Log& log, const std::string& url){return make_shared<type>(log, url);}, std::function<void(void)>()); }
 #else
-#define REGISTER_DATAGRAM_SOCKET(name, type) /*bool socket_reg_ ## type = */yuri::core::DatagramSocketGenerator::get_instance().register_generator(name,[](const yuri::log::Log& log, const std::string& url){return make_shared<type>(log, url);}, function<void(void)>());
+#define REGISTER_DATAGRAM_SOCKET(name, type) /*bool socket_reg_ ## type = */yuri::core::DatagramSocketGenerator::get_instance().register_generator(name,[](const yuri::log::Log& log, const std::string& url){return make_shared<type>(log, url);}, [](){});
 #endif
 
 
