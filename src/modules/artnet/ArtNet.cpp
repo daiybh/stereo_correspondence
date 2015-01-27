@@ -69,8 +69,8 @@ bool ArtNet::do_process_event(const std::string& event_name, const event::pBasic
 	boost::regex universe_value("/([0-9]+)/([0-9]+)");
 	boost::smatch what;
 	if (boost::regex_match(event_name,what,universe_value, boost::match_default)) {
-		const uint16_t universe = std::stoul(std::string{what[1].first, what[1].second});
-		const uint16_t channel = std::stoul(std::string{what[2].first, what[2].second});
+		const uint16_t universe = static_cast<uint16_t>(std::stoul(std::string{what[1].first, what[1].second}));
+		const uint16_t channel = static_cast<uint16_t>(std::stoul(std::string{what[2].first, what[2].second}));
 		const uint8_t value = event::lex_cast_value<uint8_t>(event);
 		universes_[universe][channel]=value;
 		changed_ = true;
