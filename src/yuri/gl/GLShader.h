@@ -13,6 +13,11 @@
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
 #endif
+#include "yuri/core/utils/platform.h"
+#ifdef YURI_WIN
+#include <Windows.h>
+#endif
+
 #include <GL/gl.h>
 #include <string>
 #include "yuri/log/Log.h"
