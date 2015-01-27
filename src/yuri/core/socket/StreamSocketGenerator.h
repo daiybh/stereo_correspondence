@@ -27,14 +27,17 @@ class BasicStreamSocketGenerator: public core::BasicGenerator<T, KeyType,
 {
 public:
 	BasicStreamSocketGenerator(){}
+	static void dummy() {};
+	template <class sock>
+	static std::shared_ptr<T> generator(yuri::log::Log& log) { return std::make_shared<sock>(log); }
 };
 
 typedef utils::Singleton<BasicStreamSocketGenerator<core::socket::StreamSocket, std::string>> StreamSocketGenerator;
 
 #ifdef YURI_MODULE_IN_TREE
-#define REGISTER_STREAM_SOCKET(name, type) namespace { bool reg_ ## type = yuri::core::StreamSocketGenerator::get_instance().register_generator(name,[](const yuri::log::Log& log){return make_shared<type>(log);}, function<void(void)>()); }
+#define REGISTER_STREAM_SOCKET(name, type) namespace { bool reg_ ## type = yuri::core::StreamSocketGenerator::get_instance().register_generator(name, yuri::core::StreamSocketGenerator::generator<type>, yuri::core::StreamSocketGenerator::dummy); }
 #else
-#define REGISTER_STREAM_SOCKET(name, type) /*bool socket_reg_ ## type = */yuri::core::StreamSocketGenerator::get_instance().register_generator(name,[](const yuri::log::Log& log){return make_shared<type>(log);}, function<void(void)>());
+#define REGISTER_STREAM_SOCKET(name, type) /*bool socket_reg_ ## type = */yuri::core::StreamSocketGenerator::get_instance().register_generator(name, yuri::core::StreamSocketGenerator::generator<type>, yuri::core::StreamSocketGenerator::dummy);
 #endif
 
 
