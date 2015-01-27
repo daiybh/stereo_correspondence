@@ -23,30 +23,31 @@ namespace core {
 
 
 
-class EXPORT Parameter {
+class Parameter {
 public:
-								Parameter(const std::string& name, event::pBasicEvent value= event::pBasicEvent(), const std::string& description=std::string()):
+	EXPORT 						Parameter(const std::string& name, event::pBasicEvent value= event::pBasicEvent(), const std::string& description=std::string()):
 									name_(name),description_(description),value_(value) {}
 	template<typename T>
 								Parameter(const std::string& name, const T& value, const std::string& description=std::string()):
 									name_(name),description_(description),value_(detail::suitable_event_type<T>::create_new(value)) {}
-								~Parameter() noexcept = default;
-								Parameter(const Parameter&) = default;
-								Parameter(Parameter&&) = default;
-	Parameter&					operator=(const Parameter&) = default;
-	Parameter&					operator=(Parameter&&) = default;
-	Parameter&					operator=(const event::pBasicEvent& value) { set_value(value); return *this; }
+	EXPORT 						~Parameter() noexcept = default;
+	EXPORT 						Parameter(const Parameter&) = default;
+	EXPORT 						Parameter(Parameter&&) = default;
+	EXPORT Parameter&			operator=(const Parameter&) = default;
+	EXPORT Parameter&			operator=(Parameter&&) = default;
+	EXPORT Parameter&			operator=(const event::pBasicEvent& value) { set_value(value); return *this; }
 
 	template<typename T>
 	Parameter&					operator=(const T& value) { value_ = detail::suitable_event_type<T>::create_new(value); return *this; }
 
 
-	const std::string&			get_name() const { return name_; }
-	const event::pBasicEvent&	get_value() const { return value_; }
-	const std::string&			get_description() const { return description_; }
+	EXPORT const std::string&	get_name() const { return name_; }
+	EXPORT const event::pBasicEvent&	
+								get_value() const { return value_; }
+	EXPORT const std::string&	get_description() const { return description_; }
 
-	void						set_value(event::pBasicEvent value) { value_ = value; }
-	Parameter&					operator[](const std::string& desc){description_=desc; return *this;}
+	EXPORT void					set_value(event::pBasicEvent value) { value_ = value; }
+	EXPORT Parameter&			operator[](const std::string& desc){description_=desc; return *this;}
 
 	template<typename T>
 	T							get() const;

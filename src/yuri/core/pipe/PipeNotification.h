@@ -21,10 +21,10 @@ using pPipeNotifiable = shared_ptr<class PipeNotifiable>;
 using pwPipeNotifiable = weak_ptr<class PipeNotifiable>;
 class PipeNotifiable {
 public:
-								PipeNotifiable():pending_notification_{false}{}
-	virtual 					~PipeNotifiable() noexcept {}
-	void 						notify();
-	void						wait_for(duration_t dur);
+	EXPORT 						PipeNotifiable():pending_notification_{false}{}
+	EXPORT virtual 				~PipeNotifiable() noexcept {}
+	EXPORT void 				notify();
+	EXPORT void					wait_for(duration_t dur);
 private:
 	mutex						var_mutex_;
 	condition_variable			variable_;

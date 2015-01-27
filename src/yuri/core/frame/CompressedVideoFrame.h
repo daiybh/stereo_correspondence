@@ -19,26 +19,29 @@ namespace core {
 class CompressedVideoFrame;
 typedef shared_ptr<CompressedVideoFrame> pCompressedVideoFrame;
 
+//#ifdef YURI_WIN
+//template class EXPORT uvector<uint8_t>;
+//#endif
 class CompressedVideoFrame: public VideoFrame
 {
 public:
 	typedef	uint8_t				value_type;
 	typedef uvector<value_type>	vector_type;
-	typedef typename vector_type::iterator
+	typedef /* typename */ vector_type::iterator
 								iterator;
-	typedef typename vector_type::const_iterator
+	typedef /* typename */ vector_type::const_iterator
 								const_iterator;
-	typedef typename vector_type::reference
+	typedef /* typename */ vector_type::reference
 								reference;
-	typedef typename vector_type::const_reference
+	typedef /* typename */ vector_type::const_reference
 								const_reference;
 
-	CompressedVideoFrame(format_t format, resolution_t resolution);
-	CompressedVideoFrame(format_t format, resolution_t resolution, size_t size);
-	CompressedVideoFrame(format_t format, resolution_t resolution, const uint8_t* data, size_t size);
+	EXPORT CompressedVideoFrame(format_t format, resolution_t resolution);
+	EXPORT CompressedVideoFrame(format_t format, resolution_t resolution, size_t size);
+	EXPORT CompressedVideoFrame(format_t format, resolution_t resolution, const uint8_t* data, size_t size);
 	template<class Deleter>
 	CompressedVideoFrame(format_t format, resolution_t resolution, const uint8_t* data, size_t size, Deleter deleter);
-	~CompressedVideoFrame() noexcept;
+	EXPORT ~CompressedVideoFrame() noexcept;
 
 	template<class... Args>
 	static pCompressedVideoFrame create_empty(Args... args)
@@ -46,9 +49,9 @@ public:
 		return make_shared<CompressedVideoFrame>(std::forward<Args>(args)...);
 	}
 
-	vector_type&	get_data() { return data_; }
+	EXPORT vector_type&	get_data() { return data_; }
 
-	const vector_type& get_data() const { return data_; }
+	EXPORT const vector_type& get_data() const { return data_; }
 
 
 	iterator					begin() {return data_.begin();}
@@ -69,8 +72,8 @@ public:
 //	void						emplace_back(Args&&... args) { data_.emplace_back(std::forward<Args>(args)...); }
 private:
 	// TODO Implement this!
-	virtual pFrame	do_get_copy() const { return pFrame(); }
-	virtual size_t	do_get_size() const noexcept { return size(); };
+	EXPORT virtual pFrame	do_get_copy() const { return pFrame(); }
+	EXPORT virtual size_t	do_get_size() const noexcept { return size(); };
 
 	vector_type data_;
 };

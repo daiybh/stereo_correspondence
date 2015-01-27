@@ -18,79 +18,82 @@ namespace core {
 class Frame;
 typedef shared_ptr<Frame> pFrame;
 
-EXPORT class Frame {
+class Frame {
 public:
-					Frame(format_t format);
-	virtual 		~Frame() noexcept;
+	EXPORT 			Frame(format_t format);
+	EXPORT virtual 	~Frame() noexcept;
 
 	/*!
 	 * Copy constructor is deleted
 	 */
-					Frame(const Frame&) 	= delete;
+	EXPORT 			Frame(const Frame&) 	= delete;
 	/*!
 	 * Move constructor is deleted
 	 */
-					Frame(Frame&&) 			= delete;
+	EXPORT 			Frame(Frame&&) 			= delete;
 	/*!
 	 * Assignment operator is deleted
 	 */
-	void 			operator=(const Frame&)	= delete;
+	EXPORT void 	operator=(const Frame&)	= delete;
 	/*!
 	 * Move operator is deleted
 	 */
-	void 			operator=(Frame&&) 		= delete;
+	EXPORT void 	operator=(Frame&&) 		= delete;
 
 	/*!
 	 * @brief Returns a deep copy of the frame
 	 * @return pointer to the newly created copy
 	 */
-	pFrame			get_copy() const;
+	EXPORT pFrame	get_copy() const;
 
 	/*!
 	 * Returns size of data in frame in bytes
 	 * @return size of data
 	 */
-	size_t			get_size() const noexcept;
+	EXPORT size_t	get_size() const noexcept;
 	/*!
 	 * Returns timestamp associated with the
 	 * @return current timestamp
 	 */
-	timestamp_t		get_timestamp() const { return timestamp_; }
+	EXPORT timestamp_t		
+					get_timestamp() const { return timestamp_; }
 	/*!
 	 * Sets timestamp for the frame
 	 * @param timestamp timestamp to set
 	 */
-	void			set_timestamp(timestamp_t timestamp);
+	EXPORT void		set_timestamp(timestamp_t timestamp);
 	/*!
 	 * Return duration of the frame. Can return duration of 0.
 	 * @return frame duration
 	 */
-	duration_t		get_duration() const { return duration_; }
+	EXPORT duration_t	
+					get_duration() const { return duration_; }
 	/*!
 	 * Sets duration for current frame
 	 * @param duration duration to set
 	 */
-	void			set_duration(duration_t duration);
+	EXPORT void		set_duration(duration_t duration);
 	/*!
 	 * Returns format of the frame
 	 * @return format
 	 */
-	format_t		get_format() const { return format_; }
+	EXPORT format_t	get_format() const { return format_; }
 	/*!
 	 * Sets format for the frame
 	 * @param format foramt to set
 	 */
-	void			set_format(format_t timestamp);
+	EXPORT void		set_format(format_t timestamp);
 	/*!
 	 * Returns format name of the frame
 	 * @return format name
 	 */
-	std::string		get_format_name() const { return format_name_; }
+	EXPORT std::string		
+					get_format_name() const { return format_name_; }
 	/*!
 	 * Sets format for the frame
 	 * @param format format name to set
 	 */
-	void			set_format_name(const std::string& format_name);
+	EXPORT void		set_format_name(const std::string& format_name);
 
 private:
 	/*!
@@ -109,7 +112,8 @@ protected:
 	 * The intention is to be used in get_copy() method.
 	 * @param frame to copy parameters to
 	 */
-	virtual void	copy_parameters(Frame&) const;
+	EXPORT 	virtual void	
+					copy_parameters(Frame&) const;
 private:
 	format_t		format_;
 	timestamp_t		timestamp_;

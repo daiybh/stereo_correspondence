@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <ostream>
 #include <istream>
+#include "platform.h"
 
 namespace yuri {
 namespace detail {
@@ -31,47 +32,47 @@ struct duration_t;
 struct timestamp_t {
 	using duration = detail::time_point::duration;
 
-	timestamp_t():value(detail::clock_t::now()) {}
+	EXPORT timestamp_t():value(detail::clock_t::now()) {}
 	template<class Duration>
 	timestamp_t(const std::chrono::time_point<detail::clock_t,Duration>& tp):
 		value(std::chrono::time_point_cast<duration>(tp))
 	{}
 
-	timestamp_t &operator+=(const duration_t& dur);
-	timestamp_t &operator-=(const duration_t& dur);
+	EXPORT timestamp_t &operator+=(const duration_t& dur);
+	EXPORT timestamp_t &operator-=(const duration_t& dur);
 	detail::time_point			value;
 };
 
-inline constexpr bool operator==(const timestamp_t& a, const timestamp_t& b) {
+inline /* constexpr */ bool operator==(const timestamp_t& a, const timestamp_t& b) {
 	return a.value == b.value;
 }
 
-inline constexpr bool operator!=(const timestamp_t& a, const timestamp_t& b) {
+inline /* constexpr  */ bool operator!=(const timestamp_t& a, const timestamp_t& b) {
 	return a.value != b.value;
 }
-inline constexpr bool operator>(const timestamp_t& a, const timestamp_t& b) {
+inline /* constexpr */  bool operator>(const timestamp_t& a, const timestamp_t& b) {
 	return a.value > b.value;
 }
-inline constexpr bool operator>=(const timestamp_t& a, const timestamp_t& b) {
+inline /* constexpr */  bool operator>=(const timestamp_t& a, const timestamp_t& b) {
 	return a.value >= b.value;
 }
-inline constexpr bool operator<(const timestamp_t& a, const timestamp_t& b) {
+inline /* constexpr */  bool operator<(const timestamp_t& a, const timestamp_t& b) {
 	return a.value < b.value;
 }
 
-inline constexpr bool operator<=(const timestamp_t& a, const timestamp_t& b) {
+inline /* constexpr */  bool operator<=(const timestamp_t& a, const timestamp_t& b) {
 	return a.value <= b.value;
 }
 
-struct duration_t {
-	constexpr duration_t():value(0) {}
-	explicit constexpr duration_t(int64_t microseconds):value(microseconds){}
+struct EXPORT duration_t {
+	/* constexpr */  duration_t():value(0) {}
+	explicit /* constexpr */  duration_t(detail::duration_rep microseconds):value(microseconds){}
 	template<typename T, class Period>
 	explicit duration_t(const std::chrono::duration<T, Period>& dur){
 		value = std::chrono::duration_cast<detail::duration>(dur).count();
 	}
 	template<typename Rep, class Period>
-	explicit operator std::chrono::duration<Rep, Period>() const {
+	/* explicit */ operator std::chrono::duration<Rep, Period>() const {
 		return std::chrono::duration_cast<
 					std::chrono::duration<Rep, Period>>(
 							detail::duration(value));
@@ -88,19 +89,19 @@ struct duration_t {
 	detail::duration_rep		value;
 };
 
-inline constexpr duration_t operator"" _us(unsigned long long val) { return duration_t{static_cast<detail::duration_rep>(val)}; }
-inline constexpr duration_t operator"" _ms(unsigned long long val) { return duration_t{static_cast<detail::duration_rep>(val*1e3)}; }
-inline constexpr duration_t operator"" _s(unsigned long long val) { return duration_t{static_cast<detail::duration_rep>(val*1e6)}; }
-inline constexpr duration_t operator"" _minutes(unsigned long long val) { return duration_t{static_cast<detail::duration_rep>(val*60e6)}; }
-inline constexpr duration_t operator"" _hours(unsigned long long val) { return duration_t{static_cast<detail::duration_rep>(val*3600e6)}; }
-inline constexpr duration_t operator"" _days(unsigned long long val) { return duration_t{static_cast<detail::duration_rep>(val*24*3600e6)}; }
+inline /* constexpr */  duration_t operator"" _us(unsigned long long val) { return duration_t{static_cast<detail::duration_rep>(val)}; }
+inline /* constexpr */  duration_t operator"" _ms(unsigned long long val) { return duration_t{static_cast<detail::duration_rep>(val*1e3)}; }
+inline /* constexpr */  duration_t operator"" _s(unsigned long long val) { return duration_t{static_cast<detail::duration_rep>(val*1e6)}; }
+inline /* constexpr */  duration_t operator"" _minutes(unsigned long long val) { return duration_t{static_cast<detail::duration_rep>(val*60e6)}; }
+inline /* constexpr */  duration_t operator"" _hours(unsigned long long val) { return duration_t{static_cast<detail::duration_rep>(val*3600e6)}; }
+inline /* constexpr */  duration_t operator"" _days(unsigned long long val) { return duration_t{static_cast<detail::duration_rep>(val*24*3600e6)}; }
 
-inline constexpr duration_t operator"" _us(long double val) { return duration_t{static_cast<detail::duration_rep>(val)}; }
-inline constexpr duration_t operator"" _ms(long double val) { return duration_t{static_cast<detail::duration_rep>(val*1e3)}; }
-inline constexpr duration_t operator"" _s(long double val) { return duration_t{static_cast<detail::duration_rep>(val*1e6)}; }
-inline constexpr duration_t operator"" _minutes(long double val) { return duration_t{static_cast<detail::duration_rep>(val*60e6)}; }
-inline constexpr duration_t operator"" _hours(long double val) { return duration_t{static_cast<detail::duration_rep>(val*3600e6)}; }
-inline constexpr duration_t operator"" _days(long double val) { return duration_t{static_cast<detail::duration_rep>(val*24*3600e6)}; }
+inline /* constexpr */  duration_t operator"" _us(long double val) { return duration_t{static_cast<detail::duration_rep>(val)}; }
+inline /* constexpr */  duration_t operator"" _ms(long double val) { return duration_t{static_cast<detail::duration_rep>(val*1e3)}; }
+inline /* constexpr */  duration_t operator"" _s(long double val) { return duration_t{static_cast<detail::duration_rep>(val*1e6)}; }
+inline /* constexpr */  duration_t operator"" _minutes(long double val) { return duration_t{static_cast<detail::duration_rep>(val*60e6)}; }
+inline /* constexpr */  duration_t operator"" _hours(long double val) { return duration_t{static_cast<detail::duration_rep>(val*3600e6)}; }
+inline /* constexpr */  duration_t operator"" _days(long double val) { return duration_t{static_cast<detail::duration_rep>(val*24*3600e6)}; }
 
 inline timestamp_t &timestamp_t::operator+=(const duration_t& dur) {
 	value += timestamp_t::duration(dur);
@@ -135,69 +136,69 @@ inline timestamp_t operator-(const duration_t& d, timestamp_t t)
 	t -= d;
 	return t;
 }
-inline constexpr duration_t operator-(const duration_t& a)
+inline /* constexpr */  duration_t operator-(const duration_t& a)
 {
 	return duration_t(-a.value);
 }
-inline constexpr bool operator==(const duration_t& a, const duration_t& b)
+inline /* constexpr */  bool operator==(const duration_t& a, const duration_t& b)
 {
 	return a.value == b.value;
 }
-inline constexpr bool operator!=(const duration_t& a, const duration_t& b)
+inline /* constexpr */  bool operator!=(const duration_t& a, const duration_t& b)
 {
 	return !(a.value == b.value);
 }
-inline constexpr bool operator>(const duration_t& a, const duration_t& b)
+inline /* constexpr */  bool operator>(const duration_t& a, const duration_t& b)
 {
 	return a.value > b.value;
 }
-inline constexpr bool operator>=(const duration_t& a, const duration_t& b)
+inline /* constexpr */  bool operator>=(const duration_t& a, const duration_t& b)
 {
 	return !(a.value < b.value);
 }
-inline constexpr bool operator<(const duration_t& a, const duration_t& b)
+inline /* constexpr */  bool operator<(const duration_t& a, const duration_t& b)
 {
 	return a.value < b.value;
 }
-inline constexpr bool operator<=(const duration_t& a, const duration_t& b)
+inline /* constexpr */  bool operator<=(const duration_t& a, const duration_t& b)
 {
 	return !(a.value > b.value);
 }
-inline constexpr duration_t operator-(duration_t a, const duration_t& b)
+inline /* constexpr */  duration_t operator-(duration_t a, const duration_t& b)
 {
 	return duration_t(a.value-b.value);
 }
-inline constexpr duration_t operator+(duration_t a, const duration_t& b)
+inline /* constexpr */  duration_t operator+(duration_t a, const duration_t& b)
 {
 	return duration_t(a.value+b.value);
 }
 template<typename T>
-inline constexpr
+inline /* constexpr */ 
 typename std::enable_if<std::is_arithmetic<T>::value,duration_t>::type
 operator/(const duration_t& a, const T& b)
 {
-	return duration_t(a.value/b);
+	return duration_t(static_cast<detail::duration_rep>(a.value/b));
 }
 template<typename T>
-inline constexpr
+inline /* constexpr */ 
 typename std::enable_if<std::is_arithmetic<T>::value,duration_t>::type
 operator/(const T& b, const duration_t& a)
 {
-	return duration_t(a.value/b);
+	return duration_t(static_cast<detail::duration_rep>(a.value/b));
 }
 template<typename T>
-inline constexpr
+inline /* constexpr */ 
 typename std::enable_if<std::is_arithmetic<T>::value,duration_t>::type
 operator*(const duration_t& a, const T& b)
 {
-	return duration_t(a.value*b);
+	return duration_t(static_cast<detail::duration_rep>(a.value*b));
 }
 template<typename T>
-inline constexpr
+inline /* constexpr */ 
 typename std::enable_if<std::is_arithmetic<T>::value,duration_t>::type
 operator*(const T& b, const duration_t& a)
 {
-	return duration_t(a.value*b);
+	return duration_t(static_cast<detail::duration_rep>(a.value*b));
 }
 
 //template<class Stream>

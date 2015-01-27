@@ -26,15 +26,15 @@ typedef std::shared_ptr<DatagramSocket> pDatagramSocket;
 class DatagramSocket {
 public:
 
-	DatagramSocket(const log::Log& log_, const std::string& url = std::string());
-	virtual ~DatagramSocket() noexcept;
+	EXPORT DatagramSocket(const log::Log& log_, const std::string& url = std::string());
+	EXPORT virtual ~DatagramSocket() noexcept;
 	/*!
 	 * Binds socket to local port (if the underlying socket supports this).
 	 * @param url Address to bind localy. Exact meaning is implementation dependent, may contain port specification
 	 * @param port Port number to bind to. If specified, it should have higher priority than any port specified in @em url
 	 * @return false if an error occured, true otherwise
 	 */
-	bool bind(const std::string& url, port_t port);
+	EXPORT bool bind(const std::string& url, port_t port);
 
 	/*!
 	 * Connects socket to remote host (if the underlying socket supports this).
@@ -42,25 +42,25 @@ public:
 	 * @param port Port number to bind to. If specified, it should have higher priority than any port specified in @em url
 	 * @return false if an error occured, true otherwise
 	 */
-	bool connect(const std::string& url, port_t port);
+	EXPORT	bool connect(const std::string& url, port_t port);
 	/*!
 	 * Checks whether there are any data waiting to be read. Function returns immediately.
 	 * @return true if subsequent call to receive_datagram() will succeed.
 	 */
-	bool data_available();
+	EXPORT bool data_available();
 
 	/*!
 	 * Waits for data to become available, for at most @em duration.
 	 * @param duration Maximum time to wait for data
 	 * @return true if there are data available for read, false if timeout occurred before data become available.
 	 */
-	bool wait_for_data(duration_t duration);
+	EXPORT bool wait_for_data(duration_t duration);
 
 	/*!
 	 * Checks whether the underlying socket is ready to send a packet;
 	 * @return
 	 */
-	bool ready_to_send();
+	EXPORT bool ready_to_send();
 
 	/*!
 	 * Sends datagram
@@ -68,7 +68,7 @@ public:
 	 * @param size size of datagram in bytes
 	 * @return number of bytes really sent
 	 */
-	size_t send_datagram(const uint8_t* data, size_t size);
+	EXPORT size_t send_datagram(const uint8_t* data, size_t size);
 
 	/*!
 	 * Convenience wrapper for sending datagrams with different underlying type
@@ -106,7 +106,7 @@ public:
 	 * @param size size of the buffer
 	 * @return number of bytes received.
 	 */
-	size_t receive_datagram(uint8_t* data, size_t size);
+	EXPORT size_t receive_datagram(uint8_t* data, size_t size);
 
 	/*!
 	 * Convenience wrapper, receives datagram into an array with different underlying type

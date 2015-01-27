@@ -31,12 +31,12 @@ struct 							event_function_record_t
 class EventFunctions
 {
 public:
-	void 						add_function(const event_function_record_t& frec);
-	void 						add_functions(const std::vector<event_function_record_t>& records);
+	EXPORT void 				add_function(const event_function_record_t& frec);
+	EXPORT void 				add_functions(const std::vector<event_function_record_t>& records);
 	std::unordered_multimap<std::string, event_function_record_t> &
 								get_map()
 									{ return functions_; };
-								EventFunctions() {}
+	EXPORT 						EventFunctions() {}
 private:
 	std::unordered_multimap<std::string, event_function_record_t>
 								functions_;
@@ -47,8 +47,10 @@ typedef  SingletonBase<EventFunctions>
 								EventFunctionsFactory;
 
 
+EXPORT
 pBasicEvent 					implicit_conversion(pBasicEvent event, event_type_t target_type);
 
+EXPORT
 pBasicEvent 					call(const std::string& fname, const std::vector<pBasicEvent>& events);
 
 template<class... Args>

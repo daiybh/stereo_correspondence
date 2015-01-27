@@ -60,7 +60,7 @@ template<
     class CharT,
     class Traits = std::char_traits<CharT>
 >
-class EXPORT LogProxy {
+class LogProxy {
 private:
 	typedef std::basic_ostream<char>& (*iomanip_t)(std::basic_ostream<char>&);
 public:

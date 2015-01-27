@@ -47,20 +47,20 @@ typedef _debug_flags  debug_flags;
 /**
  * @brief Main logging facility for libyuri
  */
-class EXPORT Log
+class Log
 {
 public:
 	//! Constructs Log instance with @em out as a backend
-	Log(std::ostream &out);
+	EXPORT Log(std::ostream &out);
 	//! Constructs Log instance as a copy of @em log, with a new id
-	Log(const Log& log);
-	virtual ~Log() noexcept;
-	void set_id(int id);
-	void set_label(std::string s);
-	void set_flags(int f) { output_flags=f; }
-	LogProxy<char> operator[](debug_flags f);
-	int get_flags() { return output_flags; }
-	void set_quiet(bool q) {quiet =q;}
+	EXPORT Log(const Log& log);
+	EXPORT virtual ~Log() noexcept;
+	EXPORT void set_id(int id);
+	EXPORT void set_label(std::string s);
+	EXPORT void set_flags(int f) { output_flags=f; }
+	EXPORT LogProxy<char> operator[](debug_flags f);
+	EXPORT int get_flags() { return output_flags; }
+	EXPORT void set_quiet(bool q) {quiet =q;}
 private:
 	static int uids;
 	int uid;

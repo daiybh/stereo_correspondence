@@ -27,20 +27,19 @@ typedef weak_ptr<BasicEventConsumer>
 
 class BasicEventConsumer {
 public:
-								BasicEventConsumer(log::Log&);
-	virtual						~BasicEventConsumer();
-	bool 						receive_event(const std::string& event_name, const pBasicEvent& event);
+	EXPORT 						BasicEventConsumer(log::Log&);
+	EXPORT virtual				~BasicEventConsumer();
+	EXPORT bool 				receive_event(const std::string& event_name, const pBasicEvent& event);
 protected:
-	//event_record_t 				fetch_event();
-	bool 						process_events(ssize_t max_count = -1);
-	size_t						pending_events() const;
-	bool						wait_for_events(duration_t timeout);
-	event_record_t				get_pending_event();
-	virtual void 				receive_event_hook() noexcept {};
-private:
-	bool 						do_receive_event(const std::string& event_name, const pBasicEvent& event);
+	EXPORT event_record_t		get_pending_event();
+	EXPORT virtual void 		receive_event_hook() noexcept {};
 
-//	bool 						do_process_events(ssize_t max_count);
+	EXPORT bool 				process_events(ssize_t max_count = -1);
+	EXPORT size_t				pending_events() const;
+	EXPORT bool					wait_for_events(duration_t timeout);
+private:
+	EXPORT bool 				do_receive_event(const std::string& event_name, const pBasicEvent& event);
+	EXPORT bool 				do_process_events(ssize_t max_count);
 	virtual bool 				do_process_event(const std::string& event_name, const pBasicEvent& event) = 0;
 	std::deque<event_record_t> 	incomming_events_;
 	mutable mutex				incomming_mutex_;

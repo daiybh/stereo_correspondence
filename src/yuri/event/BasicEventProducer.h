@@ -26,13 +26,14 @@ typedef std::pair<std::string, event_type_t>
 
 class BasicEventProducer {
 public:
-								BasicEventProducer(log::Log&);
-	virtual						~BasicEventProducer();
-	bool 						register_listener(const std::string& event_name, pwBasicEventConsumer consumer, const std::string& target_name);
-	bool 						unregister_listener(const std::string& event_name, pwBasicEventConsumer consumer, const std::string& target_name);
-	std::vector<event_info_t>	list_events();
+	EXPORT 						BasicEventProducer(log::Log&);
+	EXPORT virtual				~BasicEventProducer();
+	EXPORT bool 				register_listener(const std::string& event_name, pwBasicEventConsumer consumer, const std::string& target_name);
+	EXPORT bool 				unregister_listener(const std::string& event_name, pwBasicEventConsumer consumer, const std::string& target_name);
+	EXPORT std::vector<event_info_t>	
+								list_events();
 protected:
-	bool 						emit_event(const std::string& event_name, pBasicEvent event);
+	EXPORT bool 				emit_event(const std::string& event_name, pBasicEvent event);
 
 	// Overload for emitting a bang event
 	bool 						emit_event(const std::string& event_name) {
@@ -89,9 +90,9 @@ protected:
 private:
 	bool 						do_register_listener(const std::string& event_name, pwBasicEventConsumer consumer, const std::string& target_name);
 	bool 						do_unregister_listener(const std::string& event_name, pwBasicEventConsumer consumer, const std::string& target_name);
-	virtual	std::vector<event_info_t>
+	EXPORT virtual	std::vector<event_info_t>
 								do_list_events() { return {}; }
-	virtual bool				verify_register_event(const::std::string& event_name);
+	EXPORT virtual bool			verify_register_event(const::std::string& event_name);
 	std::unordered_multimap<std::string, event_target_t>
 								consumers_;
 	mutex						consumers_mutex_;

@@ -20,15 +20,14 @@ namespace core {
 namespace raw_format {
 struct raw_format_t;
 
-const raw_format_t &get_format_info(format_t format);
-bool add_format(const raw_format_t &);
-format_t new_user_format();
-format_t parse_format(const std::string& name);
-const std::string& get_format_name(format_t format);
+EXPORT const raw_format_t &get_format_info(format_t format);
+EXPORT bool add_format(const raw_format_t &);
+EXPORT format_t new_user_format();
+EXPORT format_t parse_format(const std::string& name);
+EXPORT const std::string& get_format_name(format_t format);
 using format_info_map_t = std::map<format_t, raw_format_t>;
 
-struct formats {
-
+struct EXPORT formats {
 	format_info_map_t::const_iterator begin() const;
 	format_info_map_t::const_iterator end() const;
 };

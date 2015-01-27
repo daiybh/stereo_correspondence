@@ -17,10 +17,10 @@ namespace yuri {
 
 namespace exception {
 
-class EXPORT InitializationFailed: public yuri::exception::Exception {
+class InitializationFailed: public yuri::exception::Exception {
 public:
-	InitializationFailed(std::string reason = "Failed to initialize object");
-	virtual ~InitializationFailed() throw();
+	EXPORT InitializationFailed(std::string reason = "Failed to initialize object");
+	EXPORT virtual ~InitializationFailed() throw();
 };
 
 }

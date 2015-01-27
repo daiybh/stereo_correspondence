@@ -36,25 +36,25 @@ class BasicEvent;
 typedef shared_ptr<BasicEvent> pBasicEvent;
 class BasicEvent: 	public enable_shared_from_this<BasicEvent> {
 public:
-								BasicEvent() = delete;
-								BasicEvent(event_type_t type):type_(type),
+	EXPORT 						BasicEvent() = delete;
+	EXPORT						BasicEvent(event_type_t type):type_(type),
 											timestamp_() {}
-								BasicEvent(const BasicEvent&) = delete;
-								BasicEvent(BasicEvent&&) = delete;
-	void 						operator=(const BasicEvent&) = delete;
-	void 						operator=(BasicEvent&&) = delete;
+	EXPORT 						BasicEvent(const BasicEvent&) = delete;
+	EXPORT 						BasicEvent(BasicEvent&&) = delete;
+	EXPORT void 				operator=(const BasicEvent&) = delete;
+	EXPORT void 				operator=(BasicEvent&&) = delete;
 
-	virtual 					~BasicEvent() {}
+	EXPORT virtual 				~BasicEvent() {}
 
-	event_type_t 				get_type() const
+	event_type_t 		get_type() const
 									{ return type_; }
-	timestamp_t					get_timestamp() const
+	timestamp_t			get_timestamp() const
 									{ return timestamp_; }
 	pBasicEvent					get_copy() const
 									{ return do_get_copy(); }
 
 private:
-	virtual pBasicEvent			do_get_copy() const = 0;
+	virtual pBasicEvent	do_get_copy() const = 0;
 	event_type_t				type_;
 	const timestamp_t			timestamp_;
 };

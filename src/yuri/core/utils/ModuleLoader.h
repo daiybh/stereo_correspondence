@@ -19,9 +19,9 @@ namespace module_loader {
 
 struct module_handle;
 
-std::vector<std::string> find_modules_path(const std::string& path);
-bool load_module(const std::string& path);
-const std::vector<std::string>& get_builtin_paths();
+EXPORT std::vector<std::string> find_modules_path(const std::string& path);
+EXPORT bool load_module(const std::string& path);
+EXPORT const std::vector<std::string>& get_builtin_paths();
 
 }
 }

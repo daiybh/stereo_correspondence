@@ -22,37 +22,37 @@ using pPipe = shared_ptr<class Pipe>;
 class Pipe
 {
 public:
-	virtual 					~Pipe() noexcept;
+	EXPORT virtual 				~Pipe() noexcept;
 	/*!
 	 * Push frame 		into the pipe
 	 * @param frame 	Frame to push
 	 * @return	true is successfully pushed, false if the frame can't be pushed (when pipe is full or closed)
 	 */
-	bool 						push_frame(const pFrame &frame);
+	EXPORT bool 				push_frame(const pFrame &frame);
 	/*!
 	 * Pops a frame out of the pipe
 	 * @return	frame or empty pointer
 	 */
-	pFrame 						pop_frame();
+	EXPORT pFrame 				pop_frame();
 	/*!
 	 * Closes this pipe, so no further frames can't be pushed there
 	 */
-	void						close_pipe();
+	EXPORT void					close_pipe();
 	/*!
 	 * Returns whether the pipe is already finished
 	 * @return true when the pipe is closed and empty (i.e. no frame can ever be popped out)
 	 */
-	bool						is_finished() const;
+	EXPORT bool					is_finished() const;
 	/*!
 	 * Return number of frames in the pipe
 	 * @return Number of pipes in the pipe
 	 */
-	size_t						get_size() const;
+	EXPORT size_t				get_size() const;
 	/*!
 	 * Returns whether the pipe is empty
 	 * @return true if there's no frame in the pipe
 	 */
-	bool						is_empty() const;
+	EXPORT bool					is_empty() const;
 	/*!
 	 * Returns whether the pipe is full
 	 * @return true if there's no frame in the pipe
@@ -63,8 +63,8 @@ public:
 
 	bool						is_blocking() const noexcept { return do_is_blocking(); }
 protected:
-								Pipe(const std::string& name, const log::Log& log_);
-	void						drop_frame(const pFrame &frame) { if(frame) frames_dropped_++; }
+	EXPORT 						Pipe(const std::string& name, const log::Log& log_);
+	EXPORT void					drop_frame(const pFrame &frame) { if(frame) frames_dropped_++; }
 	log::Log					log;
 private:
 	virtual bool 				do_push_frame(const pFrame &frame) = 0;

@@ -49,7 +49,7 @@ namespace core
 
 
 
-class EXPORT IOThread: public ThreadBase, public PipeNotifiable
+class IOThread: public ThreadBase, public PipeNotifiable
 {
 public:
 	/*!
@@ -60,7 +60,7 @@ public:
 	 *
 	 * @return Parameter object with supported parameters and default values.
 	 */
-	static Parameters			configure();
+	EXPORT static Parameters			configure();
 
 	/*!
 	 * Constructor
@@ -71,38 +71,38 @@ public:
 	 * @param outp		Number of output ports (can be changed later)
 	 * @param id		Name of the class
 	 */
-								IOThread(const log::Log &log_, pwThreadBase parent,
+	EXPORT 						IOThread(const log::Log &log_, pwThreadBase parent,
 			position_t inp, position_t outp, const std::string& id = "IO");
 
 	/*!
 	 * Destructor
 	 */
-	virtual 					~IOThread() noexcept;
+	EXPORT virtual 				~IOThread() noexcept;
 /* ****************************************************************************
  * 							Input/Output
  **************************************************************************** */
 	/*!
 	 * @return 			Actual number of input ports
 	 */
-	position_t	 				get_no_in_ports();
+	EXPORT position_t	 		get_no_in_ports();
 
 	/*!
 	 * @return 			Actual number of output ports
 	 */
-	position_t	 				get_no_out_ports();
+	EXPORT position_t	 		get_no_out_ports();
 
 	/*!
 	 * Connects a pipe into an input port
 	 * @param index				Index of input pipe
 	 * @param pipe				The pipe to connect
 	 */
-	void 						connect_in(position_t index, pPipe pipe);
+	EXPORT void 				connect_in(position_t index, pPipe pipe);
 	/*!
 	 * Connects a pipe into an output port
 	 * @param index				Index of output pipe
 	 * @param pipe				The pipe to connect
 	 */
-	void 						connect_out(position_t index, pPipe pipe);
+	EXPORT void 				connect_out(position_t index, pPipe pipe);
 
 /* ****************************************************************************
  * 							Parameters
@@ -115,7 +115,7 @@ public:
 	 * @param parameter			Parameter to set
 	 * @return 	tru if parameter was processed successfully, false otherwise
 	 */
-	virtual bool 				set_param(const Parameter &parameter) override;
+	EXPORT virtual bool 		set_param(const Parameter &parameter) override;
 
 /* ****************************************************************************
  * 							Protected API
@@ -125,7 +125,7 @@ protected:
 	 * Main loop for the thread. Classes with own loop (inputs, classes
 	 * processing only events) should override this method.
 	 */
-	virtual void 				run() override;
+	EXPORT virtual void 		run() override;
 
 	/*!
 	 * Single step of the class logic. Classes using the default IOThread::run
@@ -136,7 +136,7 @@ protected:
 	 *
 	 * @return false if the class wants to end processing, true otherwise
 	 */
-	virtual bool 				step();
+	EXPORT virtual bool 		step();
 
 	/*!
 	 * Pushes a frame into output pipe @em index
@@ -146,7 +146,7 @@ protected:
 	 * @return true if frame was empty, pushed successfully, or the output pipe is not connected.
 	 * 			If the pipe is full and not accepting frames, it returns false.
 	 */
-	bool		 				push_frame(position_t index, pFrame frame);
+	EXPORT bool		 			push_frame(position_t index, pFrame frame);
 
 	/*!
 	 * Reads frame from input pipe @em index
@@ -154,7 +154,7 @@ protected:
 	 * @param index				Index of input pipe
 	 * @return A frame if there's frame available in the pipe, empty pFrame otherwise.
 	 */
-	pFrame						pop_frame(position_t index);
+	EXPORT pFrame				pop_frame(position_t index);
 
 	/*!
 	 * Changes the number of input and output pipes.
@@ -162,7 +162,7 @@ protected:
 	 * @param inp				New number of input pipes. Set to negative number to preserve current count.
 	 * @param outp				New number of output pipes. Set to negative number to preserve current count.
 	 */
-	virtual void 				resize(position_t inp, position_t outp);
+	EXPORT virtual void 		resize(position_t inp, position_t outp);
 
 	/*!
 	 * Returns a number of input ports. This method doesn't lock @port_lock_.
@@ -171,7 +171,7 @@ protected:
 	 *
 	 * @return Actual number of input ports.
 	 */
-	position_t					do_get_no_in_ports();
+	EXPORT position_t			do_get_no_in_ports();
 	/*!
 	 * Returns a number of output ports. This method doesn't lock @port_lock_.
 	 * Use this method only when working under @em port_lock_ (for example
@@ -179,12 +179,12 @@ protected:
 	 *
 	 * @return Actual number of output ports.
 	 */
-	position_t					do_get_no_out_ports();
+	EXPORT position_t			do_get_no_out_ports();
 
 	/*!
 	 * Closes and disconnects all output pipes
 	 */
-	void 						close_pipes();
+	EXPORT void 				close_pipes();
 
 	/*!
 	 * Sets class latency. This setting has by default effect only for classes
@@ -196,12 +196,12 @@ protected:
 	 *
 	 * @param lat 				New latency
 	 */
-	void 						set_latency(duration_t lat) { latency_=lat; }
+	EXPORT void 				set_latency(duration_t lat) { latency_=lat; }
 
 	/*!
 	 * @return Current latency value.
 	 */
-	duration_t					get_latency() { return latency_; }
+	EXPORT duration_t			get_latency() { return latency_; }
 
 	/*!
 	 * Checks whether there's any data available in any input pipe.
@@ -209,7 +209,7 @@ protected:
 	 * @return true if there's data available in at least one input pipe,
 	 * 				false otherwise
 	 */
-	bool 						pipes_data_available();
+	EXPORT bool 				pipes_data_available();
 
 	/*!
 	 * Implementation of @em connect_in method.
@@ -219,7 +219,7 @@ protected:
 	 *  @param position			Pipe index
 	 *  @param pipe				The pipe to connect
 	 */
-	virtual	void				do_connect_in(position_t position, pPipe pipe);
+	EXPORT virtual	void		do_connect_in(position_t position, pPipe pipe);
 
 	/*!
 	 * Implementation of @em connect_out method.
@@ -229,7 +229,7 @@ protected:
 	 *  @param position			Pipe index
 	 *  @param pipe				The pipe to connect
 	 */
-	virtual	void				do_connect_out(position_t position, pPipe pipe);
+	EXPORT virtual	void		do_connect_out(position_t position, pPipe pipe);
 
 private:
 

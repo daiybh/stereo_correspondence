@@ -21,7 +21,7 @@ namespace compressed_frame {
 
 struct compressed_frame_info_t
 {
-	compressed_frame_info_t(format_t format, std::string name, std::vector<std::string> short_names, std::vector<std::string> mime_types, std::string fourcc = std::string()):
+	EXPORT compressed_frame_info_t(format_t format, std::string name, std::vector<std::string> short_names, std::vector<std::string> mime_types, std::string fourcc = std::string()):
 		format(format),name(name),short_names(short_names), mime_types(mime_types), fourcc(fourcc)
 	{}
 	format_t					format;
@@ -34,16 +34,16 @@ struct compressed_frame_info_t
 using comp_format_info_map_t = std::map<format_t, compressed_frame_info_t>;
 
 struct formats {
-	comp_format_info_map_t::const_iterator begin() const;
-	comp_format_info_map_t::const_iterator end() const;
+	EXPORT comp_format_info_map_t::const_iterator begin() const;
+	EXPORT comp_format_info_map_t::const_iterator end() const;
 };
 
-const compressed_frame_info_t &get_format_info(format_t format);
-bool add_format(const compressed_frame_info_t &);
-format_t new_user_format();
-format_t parse_format(const std::string& name);
-const std::string& get_format_name(format_t format);
-format_t get_format_from_mime(const std::string& mime);
+EXPORT const compressed_frame_info_t &get_format_info(format_t format);
+EXPORT bool add_format(const compressed_frame_info_t &);
+EXPORT format_t new_user_format();
+EXPORT format_t parse_format(const std::string& name);
+EXPORT const std::string& get_format_name(format_t format);
+EXPORT format_t get_format_from_mime(const std::string& mime);
 
 
 

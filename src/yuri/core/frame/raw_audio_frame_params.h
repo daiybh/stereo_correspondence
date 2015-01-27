@@ -19,27 +19,27 @@ namespace core {
 namespace raw_audio_format {
 struct raw_audio_format_t;
 
-const raw_audio_format_t &get_format_info(format_t format);
-bool add_format(const raw_audio_format_t &);
-format_t new_user_format();
-format_t parse_format(const std::string& name);
-const std::string& get_format_name(format_t format);
+EXPORT const raw_audio_format_t &get_format_info(format_t format);
+EXPORT bool add_format(const raw_audio_format_t &);
+EXPORT format_t new_user_format();
+EXPORT format_t parse_format(const std::string& name);
+EXPORT const std::string& get_format_name(format_t format);
 using format_info_map_t = std::map<format_t, raw_audio_format_t>;
 
 
 struct formats {
-	format_info_map_t::const_iterator begin() const;
-	format_info_map_t::const_iterator end() const;
+	EXPORT format_info_map_t::const_iterator begin() const;
+	EXPORT format_info_map_t::const_iterator end() const;
 };
 
 
 struct raw_audio_format_t {
-  raw_audio_format_t(format_t format, std::string long_name,
+	EXPORT  raw_audio_format_t(format_t format, std::string long_name,
                std::vector<std::string> short_names, size_t bits_per_sample,
                bool little_endian = true)
       : format(format), name(long_name), short_names(short_names),
         bits_per_sample(bits_per_sample),little_endian(little_endian) {}
-  ~raw_audio_format_t() noexcept {}
+	EXPORT ~raw_audio_format_t() noexcept {}
   format_t format;
   std::string name;
   std::vector<std::string> short_names;

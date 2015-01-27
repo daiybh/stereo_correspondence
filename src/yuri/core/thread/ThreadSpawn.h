@@ -19,12 +19,12 @@ namespace yuri
 namespace core
 {
 
-class EXPORT ThreadSpawn
+class ThreadSpawn
 {
 public:
-							ThreadSpawn(pThreadBase thread);
-							~ThreadSpawn() noexcept;
-	void 					operator() ();
+	EXPORT					ThreadSpawn(pThreadBase thread);
+	EXPORT 					~ThreadSpawn() noexcept;
+	EXPORT void 			operator() ();
 protected:
 	pThreadBase			 	thread_;
 };
