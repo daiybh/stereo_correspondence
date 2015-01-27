@@ -303,10 +303,10 @@ core::pRawVideoFrame ColorKey::find_key(const core::pRawVideoFrame& frame)
 		core::RawVideoFrame::value_type::iterator 		dest_pix	= dest+line*linesize_out;
 		for (size_t pixel = 0; pixel < width; ++pixel) {
 			if (kernel::rgb_vals) { // this condition should get optimized out by compiler...
-				const ssize_t total = kernel::difference(src_pix, r_, g_, b_, y_cutoff_);
+				const ssize_t total = kernel::difference(src_pix, r_, g_, b_, static_cast<int>(y_cutoff_));
 				kernel::eval(src_pix, dest_pix, total, delta_, delta2_);
 			} else {
-				const ssize_t total = kernel::difference(src_pix, y_, u_, v_, y_cutoff_);
+				const ssize_t total = kernel::difference(src_pix, y_, u_, v_, static_cast<int>(y_cutoff_));
 				kernel::eval(src_pix, dest_pix, total, delta_, delta2_);
 			}
 
