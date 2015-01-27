@@ -103,9 +103,9 @@ position_(coordinates_t{-1, -1})
 		display_str_ = "DISPLAY="+display_;
 		::putenv(const_cast<char*>(display_str_.c_str()));
 	}
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0) {
-		throw exception::InitializationFailed("Failed to initialize SDL");
-	}
+	//if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0) {
+	//	throw exception::InitializationFailed("Failed to initialize SDL");
+	//}
 #ifdef  YURI_SDL_OPENGL
 	if (!use_gl_) {
 		set_supported_formats(supported_formats);
@@ -136,7 +136,10 @@ SDLWindow::~SDLWindow() noexcept
 void SDLWindow::run()
 {
 	print_id();
-	if (!(surface_ = SDL_SetVideoMode(resolution_.width, resolution_.height, sdl_bpp_,
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0) {
+		throw exception::InitializationFailed("Failed to initialize SDL");
+	}
+	if (!(surface_ = SDL_SetVideoMode(static_cast<int>(resolution_.width), static_cast<int>(resolution_.height), sdl_bpp_,
 			  SDL_HWSURFACE |  SDL_DOUBLEBUF | SDL_RESIZABLE |
 			  (decorations_?0:SDL_NOFRAME) |
 			  (fullscreen_?SDL_FULLSCREEN:0) |
@@ -202,7 +205,7 @@ core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame
 				overlay_->w != static_cast<int>(res.width) ||
 				overlay_->h != static_cast<int>(res.height) ||
 				overlay_->format != sdl_fmt) {
-			overlay_.reset(SDL_CreateYUVOverlay(res.width, res.height, sdl_fmt, surface_));
+			overlay_.reset(SDL_CreateYUVOverlay(static_cast<int>(res.width), static_cast<int>(res.height), sdl_fmt, surface_));
 		}
 		if (!overlay_) {
 			log[log::error] << "Failed to allocate overlay";
@@ -305,7 +308,7 @@ void SDLWindow::sdl_resize(resolution_t new_res)
 {
 	resolution_ = new_res;
 	Uint32 flags = (surface_->flags & ~SDL_FULLSCREEN) | (fullscreen_?SDL_FULLSCREEN:0);
-	if (surface_) surface_ = SDL_SetVideoMode(resolution_.width, resolution_.height, sdl_bpp_, flags);
+	if (surface_) surface_ = SDL_SetVideoMode(static_cast<int>(resolution_.width), static_cast<int>(resolution_.height), sdl_bpp_, flags);
 	if (!use_gl_) {
 		overlay_.reset();
 	} else {
@@ -351,14 +354,14 @@ bool SDLWindow::prepare_rgb_overlay(const core::pRawVideoFrame& frame)
 			static_cast<dimension_t>(rgb_surface_->h) != res.height ||
 			rgb_surface_->format->BitsPerPixel != bpp) {
 		log[log::info] << "(Re)creating RGB surface with " << bpp << " bpp.";
-		rgb_surface_.reset(SDL_CreateRGBSurface(SDL_SWSURFACE, res.width, res.height, bpp,
+		rgb_surface_.reset(SDL_CreateRGBSurface(SDL_SWSURFACE, static_cast<int>(res.width), static_cast<int>(res.height), static_cast<int>(bpp),
 				std::get<0>(masks), std::get<1>(masks), std::get<2>(masks), std::get<3>(masks)));
 //		rgb_surface2_.reset(SDL_CreateRGBSurface(SDL_SWSURFACE, resolution_.width, resolution_.height, bpp,
 //				std::get<0>(masks), std::get<1>(masks), std::get<2>(masks), std::get<3>(masks)),
 //				[](SDL_Surface*s){SDL_FreeSurface(s);});
 	}
 	if (bpp != sdl_bpp_) {
-		sdl_bpp_ = bpp;
+		sdl_bpp_ = static_cast<int>(bpp);
 		sdl_resize(resolution_);
 	}
 	return true;

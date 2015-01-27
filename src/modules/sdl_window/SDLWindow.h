@@ -13,6 +13,9 @@
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/event/BasicEventConsumer.h"
+#ifdef YURI_WIN
+#include <Windows.h>
+#endif
 #include "SDL.h"
 #ifdef  YURI_SDL_OPENGL
 #include "yuri/gl/GL.h"
