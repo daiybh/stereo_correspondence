@@ -87,7 +87,7 @@ core::Parameters SDLWindow::configure()
 
 SDLWindow::SDLWindow(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("sdl_window")),
-BasicEventConsumer(log),
+BasicEventConsumer(log),BasicEventProducer(log),
 resolution_({800,600}),fullscreen_(false),default_keys_(true),use_gl_(false),
 overlay_{nullptr,[](SDL_Overlay*o){if(o) SDL_FreeYUVOverlay(o);}},
 rgb_surface_{nullptr,[](SDL_Surface*s){ if(s) SDL_FreeSurface(s);}},
@@ -298,6 +298,37 @@ void SDLWindow::process_sdl_events()
 					if (event.key.keysym.sym == SDLK_f) { fullscreen_=!fullscreen_; sdl_resize(resolution_);}
 				}
 				break;
+			case SDL_MOUSEMOTION:{
+				// there should be a way to disable this...
+				std::vector<event::pBasicEvent> motion{
+						std::make_shared<event::EventInt>(event.motion.x, 0, resolution_.width),
+						std::make_shared<event::EventInt>(event.motion.y, 0, resolution_.height)};
+
+				emit_event("mouse", std::make_shared<event::EventVector>(motion));
+				emit_event("mouse_x", event.motion.x, 0, resolution_.width);
+				emit_event("mouse_y", event.motion.y, 0, resolution_.height);
+				}break;
+			case SDL_MOUSEBUTTONDOWN:{
+				emit_event("button",event.button.button);
+				emit_event("button"+std::to_string(event.button.button));
+				switch (event.button.button) {
+					case SDL_BUTTON_LEFT: {emit_event("mouse_left");
+						auto t = timestamp_t{};
+						if ((t - last_click_) < 250_ms) {
+							emit_event("mouse_double_click");
+						}
+						last_click_ = t;
+						}break;
+					case SDL_BUTTON_RIGHT: emit_event("mouse_right");
+						break;
+					case SDL_BUTTON_MIDDLE: emit_event("mouse_middle");
+						break;
+					case SDL_BUTTON_WHEELDOWN: emit_event("wheel_down");
+						break;
+					case SDL_BUTTON_WHEELUP: emit_event("wheel_up");
+						break;
+				}
+				}break;
 
 			default:break;
 		}

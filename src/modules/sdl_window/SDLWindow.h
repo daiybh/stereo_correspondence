@@ -13,6 +13,7 @@
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/event/BasicEventConsumer.h"
+#include "yuri/event/BasicEventProducer.h"
 #ifdef YURI_WIN
 #include <Windows.h>
 #endif
@@ -25,7 +26,7 @@ namespace yuri {
 namespace sdl_window {
 
 class SDLWindow: public core::SpecializedIOFilter<core::RawVideoFrame>,
-public event::BasicEventConsumer
+public event::BasicEventConsumer, public event::BasicEventProducer
 {
 	using base_type = core::SpecializedIOFilter<core::RawVideoFrame>;
 public:
@@ -56,6 +57,7 @@ private:
 	coordinates_t	position_;
 	std::string		display_;
 	std::string		display_str_;
+	timestamp_t		last_click_;
 #ifdef  YURI_SDL_OPENGL
 	gl::GL				gl_;
 	std::string			transform_shader_;
