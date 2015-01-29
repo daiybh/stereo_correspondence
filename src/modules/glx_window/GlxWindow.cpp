@@ -82,6 +82,7 @@ int stereo_frames_needed(stereo_mode_t mode) {
 GlxWindow::GlxWindow(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOThread(log_,parent,2,1,std::string("glx_window")),
 BasicEventConsumer(log),
+BasicEventProducer(log),
 gl_(log),
 display_str_{":0"},display_(nullptr,[](Display*d) { XCloseDisplay(d);}),
 screen_number_{0},attributes_{GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None},
@@ -171,8 +172,9 @@ bool GlxWindow::create_window()
 	auto cmap = XCreateColormap(display_.get(), root_, visual_->visual, AllocNone);
 	XSetWindowAttributes swa;
 	swa.colormap = cmap;
-	swa.event_mask = ExposureMask | KeyPressMask | StructureNotifyMask
-					| KeyReleaseMask;//ResizeRedirectMask;
+	swa.event_mask =  ExposureMask   | KeyPressMask    | StructureNotifyMask
+					| KeyReleaseMask | ButtonPressMask | ButtonReleaseMask
+					| PointerMotionMask ;//ResizeRedirectMask;
 	swa.border_pixel = 0;
 	swa.background_pixel = 0;
 	log[log::info] << "geometry " << geometry_;
@@ -241,8 +243,11 @@ void GlxWindow::resize_window(resolution_t res)
 bool GlxWindow::process_x11_events()
 {
 	XEvent event_;
-	if (XCheckWindowEvent(display_.get(),win_,StructureNotifyMask|KeyPressMask
-				|KeyReleaseMask,&event_))
+	if (XCheckWindowEvent(display_.get(),
+				win_,
+				StructureNotifyMask|KeyPressMask|KeyReleaseMask|
+				ButtonPressMask|ButtonReleaseMask|PointerMotionMask,
+				&event_))
 		{
 			switch (event_.type) {
 			case DestroyNotify:
@@ -257,18 +262,37 @@ bool GlxWindow::process_x11_events()
 										event_.xconfigure.y});
 				break;
 			case KeyPress:
+				emit_event("key"+std::to_string(event_.xkey.keycode));
+				emit_event("key"+std::to_string(event_.xkey.keycode), true);
+				emit_event("key_down",event_.xkey.keycode);
 //				log[log::debug] << "Key " << do_get_keyname(event_.xkey.keycode) << " (" <<
 //				event_.xkey.keycode << ") pressed" <<std::endl;
 //				keys[event_.xkey.keycode]=true;
 				// TODO: need to reenable this again!
+				// std::string keyname = XKeysymToString(XkbKeycodeToKeysym(display.get(), event_.xkey.keycode, 0, 0));
 				//if (keyCallback) keyCallback->run(&xev.xkey.keycode);
 				if (event_.xkey.keycode==9) request_end(core::yuri_exit_interrupted);
 				break;
 			case KeyRelease:
-//				log[log::debug] << "Key " << do_get_keyname(xev.xkey.keycode) << " (" <<
-//					xev.xkey.keycode << ") released" <<std::endl;
-//				keys[xev.xkey.keycode]=false;
+				emit_event("key"+std::to_string(event_.xkey.keycode), false);
+				emit_event("key_up",event_.xkey.keycode);
 				break;
+			case ButtonPress:
+				emit_event("button",event_.xbutton.button);
+				emit_event("button"+std::to_string(event_.xbutton.button), true);
+				break;
+			case ButtonRelease:
+				emit_event("button"+std::to_string(event_.xbutton.button), false);
+				break;
+			case MotionNotify: {
+				std::vector<event::pBasicEvent> motion{
+					std::make_shared<event::EventInt>(event_.xmotion.x, 0, geometry_.width),
+					std::make_shared<event::EventInt>(event_.xmotion.y, 0, geometry_.height)};
+
+				emit_event("mouse", std::make_shared<event::EventVector>(motion));
+				emit_event("mouse_x",event_.xmotion.x, 0, geometry_.width);
+				emit_event("mouse_y",event_.xmotion.y, 0, geometry_.height);
+				} break;
 			}
 			return true;
 		}

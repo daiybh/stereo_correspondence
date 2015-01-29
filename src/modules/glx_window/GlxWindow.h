@@ -12,6 +12,7 @@
 
 #include "yuri/core/thread/IOThread.h"
 #include "yuri/event/BasicEventConsumer.h"
+#include "yuri/event/BasicEventProducer.h"
 #include "GL/glx.h"
 #include "yuri/gl/GL.h"
 namespace yuri {
@@ -25,7 +26,8 @@ enum class stereo_mode_t {
 	top_bottom,
 };
 
-class GlxWindow: public core::IOThread, public event::BasicEventConsumer
+class GlxWindow: public core::IOThread, public event::BasicEventConsumer,
+public event::BasicEventProducer
 {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
