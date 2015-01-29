@@ -78,6 +78,7 @@ private:
 	float					delta_x_;
 	float					delta_y_;
 	bool 					needs_move_;
+	bool					show_cursor_;
 };
 
 } /* namespace glx_window */

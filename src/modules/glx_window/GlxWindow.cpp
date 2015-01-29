@@ -37,6 +37,7 @@ core::Parameters GlxWindow::configure()
 	p["swap_eyes"]["Swap stereo eyes"]=false;
 	p["delta_x"]["Horizontal correction (-1.0, 1.0)"]=0.0f;
 	p["delta_y"]["Vertical correction (-1.0, 1.0)"]=0.0f;
+	p["show_cursor"]["Enable or disable cursor in the window"]=true;
 	return p;
 }
 
@@ -86,7 +87,8 @@ display_str_{":0"},display_(nullptr,[](Display*d) { XCloseDisplay(d);}),
 screen_number_{0},attributes_{GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None},
 geometry_{800,600,0,0},visual_{nullptr},flip_x_{false},flip_y_{false},
 read_back_{false},stereo_mode_{stereo_mode_t::none},decorations_{false},
-swap_eyes_{false},delta_x_{0.0},delta_y_{0.0},needs_move_{false}
+swap_eyes_{false},delta_x_{0.0},delta_y_{0.0},needs_move_{false},
+show_cursor_{true}
 {
 	set_latency(10_ms);
 	IOTHREAD_INIT(parameters)
@@ -119,7 +121,7 @@ void GlxWindow::run()
 		converter_.reset(new core::Convert(log, get_this_ptr(), core::Convert::configure()));
 		add_child(converter_);
 		log[log::info] << "Stereo method: " << get_mode_name(stereo_mode_);
-
+		show_cursor(show_cursor_);
 	}
 	while (still_running()) {
 		process_events();
@@ -208,8 +210,21 @@ bool GlxWindow::show_window(bool /* show */)
 	XMapWindow(display_.get(), win_);
 	return true;
 }
-bool GlxWindow::show_cursor(bool /* show */)
+bool GlxWindow::show_cursor(bool show)
 {
+	if (show) {
+		XUndefineCursor(display_.get(), win_);
+	} else {
+		Pixmap pixmap;
+		Cursor cursor;
+		XColor color;
+		// Create 1x1 1bpp pixmap
+		pixmap = XCreatePixmap(display_.get(), win_, 1, 1, 1);
+		std::fill_n(reinterpret_cast<char*>(&color),sizeof(XColor),0);
+		cursor = XCreatePixmapCursor(display_.get(), pixmap, pixmap, &color, &color,
+				0, 0);
+		XDefineCursor(display_.get(), win_, cursor);
+	}
 	return true;
 }
 void GlxWindow::move_window(coordinates_t coord)
@@ -389,6 +404,7 @@ bool GlxWindow::set_param(const core::Parameter& param)
 			(delta_x_, "delta_x")
 			(delta_y_, "delta_y")
 			(display_str_, "display")
+			(show_cursor_, "show_cursor")
 			(stereo_mode_, "stereo", [](const core::Parameter& p){return get_mode(p.get<std::string>());}))
 		return true;
 
