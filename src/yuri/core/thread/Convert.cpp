@@ -187,12 +187,13 @@ pFrame Convert::do_simple_single_step(const pFrame& frame)
 
 bool Convert::set_param(const core::Parameter& param)
 {
+	if (assign_parameters(param)
+			(allow_passthrough_, "allow_passthrough"))
+		return true;
 	if (param.get_name() == "format") {
 		format_ = raw_format::parse_format(param.get<std::string>());
 		if (!format_) format_ = compressed_frame::parse_format(param.get<std::string>());
 		if (!format_) format_ = raw_audio_format::parse_format(param.get<std::string>());
-	} else if (param.get_name() == "allow_passthrough") {
-		allow_passthrough_ = param.get<bool>();
 	} else return core::IOFilter::set_param(param);
 	return true;
 }

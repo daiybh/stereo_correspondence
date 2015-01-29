@@ -12,6 +12,7 @@
 #include "yuri/core/thread/IOThreadGenerator.h"
 #include "yuri/core/pipe/PipeGenerator.h"
 #include "yuri/core/utils/ModuleLoader.h"
+#include "yuri/core/utils/assign_parameters.h"
 #include "builder_utils.h"
 #define TIXML_USE_STL
 #ifdef YURI_WIN
@@ -392,12 +393,13 @@ XmlBuilder::~XmlBuilder() noexcept {}
 
 bool XmlBuilder::set_param(const Parameter& parameter)
 {
-	if (parameter.get_name() == "filename") {
-		filename_ = parameter.get<std::string>();
-	} else if (parameter.get_name() == "run_limit") {
-		auto time_val = parameter.get<double>();
-		max_run_time_ = 1_s * time_val;
-	} else IOThread::set_param(parameter);
+	if (assign_parameters(parameter)
+			(filename_, "filename")
+			(max_run_time_, "run_limit", [](const core::Parameter& p){return 1_s * p.get<double>();}))
+	{
+		return true;
+	}
+	IOThread::set_param(parameter);
 	// Return always true so pass-through parameters work without warnings
 	return true;
 }

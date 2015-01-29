@@ -12,6 +12,7 @@
 #include "yuri/core/thread/ThreadSpawn.h"
 #include <sys/types.h>
 #include <string>
+#include "yuri/core/utils/assign_parameters.h"
 #ifdef YURI_LINUX
 #include <pthread.h>
 #include <sys/syscall.h>
@@ -438,15 +439,12 @@ bool ThreadBase::set_params(const Parameters &parameters)
 }
 bool ThreadBase::set_param(const Parameter &parameter)
 {
-	if (parameter.get_name() == "cpu") {
-		cpu_affinity_=parameter.get<yuri::ssize_t>();
-	} else if (parameter.get_name() == "debug") {
-		/*int debug;
-		debug = parameter.get<yuri::sint_t>();
-		if (debug) {
-			yuri::sint_t orig = log.get_flags();
-			log.set_flags(((orig&flag_mask)<<debug)|(orig&~flag_mask));
-		}*/
+	if (assign_parameters(parameter)
+			(cpu_affinity_, "cpu"))
+		return true;
+
+	if (parameter.get_name() == "debug") {
+
 	} else if (parameter.get_name() == "_node_name") {
 		node_name_ = parameter.get<std::string>();
 		log.set_label(get_node_name());

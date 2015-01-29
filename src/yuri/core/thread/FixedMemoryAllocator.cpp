@@ -12,6 +12,7 @@
 #include "yuri/core/utils/uvector.h"
 #include "yuri/exception/InitializationFailed.h"
 #include "yuri/core/thread/IOThreadGenerator.h"
+#include "yuri/core/utils/assign_parameters.h"
 //#include <iostream>
 #include <cassert>
 namespace yuri {
@@ -176,12 +177,11 @@ FixedMemoryAllocator::~FixedMemoryAllocator() noexcept
  */
 bool FixedMemoryAllocator::set_param(const Parameter &parameter)
 {
-	if (parameter.get_name() == "count") {
-		count=parameter.get<yuri::size_t>();
-	} else if (parameter.get_name() == "size") {
-		block_size=parameter.get<yuri::size_t>();
-	} else return IOThread::set_param(parameter);
-	return true;
+	if (assign_parameters(parameter)
+			(count, "count")
+			(block_size, "size"))
+		return true;
+	return IOThread::set_param(parameter);
 }
 /** \brief Dummy implementation of IOThread::step()
  *

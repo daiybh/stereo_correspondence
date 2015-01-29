@@ -12,6 +12,7 @@
 #include "yuri/exception/NotImplemented.h"
 #include "yuri/core/frame/Frame.h"
 #include "yuri/core/pipe/Pipe.h"
+#include "yuri/core/utils/assign_parameters.h"
 #include <algorithm>
 #include <stdexcept>
 #include <numeric>
@@ -246,10 +247,10 @@ bool IOThread::set_params(Parameters &parameters)
  */
 bool IOThread::set_param(const Parameter &parameter)
 {
-	if (parameter.get_name() == "fps_stats") {
-		fps_stats_ = parameter.get<yuri::size_t>();
-	} else return ThreadBase::set_param(parameter);
-	return true;
+	if (assign_parameters(parameter)
+			(fps_stats_, "fps_stats"))
+		return true;
+	return ThreadBase::set_param(parameter);
 }
 
 /*

@@ -9,6 +9,7 @@
  */
 
 #include "MultiIOFilter.h"
+#include "yuri/core/utils/assign_parameters.h"
 #include <cassert>
 
 namespace yuri {
@@ -84,12 +85,10 @@ bool MultiIOFilter::step()
 
 bool MultiIOFilter::set_param(const Parameter &parameter)
 {
-	/*if (iequals(parameter.name, "realtime")) {
-		realtime_ = parameter.get<bool>();
-	} else */if (iequals(parameter.get_name(), "main_input")) {
-		main_input_ = parameter.get<position_t>();
-	} else return IOThread::set_param(parameter);
-	return true;
+	if (assign_parameters(parameter)
+			(main_input_, "main_input"))
+		return true;
+	return IOThread::set_param(parameter);
 }
 
 }
