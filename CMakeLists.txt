@@ -52,7 +52,6 @@ SET(LIBNAME_PREFIX 			yuri${YURI_CORE_VERSION})
 SET(LIBNAME 				${LIBNAME_PREFIX}_core)
 SET(LIBNAME_HELPER_LIBAV 	${LIBNAME_PREFIX}_helper_av)
 SET(LIBNAME_HELPER_CUDA 	${LIBNAME_PREFIX}_helper_cuda)
-SET(LIBNAME_HELPER_X11 		${LIBNAME_PREFIX}_helper_x11)
 SET(LIBNAME_HELPER_GL 		${LIBNAME_PREFIX}_helper_gl)
 
 #################################################################
