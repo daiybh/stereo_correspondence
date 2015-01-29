@@ -123,10 +123,10 @@ core::pFrame JpegEncoder::do_convert_frame(core::pFrame input_frame, format_t ta
 }
 bool JpegEncoder::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "quality") {
-		quality_ = param.get<size_t>();
-	} else return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(quality_, "quality"))
+		return true;
+	return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
 }
 
 } /* namespace jpeg2 */

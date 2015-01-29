@@ -159,12 +159,11 @@ core::pFrame JpegDecoder::do_special_single_step(const core::pCompressedVideoFra
 
 bool JpegDecoder::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "format") {
-		output_format_ = core::raw_format::parse_format(param.get<std::string>());
-	} else if (param.get_name() == "fast") {
-		fast_ = param.get<bool>();
-	} else return core::SpecializedIOFilter<core::CompressedVideoFrame>::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(output_format_, "format", [](const core::Parameter&p){ return core::raw_format::parse_format(p.get<std::string>()); })
+			(fast_, "fast"))
+		return true;
+	return core::SpecializedIOFilter<core::CompressedVideoFrame>::set_param(param);
 }
 
 } /* namespace jpeg */
