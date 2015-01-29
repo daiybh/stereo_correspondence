@@ -7,7 +7,7 @@
 
 #include "FpsFixer.h"
 #include "yuri/core/Module.h"
-
+#include "yuri/core/utils/assign_events.h"
 namespace yuri {
 
 namespace fps {
@@ -65,26 +65,22 @@ void FpsFixer::run()
 
 bool FpsFixer::set_param(const core::Parameter &parameter)
 {
-	if (parameter.get_name() == "fps") {
-		fps_=parameter.get<double>();
-	} else return IOThread::set_param(parameter);
-	return true;
+	if (assign_parameters(parameter)
+			(fps_, "fps"))
+		return true;
+	return IOThread::set_param(parameter);
 }
 
 bool FpsFixer::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
-	try {
-		if (event_name == "fps") {
-			fps_ = event::lex_cast_value<float>(event);
-			frames_ = 0;
-			timer_.reset();
-		} else return false;
+	if (assign_events(event_name, event)
+			(fps_, "fps"))
+	{
+		frames_ = 0;
+		timer_.reset();
+		return true;
 	}
-	catch (std::bad_cast&) {
-		log[log::info] << "bad cast in " << event_name;
-		return false;
-	}
-	return true;
+	return false;
 }
 }
 
