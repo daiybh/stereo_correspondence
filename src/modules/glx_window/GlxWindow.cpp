@@ -12,7 +12,7 @@
 #include "yuri/core/utils/irange.h"
 #include <X11/Xatom.h>
 #include "yuri/core/thread/Convert.h"
-#include "yuri/event/EventHelpers.h"
+#include "yuri/core/utils/assign_events.h"
 namespace yuri {
 namespace glx_window {
 
@@ -421,24 +421,21 @@ bool GlxWindow::set_param(const core::Parameter& param)
 
 bool GlxWindow::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
-	if (event_name == "dx" || event_name == "delta_x") {
-		delta_x_ = event::lex_cast_value<float>(event);
-	} else if (event_name == "dy" || event_name == "delta_y") {
-		delta_y_ = event::lex_cast_value<float>(event);
-	} else if (event_name == "x") {
-		geometry_.x = event::lex_cast_value<position_t>(event);
+	if (assign_events(event_name, event)
+			(delta_x_, "dx", "delta_x")
+			(delta_y_, "dy", "delta_y"))
+		return true;
+
+	if (assign_events(event_name, event)
+			(geometry_.x, "x")
+			(geometry_.y, "y")
+			(geometry_.width, "width")
+			(geometry_.height, "height")) {
 		needs_move_ = true;
-	} else if (event_name == "y") {
-		geometry_.y = event::lex_cast_value<position_t>(event);
-		needs_move_ = true;
-	} else if (event_name == "width") {
-		geometry_.width = event::lex_cast_value<dimension_t>(event);
-		needs_move_ = true;
-	} else if (event_name == "height") {
-		geometry_.height = event::lex_cast_value<dimension_t>(event);
-		needs_move_ = true;
+		return true;
 	}
-	return true;
+
+	return false;
 }
 } /* namespace glx_window */
 } /* namespace yuri */
