@@ -11,6 +11,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
 #include "yuri/core/frame/compressed_frame_types.h"
+#include "yuri/core/utils/assign_events.h"
 #include "jpeg_common.h"
 namespace yuri {
 namespace jpeg {
@@ -45,6 +46,7 @@ std::vector<format_t> supported_formats = {
 
 JpegEncoder::JpegEncoder(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("jpeg_encoder")),
+BasicEventConsumer(log),
 quality_(90)
 {
 	IOTHREAD_INIT(parameters)
@@ -57,6 +59,7 @@ JpegEncoder::~JpegEncoder() noexcept
 
 core::pFrame JpegEncoder::do_special_single_step(const core::pRawVideoFrame& frame)
 {
+	process_events();
 	unique_ptr<jpeg_compress_struct, function<void(jpeg_compress_struct*)>> cinfox(
 			new jpeg_compress_struct, [](jpeg_compress_struct* ptr)
 			{
@@ -127,6 +130,14 @@ bool JpegEncoder::set_param(const core::Parameter& param)
 			(quality_, "quality"))
 		return true;
 	return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
+}
+
+bool JpegEncoder::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
+{
+	if (assign_events(event_name, event)
+			.ranged(quality_, 0, 100, "quality"))
+		return true;
+	return false;
 }
 
 } /* namespace jpeg2 */

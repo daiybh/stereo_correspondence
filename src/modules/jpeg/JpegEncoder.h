@@ -15,10 +15,13 @@
 #include "yuri/core/thread/ConverterThread.h"
 #include "yuri/core/thread/Convert.h"
 #include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/event/BasicEventConsumer.h"
 namespace yuri {
 namespace jpeg {
 
-class JpegEncoder: public core::SpecializedIOFilter<core::RawVideoFrame>, public core::ConverterThread
+class JpegEncoder: public core::SpecializedIOFilter<core::RawVideoFrame>,
+public core::ConverterThread,
+public event::BasicEventConsumer
 {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
@@ -30,7 +33,7 @@ private:
 	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
 	virtual core::pFrame do_convert_frame(core::pFrame input_frame, format_t target_format) override;
 	virtual bool set_param(const core::Parameter& param);
-
+	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 	size_t quality_;
 };
 
