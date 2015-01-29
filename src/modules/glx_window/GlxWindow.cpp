@@ -380,29 +380,25 @@ bool GlxWindow::display_frames()
 
 bool GlxWindow::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "flip_x") {
-		flip_x_ = param.get<bool>();
-	} else if (param.get_name() == "flip_y") {
-		flip_y_ = param.get<bool>();
-	} else if (param.get_name() == "read_back") {
-		read_back_ = param.get<bool>();
-	} else if (param.get_name() == "resolution") {
+	if (assign_parameters(param)
+			(flip_x_, "flip_x")
+			(flip_y_, "flip_y")
+			(read_back_, "read_back")
+			(decorations_, "decorations")
+			(swap_eyes_, "swap_eyes")
+			(delta_x_, "delta_x")
+			(delta_y_, "delta_y")
+			(screen_, "display")
+			(stereo_mode_, "stereo", [](const core::Parameter& p){return get_mode(p.get<std::string>());}))
+		return true;
+
+	if (param.get_name() == "resolution") {
 		auto res = param.get<resolution_t>();
 		geometry_.width = res.width; geometry_.height = res.height;
 	} else if (param.get_name() == "position") {
 		auto pos = param.get<coordinates_t>();
 		geometry_.x = pos.x; geometry_.y = pos.y;
 		log[log::info] << "Geometry " << geometry_;
-	} else if (param.get_name() == "stereo") {
-		stereo_mode_ = get_mode(param.get<std::string>());
-	} else if (param.get_name() == "decorations") {
-		decorations_ = param.get<bool>();
-	} else if (param.get_name() == "swap_eyes") {
-		swap_eyes_ = param.get<bool>();
-	} else if (param.get_name() == "delta_x") {
-		delta_x_ = param.get<float>();
-	} else if (param.get_name() == "delta_y") {
-		delta_y_ = param.get<float>();
 	} else return core::IOThread::set_param(param);
 	return true;
 }
