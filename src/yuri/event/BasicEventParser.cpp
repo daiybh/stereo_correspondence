@@ -431,7 +431,7 @@ namespace {
 				if (!spec) return p_token();
 				route->output.push_back(spec);
 				trim_string(first,last);
-				if (first != last || *first==';') {
+				if (first != last && *first==';') {
 					++first;
 					break;
 				}
