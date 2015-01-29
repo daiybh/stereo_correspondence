@@ -144,14 +144,12 @@ core::pFrame AudioLatency::do_special_single_step(const core::pRawAudioFrame& fr
 }
 bool AudioLatency::set_param(const core::Parameter& param)
 {
-	if (param.get_name() =="threshold") {
-		threshold_ = param.get<double>();
-	} else if (param.get_name() == "cooldown") {
-		cooldown_ = param.get<int_fast32_t>();
-	} else if (param.get_name() == "max_peak") {
-		max_peak_dist_ = param.get<size_t>();
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(threshold_, "threshold")
+			(cooldown_, "cooldown")
+			(max_peak_dist_, "max_peak"))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace audio_latency */
