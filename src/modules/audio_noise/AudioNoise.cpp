@@ -139,16 +139,13 @@ void AudioNoise::run()
 }
 bool AudioNoise::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "channels") {
-		channels_ = param.get<size_t>();
-	} else if (param.get_name() == "frequency") {
-		sampling_frequency_ = param.get<size_t>();
-	} else if (param.get_name() == "amplitude") {
-		amplitude_ = param.get<double>();
-	} else if (param.get_name() == "format") {
-		format_ = core::raw_audio_format::parse_format(param.get<std::string>());
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(channels_, "channels")
+			(sampling_frequency_, "frequency")
+			(amplitude_, "amplitude")
+			(format_, "format", [](const core::Parameter&p){ return core::raw_audio_format::parse_format(p.get<std::string>()); }))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace audio_noise */
