@@ -63,11 +63,10 @@ std::vector<core::pFrame> Dup::do_single_step(const std::vector<core::pFrame>& f
 
 bool Dup::set_param(const core::Parameter &parameter)
 {
-	if (parameter.get_name() == "hard_dup") {
-		hard_dup_=parameter.get<bool>();
-	} else
-		return MultiIOFilter::set_param(parameter);
-	return true;
+	if (assign_parameters(parameter)
+			(hard_dup_, "hard_dup"))
+		return true;
+	return MultiIOFilter::set_param(parameter);
 }
 
 }
