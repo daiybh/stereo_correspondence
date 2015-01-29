@@ -204,12 +204,11 @@ bool VNCClient::connect()
 
 bool VNCClient::set_param(const core::Parameter &p)
 {
-	if (iequals(p.get_name(), "address")) {
-		address = p.get<std::string>();
-	} else if (iequals(p.get_name(), "port")) {
-		port=p.get<uint16_t>();
-	} else return IOThread::set_param(p);
-	return true;
+	if(assign_parameters(p)
+			(address, "address")
+			(port, "port"))
+		return true;
+	return IOThread::set_param(p);
 }
 
 /** \brief Goes thru the handshake with the server, setting up necessary parameters
