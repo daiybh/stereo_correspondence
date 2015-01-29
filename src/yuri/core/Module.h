@@ -17,5 +17,5 @@
 #include "yuri/core/pipe/Pipe.h"
 #include "yuri/core/frame/Frame.h"
 #include "yuri/core/thread/IOThreadGenerator.h"
-
+#include "yuri/core/utils/assign_parameters.h"
 #endif /* MODULE_H_ */
