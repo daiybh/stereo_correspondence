@@ -184,7 +184,7 @@ void IrcClient::process_incomming_message(const std::string& msg)
 		} else {
 			const std::string tgt = msg.substr(idx2,idx3-idx2);
 			auto idx4 = msg.find_first_not_of(' ',idx3);
-			emit_event(tgt,make_shared<event::EventString>(msg.substr(idx4)));
+			emit_event(tgt,msg.substr(idx4));
 		}
 	}
 }
@@ -192,32 +192,25 @@ bool IrcClient::do_process_event(const std::string& event_name, const event::pBa
 {
 	log[log::info] << "Received " << event_name;
 	if (state_ == state_t::connected && !target_.empty()) {
-		if (event->get_type() == event::event_type_t::string_event) {
-			send_message("PRIVMSG " + target_ + " :"+event_name+": "+event::get_value<event::EventString>(event));
-		} else {
-			send_message("PRIVMSG " + target_ + " : "+"Received event "+event_name);
-		}
+		send_message("PRIVMSG " + target_ + " :"+event_name+": "+event::lex_cast_value<std::string>(event));
+//		} else {
+//			send_message("PRIVMSG " + target_ + " : "+"Received event "+event_name);
+//		}
 	}
 	return true;
 }
 bool IrcClient::set_param(const core::Parameter& param)
 {
-	if (iequals(param.get_name(),"server")) {
-		server_ = param.get<std::string>();
-	} else if (iequals(param.get_name(),"nickname")) {
-		nickname_ = param.get<std::string>();
-	} else if (iequals(param.get_name(),"alt_nickname")) {
-		alt_nickname_ = param.get<std::string>();
-	} else if (iequals(param.get_name(),"port")) {
-		port_ = param.get<uint16_t>();
-	} else if (iequals(param.get_name(),"channel")) {
-		channel_ = param.get<std::string>();
-	} else if (iequals(param.get_name(),"target")) {
-		target_ = param.get<std::string>();
-	} else if (iequals(param.get_name(),"socket")) {
-		socket_impl_ = param.get<std::string>();
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(server_, 		"server")
+			(nickname_, 	"nickname")
+			(alt_nickname_, "alt_nickname")
+			(port_, 		"port")
+			(channel_, 		"channel")
+			(target_,		"target")
+			(socket_impl_,	"socket"))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace irc_client */
