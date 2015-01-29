@@ -36,6 +36,27 @@ struct assign_parameters {
 		return *this;
 	}
 
+	/*!
+	 * Parses the event into a type P, then calls the provided function f
+	 * and assigns the result to target.
+	 *
+	 *
+	 * @param target
+	 * @param name
+	 * @param f
+	 * @return
+	 */
+	template<class P, class T, class Str, class F>
+	assign_parameters&
+	parsed(T& target, Str&& name, F f)
+	{
+		if (!assigned_ && name == param_name_) {
+			target = f(parameter_.get<P>());
+			assigned_ = true;
+		}
+		return *this;
+	}
+
 	operator bool() const {
 		return assigned_;
 	}
