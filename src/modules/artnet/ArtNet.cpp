@@ -80,14 +80,12 @@ bool ArtNet::do_process_event(const std::string& event_name, const event::pBasic
 
 bool ArtNet::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "socket") {
-		socket_impl_ = param.get<std::string>();
-	} else if (param.get_name() == "address") {
-		address_ = param.get<std::string>();
-	} else if (param.get_name() == "port") {
-		port_ = param.get<core::socket::port_t>();
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(socket_impl_, "socket")
+			(address_, "address")
+			(port_, "port"))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace artnet */
