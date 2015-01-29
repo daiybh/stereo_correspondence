@@ -74,7 +74,41 @@ struct assign_events {
 		}
 		return (*this)(target, names...);
 	}
+	/*!
+	 * Converts incoming vector into several values
+	 *
+	 * The syntax has to be reversed compared to other methods because of the variadic template...
+	 * @param name expected argument name
+	 * @param args targets for the values
+	 * @return
+	 */
+
+	template<class Str, class... Arg>
+	assign_events& vector_values(Str&& name, Arg&... args)
+	{
+		if (name != event_name) return *this;
+		if (const auto& vec_event = std::dynamic_pointer_cast<event::EventVector>(event))
+		{
+			const auto& vec = vec_event->get_value();
+			if (vec.size() < sizeof...(args)) return *this;
+			return vector_values_impl(vec.cbegin(), args...);
+		}
+		return *this;
+	}
+
 	operator bool() { return assigned; }
+private:
+	template<class It>
+	assign_events& vector_values_impl(It)
+	{
+		return *this;
+	}
+	template<class It, class First, class... Arg>
+	assign_events& vector_values_impl(It iter, First& first, Arg&... rest)
+	{
+		first = event::lex_cast_value<First>(*iter++);
+		return vector_values_impl(iter, rest...);
+	}
 private:
 	const std::string& event_name;
 	const event::pBasicEvent& event;
