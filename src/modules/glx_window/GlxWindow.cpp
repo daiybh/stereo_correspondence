@@ -82,7 +82,7 @@ GlxWindow::GlxWindow(const log::Log &log_, core::pwThreadBase parent, const core
 core::IOThread(log_,parent,2,1,std::string("glx_window")),
 BasicEventConsumer(log),
 gl_(log),
-screen_{":0"},display_(nullptr,[](Display*d) { XCloseDisplay(d);}),
+display_str_{":0"},display_(nullptr,[](Display*d) { XCloseDisplay(d);}),
 screen_number_{0},attributes_{GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None},
 geometry_{800,600,0,0},visual_{nullptr},flip_x_{false},flip_y_{false},
 read_back_{false},stereo_mode_{stereo_mode_t::none},decorations_{false},
@@ -149,14 +149,14 @@ void GlxWindow::run()
 
 bool GlxWindow::create_window()
 {
-	display_.reset(XOpenDisplay(screen_.c_str()));
+	display_.reset(XOpenDisplay(display_str_.c_str()));
 	if (!display_) return false;
-	log[log::info] << "Connected to display " << screen_;
-	std::string::size_type ind=screen_.find_last_of(':');
+	log[log::info] << "Connected to display " << display_str_;
+	std::string::size_type ind=display_str_.find_last_of(':');
 	if (ind!=std::string::npos) {
-		ind = screen_.find_first_of('.',ind);
+		ind = display_str_.find_first_of('.',ind);
 		if (ind != std::string::npos) {
-			screen_number_ = std::stoi(screen_.substr(ind+1).c_str());
+			screen_number_ = std::stoi(display_str_.substr(ind+1).c_str());
 		}
 	}
 	log[log::info] << "Screen number is " << screen_number_;
@@ -388,7 +388,7 @@ bool GlxWindow::set_param(const core::Parameter& param)
 			(swap_eyes_, "swap_eyes")
 			(delta_x_, "delta_x")
 			(delta_y_, "delta_y")
-			(screen_, "display")
+			(display_str_, "display")
 			(stereo_mode_, "stereo", [](const core::Parameter& p){return get_mode(p.get<std::string>());}))
 		return true;
 

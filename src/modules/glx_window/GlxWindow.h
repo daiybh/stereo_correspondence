@@ -53,7 +53,7 @@ private:
 private:
 	gl::GL					gl_;
 	using display_deleter = std::function<void(Display*)>;
-	std::string 			screen_;
+	std::string 			display_str_;
 	unique_ptr<Display, display_deleter>
 							display_;
 	Window					root_;
