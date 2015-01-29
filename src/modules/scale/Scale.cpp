@@ -348,12 +348,11 @@ core::pFrame Scale::do_special_single_step(const core::pRawVideoFrame& frame)
 }
 bool Scale::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "resolution") {
-		resolution_ = param.get<resolution_t>();
-	} else if (param.get_name() == "fast") {
-		fast_ = param.get<bool>();
-	} else return base_type::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(resolution_, 	"resolution")
+			(fast_, 		"fast"))
+		return true;
+	return base_type::set_param(param);
 }
 
 } /* namespace scale */
