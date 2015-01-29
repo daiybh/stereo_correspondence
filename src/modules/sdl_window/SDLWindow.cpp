@@ -248,37 +248,27 @@ core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame
 }
 bool SDLWindow::set_param(const core::Parameter& param)
 {
-	if (iequals(param.get_name(), "resolution")) {
-		resolution_ = param.get<resolution_t>();
-	} else if (iequals(param.get_name(), "fullscreen")) {
-		fullscreen_ = param.get<bool>();
-	} else if (iequals(param.get_name(), "default_keys")) {
-		default_keys_ = param.get<bool>();
-	} else if (iequals(param.get_name(), "opengl")) {
-		use_gl_ = param.get<bool>();
-	} else if (iequals(param.get_name(), "window_title")) {
+	if (assign_parameters(param)
+			(resolution_, "resolution")
+			(fullscreen_, "fullscreen")
+			(default_keys_, "default_keys")
+			(use_gl_, "opengl")
+			(decorations_, "decorations")
+			(position_, "position")
+			(display_, "display")
+#if YURI_SDL_OPENGL
+			(transform_shader_, "transform_shader")
+			(color_map_shader_, "color_shader")
+			(flip_x_, "flip_x")
+			(flip_y_, "flip_y")
+			(read_back_, "read_back")
+			(shader_version_, "shader_version")
+#endif
+		) return true;
+
+	if (param.get_name() == "window_title") {
 		std::string new_title = param.get<std::string>();
 		if (!new_title.empty()) title_=std::move(new_title);
-	} else if (param.get_name() == "decorations") {
-		decorations_ = param.get<bool>();
-	} else if (param.get_name() == "position") {
-		position_ = param.get<coordinates_t>();
-	} else if (param.get_name() == "display") {
-		display_ = param.get<std::string>();
-#if YURI_SDL_OPENGL
-	} else if (param.get_name() == "transform_shader") {
-		transform_shader_ = param.get<std::string>();
-	} else if (param.get_name() == "color_shader") {
-		color_map_shader_ = param.get<std::string>();
-	} else if (param.get_name() == "flip_x") {
-		flip_x_ = param.get<bool>();
-	} else if (param.get_name() == "flip_y") {
-		flip_y_ = param.get<bool>();
-	} else if (param.get_name() == "read_back") {
-		read_back_ = param.get<bool>();
-	} else if (param.get_name() == "shader_version") {
-		shader_version_ = param.get<int>();
-#endif
 	} else return base_type::set_param(param);
 	return true;
 }
