@@ -134,10 +134,10 @@ core::pFrame FrameInfo::do_simple_single_step(const core::pFrame& frame)
 }
 bool FrameInfo::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "print_all") {
-		print_all_ = param.get<bool>();
-	} else return core::IOFilter::set_param(param);
-	return true;
+	if(assign_parameters(param)
+			(print_all_, "print_all"))
+		return true;
+	return core::IOFilter::set_param(param);
 }
 
 } /* namespace frame_info */
