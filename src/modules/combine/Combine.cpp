@@ -104,12 +104,11 @@ std::vector<core::pFrame> Combine::do_single_step(const std::vector<core::pFrame
 }
 bool Combine::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "x") {
-		x_ = param.get<size_t>();
-	} else if (param.get_name() == "y") {
-		y_ = param.get<size_t>();
-	} else return base_type::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(x_, "x")
+			(y_, "y"))
+		return true;
+	return base_type::set_param(param);
 }
 
 } /* namespace dummy_module */
