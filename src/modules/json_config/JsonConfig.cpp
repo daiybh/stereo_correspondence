@@ -206,10 +206,10 @@ void JsonConfig::run()
 }
 bool JsonConfig::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "filename") {
-		filename_ = param.get<std::string>();
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(filename_, "filename"))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 bool JsonConfig::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
