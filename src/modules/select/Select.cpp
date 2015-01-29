@@ -10,6 +10,7 @@
 #include "Select.h"
 #include "yuri/core/Module.h"
 #include "yuri/event/EventHelpers.h"
+#include "yuri/core/utils/assign_events.h"
 
 namespace yuri {
 namespace select {
@@ -45,10 +46,10 @@ bool Select::step()
 }
 bool Select::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "index") {
-		 index_ = param.get<position_t>();
-	} else return base_type::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(index_, "index"))
+		return true;
+	return base_type::set_param(param);
 }
 
 void Select::do_connect_in(position_t pos, core::pPipe pipe)
@@ -65,10 +66,10 @@ void Select::do_connect_in(position_t pos, core::pPipe pipe)
 
 bool Select::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
-	if (event_name == "index") {
-		index_ = event::lex_cast_value<position_t>(event);
-	}
-	return true;
+	if (assign_events(event_name, event)
+			(index_, "index"))
+		return true;
+	return false;
 }
 
 } /* namespace select */
