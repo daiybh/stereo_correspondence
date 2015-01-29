@@ -72,10 +72,10 @@ void Delay::run()
 
 bool Delay::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "delay") {
-		delay_ = 1_s * param.get<double>();
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(delay_, "delay", [](const core::Parameter& p){ return 1_s * p.get<double>();}))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace delay */
