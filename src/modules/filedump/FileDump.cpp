@@ -105,14 +105,12 @@ core::pFrame FileDump::do_simple_single_step(const core::pFrame& frame)
 
 bool FileDump::set_param(const core::Parameter &param)
 {
-	if (param.get_name() == "filename") {
-		filename = param.get<std::string>();
-	} else if (param.get_name() == "sequence") {
-		seq_chars = param.get<int>();
-	} else if (param.get_name() == "frame_limit") {
-		dump_limit = param.get<size_t>();
-	} else return IOFilter::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(filename, "filename")
+			(seq_chars, "sequence")
+			(dump_limit, "frame_limit"))
+		return true;
+	return IOFilter::set_param(param);
 }
 
 }
