@@ -12,7 +12,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/raw_frame_types.h"
-#include "yuri/event/EventHelpers.h"
+#include "yuri/core/utils/assign_events.h"
 #include <cassert>
 #include <algorithm>
 #include <array>
@@ -214,19 +214,11 @@ bool Flip::set_param(const core::Parameter &parameter)
 
 bool Flip::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
-	try {
-
-		if (event_name == "flip_x") {
-			flip_x_ = event::lex_cast_value<bool>(event);
-		} else if (event_name == "flip_y") {
-			flip_y_ = event::lex_cast_value<bool>(event);
-		} else return false;
-	}
-	catch (std::bad_cast&) {
-		log[log::info] << "bad cast in " << event_name;
-		return false;
-	}
-	return true;
+	if (assign_events(event_name, event)
+			(flip_x_, "flip_x")
+			(flip_y_, "flip_y"))
+		return true;
+	return false;
 }
 }
 
