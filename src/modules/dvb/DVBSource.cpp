@@ -229,22 +229,16 @@ bool DVBSource::init()
 
 bool DVBSource::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "adapter") {
-		adapter_path_ = param.get<std::string>();
-	} else if (param.get_name() == "frontend") {
-		frontend_ = param.get<std::string>();
-	} else if (param.get_name() == "frequency") {
-		frequency_ = param.get<int>();
-	} else if (param.get_name() == "pid") {
-		pid_ = param.get<int>();
-	} else if (param.get_name() ==  "apid") {
-		apid_ = param.get<int>();
-	} else if (param.get_name() == "chunk_size") {
-		chunk_size_ = param.get<size_t>();
-	} else if (param.get_name() == "ts") {
-		output_ts_ = param.get<bool>();
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(adapter_path_, "adapter")
+			(frontend_, "frontend")
+			(frequency_, "frequency")
+			(pid_, "pid")
+			(apid_, "apid")
+			(chunk_size_, "chunk_size")
+			(output_ts_, "ts"))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 
