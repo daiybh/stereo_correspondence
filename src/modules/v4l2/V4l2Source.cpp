@@ -53,24 +53,18 @@ namespace {
 #include "v4l2_constants.cpp"
 
 namespace {
-//void list_controls(int fd, log::Log& log)
-//{
-//	log[log::info] << "Supported controls:";
-//	for (const auto& ctrl: user_controls) {
-//		auto state = is_control_supported(fd, ctrl.first, log);
-//		if (state.supported == control_support_t::supported) {
-//			log[log::info] << "control '" << ctrl.second << ", value: " << state.value << ", range: <" << state.min_value << ", " << state.max_value << ">";
-//		}
-//	}
-//}
-
+V4l2Source::methods parse_method(const std::string& method_s)
+{
+	if (iequals(method_s,"user")) return V4l2Source::METHOD_USER;
+	else if (iequals(method_s,"mmap")) return V4l2Source::METHOD_MMAP;
+	else if (iequals(method_s,"read")) return V4l2Source::METHOD_READ;
+	else return V4l2Source::METHOD_NONE;
+}
 }
 
 core::Parameters V4l2Source::configure()
 {
 	core::Parameters p = IOThread::configure();
-//	p["width"]["Width of the input image. Note that actual resolution from camera may differ."]=640;
-//	p["height"]["Height of the input image. Note that actual resolution from camera may differ."]=480;
 	p["resolution"]["Resolution of the image. Note that actual resolution may differ"]=resolution_t{640,480};
 	p["path"]["Path to the camera device. usually /dev/video0 or similar."]=std::string();
 	p["method"]["Method used to get images from camera. Possible values are: none, mmap, user, read. For experts only"]="none";
@@ -156,12 +150,7 @@ void V4l2Source::run()
 		sleep(get_latency());
 		if (!still_running()) break;
 	}
-//	set_control(fd, V4L2_CID_AUTO_WHITE_BALANCE, false, log);
-//	set_control(fd, V4L2_CID_EXPOSURE_AUTO, 0, log);
-//	set_control(fd, V4L2_CID_EXPOSURE_ABSOLUTE, 2, log);
-//	set_control(fd, V4L2_CID_BRIGHTNESS, -64, log);
-//	int frames=0;
-	while (/*frames++<1000 &&*/ still_running()) {
+	while (still_running()) {
 		process_events();
 		FD_ZERO(&set);
 		FD_SET(fd,&set);
@@ -432,7 +421,6 @@ bool V4l2Source::read_frame()
 	}
 	if (output_frame && !buffer_free) {
 //		output_frame->set_time(0,0,frame_duration);
-//		if (out[0]) push_raw_video_frame(0,timestamp_frame(output_frame));
 		output_frame->set_duration(frame_duration);
 		push_frame(0, output_frame);
 		output_frame.reset();
@@ -463,10 +451,18 @@ bool V4l2Source::stop_capture()
 
 bool V4l2Source::set_param(const core::Parameter &param)
 {
-	log[log::info] << "Processing param " << param.get_name() << " = " << param.get<std::string>();
-	if (param.get_name() == "path") {
-		filename = param.get<std::string>();
-	} else if (param.get_name() == "format") {
+	if (assign_parameters(param)
+			(filename, "path")
+			(resolution, "resolution")
+			(input_number, "input")
+			(illumination, "illumination")
+			(combine_frames, "combine")
+			(fps, "fps")
+			(method, "method", [](const core::Parameter& p){return parse_method(p.get<std::string>());})
+			)
+		return true;
+
+	if (param.get_name() == "format") {
 		std::string format = param.get<std::string>();
 		format_t fmt = core::raw_format::parse_format(format);
 		if (!fmt) {
@@ -483,28 +479,6 @@ bool V4l2Source::set_param(const core::Parameter &param)
 			log[log::warning] << "Unsupported format specified. Trying YUV422";
 			pixelformat = V4L2_PIX_FMT_YUYV;
 		}
-
-//	} else if (param.get_name() == "width") {
-//		width = param.get<yuri::size_t>();
-//	} else if (param.get_name() == "height") {
-//		height = param.get<yuri::size_t>();
-	} else if (param.get_name() == "resolution") {
-		resolution = param.get<resolution_t>();
-	} else if (param.get_name() == "method") {
-		std::string method_s;
-		method_s = param.get<std::string>();
-		if (iequals(method_s,"user")) method = METHOD_USER;
-		else if (iequals(method_s,"mmap")) method = METHOD_MMAP;
-		else if (iequals(method_s,"read")) method = METHOD_READ;
-		else method=METHOD_NONE;
-	} else if (param.get_name() == "input") {
-		input_number = param.get<size_t>();
-	} else if (param.get_name() == "illumination") {
-			illumination = param.get<bool>();
-	} else if (param.get_name() == "combining") {
-		combine_frames = param.get<bool>();
-	} else if (param.get_name() == "fps") {
-		fps= param.get<yuri::fraction_t>();
 	} else return IOThread::set_param(param);
 	return true;
 

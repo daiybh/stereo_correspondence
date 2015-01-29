@@ -82,7 +82,7 @@ private:
 	int fd;
 	v4l2_capability cap;
 	v4l2_format fmt;
-	dimension_t /*width,height,*/imagesize;
+	dimension_t imagesize;
 	resolution_t resolution;
 	uint pixelformat;
 	methods method;
