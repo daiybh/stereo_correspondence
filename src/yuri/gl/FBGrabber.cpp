@@ -200,23 +200,21 @@ void FBGrabber::do_connect_out(position_t position, core::pPipe pipe)
 
 bool FBGrabber::set_param(const core::Parameter &parameter)
 {
-	if (parameter.get_name() == "gl_library") {
-		gl_lib_path_ = parameter.get<std::string>();
-	} else if (parameter.get_name() == "sdl_library") {
-		sdl_lib_path_ = parameter.get<std::string>();
-	} else if (parameter.get_name() == "format") {
-		auto fmt_string = parameter.get<std::string>();
-		format_ = core::raw_format::parse_format(fmt_string);
+	if (assign_parameters(parameter)
+			(gl_lib_path_, "gl_library")
+			(sdl_lib_path_, "sdl_library")
+			.parsed<std::string>
+				(format_, "format", core::raw_format::parse_format)
+			(stereo_, "stereo")
+			(depth_, "depth")) {
+
 		if (!format_) {
 			log[log::warning] << "Failed to parse format, using RGB";
 			format_ = core::raw_format::rgb24;
 		}
-	} else if (parameter.get_name() == "stereo") {
-		stereo_ = parameter.get<bool>();
-	} else if (parameter.get_name() == "depth") {
-		depth_ = parameter.get<bool>();
-	}else return IOThread::set_param(parameter);
-	return true;
+		return true;
+		}
+	return IOThread::set_param(parameter);
 }
 }
 }
