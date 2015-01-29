@@ -14,6 +14,7 @@
 #include "yuri/version.h"
 #include "yuri/core/utils/Timer.h"
 #include <unordered_map>
+#include "yuri/core/utils/assign_events.h"
 #ifdef YURI_LINUX
 #include "SDL_syswm.h"
 
@@ -391,36 +392,23 @@ bool SDLWindow::prepare_rgb_overlay(const core::pRawVideoFrame& frame)
 bool SDLWindow:: do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
 #ifdef YURI_SDL_OPENGL
-	if (event->get_type() == event::event_type_t::vector_event) {
-		if (auto event_vec = dynamic_pointer_cast<event::EventVector>(event)) {
-			auto& vec = *event_vec;
-			double x = event::lex_cast_value<double>(vec[0]);
-			double y = event::lex_cast_value<double>(vec[1]);
-			if (event_name == "corner0") {
-				gl_.corners[0]=x;
-				gl_.corners[1]=y;
-			} else if (event_name == "corner1") {
-				gl_.corners[2]=x;
-				gl_.corners[3]=y;
-			} else if (event_name == "corner2") {
-				gl_.corners[4]=x;
-				gl_.corners[5]=y;
-			} else if (event_name == "corner3") {
-				gl_.corners[6]=x;
-				gl_.corners[7]=y;
-			}
-		}
-	} else {
-		if (event_name.size() > 1 && (event_name[0]=='x' || event_name[0]=='y')) {
-			int offset = event_name[0]-'x'; // This can return only 0 and 1
-			int idx = event_name[1]-'0';
-			if (idx >= 0 && idx < 4) {
-				gl_.corners[idx*2+offset]=event::lex_cast_value<double>(event);
-			}
-		}
-	}
+	if (assign_events(event_name, event)
+			.vector_values("corner0", gl_.corners[0], gl_.corners[1])
+			.vector_values("corner1", gl_.corners[2], gl_.corners[3])
+			.vector_values("corner2", gl_.corners[4], gl_.corners[5])
+			.vector_values("corner3", gl_.corners[6], gl_.corners[7])
+			(gl_.corners[0], "x0")
+			(gl_.corners[1], "y0")
+			(gl_.corners[2], "x1")
+			(gl_.corners[3], "y1")
+			(gl_.corners[4], "x2")
+			(gl_.corners[5], "y2")
+			(gl_.corners[6], "x3")
+			(gl_.corners[7], "y3"))
+
+		return true;
 #endif
-	return true;
+	return false;
 }
 } /* namespace sdl_window */
 } /* namespace yuri */
