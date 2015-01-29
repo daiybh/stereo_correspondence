@@ -204,12 +204,11 @@ core::pFrame Flip::do_special_single_step(const core::pRawVideoFrame& frame)
 
 bool Flip::set_param(const core::Parameter &parameter)
 {
-	if (parameter.get_name()== "flip_x") {
-		flip_x_=parameter.get<bool>();
-	} else if (parameter.get_name()== "flip_y") {
-		flip_y_=parameter.get<bool>();
-	} else return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(parameter);
-	return true;
+	if(assign_parameters(parameter)
+			(flip_x_, "flip_x")
+			(flip_y_, "flip_y"))
+		return true;
+	return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(parameter);
 }
 
 
