@@ -147,8 +147,10 @@ inline geometry_t intersection(const geometry_t& rect1, const geometry_t& rect2)
 	geometry_t rect_out;
 	rect_out.x = std::max(rect1.x, rect2.x);
 	rect_out.y = std::max(rect1.y, rect2.y);
-	rect_out.width = std::min(geometry_max_x(rect1),geometry_max_x(rect2))-rect_out.x;
-	rect_out.height = std::min(geometry_max_y(rect1),geometry_max_y(rect2))-rect_out.y;
+	const auto max_x = std::min(geometry_max_x(rect1),geometry_max_x(rect2));
+	const auto max_y = std::min(geometry_max_y(rect1),geometry_max_y(rect2));
+	rect_out.width = (max_x>rect_out.x)?max_x-rect_out.x:0;
+	rect_out.height = (max_y>rect_out.y)?max_y-rect_out.y:0;
 	return rect_out;
 }
 inline geometry_t intersection(const geometry_t& rect1, const resolution_t& rect2)
