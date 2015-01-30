@@ -14,8 +14,8 @@
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/event/BasicEventConsumer.h"
 #include <ft2build.h>
-#include <freetype/freetype.h>
-//#include FT_FREETYPE_H
+//#include <freetype/freetype.h>
+#include FT_FREETYPE_H
 
 namespace yuri {
 namespace freetype {
