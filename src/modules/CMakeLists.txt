@@ -238,6 +238,11 @@ IF(${X265_FOUND})
     add_subdirectory(x265)
 ENDIF()
 
+pkg_check_modules(GPHOTO2 libgphoto2)
+IF(GPHOTO2_FOUND)
+add_subdirectory(gphoto)
+ENDIF() 
+
 ENDIF(YURI_BUILD_EXPERIMENTAL_MODULES)
 
 #################################################################
