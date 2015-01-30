@@ -238,6 +238,11 @@ IF(${X265_FOUND})
     add_subdirectory(x265)
 ENDIF()
 
+find_package(Freetype)
+IF(FREETYPE_FOUND)
+    add_subdirectory(freetype)
+ENDIF()
+
 pkg_check_modules(GPHOTO2 libgphoto2)
 IF(GPHOTO2_FOUND)
 add_subdirectory(gphoto)
