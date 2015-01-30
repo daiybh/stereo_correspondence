@@ -65,6 +65,7 @@ struct geometry_t {
 	position_t	x;
 	position_t	y;
 	resolution_t get_resolution() const;
+	explicit operator bool() const { return width && height; }
 };
 
 struct resolution_t {
