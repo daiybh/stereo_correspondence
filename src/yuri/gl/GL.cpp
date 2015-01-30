@@ -125,7 +125,7 @@ const std::vector<format_t> gl_supported_formats = {
 		raw_format::rgb24,
 		raw_format::rgba32,
 		raw_format::bgr24,
-		raw_format::abgr32,
+		raw_format::bgra32,
 		raw_format::yuv444,
 		raw_format::yuyv422,
 		raw_format::yvyu422,
@@ -236,7 +236,7 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, 
 		case raw_format::rgb24:
 		case raw_format::rgba32:
 		case raw_format::bgr24:
-		case raw_format::abgr32:
+		case raw_format::bgra32:
 		case raw_format::r8:
 		case raw_format::g8:
 		case raw_format::b8:
