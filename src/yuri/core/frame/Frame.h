@@ -18,7 +18,7 @@ namespace core {
 class Frame;
 typedef shared_ptr<Frame> pFrame;
 
-class Frame {
+class Frame: public std::enable_shared_from_this<Frame> {
 public:
 	EXPORT 			Frame(format_t format);
 	EXPORT virtual 	~Frame() noexcept;
@@ -95,6 +95,21 @@ public:
 	 */
 	EXPORT void		set_format_name(const std::string& format_name);
 
+	/*!
+	 * Queries the shared state for being unique
+ 	 * If the method returns true that subsequent call to get_unique should not copy.
+ 	 *
+	 * @return true if this is the only copy of the frame.
+	 */
+	bool			is_unique() const;
+	/*!
+	 * Method return a modifiable version of the frame.
+	 *
+	 * If this frame is shared between more threads, the method returns a copy.
+	 * Otherwise return the original frame.
+	 * @return A version of this frame that is unique and can be directly modified.
+	 */
+	EXPORT pFrame 	get_unique();
 private:
 	/*!
 	 * Implementation of copy, should be implemented in node classes only.

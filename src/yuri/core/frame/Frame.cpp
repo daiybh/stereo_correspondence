@@ -57,6 +57,30 @@ void Frame::copy_parameters(Frame& frame) const
 	frame.set_format_name(format_name_);
 }
 
+bool Frame::is_unique() const
+{
+	auto frame = shared_from_this();
+	// If there's use count 2, we have one copy and the caller has another
+	// If there's only 1, we have unique copy and caller has none.
+	// Any other number means, it can be shared.
+	if (frame.use_count() <= 2) {
+		return true;
+	}
+	return false;
+}
+
+pFrame Frame::get_unique()
+{
+	auto frame = shared_from_this();
+	// If there's use count 2, we have one copy and the caller has another
+	// If there's only 1, we have unique copy and caller has none.
+	// Any other number means, it can be shared.
+	if (frame.use_count() <= 2) {
+		return frame;
+	}
+	return get_copy();
+}
+
 }
 }
 
