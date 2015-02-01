@@ -38,7 +38,7 @@ struct guarded_stream {
 
 	template<class T>
 	guarded_stream& operator<<(const T& val) {
-		yuri::lock_t l(mutex_);
+		yuri::lock_t _(mutex_);
 		str_ << val;
 		return *this;
 	}
@@ -71,13 +71,16 @@ public:
 	 * @param	dummy	All input is discarded, when dummy is set to true
 	 */
 	LogProxy(gstream_t& str_,bool dummy):stream_(str_),dummy_(dummy) {}
+	
+	LogProxy(const LogProxy&) = delete;
 	/*!
-	 * @brief			Copy constructor. Invalides the original LogProxy object
-	 */
-	LogProxy(const LogProxy& other):stream_(other.stream_),dummy_(other.dummy_) {
+	* @brief			Move constructor. Invalides the original LogProxy object
+	*/
+
+	LogProxy(LogProxy&& other) :stream_(other.stream_), dummy_(std::move(other.dummy_)) {
 		if (!dummy_) {
-			buffer_.str(other.buffer_.str());
-			const_cast<LogProxy&>(other).dummy_=true;
+			buffer_ << other.buffer_.str();
+			other.dummy_ = true;
 		}
 	}
 	/*!

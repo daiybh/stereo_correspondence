@@ -103,7 +103,7 @@ LogProxy<char> Log::operator[](debug_flags f) const
 	} else {
 		lp << " ";
 	}
-	return lp;
+	return std::move(lp);
 }
 
 
@@ -130,7 +130,7 @@ std::string Log::print_level(debug_flags flags) const
 		return {};
 	}
 	const auto& name = it->second;
-
+	
 	if (output_flags_&use_colors) {
 		auto it_col = level_colors.find(f);
 		auto it_col2 = level_colors.find(info);
