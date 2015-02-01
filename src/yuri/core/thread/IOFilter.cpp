@@ -17,7 +17,9 @@ namespace core {
 
 Parameters IOFilter::configure()
 {
-	return MultiIOFilter::configure();
+	auto p = MultiIOFilter::configure();
+	p["main_input"]=0;
+	return p;
 }
 
 IOFilter::IOFilter(const log::Log &log_, pwThreadBase parent, const std::string& id)
