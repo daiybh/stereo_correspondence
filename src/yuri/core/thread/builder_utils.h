@@ -18,14 +18,14 @@ namespace yuri {
 namespace core{
 namespace builder {
 
-size_t load_builtin_modules(log::Log& l_);
-size_t load_module_dir(log::Log& l_, const std::string& path);
-size_t load_modules(log::Log& l_, const std::vector<std::string>& modules);
+EXPORT size_t load_builtin_modules(log::Log& l_);
+EXPORT size_t load_module_dir(log::Log& l_, const std::string& path);
+EXPORT size_t load_modules(log::Log& l_, const std::vector<std::string>& modules);
 
-void verify_node_class(const std::string& node);
-bool verify_node_class(const std::string& node, const std::nothrow_t& tag);
-void verify_link_class(const std::string& node);
-bool verify_link_class(const std::string& node, const std::nothrow_t& tag);
+EXPORT void verify_node_class(const std::string& node);
+EXPORT bool verify_node_class(const std::string& node, const std::nothrow_t& tag);
+EXPORT void verify_link_class(const std::string& node);
+EXPORT bool verify_link_class(const std::string& node, const std::nothrow_t& tag);
 
 
 

@@ -43,21 +43,21 @@ bool is_special_link_target(const std::string& name);
 class GenericBuilder: public IOThread, public event::BasicEventParser {
 public:
 
-	GenericBuilder(const log::Log& log_, pwThreadBase parent, const std::string& name);
-	~GenericBuilder() noexcept {};
-	virtual void run() override;
-	virtual bool step() override;
-	pIOThread get_node(const std::string& name);
-	virtual event::pBasicEventProducer find_producer(const std::string& name) override;
-	virtual event::pBasicEventConsumer find_consumer(const std::string& name) override;
-	virtual bool 				do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
+	EXPORT GenericBuilder(const log::Log& log_, pwThreadBase parent, const std::string& name);
+	EXPORT ~GenericBuilder() noexcept {};
+	EXPORT virtual void run() override;
+	EXPORT virtual bool step() override;
+	EXPORT pIOThread get_node(const std::string& name);
+	EXPORT virtual event::pBasicEventProducer find_producer(const std::string& name) override;
+	EXPORT virtual event::pBasicEventConsumer find_consumer(const std::string& name) override;
+	EXPORT virtual bool 				do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 
 protected:
-	void set_graph(node_map nodes, link_map links, std::string routing = {});
+	EXPORT void set_graph(node_map nodes, link_map links, std::string routing = {});
 private:
-	virtual	void do_connect_in(position_t position, pPipe pipe) override;
-	virtual	void do_connect_out(position_t position, pPipe pipe) override;
-	virtual void receive_event_hook() noexcept override;
+	EXPORT virtual	void do_connect_in(position_t position, pPipe pipe) override;
+	EXPORT virtual	void do_connect_out(position_t position, pPipe pipe) override;
+	EXPORT virtual void receive_event_hook() noexcept override;
 
 	node_map nodes_;
 	link_map links_;
