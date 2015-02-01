@@ -59,10 +59,10 @@ void print_frame(log::Log& log, core::pRawAudioFrame frame)
 void print_frame(log::Log& log, core::pFrame frame) {
 	if (auto f = dynamic_pointer_cast<core::RawVideoFrame>(frame)) {
 		print_frame(log, f);
-	} else if (auto f = dynamic_pointer_cast<core::CompressedVideoFrame>(frame)) {
-		print_frame(log, f);
-	} else if (auto f = dynamic_pointer_cast<core::RawAudioFrame>(frame)) {
-		print_frame(log, f);
+	} else if (auto f2 = dynamic_pointer_cast<core::CompressedVideoFrame>(frame)) {
+		print_frame(log, f2);
+	} else if (auto f3 = dynamic_pointer_cast<core::RawAudioFrame>(frame)) {
+		print_frame(log, f3);
 	} else {
 		log[log::info] << "Unknown format (" << frame->get_format() << ")";
 	}
