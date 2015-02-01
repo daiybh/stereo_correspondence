@@ -77,10 +77,10 @@ core::pFrame FileDump::do_simple_single_step(core::pFrame frame)
 		for (yuri::size_t i=0; i<f->get_planes_count();++i) {
 			dump_file.write(reinterpret_cast<const char *>(PLANE_RAW_DATA(f,0)),PLANE_SIZE(f,0));
 		}
-	} else if (auto f = std::dynamic_pointer_cast<core::CompressedVideoFrame>(frame)) {
-		dump_file.write(reinterpret_cast<const char *>(f->begin()),f->size());
-	} else if (auto f = std::dynamic_pointer_cast<core::RawAudioFrame>(frame)) {
-		dump_file.write(reinterpret_cast<const char *>(f->data()),f->size());
+	} else if (auto f2 = std::dynamic_pointer_cast<core::CompressedVideoFrame>(frame)) {
+		dump_file.write(reinterpret_cast<const char *>(f2->begin()),f2->size());
+	} else if (auto f3 = std::dynamic_pointer_cast<core::RawAudioFrame>(frame)) {
+		dump_file.write(reinterpret_cast<const char *>(f3->data()),f3->size());
 	} else {
 		written=false;
 	}
