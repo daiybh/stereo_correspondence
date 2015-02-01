@@ -134,9 +134,9 @@ response_t WebServer::find_response(request_t request)
 			// This isn't fatal, there may be another resource publishing this path.
 			continue;
 		}
-		catch (not_modified& redirect) {
+		catch (not_modified& /* redirect */) {
 //				log[log::info] << "Returning 304 for resource";
-			return {http_code::not_modified,{},{}};
+			return response_t{http_code::not_modified,{},{}};
 
 		}
 		catch (std::runtime_error& e) {
