@@ -113,7 +113,7 @@ void AudioLatency::process_latency(const uint8_t* data_ptr, const size_t sample_
 
 }
 
-core::pFrame AudioLatency::do_special_single_step(const core::pRawAudioFrame& frame)
+core::pFrame AudioLatency::do_special_single_step(core::pRawAudioFrame frame)
 {
 	using namespace core::raw_audio_format;
 	size_t skip0 = 0;

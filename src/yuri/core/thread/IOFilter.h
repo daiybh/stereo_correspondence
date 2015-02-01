@@ -26,7 +26,7 @@ public:
 				const std::string& id = "FILTER");
 	EXPORT virtual 			~IOFilter() noexcept;
 
-	EXPORT pFrame			simple_single_step(const pFrame& frame);
+	EXPORT pFrame			simple_single_step(pFrame frame);
 
 	EXPORT void				set_supported_formats(const std::vector<format_t>& formats);
 	template<class T>
@@ -35,9 +35,9 @@ public:
 							get_supported_formats() { return supported_formats_; }
 	EXPORT void				set_supported_priority(bool);
 private:
-	EXPORT virtual pFrame	do_simple_single_step(const pFrame& frame) = 0;
+	EXPORT virtual pFrame	do_simple_single_step(pFrame frame) = 0;
 	EXPORT virtual std::vector<pFrame> 
-							do_single_step(const std::vector<pFrame>& frames);
+							do_single_step(std::vector<pFrame> frames);
 	std::vector<format_t>	supported_formats_;
 	pConvert				converter_;
 	bool 					priority_supported_;

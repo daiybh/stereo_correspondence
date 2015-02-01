@@ -323,7 +323,7 @@ core::pFrame YuriConvertor::do_convert_frame(core::pFrame input_frame, format_t 
 	return outframe;
 }
 
-core::pFrame YuriConvertor::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame YuriConvertor::do_special_single_step(core::pRawVideoFrame frame)
 {
 
 	return convert_frame(frame, format_);

@@ -120,7 +120,7 @@ const uint8_t* write_data(log::Log& log, const uint8_t* start, const uint8_t* en
 
 }
 
-core::pFrame AlsaOutput::do_special_single_step(const core::pRawAudioFrame& frame)
+core::pFrame AlsaOutput::do_special_single_step(core::pRawAudioFrame frame)
 {
 	if (is_different_format(frame)) {
 		if (!init_alsa(frame)) return {};

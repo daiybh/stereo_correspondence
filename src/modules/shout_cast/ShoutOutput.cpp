@@ -116,7 +116,7 @@ ShoutOutput::~ShoutOutput() noexcept
 {
 }
 
-core::pFrame ShoutOutput::do_special_single_step(const core::pCompressedVideoFrame& frame)
+core::pFrame ShoutOutput::do_special_single_step(core::pCompressedVideoFrame frame)
 {
 	if (shout_send(shout_.get(), frame->data(), frame->size())!=SHOUTERR_SUCCESS) {
 		log[log::warning] << "Failed to submit data to shoutcast server";

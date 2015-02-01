@@ -121,7 +121,7 @@ FrameInfo::~FrameInfo() noexcept
 {
 }
 
-core::pFrame FrameInfo::do_simple_single_step(const core::pFrame& frame)
+core::pFrame FrameInfo::do_simple_single_step(core::pFrame frame)
 {
 	try {
 		if (print_all_ || !last_frame_ || !same_format(last_frame_, frame)) {

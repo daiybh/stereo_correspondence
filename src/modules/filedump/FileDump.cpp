@@ -53,7 +53,7 @@ FileDump::~FileDump() noexcept
 	if (dump_file.is_open()) dump_file.close();
 }
 
-core::pFrame FileDump::do_simple_single_step(const core::pFrame& frame)
+core::pFrame FileDump::do_simple_single_step(core::pFrame frame)
 {
 	if (seq_chars) {
 		std::stringstream ss;

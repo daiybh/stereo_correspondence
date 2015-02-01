@@ -298,7 +298,7 @@ core::pRawVideoFrame scale_image_fast(const core::pRawVideoFrame& frame, const r
 
 }
 
-core::pFrame Scale::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame Scale::do_special_single_step(core::pRawVideoFrame frame)
 {
 	if (frame->get_resolution() == resolution_)
 		return frame;

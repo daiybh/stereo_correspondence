@@ -93,7 +93,7 @@ geometry_t set_alignment(format_t format, geometry_t geometry)
 }
 }
 
-core::pFrame Crop::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame Crop::do_special_single_step(core::pRawVideoFrame frame)
 {
 	process_events();
 	const format_t format = frame->get_format();

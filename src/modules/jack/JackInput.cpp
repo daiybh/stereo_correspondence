@@ -144,7 +144,7 @@ JackInput::~JackInput() noexcept
 {
 }
 
-core::pFrame JackInput::do_special_single_step(const core::pRawAudioFrame& /*frame*/)
+core::pFrame JackInput::do_special_single_step(core::pRawAudioFrame /*frame*/)
 {
 	return {};
 }

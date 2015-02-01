@@ -27,7 +27,7 @@ public:
 	virtual ~Null() noexcept;
 	Null(log::Log &_log,core::pwThreadBase parent, const core::Parameters& parameters);
 private:
-	virtual core::pFrame do_simple_single_step(const core::pFrame& frame) override;
+	virtual core::pFrame do_simple_single_step(core::pFrame frame) override;
 };
 
 }

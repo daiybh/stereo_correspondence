@@ -81,7 +81,7 @@ bool UVAlsaOutput::reconfigure(const core::pRawAudioFrame& frame)
 	return audio_play_alsa_reconfigure(device_, fi.bits_per_sample, frame_.ch_count, frame_.sample_rate);
 }
 
-core::pFrame UVAlsaOutput::do_special_single_step(const core::pRawAudioFrame& frame)
+core::pFrame UVAlsaOutput::do_special_single_step(core::pRawAudioFrame frame)
 {
 	if (format_changed(frame)) {
 		if (!reconfigure(frame)) {

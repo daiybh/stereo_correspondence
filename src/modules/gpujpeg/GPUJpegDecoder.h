@@ -23,7 +23,7 @@ public:
 protected:
 //	virtual bool step();
 	virtual bool set_param(const core::Parameter& parameter) override;
-	virtual core::pFrame do_simple_single_step(const core::pFrame& frame) override;
+	virtual core::pFrame do_simple_single_step(core::pFrame frame) override;
 	virtual core::pFrame do_convert_frame(core::pFrame input_frame, format_t target_format) override;
 	virtual bool do_initialize_converter(format_t target_format) override; //{ return true; }
 	virtual bool do_converter_is_stateless() const override { return false; }

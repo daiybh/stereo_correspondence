@@ -290,7 +290,7 @@ void RenderText::run()
 	}
 }
 
-core::pFrame RenderText::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame RenderText::do_special_single_step(core::pRawVideoFrame frame)
 {
 	auto f = std::dynamic_pointer_cast<core::RawVideoFrame>(frame->get_copy());
 	draw_text(text_, f);

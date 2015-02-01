@@ -25,7 +25,7 @@ public:
 	virtual bool set_param(const core::Parameter &parameter);
 
 private:
-	virtual std::vector<core::pFrame> do_single_step(const std::vector<core::pFrame>& frames) override;
+	virtual std::vector<core::pFrame> do_single_step(std::vector<core::pFrame> frames) override;
 	virtual void do_connect_out(position_t index, core::pPipe pipe) override;
 	bool hard_dup_;
 };

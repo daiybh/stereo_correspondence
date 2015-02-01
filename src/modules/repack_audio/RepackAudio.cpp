@@ -78,7 +78,7 @@ void RepackAudio::push_current_frame()
 //	push_raw_audio_frame(0,frame);
 	samples_missing_ = total_samples_;
 }
-core::pFrame RepackAudio::do_special_single_step(const core::pRawAudioFrame& frame)
+core::pFrame RepackAudio::do_special_single_step(core::pRawAudioFrame frame)
 //bool RepackAudio::step()
 {
 	current_format_ = frame->get_format();

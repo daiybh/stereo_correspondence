@@ -36,7 +36,7 @@ public:
 	bool get_full_range() const { return full_range_; }
 private:
 	bool set_param(const core::Parameter &p);
-	core::pFrame do_special_single_step(const core::pRawVideoFrame& frame);
+	core::pFrame do_special_single_step(core::pRawVideoFrame frame);
 	virtual core::pFrame do_convert_frame(core::pFrame input_frame, format_t target_format) override;
 	colorimetry_t colorimetry_;
 	bool full_range_;

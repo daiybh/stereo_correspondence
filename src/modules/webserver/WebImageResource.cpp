@@ -49,7 +49,7 @@ void WebImageResource::run()
 	log[log::info] << "Registered to server";
 	base_type::run();
 }
-core::pFrame WebImageResource::do_special_single_step(const core::pCompressedVideoFrame& frame)
+core::pFrame WebImageResource::do_special_single_step(core::pCompressedVideoFrame frame)
 {
 	{
 		std::unique_lock<std::mutex> _(frame_lock_);

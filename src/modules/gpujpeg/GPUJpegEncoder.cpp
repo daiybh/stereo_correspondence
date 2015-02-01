@@ -43,9 +43,9 @@ GPUJpegEncoder::~GPUJpegEncoder() noexcept
 {
 }
 
-core::pFrame GPUJpegEncoder::do_simple_single_step(const core::pFrame& frame)
+core::pFrame GPUJpegEncoder::do_simple_single_step(core::pFrame frame)
 {
-	return do_convert_frame(frame, core::compressed_frame::jpeg);
+	return do_convert_frame(std::move(frame), core::compressed_frame::jpeg);
 }
 core::pFrame GPUJpegEncoder::do_convert_frame(core::pFrame input_frame, format_t target_format)
 {

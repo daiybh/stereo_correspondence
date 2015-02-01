@@ -106,9 +106,9 @@ UVConvert::~UVConvert() noexcept
 }
 
 
-core::pFrame UVConvert::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame UVConvert::do_special_single_step(core::pRawVideoFrame frame)
 {
-	return convert_raw_frame(frame, format_);
+	return convert_raw_frame(std::move(frame), format_);
 }
 core::pFrame UVConvert::do_convert_frame(core::pFrame input_frame, format_t target_format)
 {

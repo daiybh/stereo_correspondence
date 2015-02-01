@@ -137,7 +137,7 @@ void fill_from_sample(Iter start, const Iter& end, const Iter2& sample)
 }
 
 
-core::pFrame Pad::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame Pad::do_special_single_step(core::pRawVideoFrame frame)
 {
 //	const core::pRawVideoFrame frame= 	dynamic_pointer_cast<core::RawVideoFrame>(frame_in);
 	const resolution_t resolution	= frame->get_resolution();

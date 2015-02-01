@@ -90,7 +90,7 @@ core::pRawVideoFrame rotate(const core::pRawVideoFrame& frame, size_t angle) {
 }
 }
 
-core::pFrame Rotate::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame Rotate::do_special_single_step(core::pRawVideoFrame frame)
 //bool Rotate::step()
 {
 //	if (!in[0]) return true;

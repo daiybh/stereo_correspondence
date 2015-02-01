@@ -327,7 +327,7 @@ core::pRawVideoFrame ColorKey::dispatch_find_key(const core::pRawVideoFrame& fra
 	return core::pRawVideoFrame();
 }
 
-core::pFrame ColorKey::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame ColorKey::do_special_single_step(core::pRawVideoFrame frame)
 {
 	process_events();
 	const format_t fmt = frame->get_format();

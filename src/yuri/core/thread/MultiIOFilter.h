@@ -34,14 +34,14 @@ public:
 	EXPORT virtual 			~MultiIOFilter() noexcept;
 
 	EXPORT std::vector<pFrame> 	
-							single_step(const std::vector<pFrame>& frames);
+							single_step(std::vector<pFrame> frames);
 	EXPORT virtual bool 	step();
 
 	EXPORT virtual bool 	set_param(const Parameter &parameter) override;
 protected:
 	EXPORT virtual void 	resize(position_t inp, position_t outp) override;
 private:
-	virtual std::vector<pFrame> do_single_step(const std::vector<pFrame>& frames) = 0;
+	virtual std::vector<pFrame> do_single_step(std::vector<pFrame> frames) = 0;
 	std::vector<pFrame> 	stored_frames_;
 //	bool 					realtime_;
 	position_t				main_input_;

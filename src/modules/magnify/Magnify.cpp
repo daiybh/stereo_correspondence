@@ -45,7 +45,7 @@ Magnify::~Magnify() noexcept
 {
 }
 
-core::pFrame Magnify::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame Magnify::do_special_single_step(core::pRawVideoFrame frame)
 {
 	process_events();
 	const resolution_t out_res = {geometry_.width*zoom_, geometry_.height*zoom_};

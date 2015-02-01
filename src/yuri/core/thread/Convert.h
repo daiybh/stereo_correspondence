@@ -25,12 +25,12 @@ public:
 	Convert(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~Convert() noexcept;
 
-	pFrame convert_to_any(const pFrame& frame, const std::vector<format_t>& fmts);
-	pFrame convert_to_cheapest(const pFrame& frame, const std::vector<format_t>& fmts);
+	pFrame convert_to_any(pFrame frame, const std::vector<format_t>& fmts);
+	pFrame convert_to_cheapest(pFrame frame, const std::vector<format_t>& fmts);
 
 private:
 	pFrame 	do_convert_frame(pFrame frame_in, format_t target_format);
-	pFrame 	do_simple_single_step(const pFrame& frame);
+	pFrame 	do_simple_single_step(pFrame frame);
 	virtual bool set_param(const core::Parameter& param);
 	format_t	format_;
 	bool allow_passthrough_;

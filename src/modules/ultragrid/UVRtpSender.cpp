@@ -62,15 +62,15 @@ UVRtpSender::~UVRtpSender() noexcept
 //	rtp_done(rtp_session_);
 }
 
-core::pFrame UVRtpSender::do_simple_single_step(const core::pFrame& frame)
+core::pFrame UVRtpSender::do_simple_single_step(core::pFrame frame)
 {
         if (auto videoFrame = dynamic_pointer_cast<core::VideoFrame>(frame)) {
-                return do_special_simple_single_step(videoFrame);
+                return do_special_simple_single_step(std::move(videoFrame));
         } else if (auto audioFrame = dynamic_pointer_cast<core::AudioFrame>(frame)) {
-                return do_special_simple_single_step(audioFrame);
+                return do_special_simple_single_step(std::move(audioFrame));
         } else return {};
 }
-core::pFrame UVRtpSender::do_special_simple_single_step(const core::pVideoFrame& frame)
+core::pFrame UVRtpSender::do_special_simple_single_step(core::pVideoFrame frame)
 {
 	auto f = ultragrid::allocate_uv_frame(frame);
 	if (f) {
@@ -80,7 +80,7 @@ core::pFrame UVRtpSender::do_special_simple_single_step(const core::pVideoFrame&
 	}
 	return {};
 }
-core::pFrame UVRtpSender::do_special_simple_single_step(const core::pAudioFrame& frame)
+core::pFrame UVRtpSender::do_special_simple_single_step(core::pAudioFrame frame)
 {
 	auto f = ultragrid::allocate_uv_frame(frame);
 	if (f) {

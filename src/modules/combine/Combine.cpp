@@ -48,7 +48,7 @@ Combine::~Combine() noexcept
 {
 }
 
-std::vector<core::pFrame> Combine::do_single_step(const std::vector<core::pFrame>& framesx)
+std::vector<core::pFrame> Combine::do_single_step(std::vector<core::pFrame> framesx)
 {
 	const format_t format = framesx[0]->get_format();
 	const auto& fi = core::raw_format::get_format_info(format);

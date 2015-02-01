@@ -609,7 +609,7 @@ ConvertPlanes::~ConvertPlanes() noexcept
 {
 }
 
-core::pFrame ConvertPlanes::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame ConvertPlanes::do_special_single_step(core::pRawVideoFrame frame)
 {
 	return dispatch(frame, format_);
 }

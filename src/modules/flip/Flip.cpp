@@ -165,7 +165,7 @@ void flip_dispatch(int yuv_pos, int bpp, bool flip_x, bool flip_y,
 
 }
 
-core::pFrame Flip::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame Flip::do_special_single_step(core::pRawVideoFrame frame)
 {
 	if (!flip_x_ && !flip_y_) return frame;
 	size_t	w = frame->get_width();

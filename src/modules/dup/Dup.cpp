@@ -48,7 +48,7 @@ void Dup::do_connect_out(position_t index, core::pPipe pipe)
 	MultiIOFilter::do_connect_out(index, pipe);
 }
 
-std::vector<core::pFrame> Dup::do_single_step(const std::vector<core::pFrame>& frames)
+std::vector<core::pFrame> Dup::do_single_step(std::vector<core::pFrame> frames)
 {
 	std::vector<core::pFrame> outframes;
 	if (!hard_dup_) {

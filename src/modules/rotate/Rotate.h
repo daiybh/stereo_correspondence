@@ -22,7 +22,7 @@ public:
 	static core::Parameters configure();
 private:
 	virtual bool set_param(const core::Parameter &param);
-	virtual core::pFrame			do_special_single_step(const core::pRawVideoFrame& frame) override;
+	virtual core::pFrame			do_special_single_step(core::pRawVideoFrame frame) override;
 	size_t 		angle_;
 };
 

@@ -177,7 +177,7 @@ bool SDLWindow::step()
 	return base_type::step();
 }
 
-core::pFrame SDLWindow::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame SDLWindow::do_special_single_step(core::pRawVideoFrame frame)
 {
 	BasicEventConsumer::process_events();
 	Timer timer;

@@ -57,7 +57,7 @@ JpegEncoder::~JpegEncoder() noexcept
 {
 }
 
-core::pFrame JpegEncoder::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame JpegEncoder::do_special_single_step(core::pRawVideoFrame frame)
 {
 	process_events();
 	unique_ptr<jpeg_compress_struct, function<void(jpeg_compress_struct*)>> cinfox(

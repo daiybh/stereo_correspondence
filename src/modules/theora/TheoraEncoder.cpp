@@ -177,7 +177,7 @@ void set_th_plane(const core::pRawVideoFrame& frame, size_t index, th_img_plane&
 }
 }
 
-core::pFrame TheoraEncoder::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame TheoraEncoder::do_special_single_step(core::pRawVideoFrame frame)
 {
 	if (!ctx_ && !init_ctx(frame)) return {};
 	if (!compare_params(frame,theora_info_)) return {};

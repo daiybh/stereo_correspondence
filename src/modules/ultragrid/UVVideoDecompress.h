@@ -68,7 +68,7 @@ protected:
 	bool init_decompressor(const std::string& params);
 private:
 
-	virtual core::pFrame do_special_single_step(const core::pCompressedVideoFrame& frame) override;
+	virtual core::pFrame do_special_single_step(core::pCompressedVideoFrame frame) override;
 	virtual core::pFrame 		do_convert_frame(core::pFrame input_frame, format_t target_format) override;
 	virtual bool do_converter_is_stateless() const override { return false; }
 	virtual bool 				set_param(const core::Parameter& param);

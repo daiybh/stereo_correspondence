@@ -40,7 +40,7 @@ Null::~Null() noexcept
 {
 }
 
-core::pFrame Null::do_simple_single_step(const core::pFrame&)
+core::pFrame Null::do_simple_single_step(core::pFrame)
 {
 	return {};
 }

@@ -83,7 +83,7 @@ core::pFrame PngDecoder::do_convert_frame(core::pFrame input_frame, format_t tar
 	if (frame) return do_special_single_step(frame);
 	return {};
 }
-core::pFrame PngDecoder::do_special_single_step(const core::pCompressedVideoFrame& frame)
+core::pFrame PngDecoder::do_special_single_step(core::pCompressedVideoFrame frame)
 {
 	if (frame->get_format() != core::compressed_frame::png) return {};
 

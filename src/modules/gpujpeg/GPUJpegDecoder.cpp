@@ -81,9 +81,9 @@ bool GPUJpegDecoder::do_initialize_converter(format_t target_format)
 	out_format = target_format;
 	return init();
 }
-core::pFrame GPUJpegDecoder::do_simple_single_step(const core::pFrame& frame)
+core::pFrame GPUJpegDecoder::do_simple_single_step(core::pFrame frame)
 {
-	return do_convert_frame(frame, out_format);
+	return do_convert_frame(std::move(frame), out_format);
 }
 core::pFrame GPUJpegDecoder::do_convert_frame(core::pFrame input_frame, format_t target_format)
 {

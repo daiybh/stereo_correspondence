@@ -60,7 +60,7 @@ core::pFrame JpegDecoder::do_convert_frame(core::pFrame input_frame, format_t ta
 	return do_special_single_step(frame);
 }
 
-core::pFrame JpegDecoder::do_special_single_step(const core::pCompressedVideoFrame& frame)
+core::pFrame JpegDecoder::do_special_single_step(core::pCompressedVideoFrame frame)
 {
 	format_t fmt = frame->get_format();
 	if ((fmt != core::compressed_frame::jpeg) &&

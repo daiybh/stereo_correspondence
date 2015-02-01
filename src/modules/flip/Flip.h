@@ -27,7 +27,7 @@ public:
 	Flip(log::Log &_log, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~Flip() noexcept;
 private:
-	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
+	virtual core::pFrame do_special_single_step(core::pRawVideoFrame frame) override;
 	bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 	bool flip_x_, flip_y_;
 };

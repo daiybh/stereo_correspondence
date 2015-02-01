@@ -44,7 +44,7 @@ bool UVVideoDecompress::init_decompressor(const std::string& /* params */)
 	return (decoder_ != nullptr);
 }
 
-core::pFrame UVVideoDecompress::do_special_single_step(const core::pCompressedVideoFrame& frame)
+core::pFrame UVVideoDecompress::do_special_single_step(core::pCompressedVideoFrame frame)
 {
 	const auto res = frame->get_resolution();
 	const auto format = frame->get_format();

@@ -24,7 +24,7 @@ public:
 	Combine(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~Combine() noexcept;
 private:
-	virtual std::vector<core::pFrame> do_single_step(const std::vector<core::pFrame>& frames) override;
+	virtual std::vector<core::pFrame> do_single_step(std::vector<core::pFrame> frames) override;
 	virtual bool set_param(const core::Parameter& param);
 	size_t x_,y_;
 

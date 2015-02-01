@@ -28,7 +28,7 @@ public:
 	X264Encoder(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~X264Encoder() noexcept;
 private:
-	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
+	virtual core::pFrame do_special_single_step(core::pRawVideoFrame frame) override;
 	virtual bool set_param(const core::Parameter& param) override;
 
 	void process_nal(x264_nal_t& nal);

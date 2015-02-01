@@ -76,7 +76,7 @@ protected:
 private:
 
 	void run() override;
-	virtual core::pFrame do_special_single_step(const core::pVideoFrame& frame) override;
+	virtual core::pFrame do_special_single_step(core::pVideoFrame frame) override;
 	virtual void child_ends_hook(core::pwThreadBase child, int code, size_t remaining_child_count) override;
 
 	video_desc last_desc_;

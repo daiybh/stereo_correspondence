@@ -38,7 +38,7 @@ private:
 	
 	virtual void run() override;
 	virtual bool step() override;
-	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
+	virtual core::pFrame do_special_single_step(core::pRawVideoFrame frame) override;
 	virtual bool set_param(const core::Parameter& param);
 	void process_sdl_events();
 	void sdl_resize(resolution_t);

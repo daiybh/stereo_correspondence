@@ -31,12 +31,12 @@ IOFilter::~IOFilter() noexcept
 
 }
 
-pFrame	IOFilter::simple_single_step(const pFrame& frame)
+pFrame	IOFilter::simple_single_step(pFrame frame)
 {
-	return do_simple_single_step(frame);
+	return do_simple_single_step(std::move(frame));
 }
 
-std::vector<pFrame> IOFilter::do_single_step(const std::vector<pFrame>& frames)
+std::vector<pFrame> IOFilter::do_single_step(std::vector<pFrame> frames)
 {
 	if (!supported_formats_.empty() && !converter_) {
 		converter_.reset(new Convert(log, get_this_ptr(), Convert::configure()));
@@ -45,12 +45,12 @@ std::vector<pFrame> IOFilter::do_single_step(const std::vector<pFrame>& frames)
 	assert (frames.size() == 1 && frames[0]);
 	pFrame outframe;
 	if (supported_formats_.empty()) {
-		outframe = simple_single_step(frames[0]);
+		outframe = simple_single_step(std::move(frames[0]));
 	} else {
 		pFrame frame;
-		if (priority_supported_) frame = converter_->convert_to_any(frames[0], supported_formats_);
-		else frame = converter_->convert_to_cheapest(frames[0], supported_formats_);
-		if (frame) outframe = simple_single_step(frame);
+		if (priority_supported_) frame = converter_->convert_to_any(std::move(frames[0]), supported_formats_);
+		else frame = converter_->convert_to_cheapest(std::move(frames[0]), supported_formats_);
+		if (frame) outframe = simple_single_step(std::move(frame));
 	}
 	if (outframe) return {outframe};
 	return {};

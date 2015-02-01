@@ -92,7 +92,7 @@ void process_lines(const T2* start, T2* out_start, size_t lines, size_t line_siz
 }
 }
 
-core::pFrame Invert::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame Invert::do_special_single_step(core::pRawVideoFrame frame)
 {
 	const auto& fi = core::raw_format::get_format_info(frame->get_format());
 	if (!verify_support(fi)) return {};

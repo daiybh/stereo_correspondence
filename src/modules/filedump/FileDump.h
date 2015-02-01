@@ -30,7 +30,7 @@ public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
 private:
-	virtual core::pFrame do_simple_single_step(const core::pFrame& frame) override;
+	virtual core::pFrame do_simple_single_step(core::pFrame frame) override;
 	virtual bool set_param(const core::Parameter &param) override;
 	std::ofstream dump_file;
 	std::string filename;

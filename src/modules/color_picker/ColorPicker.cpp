@@ -151,7 +151,7 @@ core::pRawVideoFrame process_colors_yuv(const core::pRawVideoFrame& frame, geome
 
 }
 
-core::pFrame ColorPicker::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame ColorPicker::do_special_single_step(core::pRawVideoFrame frame)
 {
 	process_events();
 	using namespace core::raw_format;

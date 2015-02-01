@@ -10,6 +10,7 @@
 
 #include "MultiIOFilter.h"
 #include "yuri/core/utils/assign_parameters.h"
+#include "yuri/core/utils/irange.h"
 #include <cassert>
 
 namespace yuri {
@@ -36,9 +37,9 @@ MultiIOFilter::~MultiIOFilter() noexcept
 
 }
 
-std::vector<pFrame> MultiIOFilter::single_step(const std::vector<pFrame>& frames)
+std::vector<pFrame> MultiIOFilter::single_step(std::vector<pFrame> frames)
 {
-	return do_single_step(frames);
+	return do_single_step(std::move(frames));
 }
 void MultiIOFilter::resize(position_t inp, position_t outp)
 {
@@ -66,7 +67,35 @@ bool MultiIOFilter::step()
 		if (!stored_frames_[i]) ready = false;
 	}
 	if (ready || main_input_ == -3) {
-		auto outframes = single_step(stored_frames_);
+//		log[log::info] << "use count before single_step(): " << stored_frames_[0].use_count();
+		// In some cases, we will delete the frames (all or some) later.
+		// So let's do it now and prepare new vector - so the implementation
+		// can get unique copy
+		std::vector<pFrame> frames_to_pass_down;
+		const auto input_count = get_no_in_ports();
+		if (main_input_ == -1 || main_input_ >= input_count || (input_count == 1 && main_input_ == 0)) {
+			// We won't store any frames whatsoever
+			frames_to_pass_down = std::move(stored_frames_);
+			stored_frames_.resize(0);
+		} else if (main_input_ >= 0) {
+			// We have to store all frames except one (for main_input)
+			frames_to_pass_down.resize(input_count, pFrame{});
+			for (auto i: irange(0, input_count)) {
+				if (i != main_input_) frames_to_pass_down[i] = stored_frames_[i];
+				else {
+					frames_to_pass_down[i]=std::move(stored_frames_[i]);
+					stored_frames_[i].reset(); // This should not be necessary, but just to make sure...
+				}
+			}
+		} else {
+			// We have to keep all frames, so let's just copy the pointers;
+			frames_to_pass_down = stored_frames_;
+		}
+
+		// make sure we didn't mess up the stored_frames_
+		stored_frames_.resize(input_count, pFrame{});
+		auto outframes = single_step(std::move(frames_to_pass_down));
+
 		for (position_t i=0; i< std::min(get_no_out_ports(), static_cast<position_t>(outframes.size())); ++i) {
 			if (outframes[i]) push_frame(i, outframes[i]);
 		}

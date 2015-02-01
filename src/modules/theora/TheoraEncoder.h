@@ -28,7 +28,7 @@ public:
 	virtual ~TheoraEncoder() noexcept;
 private:
 	
-	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
+	virtual core::pFrame do_special_single_step(core::pRawVideoFrame frame) override;
 	virtual bool set_param(const core::Parameter& param) override;
 	bool init_ctx(const core::pRawVideoFrame& frame);
 	void process_packet(ogg_packet& packet);
