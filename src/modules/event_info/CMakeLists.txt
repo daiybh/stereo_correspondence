@@ -11,6 +11,11 @@ SET (SRC register.cpp
 		 PassEvent.h
 		 )
 
+IF(UNIX AND NOT APPLE)
+SET(SRC ${SRC}
+		 EventDevice.cpp
+		 EventDevice.h)
+ENDIF()
 
  
 add_library(${MODULE} MODULE ${SRC})

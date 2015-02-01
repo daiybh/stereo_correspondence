@@ -10,7 +10,7 @@
 #ifndef EVENTDEVICE_H_
 #define EVENTDEVICE_H_
 
-#include "yuri/core/IOThread.h"
+#include "yuri/core/thread/IOThread.h"
 #include "yuri/event/BasicEventProducer.h"
 #include <linux/input.h>
 namespace yuri {
@@ -27,13 +27,14 @@ struct abs_axis {
 class EventDevice: public core::IOThread, public event::BasicEventProducer
 {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
-	virtual ~EventDevice();
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+	EventDevice(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~EventDevice() noexcept;
 private:
-	EventDevice(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters);
-	virtual void run();
-	virtual bool set_param(const core::Parameter& param);
+
+	virtual void run() override;
+	virtual bool set_param(const core::Parameter& param) override;
 	std::string device_path_;
 	int							handle_;
 	int							min_fuzz_;

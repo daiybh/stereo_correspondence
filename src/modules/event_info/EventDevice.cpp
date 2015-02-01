@@ -15,17 +15,15 @@
 namespace yuri {
 namespace event_device {
 
-REGISTER("event_device",EventDevice)
+IOTHREAD_GENERATOR(EventDevice)
 
-IO_THREAD_GENERATOR(EventDevice)
 
-core::pParameters EventDevice::configure()
+core::Parameters EventDevice::configure()
 {
-	core::pParameters p = core::IOThread::configure();
-	p->set_description("EventDevice");
-	(*p)["device"]["Path to the device"]=std::string("/dev/input/event0");
-	(*p)["min_fuzz"]["Minimal value for fuzz. Increase if the device generates noised valued"]=0;
-	p->set_max_pipes(1,1);
+	auto p = core::IOThread::configure();
+	p.set_description("EventDevice");
+	p["device"]["Path to the device"]="/dev/input/event0";
+	p["min_fuzz"]["Minimal value for fuzz. Increase if the device generates noised valued"]=0;
 	return p;
 }
 
@@ -70,12 +68,12 @@ namespace {
 	}
 }
 
-EventDevice::EventDevice(log::Log &log_, core::pwThreadBase parent, core::Parameters &parameters):
+EventDevice::EventDevice(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOThread(log_,parent,1,1,std::string("event_device")),
 event::BasicEventProducer(log),
 handle_(-1),min_fuzz_(0)
 {
-	IO_THREAD_INIT("event_device")
+	IOTHREAD_INIT(parameters)
 	if ((handle_ = ::open(device_path_.c_str(), O_RDONLY)) < 0 ) {
 		throw exception::InitializationFailed("Failed to open device "+device_path_);
 	}
@@ -95,17 +93,17 @@ handle_(-1),min_fuzz_(0)
 	}
 }
 
-EventDevice::~EventDevice()
+EventDevice::~EventDevice() noexcept
 {
 }
 
 void EventDevice::run()
 {
 	using namespace yuri::event;
-	IO_THREAD_PRE_RUN
+//	IO_THREAD_PRE_RUN
 	while (still_running()) {
 		pollfd fd = {handle_, POLLIN, 0};
-		::poll(&fd, 1, latency/1000);
+		::poll(&fd, 1, get_latency().value/1000);
 		if (fd.revents & POLLIN) {
 			input_event ev;
 			if (::read(handle_,&ev,sizeof(input_event))>0) {
@@ -130,16 +128,15 @@ void EventDevice::run()
 		}
 
 	}
-	IO_THREAD_POST_RUN
+//	IO_THREAD_POST_RUN
 }
 bool EventDevice::set_param(const core::Parameter& param)
 {
-	if (iequals(param.name, "device")) {
-		device_path_ = param.get<std::string>();
-	} else if (iequals(param.name, "min_fuzz")) {
-		min_fuzz_ = param.get<int>();
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(device_path_, "device")
+			(min_fuzz_, "min_fuzz"))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace event_device */
