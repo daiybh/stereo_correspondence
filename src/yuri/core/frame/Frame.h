@@ -101,7 +101,7 @@ public:
  	 *
 	 * @return true if this is the only copy of the frame.
 	 */
-	bool			is_unique() const;
+	EXPORT bool			is_unique() const;
 	/*!
 	 * Method return a modifiable version of the frame.
 	 *
