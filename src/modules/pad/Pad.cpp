@@ -100,18 +100,18 @@ template<class Iter>
 void fill_black(Iter start, const Iter& end, format_t format)
 {
 	using namespace core;
-	using T = std::remove_reference<decltype(*start)>::type;
+	using T = typename std::remove_reference<decltype(*start)>::type;
 	switch (format) {
 		case raw_format::yuv444:
-			fill_pattern<3>(start, end, std::array<T,3>{0,128,128});
+			fill_pattern<3>(start, end, std::array<T,3>{{0,128,128}});
 			break;
 		case raw_format::yuyv422:
 		case raw_format::yvyu422:
-			fill_pattern<2>(start, end, std::array<T, 2>{0,128});
+			fill_pattern<2>(start, end, std::array<T, 2>{{0,128}});
 			break;
 		case raw_format::uyvy422:
 		case raw_format::vyuy422:
-			fill_pattern<2>(start, end, std::array<T, 2>{128, 0});
+			fill_pattern<2>(start, end, std::array<T, 2>{{128, 0}});
 			break;
 		case raw_format::rgb24:
 		case raw_format::rgba32:
