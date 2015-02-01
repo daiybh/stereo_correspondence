@@ -129,7 +129,7 @@ webserver::response_t WebDirectoryResource::do_process_request(const webserver::
 			data_string
 		};
 	}
-	catch (std::runtime_error& e) {
+	catch (std::runtime_error&) {
 		log[log::warning] << "Failed to process " << filename;
 		throw not_found(path);
 	}

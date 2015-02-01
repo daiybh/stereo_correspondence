@@ -31,7 +31,7 @@ core::Parameters WebImageResource::configure()
 WebImageResource::WebImageResource(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("web_static")),WebResource(log_),
 server_name_("webserver"),path_("/image"),rnd_generator_(random_device_()),
-distribution_(0,1e10L)
+distribution_(0,1000000UL)
 {
 	IOTHREAD_INIT(parameters)
 	set_supported_formats({core::compressed_frame::jpeg, core::compressed_frame::png});
