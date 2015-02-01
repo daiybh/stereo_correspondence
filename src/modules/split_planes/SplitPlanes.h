@@ -25,7 +25,7 @@ public:
 	SplitPlanes(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~SplitPlanes() noexcept;
 private:
-	virtual std::vector<core::pFrame> do_special_step(const std::tuple<core::pRawVideoFrame>& frame) override;
+	virtual std::vector<core::pFrame> do_special_step(std::tuple<core::pRawVideoFrame> frame) override;
 	virtual bool set_param(const core::Parameter& param) override;
 	bool keep_format_;
 };

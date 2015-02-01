@@ -73,7 +73,7 @@ std::vector<core::pFrame> split(core::pRawVideoFrame frame)
 }
 
 
-std::vector<core::pFrame> SplitPlanes::do_special_step(const std::tuple<core::pRawVideoFrame>& frames)
+std::vector<core::pFrame> SplitPlanes::do_special_step(std::tuple<core::pRawVideoFrame> frames)
 {
 	const auto frame = std::get<0>(frames);
 	const format_t format = frame->get_format();

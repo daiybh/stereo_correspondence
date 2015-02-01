@@ -190,7 +190,7 @@ Anaglyph::~Anaglyph() noexcept {
 }
 
 //std::vector<core::pBasicFrame> Anaglyph::do_single_step(const std::vector<core::pBasicFrame>& frames)
-std::vector<core::pFrame>	Anaglyph::do_special_step(const std::tuple<core::pRawVideoFrame, core::pRawVideoFrame>& frames)
+std::vector<core::pFrame>	Anaglyph::do_special_step(std::tuple<core::pRawVideoFrame, core::pRawVideoFrame> frames)
 {
 //	assert(frames.size()==2);
 	auto& left = std::get<0>(frames);

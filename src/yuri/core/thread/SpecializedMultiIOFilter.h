@@ -27,7 +27,7 @@ template<class FrameType, class... Others, typename Iter>
 std::tuple<shared_ptr<FrameType>, shared_ptr<Others>...>
 verify_types(Iter frame_iter)
 {
-	shared_ptr<FrameType> frame = dynamic_pointer_cast<FrameType>(*frame_iter);
+	shared_ptr<FrameType> frame = dynamic_pointer_cast<FrameType>(std::move(*frame_iter));
 	if (!frame) throw std::runtime_error("Wrong type");
 	return std::tuple_cat(std::make_tuple(frame), verify_types<Others...>(frame_iter+1));
 }
@@ -52,6 +52,7 @@ private:
 //			Timer t;
 			auto p = verify_types<InFrameTypes...>(frames.begin());
 //			auto t1 = t.get_duration();
+			frames.clear();
 			auto f = do_special_step(std::move(p));
 //			auto t2 = t.get_duration();
 //			log[log::info] << "Processing took "<<t2<<" in total, conversions " << t1 << " and module took " << (t2-t1);
@@ -64,7 +65,7 @@ private:
 		}
 	}
 
-	virtual std::vector<pFrame> do_special_step(const param_type& frames) = 0;
+	virtual std::vector<pFrame> do_special_step(param_type frames) = 0;
 
 };
 

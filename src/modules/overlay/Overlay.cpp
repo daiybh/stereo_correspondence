@@ -420,7 +420,7 @@ core::pRawVideoFrame Overlay::combine(const core::pRawVideoFrame& frame_0, const
 	}
 	return outframe;
 }
-std::vector<core::pFrame> Overlay::do_special_step(const param_type& frames)
+std::vector<core::pFrame> Overlay::do_special_step(param_type frames)
 {
 	process_events();
 	core::pRawVideoFrame f0 = std::get<0>(frames);

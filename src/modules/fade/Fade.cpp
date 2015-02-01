@@ -44,7 +44,7 @@ Fade::~Fade() noexcept
 //
 //}
 //std::vector<core::pFrame> Fade::do_single_step(const std::vector<core::pFrame>& frames)
-std::vector<core::pFrame> Fade::do_special_step(const std::tuple<core::pRawVideoFrame, core::pRawVideoFrame>& frames)
+std::vector<core::pFrame> Fade::do_special_step(std::tuple<core::pRawVideoFrame, core::pRawVideoFrame> frames)
 {
 	process_events();
 //	timestamp_t start_time;
