@@ -11,7 +11,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/RawVideoFrame.h"
-#include "yuri/event/EventHelpers.h"
+#include "yuri/core/utils/assign_events.h"
 #include <cmath>
 namespace yuri {
 namespace mosaic {
@@ -176,30 +176,26 @@ core::pFrame Mosaic::do_special_single_step(core::pRawVideoFrame frame)
 
 bool Mosaic::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "center") {
-		mosaics_[0].center = param.get<coordinates_t>();
-	} else if (param.get_name() == "radius") {
-		mosaics_[0].radius = param.get<position_t>();
-	} else if (param.get_name() == "tile_size") {
-		mosaics_[0].tile_size = param.get<position_t>();
-	} else return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(mosaics_[0].center, "center")
+			(mosaics_[0].radius, "radius")
+			(mosaics_[0].tile_size, "tile_size"))
+		return true;
+	return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
 }
 bool Mosaic::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
-	if (event_name == "x") {
-		mosaics_[0].center.x = event::lex_cast_value<position_t>(event);
-	} else if (event_name == "y") {
-		mosaics_[0].center.y = event::lex_cast_value<position_t>(event);
-	} else if (event_name == "radius") {
-		mosaics_[0].radius = event::lex_cast_value<position_t>(event);
-	} else if (event_name == "tile_size") {
-		mosaics_[0].tile_size = event::lex_cast_value<position_t>(event);
-	} else if (event_name == "center") {
-		mosaics_[0].center = event::lex_cast_value<coordinates_t>(event);
-	} else if (event_name == "mosaic" && event->get_type() == event::event_type_t::vector_event) {
+	if (assign_events(event_name, event)
+			(mosaics_[0].center.x, "x")
+			(mosaics_[0].center.y, "y")
+			(mosaics_[0].radius, "radius")
+			(mosaics_[0].tile_size, "tile_size")
+			(mosaics_[0].center, "center"))
+		return true;
+	if (event_name == "mosaic" && event->get_type() == event::event_type_t::vector_event) {
 		if (auto mosaic_event = dynamic_pointer_cast<event::EventVector>(event)) {
 			mosaics_={parse_mosaic_info(*mosaic_event)};
+			return true;
 		}
 	} else if (event_name == "mosaics" && event->get_type() == event::event_type_t::vector_event) {
 		if (auto mosaic_events = dynamic_pointer_cast<event::EventVector>(event)) {
@@ -212,6 +208,7 @@ bool Mosaic::do_process_event(const std::string& event_name, const event::pBasic
 					}
 				}
 			}
+			return true;
 		}
 	}
 	return true;
