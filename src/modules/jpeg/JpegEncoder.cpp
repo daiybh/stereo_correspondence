@@ -87,15 +87,15 @@ core::pFrame JpegEncoder::do_special_single_step(core::pRawVideoFrame frame)
 		const auto& fi = core::raw_format::get_format_info(fmt);
 //		size_t bpp = core::raw_format::get_fmt_bpp(fmt)/8;
 		resolution_t res = frame->get_resolution();
-		cinfo->image_width = res.width;
-		cinfo->image_height = res.height;
+		cinfo->image_width = static_cast<JDIMENSION>(res.width);
+		cinfo->image_height = static_cast<JDIMENSION>(res.height);
 
 		// This is probably not correct for all formats, but it should work for all formats supported here.
-		cinfo->input_components = fi.planes[0].components.size();
+		cinfo->input_components = static_cast<int>(fi.planes[0].components.size());
 		cinfo->in_color_space = cs;
 
 		jpeg_set_defaults(cinfo);
-		jpeg_set_quality(cinfo, quality_, true);
+		jpeg_set_quality(cinfo, static_cast<int>(quality_), true);
 		jpeg_start_compress(cinfo, true);
 
 		uint8_t* data = PLANE_RAW_DATA(frame,0);

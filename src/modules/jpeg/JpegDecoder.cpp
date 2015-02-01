@@ -86,7 +86,7 @@ core::pFrame JpegDecoder::do_special_single_step(core::pCompressedVideoFrame fra
 
 		jpeg_create_decompress(cinfo);
 
-		jpeg_mem_src(cinfo, frame->data(), frame->size());
+		jpeg_mem_src(cinfo, frame->data(), static_cast<unsigned long>(frame->size()));
 
 
 		if (jpeg_read_header(cinfo,true)!=JPEG_HEADER_OK) {
@@ -116,7 +116,7 @@ core::pFrame JpegDecoder::do_special_single_step(core::pCompressedVideoFrame fra
 		for (size_t p=0;p<planes;++p) {
 			size_t plane_height = res.height * cinfo->comp_info[p].h_samp_factor/cinfo->comp_info[0].h_samp_factor;
 			row_pointers[p].resize(plane_height);
-			int ls = out_linesize*cinfo->comp_info[p].v_samp_factor/cinfo->comp_info[0].v_samp_factor;
+			auto ls = out_linesize*cinfo->comp_info[p].v_samp_factor/cinfo->comp_info[0].v_samp_factor;
 			for (size_t h = 0; h < plane_height; ++h) {
 				row_pointers[p][h]=PLANE_RAW_DATA(out_frame,p) + h*ls;
 			}
@@ -128,7 +128,7 @@ core::pFrame JpegDecoder::do_special_single_step(core::pCompressedVideoFrame fra
 		yuri::size_t processed=0;
 
 		while (cinfo->output_scanline < cinfo->image_height) {
-			/*if (!raw_)*/ processed = jpeg_read_scanlines(cinfo, &row_pointers[0][cinfo->output_scanline], res.height - cinfo->output_scanline);
+			/*if (!raw_)*/ processed = jpeg_read_scanlines(cinfo, &row_pointers[0][cinfo->output_scanline], static_cast<JDIMENSION>(res.height - cinfo->output_scanline));
 	//		else {
 	//			log[log::info] << "processing raw line " << cinfo.output_scanline;
 	//			//JSAMPARRAY arr_pointer = &row_pointers[0];
