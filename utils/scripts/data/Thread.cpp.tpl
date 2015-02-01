@@ -1,9 +1,9 @@
 /*!
  * @file 		${class_name}.cpp
- * @author 		<Your name>
- * @date		${date}
- * @copyright	Institute of Intermedia, 2013
- * 				Distributed BSD License
+ * @author 		${user}
+ * @date 		${date}
+ * @copyright	Institute of Intermedia, CTU in Prague, ${year}
+ * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
  */
 
