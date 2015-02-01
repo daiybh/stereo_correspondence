@@ -439,16 +439,21 @@ bool ThreadBase::set_params(const Parameters &parameters)
 }
 bool ThreadBase::set_param(const Parameter &parameter)
 {
+	long debug = 0;
 	if (assign_parameters(parameter)
 			(cpu_affinity_, "cpu"))
 		return true;
 
-	if (parameter.get_name() == "debug") {
+	if (assign_parameters(parameter)
+			(debug, "debug")) {
+		log.adjust_log_level(debug);
+		return true;
+	}
 
-	} else if (parameter.get_name() == "_node_name") {
+
+	if (parameter.get_name() == "_node_name") {
 		node_name_ = parameter.get<std::string>();
 		log.set_label(get_node_name());
-//		set_log_id();
 	} else return false;
 	return true;
 }
