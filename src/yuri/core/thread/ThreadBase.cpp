@@ -391,7 +391,7 @@ pid_t retrieve_tid()
 
 }
 
-void ThreadBase::print_id(_debug_flags f)
+void ThreadBase::print_id(debug_flags_t f)
 {
 	log[f] << "Started as thread " << retrieve_tid() <<"\n";
 }

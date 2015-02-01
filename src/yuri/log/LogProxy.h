@@ -102,16 +102,15 @@ public:
 	 */
 	LogProxy& operator<<(iomanip_t manip)
 	{
-		// We can't call endl on std::stringstream, so let's filter it out
-		if (manip==static_cast<iomanip_t>(std::endl)) return *this << stream_.widen('\n');
-		else return *this << manip;
+		if (!dummy_) {
+			// We can't call endl on std::stringstream, so let's filter it out
+			if (manip==static_cast<iomanip_t>(std::endl)) return *this << stream_.widen('\n');
+			else return *this << manip;
+		}
+		return *this;
 	}
 
 	~LogProxy() noexcept {
-#if 0 && __cplusplus >=201103L
-		const std::string msg = buffer_.str();
-		if (!dummy_) std::async([&msg,this](){stream_.write(msg);});
-#else
 		if (!dummy_) {
 			// TODO: Creating a copy of str() just for detecting the trailing newline shouldn't be necessary...
 			const typename gstream_t::string_t str = buffer_.str();
@@ -119,7 +118,6 @@ public:
 			// Avoiding unnecessary copy of the rdbuf by writing it directly
 			stream_ << buffer_.rdbuf();
 		}
-#endif
 	}
 private:
 	gstream_t& stream_;

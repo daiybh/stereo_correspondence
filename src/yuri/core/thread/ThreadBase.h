@@ -135,7 +135,7 @@ protected:
 //	//! Return current thread id, if supported on current platform
 //	virtual pid_t 				retrieve_tid();
 	//! Prints own tid. Useful for debugging
-	EXPORT virtual void 		print_id(log::_debug_flags f=log::info);
+	EXPORT virtual void 		print_id(log::debug_flags_t f=log::info);
 	//! Sets CPU affinity to a single CPU core.
 	EXPORT virtual bool 		bind_to_cpu(size_t cpu);
 
