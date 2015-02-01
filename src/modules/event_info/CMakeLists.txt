@@ -5,6 +5,8 @@ SET (MODULE event_info)
 SET (SRC register.cpp 
          EventInfo.cpp
 		 EventInfo.h
+		 EventTimer.cpp
+		 EventTimer.h
 		 PassEvent.cpp
 		 PassEvent.h
 		 )

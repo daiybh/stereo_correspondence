@@ -9,13 +9,14 @@
 #include "yuri/core/thread/IOThreadGenerator.h"
 #include "EventInfo.h"
 #include "PassEvent.h"
-
+#include "EventTimer.h"
 
 namespace yuri {
 
 MODULE_REGISTRATION_BEGIN("event_misc")
 		REGISTER_IOTHREAD("event_info", event_info::EventInfo)
 		REGISTER_IOTHREAD("pass_event", pass_events::PassEvent)
+		REGISTER_IOTHREAD("event_timer", event_timer::EventTimer)
 MODULE_REGISTRATION_END()
 
 }
