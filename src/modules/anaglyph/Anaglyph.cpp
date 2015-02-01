@@ -120,7 +120,7 @@ PACK_START struct rgba_t {
 	uint8_t r,g,b,a;
 } PACK_END;
 
-struct rgb48_t {
+PACK_START struct rgb48_t {
 	uint16_t r,g,b;
 } PACK_END;
 
