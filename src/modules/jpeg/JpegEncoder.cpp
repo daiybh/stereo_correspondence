@@ -41,7 +41,8 @@ BasicEventConsumer(log),
 quality_(90)
 {
 	IOTHREAD_INIT(parameters)
-	set_supported_formats(get_supported_formats());
+    log[log::info] << "sf: " << get_jpeg_supported_formats().size();
+	set_supported_formats(get_jpeg_supported_formats());
 }
 
 JpegEncoder::~JpegEncoder() noexcept
