@@ -1,8 +1,8 @@
 /*!
  * @file 		RenderText.cpp
- * @author 		<Your name>
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
  * @date		29.01.2015
- * @copyright	Institute of Intermedia, 2013
+ * @copyright	Institute of Intermedia, 2015
  * 				Distributed BSD License
  *
  */
@@ -292,7 +292,7 @@ void RenderText::run()
 
 core::pFrame RenderText::do_special_single_step(core::pRawVideoFrame frame)
 {
-	auto f = std::dynamic_pointer_cast<core::RawVideoFrame>(frame->get_copy());
+	auto f = get_frame_unique(frame);
 	draw_text(text_, f);
 	return f;
 }

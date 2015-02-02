@@ -1,8 +1,8 @@
 /*!
  * @file 		RenderText.h
- * @author 		<Your name>
- * @date 		29.01.2015
- * @copyright	Institute of Intermedia, 2013
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
+ * @date		29.01.2015
+ * @copyright	Institute of Intermedia, 2015
  * 				Distributed BSD License
  *
  */
