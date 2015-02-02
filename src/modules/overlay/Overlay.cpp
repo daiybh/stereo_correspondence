@@ -358,8 +358,8 @@ core::pRawVideoFrame dispatch(Overlay& overlay, core::pRawVideoFrame frame_0, co
 
 core::pRawVideoFrame dispatch_unique(Overlay& overlay, core::pRawVideoFrame frame_0, const core::pRawVideoFrame& frame_1)
 {
-	if (frame_0->is_unique()) {
-		auto f0 = std::dynamic_pointer_cast<core::RawVideoFrame>(frame_0->get_unique());
+	if (is_frame_unique(frame_0)) {
+		auto f0 = std::dynamic_pointer_cast<core::RawVideoFrame>(get_frame_unique(frame_0));
 		frame_0.reset();
 		return dispatch<true>(overlay, std::move(f0), frame_1);
 	}
@@ -446,7 +446,7 @@ std::vector<core::pFrame> Overlay::do_special_step(param_type frames)
 {
 	process_events();
 	core::pRawVideoFrame f0 = std::move(std::get<0>(frames));
-	core::pRawVideoFrame f1 = std::get<1>(frames);
+	core::pRawVideoFrame f1 = std::move(std::get<1>(frames));
 	std::get<0>(frames).reset();
 	if (!f0 || !f1) return {};
 	core::pRawVideoFrame outframe = dispatch_unique(*this, std::move(f0), f1);

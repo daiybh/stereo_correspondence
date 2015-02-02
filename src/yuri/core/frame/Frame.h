@@ -16,9 +16,37 @@ namespace yuri {
 namespace core {
 
 class Frame;
-typedef shared_ptr<Frame> pFrame;
+typedef std::shared_ptr<Frame> pFrame;
 
-class Frame: public std::enable_shared_from_this<Frame> {
+/*!
+ * Queries the shared state for being unique
+ * If the method returns true that subsequent call to get_unique should not copy.
+ *
+ * @return true if this is the only copy of the frame.
+ */
+template<class T>
+typename std::enable_if<std::is_base_of<core::Frame, T>::value, bool>::type
+is_frame_unique(const std::shared_ptr<T>& frame) {
+	return frame.use_count() == 1;
+}
+
+/*!
+ * Method returns a modifiable version of the frame.
+ *
+ * If this frame is shared between more threads, the method returns a copy.
+ * Otherwise returns the original frame.
+ * @return A version of this frame that is unique and can be directly modified.
+ */
+template<class T>
+typename std::enable_if<std::is_base_of<core::Frame, T>::value, std::shared_ptr<T>>::type
+get_frame_unique(const std::shared_ptr<T>& frame)
+{
+	if (frame && !is_frame_unique(frame)) return std::dynamic_pointer_cast<T>(frame->get_copy());
+	return frame;
+}
+
+
+class Frame {
 public:
 	EXPORT 			Frame(format_t format);
 	EXPORT virtual 	~Frame() noexcept;
@@ -95,21 +123,6 @@ public:
 	 */
 	EXPORT void		set_format_name(const std::string& format_name);
 
-	/*!
-	 * Queries the shared state for being unique
- 	 * If the method returns true that subsequent call to get_unique should not copy.
- 	 *
-	 * @return true if this is the only copy of the frame.
-	 */
-	EXPORT bool			is_unique() const;
-	/*!
-	 * Method return a modifiable version of the frame.
-	 *
-	 * If this frame is shared between more threads, the method returns a copy.
-	 * Otherwise return the original frame.
-	 * @return A version of this frame that is unique and can be directly modified.
-	 */
-	EXPORT pFrame 	get_unique();
 private:
 	/*!
 	 * Implementation of copy, should be implemented in node classes only.
