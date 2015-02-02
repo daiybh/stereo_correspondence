@@ -9,7 +9,7 @@
 #define SRC_MODULES_OPENCV_OPENCVSOURCE_H_
 
 #include "yuri/core/thread/IOThread.h"
-#include <opencv2/videoio.hpp>
+#include <opencv2/highgui/highgui.hpp>
 namespace yuri {
 namespace opencv {
 
