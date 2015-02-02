@@ -6,6 +6,8 @@ SET (SRC OpenCVConvert.cpp
 		 OpenCVConvert.h
 		 OpenCVFaceDetect.cpp
 		 OpenCVFaceDetect.h
+		 OpenCVSource.cpp
+		 OpenCVSource.h
 		 register.cpp)
 
 
