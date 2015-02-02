@@ -66,6 +66,14 @@ J_COLOR_SPACE  yuri_to_jpeg(format_t fmt)
 	return JCS_UNKNOWN;
 }
 
+std::vector<format_t> get_supported_formats()
+{
+	std::vector<format_t> fmts;
+	for (const auto& f: jpeg_to_yuri_formats) {
+		fmts.push_back(f.second);
+	}
+	return fmts;
+}
 }
 }
 

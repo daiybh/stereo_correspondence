@@ -32,16 +32,7 @@ void error_exit(jpeg_common_struct* /*cinfo*/)
 {
 	throw std::runtime_error("Error");
 }
-std::vector<format_t> supported_formats = {
-	core::raw_format::rgb24,
-	core::raw_format::bgr24,
-	core::raw_format::rgba32,
-	core::raw_format::bgra32,
-	core::raw_format::abgr32,
-	core::raw_format::argb32,
-	core::raw_format::yuv444,
-	core::raw_format::y8,
-};
+
 }
 
 JpegEncoder::JpegEncoder(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
@@ -50,7 +41,7 @@ BasicEventConsumer(log),
 quality_(90)
 {
 	IOTHREAD_INIT(parameters)
-	set_supported_formats(supported_formats);
+	set_supported_formats(get_supported_formats());
 }
 
 JpegEncoder::~JpegEncoder() noexcept

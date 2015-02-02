@@ -15,7 +15,7 @@ namespace jpeg {
 
 format_t jpeg_to_yuri(J_COLOR_SPACE colspace);
 J_COLOR_SPACE  yuri_to_jpeg(format_t fmt);
-
+std::vector<format_t> get_supported_formats();
 }
 }
 
