@@ -248,6 +248,14 @@ IF(GPHOTO2_FOUND)
 add_subdirectory(gphoto)
 ENDIF() 
 
+
+find_path(FLYCAP_INCLUDE_DIR FlyCapture2.h
+			PATH_SUFFIXES flycapture)
+find_library(FLYCAP_LIBRARY flycapture)
+
+IF(FLYCAP_INCLUDE_DIR AND FLYCAP_LIBRARY)
+	add_subdirectory(flycap)
+ENDIF()
 ENDIF(YURI_BUILD_EXPERIMENTAL_MODULES)
 
 #################################################################
