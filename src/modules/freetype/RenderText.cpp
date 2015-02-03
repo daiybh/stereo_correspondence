@@ -46,8 +46,8 @@ core::Parameters RenderText::configure()
 RenderText::RenderText(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("freetype")),
 BasicEventConsumer(log),
-resolution_{800,600},
-position_{0,0},char_spacing_{0},generate_{false},edge_blend_{true},
+resolution_({800,600}),
+position_({0,0}),char_spacing_{0},generate_{false},edge_blend_{true},
 modified_{true},utf8_{true}
 {
 	set_latency(50_ms);
