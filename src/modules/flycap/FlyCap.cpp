@@ -111,8 +111,8 @@ FlyCapture2::FrameRate get_fps(size_t fps)
 
 
 FlyCap::FlyCap(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("flycap")),resolution_{1280,960},
-format_t(core::raw_format::y8),fps_(30),index_(0),serial_(0),
+core::IOThread(log_,parent,1,1,std::string("flycap")),resolution_(resolution_t{1280,960}),
+format_(core::raw_format::y8),fps_(30),index_(0),serial_(0),
 shutdown_delay_(100_ms)
 {
 	IOTHREAD_INIT(parameters)
