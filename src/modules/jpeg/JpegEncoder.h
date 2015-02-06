@@ -35,6 +35,7 @@ private:
 	virtual bool set_param(const core::Parameter& param);
 	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 	size_t quality_;
+	bool force_mjpeg_;
 };
 
 } /* namespace jpeg */

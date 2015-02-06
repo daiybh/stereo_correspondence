@@ -24,6 +24,7 @@ core::Parameters JpegEncoder::configure()
 	core::Parameters p = core::SpecializedIOFilter<core::RawVideoFrame>::configure();
 	p.set_description("JpegEncoder");
 	p["quality"]["Jpeg quality"]=90;
+	p["force_mjpeg"]["Force MJPEG format"]=false;
 	return p;
 }
 namespace {
@@ -38,7 +39,7 @@ void error_exit(jpeg_common_struct* /*cinfo*/)
 JpegEncoder::JpegEncoder(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("jpeg_encoder")),
 BasicEventConsumer(log),
-quality_(90)
+quality_(90),force_mjpeg_(false)
 {
 	IOTHREAD_INIT(parameters)
     log[log::info] << "sf: " << get_jpeg_supported_formats().size();
@@ -101,7 +102,8 @@ core::pFrame JpegEncoder::do_special_single_step(core::pRawVideoFrame frame)
 		jpeg_finish_compress(cinfo);
 
 		log[log::verbose_debug] << "Buffer is now " << buffer_size << " bytes long";
-		if (buffer_size) return core::CompressedVideoFrame::create_empty(core::compressed_frame::jpeg, res, buffer, buffer_size);
+		auto out_fmt = force_mjpeg_?core::compressed_frame::mjpg:core::compressed_frame::jpeg;
+		if (buffer_size) return core::CompressedVideoFrame::create_empty(out_fmt, res, buffer, buffer_size);
 
 	}
 	catch (std::runtime_error& ) {
@@ -119,7 +121,8 @@ core::pFrame JpegEncoder::do_convert_frame(core::pFrame input_frame, format_t ta
 bool JpegEncoder::set_param(const core::Parameter& param)
 {
 	if (assign_parameters(param)
-			(quality_, "quality"))
+			(quality_, "quality")
+			(force_mjpeg_, "force_mjpeg"))
 		return true;
 	return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
 }
@@ -127,7 +130,8 @@ bool JpegEncoder::set_param(const core::Parameter& param)
 bool JpegEncoder::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
 	if (assign_events(event_name, event)
-			.ranged(quality_, 0, 100, "quality"))
+			.ranged(quality_, 0, 100, "quality")
+			(force_mjpeg_, "force_mjpeg"))
 		return true;
 	return false;
 }
