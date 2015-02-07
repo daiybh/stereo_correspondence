@@ -18,7 +18,8 @@ namespace colors {
 namespace {
 using namespace core::raw_format;
 const std::vector<format_t> color_supported_formats =
-		{yuyv422, yvyu422, uyvy422, vyuy422, yuv444, yuv411, yuva4444, ayuv4444};
+		{yuyv422, yvyu422, uyvy422, vyuy422, yuv444, yuv411, yuva4444, ayuv4444,
+		y8, u8, v8};
 
 }
 template<bool crop>
@@ -99,6 +100,11 @@ core::pRawVideoFrame convert_frame_dispatch2(const core::pRawVideoFrame& frame, 
 			return convert_frame<crop, Lum, Lum, Col, Col>(frame, saturation);
 		case yuva4444:
 			return convert_frame<crop, Lum, Col, Col, Lum>(frame, saturation);
+		case y8:
+			return convert_frame<crop, Lum>(frame, saturation);
+		case u8:
+		case v8:
+			return convert_frame<crop, Col>(frame, saturation);
 		default:
 			return {};
 	}
