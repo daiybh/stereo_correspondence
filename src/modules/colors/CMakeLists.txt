@@ -3,7 +3,11 @@ SET (MODULE colors)
 
 # Set all source files module uses
 SET (SRC Saturate.cpp
-		 Saturate.h)
+		 Saturate.h
+		 Contrast.h
+		 Contrast.cpp
+		 manipulate_colors.h
+		 register.cpp)
 
 
  
