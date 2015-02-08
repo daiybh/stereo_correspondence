@@ -8,6 +8,7 @@ SET(YURI_SRC ${YURI_SRC}
 	
 	core/frame/raw_frame_params.cpp core/frame/raw_frame_params.h
 	core/frame/raw_frame_types.h
+	core/frame/raw_frame_traits.h
 	core/frame/compressed_frame_types.h
 	core/frame/compressed_frame_params.cpp core/frame/compressed_frame_params.h
 	core/frame/raw_audio_frame_params.cpp core/frame/raw_audio_frame_params.h
