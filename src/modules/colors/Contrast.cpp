@@ -22,6 +22,7 @@ core::Parameters Contrast::configure()
 	core::Parameters p = core::IOThread::configure();
 	p.set_description("Contrast");
 	p["contrast"]["Value for contrast, values greater than zero increase the contrast, lower decrease."]=1.0;
+	p["crop"]["Crop the resulting values to correct ranges. Setting to false will allow values to over/underflow"]=true;
 	return p;
 }
 
@@ -29,7 +30,7 @@ core::Parameters Contrast::configure()
 Contrast::Contrast(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("contrast")),
 BasicEventConsumer(log),
-contrast_(1.0)
+contrast_(1.0),crop_(true)
 {
 	IOTHREAD_INIT(parameters)
 	set_supported_formats(color_supported_formats);
