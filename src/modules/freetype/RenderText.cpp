@@ -392,6 +392,11 @@ bool RenderText::do_process_event(const std::string& event_name, const event::pB
 		modified_ = true;
 		return true;
 	}
+	if (assign_events(event_name, event)
+			(position_, 	"position")
+			(position_.x, 	"x")
+			(position_.y, 	"y"))
+		return true;
 	return false;
 }
 } /* namespace freetype */
