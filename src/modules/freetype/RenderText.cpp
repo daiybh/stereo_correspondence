@@ -64,7 +64,7 @@ modified_{true},utf8_{true}
 		log[log::warning] << "Kerning requested but not supported by current font...";
 	}
 	using namespace core::raw_format;
-	set_supported_formats({y8, rgb24, bgr24, rgba32, bgra32, argb32, abgr32});
+	set_supported_formats({y8, rgb24, bgr24, rgba32, bgra32, argb32, abgr32, yuyv422, yvyu422, uyvy422, yvyu422});
 }
 
 RenderText::~RenderText() noexcept
@@ -82,9 +82,14 @@ struct compute_value<true> {
 	template<typename T, typename T2>
 	static auto eval(T p, T2 out) -> typename std::remove_reference<decltype(*out)>::type
 	{
-		const auto max = std::numeric_limits<T>::max();
 		const auto max_out = std::numeric_limits<
 				typename std::remove_reference<decltype(*out)>::type>::max();
+		return eval(p, out, max_out);
+	}
+	template<typename T, typename T2, typename T3>
+	static auto eval(T p, T2 out, T3 max_out) -> typename std::remove_reference<decltype(*out)>::type
+	{
+		const auto max = std::numeric_limits<T>::max();
 		int64_t val = (static_cast<int64_t>(*out) * (max-p)) +
 					  (static_cast<int64_t>(max_out) * p);
 		return val / max;
@@ -96,6 +101,12 @@ struct compute_value<false> {
 	template<typename T, typename T2>
 	static auto eval(T p, T2 out) -> typename std::remove_reference<decltype(*out)>::type
 	{
+		return p;
+	}
+	template<typename T, typename T2, typename T3>
+	static auto eval(T p, T2 out, T3) -> typename std::remove_reference<decltype(*out)>::type
+	{
+		(void)out;
 		return p;
 	}
 };
@@ -203,6 +214,43 @@ void draw_glyph_impl(core::pRawVideoFrame frame, const FT_Bitmap& bmp,
 	}
 }
 
+template<bool blend>
+struct draw_kernel<yuyv422, blend> {
+	template<typename T, typename T2>
+	static void draw(T in, const T in_end, T2 out)
+	{
+		while(in != in_end) {
+			const auto p = *in;
+			++in;
+			if (p) *out = compute_value<blend>::eval(p, out);
+			++out;
+			if (p) *out = compute_value<blend>::eval(p, out, 128);
+			++out;
+		}
+	}
+};
+
+template<bool blend>
+struct draw_kernel<yvyu422, blend>: public draw_kernel<yuyv422, blend> {};
+
+template<bool blend>
+struct draw_kernel<uyvy422, blend> {
+	template<typename T, typename T2>
+	static void draw(T in, const T in_end, T2 out)
+	{
+		while(in != in_end) {
+			const auto p = *in;
+			++in;
+			if (p) *out = compute_value<blend>::eval(p, out, 128);
+			++out;
+			if (p) *out = compute_value<blend>::eval(p, out);
+			++out;
+		}
+	}
+};
+
+template<bool blend>
+struct draw_kernel<vyuy422, blend>: public draw_kernel<uyvy422, blend> {};
 
 template<format_t fmt>
 void draw_glyph_impl(core::pRawVideoFrame frame, const FT_Bitmap& bmp,
@@ -248,6 +296,18 @@ bool draw_glyph(FT_GlyphSlot glyph, core::pRawVideoFrame frame,
 			break;
 		case abgr32:
 			draw_glyph_impl<abgr32>(frame, bitmap, position, draw_rect, blend);
+			break;
+		case yuyv422:
+			draw_glyph_impl<yuyv422>(frame, bitmap, position, draw_rect, blend);
+			break;
+		case yvyu422:
+			draw_glyph_impl<yvyu422>(frame, bitmap, position, draw_rect, blend);
+			break;
+		case uyvy422:
+			draw_glyph_impl<uyvy422>(frame, bitmap, position, draw_rect, blend);
+			break;
+		case vyuy422:
+			draw_glyph_impl<vyuy422>(frame, bitmap, position, draw_rect, blend);
 			break;
 		default:
 			return false;
