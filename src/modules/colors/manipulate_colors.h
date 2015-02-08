@@ -11,6 +11,8 @@
 #define MANIPULATE_COLORS_H_
 #include <limits>
 #include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/raw_frame_traits.h"
+
 #include "yuri/core/utils/irange.h"
 
 namespace yuri {
@@ -19,7 +21,7 @@ namespace {
 using namespace core::raw_format;
 const std::vector<format_t> color_supported_formats =
 		{yuyv422, yvyu422, uyvy422, vyuy422, yuv444, yuv411, yuva4444, ayuv4444,
-		y8, u8, v8};
+		y8, u8, v8, y16, u16, v16};
 
 }
 template<bool crop>
@@ -58,21 +60,23 @@ void process_pixels(T& in, T& out, double saturation) {
 	process_pixels<T, crop, Rest...>(in, out, saturation);
 }
 
-template<bool crop, class... Converters>
+template<format_t fmt, bool crop, class... Converters>
 core::pRawVideoFrame convert_frame(const core::pRawVideoFrame& frame, double saturation)
 {
-	const auto res = frame->get_resolution();
-	const auto fmt = frame->get_format();
-	const auto linesize = PLANE_DATA(frame,0).get_line_size();
+	using data_type = typename core::raw_format::frame_traits<fmt>::component_type;
+	using data_pointer = typename std::add_pointer<data_type>::type;
 
+	const auto res = frame->get_resolution();
+	const auto linesize = PLANE_DATA(frame,0).get_line_size();
 	auto out_frame = core::RawVideoFrame::create_empty(fmt, res);
 	const auto linesize_out = PLANE_DATA(out_frame,0).get_line_size();
 	for (auto line: irange(0, res.height)) {
-		auto in = PLANE_DATA(frame, 0).begin() + line * linesize;
-		auto out = PLANE_DATA(out_frame, 0).begin() + line * linesize_out;
-		const auto in_end = in + std::min(linesize_out, linesize);
+		auto in_raw = PLANE_RAW_DATA(frame, 0) + line * linesize;
+		data_pointer in = reinterpret_cast<data_pointer>(in_raw);
+		data_pointer out = reinterpret_cast<data_pointer>(PLANE_RAW_DATA(out_frame, 0) + line * linesize_out);
+		const auto in_end = reinterpret_cast<data_pointer>(in_raw + std::min(linesize_out, linesize));
 		while(in < in_end) {
-			process_pixels<typename std::decay<decltype(in)>::type, crop,Converters...>(in, out, saturation);
+			process_pixels<data_pointer, crop,Converters...>(in, out, saturation);
 		}
 	}
 	return out_frame;
@@ -86,25 +90,35 @@ core::pRawVideoFrame convert_frame_dispatch2(const core::pRawVideoFrame& frame, 
 	using namespace core::raw_format;
 	switch (fmt) {
 		case yuyv422:
+			return convert_frame<yuyv422, crop, Lum, Col>(frame, saturation);
 		case yvyu422:
-			return convert_frame<crop, Lum, Col>(frame, saturation);
+			return convert_frame<yvyu422, crop, Lum, Col>(frame, saturation);
 		case uyvy422:
+			return convert_frame<uyvy422, crop, Col, Lum>(frame, saturation);
 		case vyuy422:
-			return convert_frame<crop, Col, Lum>(frame, saturation);
+			return convert_frame<vyuy422, crop, Col, Lum>(frame, saturation);
 		case yuv444:
-			return convert_frame<crop, Lum, Col, Col>(frame, saturation);
+			return convert_frame<yuv444, crop, Lum, Col, Col>(frame, saturation);
 		case yuv411:
+			return convert_frame<yuv411, crop, Lum, Lum, Col>(frame, saturation);
 		case yvu411:
-			return convert_frame<crop, Lum, Lum, Col>(frame, saturation);
+			return convert_frame<yvu411, crop, Lum, Lum, Col>(frame, saturation);
 		case ayuv4444:
-			return convert_frame<crop, Lum, Lum, Col, Col>(frame, saturation);
+			return convert_frame<ayuv4444, crop, Lum, Lum, Col, Col>(frame, saturation);
 		case yuva4444:
-			return convert_frame<crop, Lum, Col, Col, Lum>(frame, saturation);
+			return convert_frame<yuva4444, crop, Lum, Col, Col, Lum>(frame, saturation);
 		case y8:
-			return convert_frame<crop, Lum>(frame, saturation);
+			return convert_frame<y8, crop, Lum>(frame, saturation);
 		case u8:
+			return convert_frame<u8, crop, Col>(frame, saturation);
 		case v8:
-			return convert_frame<crop, Col>(frame, saturation);
+			return convert_frame<v8, crop, Col>(frame, saturation);
+		case y16:
+			return convert_frame<y16, crop, Lum>(frame, saturation);
+		case u16:
+			return convert_frame<u16, crop, Col>(frame, saturation);
+		case v16:
+			return convert_frame<v16, crop, Col>(frame, saturation);
 		default:
 			return {};
 	}
