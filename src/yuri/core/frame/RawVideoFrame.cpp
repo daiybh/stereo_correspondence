@@ -110,7 +110,7 @@ void RawVideoFrame::copy_parameters(Frame& other) const {
 std::tuple<size_t, size_t, resolution_t> RawVideoFrame::get_plane_params(const raw_format::raw_format_t& info, size_t plane, resolution_t resolution)
 {
 
-	const auto& p = info.planes[plane];
+	const auto& p = info.planes.at(plane);
 	return get_plane_params(p, resolution);
 }
 
