@@ -104,7 +104,7 @@ std::pair<convert::path_list, size_t> find_conversion(format_t format_in, format
 	{
 		lock_t _(path_cache_mutex);
 		auto pit = path_cache.find(search_key);
-		if (pit != path_cache.end()) {
+		if (pit == path_cache.end()) {
 			path_cache[search_key]={paths[format_out], costs[format_out]};
 		}
 	}
