@@ -48,4 +48,5 @@ add_executable(yuri_simple
 						simple/SimpleBuilder.h
 						simple/SimpleBuilder.cpp)
 target_link_libraries ( yuri_simple ${LIBNAME} ${Boost_REGEX_LIBRARY})
+install(TARGETS yuri_simple RUNTIME DESTINATION bin)
 ENDIF()
