@@ -76,6 +76,7 @@ core::pFrame JpegEncoder::do_special_single_step(core::pRawVideoFrame frame)
 
 		uint8_t *buffer = nullptr;
 		unsigned long buffer_size = 0;
+		// Jpeg_mem_dest allocated buffer and it WILL BE LEAKED when an exception occurs...
 		jpeg_mem_dest(cinfo, &buffer, &buffer_size);
 		const auto& fi = core::raw_format::get_format_info(fmt);
 //		size_t bpp = core::raw_format::get_fmt_bpp(fmt)/8;
@@ -103,7 +104,12 @@ core::pFrame JpegEncoder::do_special_single_step(core::pRawVideoFrame frame)
 
 		log[log::verbose_debug] << "Buffer is now " << buffer_size << " bytes long";
 		auto out_fmt = force_mjpeg_?core::compressed_frame::mjpg:core::compressed_frame::jpeg;
-		if (buffer_size) return core::CompressedVideoFrame::create_empty(out_fmt, res, buffer, buffer_size);
+		if (buffer_size) {
+			auto outframe = core::CompressedVideoFrame::create_empty(out_fmt, res, buffer, buffer_size);
+			::free(buffer);
+			return outframe;
+		}
+		::free(buffer);
 
 	}
 	catch (std::runtime_error& ) {
