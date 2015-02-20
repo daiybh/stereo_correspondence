@@ -35,6 +35,7 @@ private:
 
 	virtual bool do_data_available() override;
 	virtual bool do_wait_for_data(duration_t duration) override;
+protected:
 	YuriNetSocket socket_;
 };
 

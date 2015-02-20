@@ -23,13 +23,16 @@ public:
 
 
 	int get_socket() const { return socket_; }
-
+	int get_sock_type() const { return sock_type_; }
+	int get_sock_domain() const { return sock_domain_; }
 
 	bool ready_to_send();
 	bool data_available();
 	bool wait_for_data(duration_t duration);
 private:
 	int socket_;
+	const int sock_type_;
+	const int sock_domain_;
 
 
 };

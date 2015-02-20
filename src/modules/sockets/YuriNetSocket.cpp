@@ -15,6 +15,7 @@ namespace yuri {
 namespace network {
 
 YuriNetSocket::YuriNetSocket(int domain, int type, int proto)
+:sock_type_(type),sock_domain_(domain)
 {
 	socket_ = ::socket(domain, type, proto);
 	int i = 1;
@@ -22,9 +23,10 @@ YuriNetSocket::YuriNetSocket(int domain, int type, int proto)
 }
 
 YuriNetSocket::YuriNetSocket(int sock_raw):
-socket_(sock_raw)
+socket_(sock_raw),sock_type_(0),sock_domain_(0) // Socket type  and domain should be properly initialized, but...
 {
 }
+
 YuriNetSocket::~YuriNetSocket() noexcept
 {
 	::close(socket_);

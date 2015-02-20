@@ -4,6 +4,8 @@ SET (MODULE yuri_net)
 # Set all source files module uses
 SET (SRC YuriNetSocket.cpp
 		 YuriNetSocket.h
+		 inet_utils.cpp
+		 inet_utils.h
 		 YuriDatagram.cpp
 		 YuriDatagram.h 
 		 YuriStreamSocket.cpp
