@@ -12,6 +12,8 @@ SET (SRC YuriNetSocket.cpp
 		 YuriStreamSocket.h
 		 YuriUdp.cpp
 		 YuriUdp.h
+		 YuriUdp6.cpp
+		 YuriUdp6.h
 		 YuriTcp.cpp
 		 YuriTcp.h
 		 UnixDatagramSocket.cpp

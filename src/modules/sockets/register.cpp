@@ -9,6 +9,7 @@
 
 #include "YuriTcp.h"
 #include "YuriUdp.h"
+#include "YuriUdp6.h"
 #include "UnixDatagramSocket.h"
 #include "UnixStreamSocket.h"
 
@@ -21,6 +22,7 @@ namespace network {
 MODULE_REGISTRATION_BEGIN("yuri_net")
 	REGISTER_STREAM_SOCKET("yuri_tcp",YuriTcp)
 	REGISTER_DATAGRAM_SOCKET("yuri_udp",YuriUdp)
+	REGISTER_DATAGRAM_SOCKET("yuri_udp6",YuriUdp6)
 
 	REGISTER_DATAGRAM_SOCKET("unix_dgram",UnixDatagramSocket)
 	REGISTER_STREAM_SOCKET("unix_stream",UnixStreamSocket)
