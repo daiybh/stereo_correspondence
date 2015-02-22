@@ -34,7 +34,7 @@ core::Parameters RenderText::configure()
 	p["resolution"]["Image resolution for generated image"]=resolution_t{800,600};
 	p["position"]["Text position"]=coordinates_t{0,0};
 	p["spacing"]["Additional spacing between characters"]=0;
-	p["generate"]["Generate blank image. Set to false to put text on incomming images"]=true;
+	p["generate"]["Generate blank image. Set to false to put text on incomming images"]=false;
 	p["kerning"]["Enable/disable kerning."]=true;
 	p["fps"]["Framerate for generated images. Set to 0 to generate only on text change"]=0.0;
 	p["blend"]["Blend edged - nicer output, but slower"]=true;
