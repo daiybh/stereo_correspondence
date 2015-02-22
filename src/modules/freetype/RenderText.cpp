@@ -331,11 +331,12 @@ void RenderText::run()
 	auto frame_delta = fps_valid?1_s/fps_:0_s;
 
 	while(still_running()) {
-		process_events();
 		if (!generate_) {
 			wait_for(get_latency());
+			process_events();
 			step();
 		} else {
+			process_events();
 			if (modified_ || (fps_valid && timer.get_duration() > frame_delta)) {
 				timer.reset();
 				push_frame(0, do_special_single_step(gframe));
