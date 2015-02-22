@@ -262,7 +262,7 @@ bool GlxWindow::process_x11_events()
 										event_.xconfigure.y});
 				break;
 			case KeyPress:
-				emit_event("key"+std::to_string(event_.xkey.keycode));
+//				emit_event("key"+std::to_string(event_.xkey.keycode));
 				emit_event("key"+std::to_string(event_.xkey.keycode), true);
 				emit_event("key_down",event_.xkey.keycode);
 //				log[log::debug] << "Key " << do_get_keyname(event_.xkey.keycode) << " (" <<
