@@ -223,6 +223,7 @@ find_package( Boost 1.46 COMPONENTS regex)
 
 IF (Boost_REGEX_FOUND)
 	add_subdirectory(webserver)
+	add_subdirectory(file_picker)
 ENDIF()
 
 find_library(JSONCPP_LIBRARY jsoncpp)
