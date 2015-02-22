@@ -95,7 +95,14 @@ struct assign_events {
 		}
 		return *this;
 	}
-
+	template<class Str, class Func>
+	assign_events& bang(Str&& name, Func func) {
+		if (name == event_name) {
+			func();
+			assigned = true;
+		}
+		return *this;
+	}
 	operator bool() { return assigned; }
 private:
 	template<class It>
