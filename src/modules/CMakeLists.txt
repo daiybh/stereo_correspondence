@@ -258,6 +258,12 @@ find_library(FLYCAP_LIBRARY flycapture)
 IF(FLYCAP_INCLUDE_DIR AND FLYCAP_LIBRARY)
 	add_subdirectory(flycap)
 ENDIF()
+
+
+pkg_check_modules(POPPLERCPP poppler-cpp)
+IF(POPPLERCPP_FOUND)
+	add_subdirectory(pdf_source)
+ENDIF()
 ENDIF(YURI_BUILD_EXPERIMENTAL_MODULES)
 
 #################################################################
