@@ -34,13 +34,31 @@ core::Parameters Pad::configure()
 	return p;
 }
 
+namespace {
+std::vector<format_t> query_supported_formats()
+{
+	std::vector<format_t> fmts;
+	for (const auto f: core::raw_format::formats()) {
+		const auto& info = f.second;
+		if (info.planes.size() != 1) {
+			continue;
+		}
+		if (info.planes[0].bit_depth.first % (8 * info.planes[0].bit_depth.second)) {
+			continue;
+		}
+		fmts.push_back(f.first);
+	}
+	return fmts;
+}
 
+}
 Pad::Pad(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("pad")),
 resolution_(resolution_t{800, 600}), halign_(horizontal_alignment_t::center),
 valign_(vertical_alignment_t::center)
 {
 	IOTHREAD_INIT(parameters)
+	set_supported_formats(query_supported_formats());
 }
 
 Pad::~Pad() noexcept
@@ -141,6 +159,7 @@ void fill_from_sample(Iter start, const Iter& end, const Iter2& sample)
 
 core::pFrame Pad::do_special_single_step(core::pRawVideoFrame frame)
 {
+	if (resolution_ == resolution_t{0,0}) return frame;
 //	const core::pRawVideoFrame frame= 	dynamic_pointer_cast<core::RawVideoFrame>(frame_in);
 	const resolution_t resolution	= frame->get_resolution();
 	if (resolution == resolution_) return frame;
