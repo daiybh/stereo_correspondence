@@ -1,8 +1,8 @@
 /*!
  * @file 		Select.h
- * @author 		<Your name>
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
  * @date 		15.03.2014
- * @copyright	Institute of Intermedia, 2013
+ * @copyright	Institute of Intermedia, 2014
  * 				Distributed BSD License
  *
  */

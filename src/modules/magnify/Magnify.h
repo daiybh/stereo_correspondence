@@ -26,7 +26,7 @@ public:
 	virtual ~Magnify() noexcept;
 private:
 	
-	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
+	virtual core::pFrame do_special_single_step(core::pRawVideoFrame frame) override;
 	virtual bool set_param(const core::Parameter& param) override;
 	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 

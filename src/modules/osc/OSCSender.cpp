@@ -24,7 +24,7 @@ core::Parameters OSCSender::configure()
 	core::Parameters p = core::IOThread::configure();
 	p.set_description("OSCSender");
 	p["address"]["Remote address"]="127.0.0.1";
-	p["socket_type"]="uv_udp";
+	p["socket_type"]="yuri_udp";
 	p["port"]=57120;
 	return p;
 }

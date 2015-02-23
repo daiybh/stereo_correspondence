@@ -149,7 +149,7 @@ pFrame Convert::do_convert_frame(pFrame frame_in, format_t target_format)
 //	log[log::info] << "COnversion ok";
 	return result;
 }
-pFrame Convert::convert_to_any(const pFrame& frame, const std::vector<format_t>& fmts)
+pFrame Convert::convert_to_any(pFrame frame, const std::vector<format_t>& fmts)
 {
 	if (!frame) return {};
 	format_t fmt = frame->get_format();
@@ -160,7 +160,7 @@ pFrame Convert::convert_to_any(const pFrame& frame, const std::vector<format_t>&
 	}
 	return {};
 }
-pFrame Convert::convert_to_cheapest(const pFrame& frame, const std::vector<format_t>& fmts)
+pFrame Convert::convert_to_cheapest(pFrame frame, const std::vector<format_t>& fmts)
 {
 	if (!frame || fmts.empty()) return {};
 	format_t fmt = frame->get_format();
@@ -180,19 +180,20 @@ pFrame Convert::convert_to_cheapest(const pFrame& frame, const std::vector<forma
 	log[log::warning] << "No suitable conversion found";
 	return {};
 }
-pFrame Convert::do_simple_single_step(const pFrame& frame)
+pFrame Convert::do_simple_single_step(pFrame frame)
 {
-	return convert_frame(frame, format_);
+	return convert_frame(std::move(frame), format_);
 }
 
 bool Convert::set_param(const core::Parameter& param)
 {
+	if (assign_parameters(param)
+			(allow_passthrough_, "allow_passthrough"))
+		return true;
 	if (param.get_name() == "format") {
 		format_ = raw_format::parse_format(param.get<std::string>());
 		if (!format_) format_ = compressed_frame::parse_format(param.get<std::string>());
 		if (!format_) format_ = raw_audio_format::parse_format(param.get<std::string>());
-	} else if (param.get_name() == "allow_passthrough") {
-		allow_passthrough_ = param.get<bool>();
 	} else return core::IOFilter::set_param(param);
 	return true;
 }

@@ -15,10 +15,14 @@
 #include <sstream>
 #include <cctype>
 #include <mutex>
+#include <iterator>
+#include <algorithm>
 namespace yuri {
 
 /*!
  * @brief Ancillary class for initializing std::map
+ *
+ * These clases were made obsolete by C++11 and initializer lists, both will be removed in near future.
  *
  * Usage std::map<A, B> name_of_map = map_list_of<A, B>(a0, b0)(a1, b1)(a2, b2);
  */
@@ -59,12 +63,22 @@ lexical_cast(const U& val)
 	return outval;
 }
 
+#ifdef YURI_WIN
+#pragma warning ( push )
+// THis seems to bethe only wan to disable C4800
+#pragma warning ( disable: 4800)
+#endif
+
 template<class T, class U>
 typename std::enable_if<std::is_convertible<U, T>::value, T>::type
 lexical_cast(const U& val)
 {
-	return val;
+	return static_cast<T>(val);
 }
+
+#ifdef YURI_WIN
+#pragma warning ( pop)
+#endif
 
 template<class Char, class traits>
 bool iequals(const std::basic_string<Char, traits>& a, const std::basic_string<Char, traits>& b)
@@ -104,6 +118,29 @@ bool iless(const std::basic_string<Char, traits>& a, const Char *b)
 	return iless(a, std::basic_string<Char, traits>(b));
 }
 
+template<class Type, class Value>
+bool contains(const Type& container, const Value& value);
+
+
+template<class Key, class Type, class Value>
+bool contains(const std::map<Key, Type>& container, const Value& value)
+{
+	return container.find(value) != container.end();
+}
+
+template<class Type, class Value>
+bool contains(const Type& container, const Value& value)
+{
+	using std::begin;
+	using std::end;
+	return std::find(begin(container), end(container), value) != end(container);
+}
+
+template<typename T, typename T2>
+T clip_value(T value, T2 min_value, T2 max_value)
+{
+	return std::min<T>(std::max<T>(value, min_value), max_value);
+}
 
 template<class T>
 class SingletonBase: public T {

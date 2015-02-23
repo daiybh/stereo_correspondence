@@ -204,7 +204,7 @@ JackOutput::~JackOutput() noexcept
 {
 }
 
-core::pFrame JackOutput::do_special_single_step(const core::pRawAudioFrame& frame)
+core::pFrame JackOutput::do_special_single_step(core::pRawAudioFrame frame)
 {
 	jack_nframes_t sample_rate =  jack_get_sample_rate(handle_.get());
 	if (sample_rate != frame->get_sampling_frequency() && !allow_different_frequencies_) {

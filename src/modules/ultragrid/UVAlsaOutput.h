@@ -36,7 +36,7 @@ public:
 	virtual ~UVAlsaOutput() noexcept;
 private:
 	
-	virtual core::pFrame do_special_single_step(const core::pRawAudioFrame& frame) override;
+	virtual core::pFrame do_special_single_step(core::pRawAudioFrame frame) override;
 	virtual bool set_param(const core::Parameter& param);
 	bool format_changed(const core::pRawAudioFrame& frame);
 	bool reconfigure(const core::pRawAudioFrame& frame);

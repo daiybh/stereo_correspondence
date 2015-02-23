@@ -26,15 +26,15 @@ typedef std::shared_ptr<DatagramSocket> pDatagramSocket;
 class DatagramSocket {
 public:
 
-	DatagramSocket(const log::Log& log_, const std::string& url = std::string());
-	virtual ~DatagramSocket() noexcept;
+	EXPORT DatagramSocket(const log::Log& log_, const std::string& url = std::string());
+	EXPORT virtual ~DatagramSocket() noexcept;
 	/*!
 	 * Binds socket to local port (if the underlying socket supports this).
 	 * @param url Address to bind localy. Exact meaning is implementation dependent, may contain port specification
 	 * @param port Port number to bind to. If specified, it should have higher priority than any port specified in @em url
 	 * @return false if an error occured, true otherwise
 	 */
-	bool bind(const std::string& url, port_t port);
+	EXPORT bool bind(const std::string& url, port_t port);
 
 	/*!
 	 * Connects socket to remote host (if the underlying socket supports this).
@@ -42,29 +42,61 @@ public:
 	 * @param port Port number to bind to. If specified, it should have higher priority than any port specified in @em url
 	 * @return false if an error occured, true otherwise
 	 */
-	bool connect(const std::string& url, port_t port);
+	EXPORT	bool connect(const std::string& url, port_t port);
 	/*!
-	 * Checks whether there are any data waiting to be read
+	 * Checks whether there are any data waiting to be read. Function returns immediately.
 	 * @return true if subsequent call to receive_datagram() will succeed.
 	 */
-	bool data_available();
+	EXPORT bool data_available();
 
-	bool wait_for_data(duration_t duration);
+	/*!
+	 * Waits for data to become available, for at most @em duration.
+	 * @param duration Maximum time to wait for data
+	 * @return true if there are data available for read, false if timeout occurred before data become available.
+	 */
+	EXPORT bool wait_for_data(duration_t duration);
 
 	/*!
 	 * Checks whether the underlying socket is ready to send a packet;
 	 * @return
 	 */
-	bool ready_to_send();
+	EXPORT bool ready_to_send();
 
-	size_t send_datagram(const uint8_t* data, size_t size);
+	/*!
+	 * Sends datagram
+	 * @param data Pinter to data to send
+	 * @param size size of datagram in bytes
+	 * @return number of bytes really sent
+	 */
+	EXPORT size_t send_datagram(const uint8_t* data, size_t size);
 
+	/*!
+	 * Convenience wrapper for sending datagrams with different underlying type
+	 * @param data Pointer to beginning of data
+	 * @param size Number of elements of type @em T
+	 * @return number of elements really sent
+	 */
 	template<typename T>
 	size_t send_datagram(const T* data, size_t size);
+	/*!
+	 * Convenience wrapper for sending data stored in a std::vector (sends whole vector)
+	 * @param data Vector to be sent
+	 * @return number of elements sent
+	 */
 	template<typename T>
 	size_t send_datagram(const std::vector<T>& data);
+	/*!
+	 * Convenience wrapper for sending data stored in a std::array (sends whole array)
+	 * @param data Array to be sent
+	 * @return number of elements sent
+	 */
 	template<typename T, size_t N>
 	size_t send_datagram(const std::array<T, N>& data);
+	/*!
+	 * Convenience wrapper for sending data stored in a std::basic_string (sends whole string)
+	 * @param data String to send
+	 * @return number of characters sent
+	 */
 	template<typename T>
 	size_t send_datagram(const std::basic_string<T>& data);
 
@@ -74,15 +106,32 @@ public:
 	 * @param size size of the buffer
 	 * @return number of bytes received.
 	 */
-	size_t receive_datagram(uint8_t* data, size_t size);
+	EXPORT size_t receive_datagram(uint8_t* data, size_t size);
 
+	/*!
+	 * Convenience wrapper, receives datagram into an array with different underlying type
+	 * @param data Beginning of data
+	 * @param size Number of elements available
+	 * @return Number of elements stored
+	 */
 	template<typename T>
 	size_t receive_datagram(T* data, size_t size);
+	/*!
+	 * Convenience wrapper, receives datagram into a std::vector
+	 * Note that the method does NOT modify the length of the vector!
+	 *
+	 * @param data The vector to write to
+	 * @return Number of elements stored
+	 */
 	template<typename T>
 	size_t receive_datagram(std::vector<T>& data);
+	/*!
+	 * Convenience wrapper, receives datagram into a std::array
+	 * @param data The array to write to
+	 * @return Number of elements stored
+	 */
 	template<typename T, size_t N>
 	size_t receive_datagram(std::array<T, N>& data);
-
 
 protected:
 	log::Log	log;

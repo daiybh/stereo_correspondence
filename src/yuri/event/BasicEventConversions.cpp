@@ -80,7 +80,7 @@ pBasicEvent call(const std::string& fname, const std::vector<pBasicEvent>& event
 					auto p = implicit_conversion(events[i], ptypes[i]);
 					converted_events.push_back(p);
 				}
-				catch (bad_event_cast& e) {
+				catch (bad_event_cast& ) {
 					ok = false;
 					break;
 				}
@@ -232,6 +232,20 @@ FuncInitHelper fhelper_ {
 		 {"pow", std::vector<event_type_t>({event_type_t::double_event, event_type_t::double_event}),event_type_t::double_event, functions::pow},
 //		 {"min", std::vector<event_type_t>({event_type_t::vector_event}),event_type_t::undetermined_event, functions::min2},
 //		 {"max", std::vector<event_type_t>({event_type_t::vector_event}),event_type_t::undetermined_event, functions::max2},
+
+
+		 {"geometry", std::vector<event_type_t>({event_type_t::string_event}),event_type_t::string_event, functions::geometry},
+
+		 {"geometry", std::vector<event_type_t>({event_type_t::undetermined_event, event_type_t::undetermined_event}),event_type_t::string_event, functions::geometry},
+		 {"geometry", std::vector<event_type_t>({event_type_t::undetermined_event, event_type_t::undetermined_event, event_type_t::undetermined_event, event_type_t::undetermined_event}),event_type_t::string_event, functions::geometry},
+
+
+		 {"get_width", std::vector<event_type_t>({event_type_t::integer_event}),event_type_t::integer_event, functions::get_width},
+		 {"get_width", std::vector<event_type_t>({event_type_t::string_event}),event_type_t::integer_event, functions::get_width},
+		 {"get_height", std::vector<event_type_t>({event_type_t::integer_event}),event_type_t::integer_event, functions::get_height},
+		 {"get_height", std::vector<event_type_t>({event_type_t::string_event}),event_type_t::integer_event, functions::get_height},
+
+
  };
 }
 

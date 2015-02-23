@@ -23,7 +23,7 @@ namespace yuri {
 namespace core {
 
 
-class EXPORT FixedMemoryAllocator: public IOThread {
+class FixedMemoryAllocator: public IOThread {
 public:
 	struct Deleter {
 		Deleter(yuri::size_t size, uint8_t *original_pointer):
@@ -38,19 +38,19 @@ public:
 	};
 	typedef std::pair<uint8_t*, struct Deleter> memory_block_t;
 	IOTHREAD_GENERATOR_DECLARATION
-	static Parameters configure();
-	FixedMemoryAllocator(log::Log &_log, pwThreadBase parent, const Parameters &parameters);
-	virtual ~FixedMemoryAllocator() noexcept;
-	static memory_block_t get_block(yuri::size_t size);
-	static bool return_memory(yuri::size_t size, uint8_t* mem);
-	static bool allocate_blocks(yuri::size_t size, yuri::size_t count);
-	static bool remove_blocks(yuri::size_t size, yuri::size_t count=0);
-	static size_t preallocated_blocks(size_t size);
-	static std::pair<size_t, size_t> clear_all();
+	EXPORT static Parameters configure();
+	EXPORT FixedMemoryAllocator(log::Log &_log, pwThreadBase parent, const Parameters &parameters);
+	EXPORT virtual ~FixedMemoryAllocator() noexcept;
+	EXPORT static memory_block_t get_block(yuri::size_t size);
+	EXPORT static bool return_memory(yuri::size_t size, uint8_t* mem);
+	EXPORT static bool allocate_blocks(yuri::size_t size, yuri::size_t count);
+	EXPORT static bool remove_blocks(yuri::size_t size, yuri::size_t count=0);
+	EXPORT static size_t preallocated_blocks(size_t size);
+	EXPORT static std::pair<size_t, size_t> clear_all();
 private:
 
 	bool step();
-	virtual bool set_param(const Parameter &parameter);
+	EXPORT virtual bool set_param(const Parameter &parameter);
 	static bool do_allocate_blocks(yuri::size_t size, yuri::size_t count);
 
 	/**\brief Global mutex protecting the pool */

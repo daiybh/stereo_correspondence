@@ -120,7 +120,7 @@ PACK_START struct rgba_t {
 	uint8_t r,g,b,a;
 } PACK_END;
 
-struct rgb48_t {
+PACK_START struct rgb48_t {
 	uint16_t r,g,b;
 } PACK_END;
 
@@ -190,7 +190,7 @@ Anaglyph::~Anaglyph() noexcept {
 }
 
 //std::vector<core::pBasicFrame> Anaglyph::do_single_step(const std::vector<core::pBasicFrame>& frames)
-std::vector<core::pFrame>	Anaglyph::do_special_step(const std::tuple<core::pRawVideoFrame, core::pRawVideoFrame>& frames)
+std::vector<core::pFrame>	Anaglyph::do_special_step(std::tuple<core::pRawVideoFrame, core::pRawVideoFrame> frames)
 {
 //	assert(frames.size()==2);
 	auto& left = std::get<0>(frames);

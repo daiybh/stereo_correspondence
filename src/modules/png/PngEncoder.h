@@ -25,7 +25,7 @@ public:
 	virtual ~PngEncoder() noexcept;
 private:
 	
-	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
+	virtual core::pFrame do_special_single_step(core::pRawVideoFrame frame) override;
 	virtual core::pFrame do_convert_frame(core::pFrame input_frame, format_t target_format) override;
 	virtual bool set_param(const core::Parameter& param);
 };

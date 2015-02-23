@@ -25,7 +25,7 @@ IOTHREAD_GENERATOR(IrcClient)
 core::Parameters IrcClient::configure()
 {
 	core::Parameters p = core::IOThread::configure();
-	p.set_description("IrcClient");
+	p.set_description("Connects to irc server and sends all incomming events to target (username or channel), if specified. Also send all private messages starting with 'send' back as events.");
 //	p->set_max_pipes(0,0);
 	p["server"]["Server hostname or IP address"]=std::string();
 	p["nickname"]["Nickname to use at server"]=std::string("yuri_irc");
@@ -41,7 +41,7 @@ IrcClient::IrcClient(const log::Log &log_, core::pwThreadBase parent, const core
 core::IOThread(log_,parent,0,0,std::string("irc_client")),
 event::BasicEventConsumer(log),
 event::BasicEventProducer(log),
-port_(6667),state_(state_t::not_connected)
+socket_impl_("yuri_tcp"),port_(6667),state_(state_t::not_connected)
 {
 	IOTHREAD_INIT(parameters)
 }
@@ -52,9 +52,7 @@ IrcClient::~IrcClient() noexcept
 
 void IrcClient::run()
 {
-//	IO_THREAD_PRE_RUN
-//	socket_.reset(new asio::ASIOTCPSocket(log,get_this_ptr()));
-	socket_ = core::StreamSocketGenerator::get_instance().generate("yuri_tcp", log);
+	socket_ = core::StreamSocketGenerator::get_instance().generate(socket_impl_, log);
 	socket_->bind("",0);
 	if (!socket_->connect(server_,port_)) {
 		log[log::error] << "Failed to connect to " << server_ << ":" << port_;
@@ -80,7 +78,6 @@ void IrcClient::run()
 		}
 	}
 	if (socket_) send_message("QUIT : Good bye, cruel world");
-//	IO_THREAD_POST_RUN
 }
 
 void IrcClient::process_buffer()
@@ -89,7 +86,6 @@ void IrcClient::process_buffer()
 	auto idx = msg_buffer_.find_first_of("\n\r");
 	while (idx != std::string::npos) {
 		std::string msg = msg_buffer_.substr(0, idx);
-//		log[log::info] << "Found line: " << msg;
 		msg_buffer_=msg_buffer_.substr(idx+1);
 		idx = msg_buffer_.find_first_of("\n\r");
 
@@ -152,7 +148,6 @@ irc_message IrcClient::parse_response(const std::string& resp)
 	//if (resp[0]<'0' || resp[0]>'9') return -1;
 	idx = resp.find_first_of(' ');
 	irc_message msg;
-//	log[log::info] << "parsing the rest: '" << resp << "'";
 	try {
 		msg.code = std::stoi(resp.substr(0,idx));
 		return msg;
@@ -169,7 +164,6 @@ void IrcClient::send_message(const std::string& msg)
 	std::vector<uint8_t> data(msg.begin(),msg.end());
 	data.push_back('\r');
 	data.push_back('\n');
-//	socket_->send_data(&data[0],data.size());
 	socket_->send_data(data);
 }
 void IrcClient::process_incomming_message(const std::string& msg)
@@ -180,41 +174,43 @@ void IrcClient::process_incomming_message(const std::string& msg)
 	std::string cmd = msg.substr(0,idx);
 	if (iequals(cmd,"send")) {
 		auto idx2 = msg.find_first_not_of(' ',idx);
+		// no event for us
+		if (idx2 == std::string::npos) return;
 		auto idx3 = msg.find_first_of(' ',idx2);
-		if (idx2 == std::string::npos || idx3 == std::string::npos) return;
-		std::string tgt = msg.substr(idx2,idx3-idx2);
-		auto idx4 = msg.find_first_not_of(' ',idx3);
-		emit_event(tgt,make_shared<event::EventString>(msg.substr(idx4)));
+		//if (idx2 == std::string::npos || idx3 == std::string::npos) return;
+		if (idx3 == std::string::npos) {
+			// no event value, so let's fire BANG
+			emit_event(msg.substr(idx2));
+		} else {
+			const std::string tgt = msg.substr(idx2,idx3-idx2);
+			auto idx4 = msg.find_first_not_of(' ',idx3);
+			emit_event(tgt,msg.substr(idx4));
+		}
 	}
 }
 bool IrcClient::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
 	log[log::info] << "Received " << event_name;
 	if (state_ == state_t::connected && !target_.empty()) {
-		if (event->get_type() == event::event_type_t::string_event) {
-			send_message("PRIVMSG " + target_ + " :"+event_name+": "+event::get_value<event::EventString>(event));
-		} else {
-			send_message("PRIVMSG " + target_ + " : "+"Received event "+event_name);
-		}
+		send_message("PRIVMSG " + target_ + " :"+event_name+": "+event::lex_cast_value<std::string>(event));
+//		} else {
+//			send_message("PRIVMSG " + target_ + " : "+"Received event "+event_name);
+//		}
 	}
 	return true;
 }
 bool IrcClient::set_param(const core::Parameter& param)
 {
-	if (iequals(param.get_name(),"server")) {
-		server_ = param.get<std::string>();
-	} else if (iequals(param.get_name(),"nickname")) {
-		nickname_ = param.get<std::string>();
-	} else if (iequals(param.get_name(),"alt_nickname")) {
-		alt_nickname_ = param.get<std::string>();
-	} else if (iequals(param.get_name(),"port")) {
-		port_ = param.get<uint16_t>();
-	} else if (iequals(param.get_name(),"channel")) {
-		channel_ = param.get<std::string>();
-	} else if (iequals(param.get_name(),"target")) {
-		target_ = param.get<std::string>();
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(server_, 		"server")
+			(nickname_, 	"nickname")
+			(alt_nickname_, "alt_nickname")
+			(port_, 		"port")
+			(channel_, 		"channel")
+			(target_,		"target")
+			(socket_impl_,	"socket"))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace irc_client */

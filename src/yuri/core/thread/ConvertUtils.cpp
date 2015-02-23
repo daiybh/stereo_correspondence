@@ -37,7 +37,6 @@ std::pair<convert::path_list, size_t> find_conversion(format_t format_in, format
 			return pit->second;
 		}
 	}
-	std::unordered_map<format_t, bool> visited;
 	std::unordered_map<converter_key, value_type > best_convertor;
 	std::unordered_multimap<format_t, converter_key> starts;
 	std::unordered_map<format_t, size_t> costs;
@@ -55,28 +54,24 @@ std::pair<convert::path_list, size_t> find_conversion(format_t format_in, format
 	// Prepare the graph
 
 	for (const auto& k: keys) {
-		visited[k.second]=false; // By default no convertor is visited
-		starts.emplace(k.first, k); // Prepare all convertors
-		auto vals = conv.find_value(k); // Select the best convertor for each format pair
+		starts.emplace(k.first, k); // Prepare all converters
+		auto vals = conv.find_value(k); // Select the best converter for each format pair (when there's multiple converters)
 		for (const auto& v: vals) {
-			if (best_convertor.find(k) == best_convertor.end()) {
+			auto&& it = best_convertor.find(k);
+			if (it == best_convertor.end() || (v.second < it->second.second)) {
 				best_convertor[k]=v;
-			} else {
-				if (v.second < best_convertor[k].second) {
-					best_convertor[k]=v;
-				}
 			}
 		}
 	}
 
 	// Populate stack with initial edges
-	visited[format_in] = true;
-	auto er = starts.equal_range(format_in);
-	auto it = er.first;
-	while(it!=er.second) {
-		stack.emplace(it++->second);
+	{
+		auto er = starts.equal_range(format_in);
+		auto it = er.first;
+		while (it != er.second) {
+			stack.emplace(it++->second);
+		}
 	}
-
 
 //	std::cout << "Looking up " << format_in << " -> " << format_out << "\n";
 //	std::cout << "Prepared " << best_convertor.size() << " convertors\n";
@@ -84,8 +79,7 @@ std::pair<convert::path_list, size_t> find_conversion(format_t format_in, format
 //		std::cout << "Stack size "<<stack.size() <<"\n";
 		auto head = stack.top();
 		stack.pop();
-
-		visited[head.second]=true;
+//		std::cout << "Visiting " << head.first << "->" << head.second << "\n";
 		size_t cost_start = costs[head.first];
 		size_t cost_end = costs[head.second];
 		const auto& bc = best_convertor[head];
@@ -102,7 +96,7 @@ std::pair<convert::path_list, size_t> find_conversion(format_t format_in, format
 		auto er = starts.equal_range(head.second);
 		auto it = er.first;
 		while(it!=er.second) {
-			if (!visited[it->second.second]) stack.emplace(it->second);
+			stack.emplace(it->second);
 			++it;
 		}
 	}
@@ -110,7 +104,7 @@ std::pair<convert::path_list, size_t> find_conversion(format_t format_in, format
 	{
 		lock_t _(path_cache_mutex);
 		auto pit = path_cache.find(search_key);
-		if (pit != path_cache.end()) {
+		if (pit == path_cache.end()) {
 			path_cache[search_key]={paths[format_out], costs[format_out]};
 		}
 	}

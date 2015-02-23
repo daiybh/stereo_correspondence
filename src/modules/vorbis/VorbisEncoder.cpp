@@ -221,7 +221,7 @@ void copy_channels_dispatch(const core::pRawAudioFrame& frame, float** buffer, i
 
 }
 
-core::pFrame VorbisEncoder::do_special_single_step(const core::pRawAudioFrame& frame)
+core::pFrame VorbisEncoder::do_special_single_step(core::pRawAudioFrame frame)
 {
 	if (!initialize(frame)) return {};
 

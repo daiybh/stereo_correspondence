@@ -16,22 +16,32 @@
 namespace yuri {
 namespace core {
 
+/*
+ * Main input policies:
+ * 0 or higher 	- threat input with this index as main input
+ * -1 			- Trigger processing only after there's a new frame on each input
+ * -2			- Trigger processing when there's new frame on any input (other frames are kept)
+ * -3			- Trigger processing when there's new frame on any input (frames are not kept)
+ */
+
 class MultiIOFilter: public IOThread {
 public:
-	static Parameters		configure();
-							MultiIOFilter(const log::Log &log_, pwThreadBase parent,
+	EXPORT static Parameters
+							configure();
+	EXPORT 					MultiIOFilter(const log::Log &log_, pwThreadBase parent,
 			position_t inp, position_t outp, const std::string& id = "FILTER");
 
-	virtual 				~MultiIOFilter() noexcept;
+	EXPORT virtual 			~MultiIOFilter() noexcept;
 
-	std::vector<pFrame> 	single_step(const std::vector<pFrame>& frames);
-	virtual bool 			step();
+	EXPORT std::vector<pFrame> 	
+							single_step(std::vector<pFrame> frames);
+	EXPORT virtual bool 	step();
 
-	virtual bool 			set_param(const Parameter &parameter) override;
+	EXPORT virtual bool 	set_param(const Parameter &parameter) override;
 protected:
-	virtual void 				resize(position_t inp, position_t outp) override;
+	EXPORT virtual void 	resize(position_t inp, position_t outp) override;
 private:
-	virtual std::vector<pFrame> do_single_step(const std::vector<pFrame>& frames) = 0;
+	virtual std::vector<pFrame> do_single_step(std::vector<pFrame> frames) = 0;
 	std::vector<pFrame> 	stored_frames_;
 //	bool 					realtime_;
 	position_t				main_input_;

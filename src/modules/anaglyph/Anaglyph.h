@@ -31,7 +31,7 @@ public:
 	static core::Parameters 		configure();
 protected:
 	//virtual bool step();
-	std::vector<core::pFrame>	do_special_step(const std::tuple<core::pRawVideoFrame, core::pRawVideoFrame>& frames);
+	std::vector<core::pFrame>	do_special_step(std::tuple<core::pRawVideoFrame, core::pRawVideoFrame> frames);
 	bool 							set_param(const core::Parameter& param);
 protected:
 	int correction;

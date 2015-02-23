@@ -27,13 +27,15 @@ typedef shared_ptr<StreamSocket> pStreamSocket;
 class StreamSocket
 {
 public:
-	StreamSocket(const log::Log& log_);
-	virtual ~StreamSocket() noexcept;
+	EXPORT StreamSocket(const log::Log& log_);
+	EXPORT virtual ~StreamSocket() noexcept;
 
-	bool bind(const std::string& url, uint16_t port);
-	bool connect(const std::string& address, uint16_t port);
+	EXPORT bool bind(const std::string& url, uint16_t port);
+	EXPORT bool connect(const std::string& address, uint16_t port);
+	EXPORT bool listen();
+	EXPORT pStreamSocket accept();
 
-	size_t send_data(const uint8_t* data, size_t data_size);
+	EXPORT size_t send_data(const uint8_t* data, size_t data_size);
 
 	template<class T>
 	size_t send_data(const T* data, size_t data_size)
@@ -56,7 +58,7 @@ public:
 		return send_data(data.data(), data.size());
 	}
 
-	size_t receive_data(uint8_t* data, size_t size);
+	EXPORT size_t receive_data(uint8_t* data, size_t size);
 
 
 	template<class T>
@@ -78,9 +80,9 @@ public:
 	 * Checks whether there are any data waiting to be read
 	 * @return true if subsequent call to receive_datagram() will succeed.
 	 */
-	bool data_available();
+	EXPORT bool data_available();
 
-	bool wait_for_data(duration_t duration);
+	EXPORT bool wait_for_data(duration_t duration);
 protected:
 	log::Log		log;
 private:
@@ -88,6 +90,9 @@ private:
 	virtual size_t do_receive_data(uint8_t* data, size_t size) = 0;
 	virtual bool do_bind(const std::string& url, uint16_t port) = 0;
 	virtual bool do_connect(const std::string& address, uint16_t port) = 0;
+	virtual bool do_listen() = 0;
+	virtual pStreamSocket do_accept() = 0;
+
 	virtual bool do_data_available() = 0;
 	virtual bool do_wait_for_data(duration_t duration) = 0;
 

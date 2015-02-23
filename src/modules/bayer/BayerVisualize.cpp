@@ -82,7 +82,7 @@ void visualize(const uint8_t* in, uint8_t* out, resolution_t res)
 
 }
 
-core::pFrame BayerVisualize::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame BayerVisualize::do_special_single_step(core::pRawVideoFrame frame)
 {
 	using namespace core::raw_format;
 	const auto res = frame->get_resolution();

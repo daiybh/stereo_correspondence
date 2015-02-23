@@ -59,7 +59,7 @@ float get_threshold<float>(double val)
 template<typename T>
 T get_threshold(double val)
 {
-	return std::numeric_limits<T>::max() * val;
+	return static_cast<T>(std::numeric_limits<T>::max() * val);
 }
 
 
@@ -113,7 +113,7 @@ void AudioLatency::process_latency(const uint8_t* data_ptr, const size_t sample_
 
 }
 
-core::pFrame AudioLatency::do_special_single_step(const core::pRawAudioFrame& frame)
+core::pFrame AudioLatency::do_special_single_step(core::pRawAudioFrame frame)
 {
 	using namespace core::raw_audio_format;
 	size_t skip0 = 0;
@@ -144,14 +144,12 @@ core::pFrame AudioLatency::do_special_single_step(const core::pRawAudioFrame& fr
 }
 bool AudioLatency::set_param(const core::Parameter& param)
 {
-	if (param.get_name() =="threshold") {
-		threshold_ = param.get<double>();
-	} else if (param.get_name() == "cooldown") {
-		cooldown_ = param.get<int_fast32_t>();
-	} else if (param.get_name() == "max_peak") {
-		max_peak_dist_ = param.get<size_t>();
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(threshold_, "threshold")
+			(cooldown_, "cooldown")
+			(max_peak_dist_, "max_peak"))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace audio_latency */

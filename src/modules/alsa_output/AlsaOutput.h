@@ -26,7 +26,7 @@ public:
 	virtual ~AlsaOutput() noexcept;
 private:
 	
-	virtual core::pFrame do_special_single_step(const core::pRawAudioFrame& frame) override;
+	virtual core::pFrame do_special_single_step(core::pRawAudioFrame frame) override;
 	virtual bool set_param(const core::Parameter& param) override;
 	bool is_different_format(const core::pRawAudioFrame& frame);
 

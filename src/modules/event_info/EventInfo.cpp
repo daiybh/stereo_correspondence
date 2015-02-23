@@ -20,17 +20,17 @@ core::Parameters EventInfo::configure()
 {
 	core::Parameters p = core::IOThread::configure();
 	p.set_description("EventInfo");
-//	p->set_max_pipes(1,1);
+	p["enabled"]["Enable/disable the output."]=true;
 	return p;
 }
 
 
 EventInfo::EventInfo(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOThread(log_,parent,0,0,std::string("event_info")),
-event::BasicEventConsumer(log)
+event::BasicEventConsumer(log),enabled_(true)
 {
 	IOTHREAD_INIT(parameters);
-	set_latency(1_ms);
+	set_latency(100_ms);
 }
 
 EventInfo::~EventInfo() noexcept
@@ -46,7 +46,10 @@ void EventInfo::run()
 }
 bool EventInfo::set_param(const core::Parameter& param)
 {
-	return core::IOThread::set_param(param);
+	if (param.get_name() == "enabled") {
+		enabled_ = param.get<bool>();
+	} else return core::IOThread::set_param(param);
+	return true;
 }
 
 namespace {
@@ -147,7 +150,8 @@ namespace {
 
 bool EventInfo::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
-	print_event_info(event, log[log::info] << "Received an event '" << event_name << "': ");
+	if (enabled_)
+		print_event_info(event, log[log::info] << "Received an event '" << event_name << "': ");
 	return true;
 }
 } /* namespace event_info */

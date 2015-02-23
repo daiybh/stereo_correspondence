@@ -74,8 +74,8 @@ namespace {
 template<typename T>
 void invert_line(const T* start, const T*end, T* out_end)
 {
-	constexpr T t_max = std::numeric_limits<T>::max();
-	std::transform(start,end,out_end,[](const T& v){return v^t_max;});
+	/* constexpr */ T t_max = std::numeric_limits<T>::max();
+	std::transform(start,end,out_end,[t_max](const T& v){return v^t_max;});
 }
 
 template<typename T, class T2>
@@ -92,7 +92,7 @@ void process_lines(const T2* start, T2* out_start, size_t lines, size_t line_siz
 }
 }
 
-core::pFrame Invert::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame Invert::do_special_single_step(core::pRawVideoFrame frame)
 {
 	const auto& fi = core::raw_format::get_format_info(frame->get_format());
 	if (!verify_support(fi)) return {};

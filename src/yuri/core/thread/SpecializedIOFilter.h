@@ -24,13 +24,14 @@ public:
 		IOFilter(log_, parent, id){}
 	virtual 				~SpecializedIOFilter() noexcept {}
 private:
-	virtual pFrame			do_simple_single_step(const pFrame& frame) override
+	virtual pFrame			do_simple_single_step(pFrame frame) override
 	{
-		const p_frame_type sframe = dynamic_pointer_cast<frame_type>(frame);
+		auto sframe = dynamic_pointer_cast<frame_type>(std::move(frame));
+		frame.reset();
 		if (!sframe) return {};
-		return do_special_single_step(sframe);
+		return do_special_single_step(std::move(sframe));
 	}
-	virtual pFrame			do_special_single_step(const p_frame_type& frame) = 0;
+	virtual pFrame			do_special_single_step(p_frame_type frame) = 0;
 };
 
 }

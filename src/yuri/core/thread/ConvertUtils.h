@@ -31,7 +31,7 @@ typedef std::vector<convert::convert_node_t> path_list;
  * @param target Output format
  * @return pair containing the shortest path and it's cost
  */
-std::pair<convert::path_list, size_t> find_conversion(format_t source, format_t target);
+EXPORT std::pair<convert::path_list, size_t> find_conversion(format_t source, format_t target);
 
 
 

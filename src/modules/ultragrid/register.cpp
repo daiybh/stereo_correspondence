@@ -7,7 +7,8 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/thread/ConverterRegister.h"
 #include "yuri/core/socket/DatagramSocketGenerator.h"
-
+#include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/compressed_frame_types.h"
 #ifdef YURI_UV_ALSA_SUPPORTED
 #include "UVAlsaInput.h"
 #include "UVAlsaOutput.h"
@@ -25,6 +26,7 @@
 
 #ifdef YURI_UV_LIBAV_SUPPORTED
 #include "UVLibav.h"
+#include "UVLibavDecompress.h"
 #endif
 
 #ifdef YURI_UV_RTDXT_SUPPORTED
@@ -85,6 +87,9 @@ MODULE_REGISTRATION_BEGIN("ultragrid")
 
 #ifdef YURI_UV_LIBAV_SUPPORTED
 		REGISTER_IOTHREAD("uv_libav",uv_libav::UVLibav)
+		REGISTER_IOTHREAD("uv_libav_decomp",uv_libav::UVLibavDecompress)
+
+		REGISTER_CONVERTER(core::compressed_frame::h264, core::raw_format::yuyv422, "uv_libav_decomp", 100)
 #endif
 #ifdef YURI_UV_RTDXT_SUPPORTED
 		REGISTER_IOTHREAD("uv_rtdxt",uv_rtdxt::UVRTDxt)

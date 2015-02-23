@@ -54,9 +54,9 @@ ColorKey::~ColorKey() noexcept
 }
 namespace {
 
-std::map<std::string, diff_types_> diff_type_strings = map_list_of<std::string, diff_types_>
-("linear", 		linear)
-("quadratic",	quadratic);
+std::map<std::string, diff_types_> diff_type_strings = {
+		{"linear", 		linear},
+		{"quadratic",	quadratic}};
 
 inline uint8_t diff(uint8_t a, uint8_t b)
 {
@@ -303,10 +303,10 @@ core::pRawVideoFrame ColorKey::find_key(const core::pRawVideoFrame& frame)
 		core::RawVideoFrame::value_type::iterator 		dest_pix	= dest+line*linesize_out;
 		for (size_t pixel = 0; pixel < width; ++pixel) {
 			if (kernel::rgb_vals) { // this condition should get optimized out by compiler...
-				const ssize_t total = kernel::difference(src_pix, r_, g_, b_, y_cutoff_);
+				const ssize_t total = kernel::difference(src_pix, r_, g_, b_, static_cast<int>(y_cutoff_));
 				kernel::eval(src_pix, dest_pix, total, delta_, delta2_);
 			} else {
-				const ssize_t total = kernel::difference(src_pix, y_, u_, v_, y_cutoff_);
+				const ssize_t total = kernel::difference(src_pix, y_, u_, v_, static_cast<int>(y_cutoff_));
 				kernel::eval(src_pix, dest_pix, total, delta_, delta2_);
 			}
 
@@ -327,7 +327,7 @@ core::pRawVideoFrame ColorKey::dispatch_find_key(const core::pRawVideoFrame& fra
 	return core::pRawVideoFrame();
 }
 
-core::pFrame ColorKey::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame ColorKey::do_special_single_step(core::pRawVideoFrame frame)
 {
 	process_events();
 	const format_t fmt = frame->get_format();

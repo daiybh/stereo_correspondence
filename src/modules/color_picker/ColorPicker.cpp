@@ -9,7 +9,7 @@
 
 #include "ColorPicker.h"
 #include "yuri/core/Module.h"
-#include "yuri/event/EventHelpers.h"
+#include "yuri/core/utils/assign_events.h"
 #include "yuri/core/frame/raw_frame_types.h"
 
 #include <numeric>
@@ -36,7 +36,7 @@ core::Parameters ColorPicker::configure()
 ColorPicker::ColorPicker(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("color_picker")),BasicEventConsumer(log),
 event::BasicEventProducer(log),
-geometry_{10,10,0,0},show_color_(true)
+geometry_(geometry_t{10,10,0,0}),show_color_(true)
 {
 	IOTHREAD_INIT(parameters)
 	using namespace core::raw_format;
@@ -151,7 +151,7 @@ core::pRawVideoFrame process_colors_yuv(const core::pRawVideoFrame& frame, geome
 
 }
 
-core::pFrame ColorPicker::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame ColorPicker::do_special_single_step(core::pRawVideoFrame frame)
 {
 	process_events();
 	using namespace core::raw_format;
@@ -248,48 +248,25 @@ core::pFrame ColorPicker::do_special_single_step(const core::pRawVideoFrame& fra
 }
 bool ColorPicker::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "geometry") {
-		geometry_ = param.get<geometry_t>();
-	} else return base_type::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(geometry_, "geometry"))
+		return true;
+	return base_type::set_param(param);
 }
 
 
 bool ColorPicker::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
-	try {
-		if (event_name == "geometry") {
-			if (event->get_type() == event::event_type_t::vector_event) {
-				auto vec = event::get_value<event::EventVector>(event);
-				if (vec.size()<2) {
-					throw std::runtime_error("Not enough values to process");
-				}
-				if (vec.size()<4) {
-					geometry_.x = event::lex_cast_value<position_t>(vec[0]);
-					geometry_.y = event::lex_cast_value<position_t>(vec[1]);
-				} else {
-					geometry_.x = event::lex_cast_value<position_t>(vec[0]);
-					geometry_.y = event::lex_cast_value<position_t>(vec[1]);
-					geometry_.width = event::lex_cast_value<dimension_t>(vec[2]);
-					geometry_.height = event::lex_cast_value<dimension_t>(vec[3]);
-				}
-			} else {
-				geometry_ = event::lex_cast_value<geometry_t>(event);
-			}
-		} else if (event_name == "x") {
-			geometry_.x = event::lex_cast_value<position_t>(event);
-		} else if (event_name == "y") {
-			geometry_.y = event::lex_cast_value<position_t>(event);
-		} else if (event_name == "width") {
-			geometry_.width = event::lex_cast_value<dimension_t>(event);
-		} else if (event_name == "height") {
-			geometry_.height= event::lex_cast_value<dimension_t>(event);
-		}
-	}
-	catch (std::exception&) {
-		return false;
-	}
-	return true;
+	if (assign_events(event_name, event)
+			.vector_values("geometry", geometry_.x, geometry_.y, geometry_.width, geometry_.height)
+			.vector_values("geometry", geometry_.x, geometry_.y)
+			(geometry_, 		"geometry")
+			(geometry_.x, 		"x")
+			(geometry_.y, 		"y")
+			(geometry_.width, 	"width")
+			(geometry_.height, 	"height"))
+		return true;
+	return false;
 }
 
 } /* namespace color_picker */

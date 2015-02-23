@@ -11,6 +11,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/raw_frame_types.h"
+#include <array>
 namespace yuri {
 namespace pad {
 
@@ -33,13 +34,31 @@ core::Parameters Pad::configure()
 	return p;
 }
 
+namespace {
+std::vector<format_t> query_supported_formats()
+{
+	std::vector<format_t> fmts;
+	for (const auto f: core::raw_format::formats()) {
+		const auto& info = f.second;
+		if (info.planes.size() != 1) {
+			continue;
+		}
+		if (info.planes[0].bit_depth.first % (8 * info.planes[0].bit_depth.second)) {
+			continue;
+		}
+		fmts.push_back(f.first);
+	}
+	return fmts;
+}
 
+}
 Pad::Pad(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("pad")),
-resolution_{800, 600},halign_(horizontal_alignment_t::center),
+resolution_(resolution_t{800, 600}), halign_(horizontal_alignment_t::center),
 valign_(vertical_alignment_t::center)
 {
 	IOTHREAD_INIT(parameters)
+	set_supported_formats(query_supported_formats());
 }
 
 Pad::~Pad() noexcept
@@ -72,8 +91,8 @@ size_t count_empty_cols_right(size_t width_in, size_t width_out, size_t skip_lef
 	return width_out>width_in?width_out-width_in-skip_left:0;
 }
 
-template<class Iter, class value_type = typename std::iterator_traits<Iter>::value_type>
-void fill_pattern(Iter start, const Iter& end, const std::vector<value_type> pattern)
+template<size_t N, class Iter, class value_type = typename std::iterator_traits<Iter>::value_type>
+void fill_pattern(Iter start, const Iter& end, const std::array<value_type, N>& pattern)
 {
 	const size_t pattern_size = pattern.size();
 //	assert(pattern_size > 0);
@@ -99,17 +118,18 @@ template<class Iter>
 void fill_black(Iter start, const Iter& end, format_t format)
 {
 	using namespace core;
+	using T = typename std::remove_reference<decltype(*start)>::type;
 	switch (format) {
 		case raw_format::yuv444:
-			fill_pattern(start, end, {0,128,128});
+			fill_pattern<3>(start, end, std::array<T,3>{{0,128,128}});
 			break;
 		case raw_format::yuyv422:
 		case raw_format::yvyu422:
-			fill_pattern(start, end, {0,128});
+			fill_pattern<2>(start, end, std::array<T, 2>{{0,128}});
 			break;
 		case raw_format::uyvy422:
 		case raw_format::vyuy422:
-			fill_pattern(start, end, {128, 0});
+			fill_pattern<2>(start, end, std::array<T, 2>{{128, 0}});
 			break;
 		case raw_format::rgb24:
 		case raw_format::rgba32:
@@ -137,10 +157,12 @@ void fill_from_sample(Iter start, const Iter& end, const Iter2& sample)
 }
 
 
-core::pFrame Pad::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame Pad::do_special_single_step(core::pRawVideoFrame frame)
 {
+	if (resolution_ == resolution_t{0,0}) return frame;
 //	const core::pRawVideoFrame frame= 	dynamic_pointer_cast<core::RawVideoFrame>(frame_in);
 	const resolution_t resolution	= frame->get_resolution();
+	if (resolution == resolution_) return frame;
 	const yuri::size_t height_in	= resolution.height;
 	const yuri::size_t width_in		= resolution.width;
 	const format_t format 			= frame->get_format();
@@ -231,23 +253,29 @@ std::map<std::string, vertical_alignment_t> valign_strings {
 	{"bottom", vertical_alignment_t::bottom},
 };
 
+horizontal_alignment_t parse_halign(const std::string& align)
+{
+	auto it=halign_strings.find(align);
+	if (it == halign_strings.end()) return horizontal_alignment_t::center;
+	return it->second;
+}
+vertical_alignment_t parse_valign(const std::string& align)
+{
+	auto it=valign_strings.find(align);
+	if (it == valign_strings.end()) return vertical_alignment_t::center;
+	return it->second;
+}
 }
 bool Pad::set_param(const core::Parameter& param)
 {
-	if (iequals(param.get_name(), "resolution")) {
-		resolution_ = param.get<resolution_t>();
-	} /*else if (iequals(param.get_name(), "height")) {
-		height_ = param.get<size_t>();
-	}*/ else if (iequals(param.get_name(), "halign")) {
-		auto it = halign_strings.find(param.get<std::string>());
-		if (it == halign_strings.end()) halign_ = horizontal_alignment_t::center;
-		else halign_=it->second;
-	} else if (iequals(param.get_name(), "valign")) {
-		auto it = valign_strings.find(param.get<std::string>());
-		if (it == valign_strings.end()) valign_ = vertical_alignment_t::center;
-		else valign_=it->second;
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(resolution_, "resolution")
+			.parsed<std::string>
+				(halign_, "halign", parse_halign)
+			.parsed<std::string>
+				(valign_, "valign", parse_valign))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace pad */

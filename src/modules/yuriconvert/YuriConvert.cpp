@@ -88,6 +88,22 @@ MODULE_REGISTRATION_BEGIN("yuri_convert")
 		REGISTER_CONVERTER(core::raw_format::yuva4444,  core::raw_format::yuyv422, "yuri_convert", 15)
 		REGISTER_CONVERTER(core::raw_format::ayuv4444,  core::raw_format::yuyv422, "yuri_convert", 15)
 
+		REGISTER_CONVERTER(core::raw_format::yuv444,  	core::raw_format::yuv411, "yuri_convert", 20)
+		REGISTER_CONVERTER(core::raw_format::yuv444,  	core::raw_format::yvu411, "yuri_convert", 20)
+
+		REGISTER_CONVERTER(core::raw_format::yuv411,  	core::raw_format::yuyv422, "yuri_convert", 10)
+
+		REGISTER_CONVERTER(core::raw_format::yuyv422,	core::raw_format::yuv411, "yuri_convert", 15)
+		REGISTER_CONVERTER(core::raw_format::yvyu422,	core::raw_format::yuv411, "yuri_convert", 15)
+		REGISTER_CONVERTER(core::raw_format::uyvy422,	core::raw_format::yuv411, "yuri_convert", 15)
+		REGISTER_CONVERTER(core::raw_format::vyuy422,	core::raw_format::yuv411, "yuri_convert", 15)
+
+		REGISTER_CONVERTER(core::raw_format::yuyv422,	core::raw_format::yvu411, "yuri_convert", 15)
+		REGISTER_CONVERTER(core::raw_format::yvyu422,	core::raw_format::yvu411, "yuri_convert", 15)
+		REGISTER_CONVERTER(core::raw_format::uyvy422,	core::raw_format::yvu411, "yuri_convert", 15)
+		REGISTER_CONVERTER(core::raw_format::vyuy422,	core::raw_format::yvu411, "yuri_convert", 15)
+
+
 		REGISTER_CONVERTER(core::raw_format::rgb24,  	core::raw_format::yuv444, "yuri_convert", 20)
 		REGISTER_CONVERTER(core::raw_format::rgba32,  	core::raw_format::yuv444, "yuri_convert", 20)
 		REGISTER_CONVERTER(core::raw_format::argb32,  	core::raw_format::yuv444, "yuri_convert", 20)
@@ -108,13 +124,42 @@ MODULE_REGISTRATION_BEGIN("yuri_convert")
 
 //		REGISTER_CONVERTER(core::raw_format::yuv422_v210, core::raw_format::yuyv422, "yuri_convert", 30)
 
-		REGISTER_CONVERTER(core::raw_format::u8, 	core::raw_format::y8, "yuri_convert", 1)
-		REGISTER_CONVERTER(core::raw_format::v8, 	core::raw_format::y8, "yuri_convert", 1)
-		REGISTER_CONVERTER(core::raw_format::r8, 	core::raw_format::y8, "yuri_convert", 1)
-		REGISTER_CONVERTER(core::raw_format::g8, 	core::raw_format::y8, "yuri_convert", 1)
-		REGISTER_CONVERTER(core::raw_format::b8, 	core::raw_format::y8, "yuri_convert", 1)
+		REGISTER_CONVERTER(core::raw_format::u8, 		core::raw_format::y8, "yuri_convert", 1)
+		REGISTER_CONVERTER(core::raw_format::v8, 		core::raw_format::y8, "yuri_convert", 1)
+		REGISTER_CONVERTER(core::raw_format::r8, 		core::raw_format::y8, "yuri_convert", 1)
+		REGISTER_CONVERTER(core::raw_format::g8, 		core::raw_format::y8, "yuri_convert", 1)
+		REGISTER_CONVERTER(core::raw_format::b8, 		core::raw_format::y8, "yuri_convert", 1)
 		REGISTER_CONVERTER(core::raw_format::depth8, 	core::raw_format::y8, "yuri_convert", 1)
 
+		REGISTER_CONVERTER(core::raw_format::y8, 		core::raw_format::y16, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::y16, 		core::raw_format::y8, "yuri_convert", 20)
+		REGISTER_CONVERTER(core::raw_format::yuyv422,	core::raw_format::y8, "yuri_convert", 40)
+		REGISTER_CONVERTER(core::raw_format::yuyv422,	core::raw_format::y16, "yuri_convert", 40)
+		REGISTER_CONVERTER(core::raw_format::yvyu422,	core::raw_format::y8, "yuri_convert", 40)
+		REGISTER_CONVERTER(core::raw_format::yvyu422,	core::raw_format::y16, "yuri_convert", 40)
+		REGISTER_CONVERTER(core::raw_format::uyvy422,	core::raw_format::y8, "yuri_convert", 40)
+		REGISTER_CONVERTER(core::raw_format::uyvy422,	core::raw_format::y16, "yuri_convert", 40)
+		REGISTER_CONVERTER(core::raw_format::vyuy422,	core::raw_format::y8, "yuri_convert", 40)
+		REGISTER_CONVERTER(core::raw_format::vyuy422,	core::raw_format::y16, "yuri_convert", 40)
+
+		REGISTER_CONVERTER(core::raw_format::y8, 		core::raw_format::yuyv422, "yuri_convert", 20)
+		REGISTER_CONVERTER(core::raw_format::y8, 		core::raw_format::yvyu422, "yuri_convert", 20)
+		REGISTER_CONVERTER(core::raw_format::y8, 		core::raw_format::uyvy422, "yuri_convert", 20)
+		REGISTER_CONVERTER(core::raw_format::y8, 		core::raw_format::vyuy422, "yuri_convert", 20)
+
+		REGISTER_CONVERTER(core::raw_format::y8, 		core::raw_format::yuv411, "yuri_convert", 20)
+		REGISTER_CONVERTER(core::raw_format::y8, 		core::raw_format::yuv444, "yuri_convert", 20)
+
+		REGISTER_CONVERTER(core::raw_format::y16, 		core::raw_format::yuyv422, "yuri_convert", 30)
+		REGISTER_CONVERTER(core::raw_format::y16, 		core::raw_format::yvyu422, "yuri_convert", 30)
+		REGISTER_CONVERTER(core::raw_format::y16, 		core::raw_format::uyvy422, "yuri_convert", 30)
+		REGISTER_CONVERTER(core::raw_format::y16, 		core::raw_format::vyuy422, "yuri_convert", 30)
+
+		REGISTER_CONVERTER(core::raw_format::y16, 		core::raw_format::yuv411, "yuri_convert", 30)
+		REGISTER_CONVERTER(core::raw_format::y16, 		core::raw_format::yuv444, "yuri_convert", 30)
+
+		REGISTER_CONVERTER(core::raw_format::y8, 		core::raw_format::rgb24, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::rgb24, 	core::raw_format::y8, "yuri_convert", 50)
 
 
 
@@ -229,6 +274,21 @@ namespace {
 		ADD_CONVERSION(core::raw_format::yuva4444, 		core::raw_format::yuyv422)
 		ADD_CONVERSION(core::raw_format::ayuv4444, 		core::raw_format::yuyv422)
 
+		ADD_CONVERSION(core::raw_format::yuv444, 		core::raw_format::yuv411)
+		ADD_CONVERSION(core::raw_format::yuv444, 		core::raw_format::yvu411)
+
+		ADD_CONVERSION(core::raw_format::yuv411, 		core::raw_format::yuyv422)
+
+		ADD_CONVERSION(core::raw_format::yuyv422,		core::raw_format::yuv411)
+		ADD_CONVERSION(core::raw_format::yvyu422,		core::raw_format::yuv411)
+		ADD_CONVERSION(core::raw_format::uyvy422,		core::raw_format::yuv411)
+		ADD_CONVERSION(core::raw_format::vyuy422,		core::raw_format::yuv411)
+
+		ADD_CONVERSION(core::raw_format::yuyv422,		core::raw_format::yvu411)
+		ADD_CONVERSION(core::raw_format::yvyu422,		core::raw_format::yvu411)
+		ADD_CONVERSION(core::raw_format::uyvy422,		core::raw_format::yvu411)
+		ADD_CONVERSION(core::raw_format::vyuy422,		core::raw_format::yvu411)
+
 		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::yuv444)
 		ADD_CONVERSION(core::raw_format::rgba32, 		core::raw_format::yuv444)
 		ADD_CONVERSION(core::raw_format::argb32, 		core::raw_format::yuv444)
@@ -255,12 +315,42 @@ namespace {
 //		ADD_CONVERSION(core::raw_format::yuyv422,		YURI_FMT_V210)
 //		ADD_CONVERSION(core::raw_format::uyvy422,	YURI_FMT_V210)
 
-		ADD_CONVERSION(core::raw_format::u8, 	core::raw_format::y8)
-		ADD_CONVERSION(core::raw_format::v8, 	core::raw_format::y8)
-		ADD_CONVERSION(core::raw_format::r8, 	core::raw_format::y8)
-		ADD_CONVERSION(core::raw_format::g8, 	core::raw_format::y8)
-		ADD_CONVERSION(core::raw_format::b8, 	core::raw_format::y8)
-		ADD_CONVERSION(core::raw_format::depth8, 	core::raw_format::y8)
+		ADD_CONVERSION(core::raw_format::u8, 			core::raw_format::y8)
+		ADD_CONVERSION(core::raw_format::v8, 			core::raw_format::y8)
+		ADD_CONVERSION(core::raw_format::r8, 			core::raw_format::y8)
+		ADD_CONVERSION(core::raw_format::g8, 			core::raw_format::y8)
+		ADD_CONVERSION(core::raw_format::b8, 			core::raw_format::y8)
+		ADD_CONVERSION(core::raw_format::depth8,		core::raw_format::y8)
+
+		ADD_CONVERSION(core::raw_format::y8, 			core::raw_format::y16)
+		ADD_CONVERSION(core::raw_format::y16, 			core::raw_format::y8)
+		ADD_CONVERSION(core::raw_format::yuyv422, 		core::raw_format::y8)
+		ADD_CONVERSION(core::raw_format::yuyv422, 		core::raw_format::y16)
+		ADD_CONVERSION(core::raw_format::yvyu422, 		core::raw_format::y8)
+		ADD_CONVERSION(core::raw_format::yvyu422, 		core::raw_format::y16)
+		ADD_CONVERSION(core::raw_format::uyvy422, 		core::raw_format::y8)
+		ADD_CONVERSION(core::raw_format::uyvy422, 		core::raw_format::y16)
+		ADD_CONVERSION(core::raw_format::vyuy422, 		core::raw_format::y8)
+		ADD_CONVERSION(core::raw_format::vyuy422, 		core::raw_format::y16)
+
+		ADD_CONVERSION(core::raw_format::y8, 			core::raw_format::yuyv422)
+		ADD_CONVERSION(core::raw_format::y8, 			core::raw_format::yvyu422)
+		ADD_CONVERSION(core::raw_format::y8, 			core::raw_format::uyvy422)
+		ADD_CONVERSION(core::raw_format::y8, 			core::raw_format::vyuy422)
+
+		ADD_CONVERSION(core::raw_format::y8, 			core::raw_format::yuv411)
+		ADD_CONVERSION(core::raw_format::y8, 			core::raw_format::yuv444)
+
+		ADD_CONVERSION(core::raw_format::y16, 			core::raw_format::yuyv422)
+		ADD_CONVERSION(core::raw_format::y16, 			core::raw_format::yvyu422)
+		ADD_CONVERSION(core::raw_format::y16, 			core::raw_format::uyvy422)
+		ADD_CONVERSION(core::raw_format::y16, 			core::raw_format::vyuy422)
+
+		ADD_CONVERSION(core::raw_format::y16, 			core::raw_format::yuv411)
+		ADD_CONVERSION(core::raw_format::y16, 			core::raw_format::yuv444)
+
+		ADD_CONVERSION(core::raw_format::y8, 			core::raw_format::rgb24)
+		ADD_CONVERSION(core::raw_format::rgb24,			core::raw_format::y8)
 
 
 	};
@@ -323,7 +413,7 @@ core::pFrame YuriConvertor::do_convert_frame(core::pFrame input_frame, format_t 
 	return outframe;
 }
 
-core::pFrame YuriConvertor::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame YuriConvertor::do_special_single_step(core::pRawVideoFrame frame)
 {
 
 	return convert_frame(frame, format_);
@@ -341,7 +431,7 @@ bool YuriConvertor::set_param(const core::Parameter &p)
 		} else if (iequals(clr,"BT2020") || iequals(clr,"REC2020") || iequals(clr,"BT.2020") || iequals(clr,"REC.2020")) {
 			colorimetry_=YURI_COLORIMETRY_REC2020;
 		} else {
-			log[log::warning] << "Unrecognized colorimetry type " << clr << ". Falling back to REC.709" << std::endl;
+			log[log::warning] << "Unrecognized colorimetry type " << clr << ". Falling back to REC.709";// << std::endl;
 			colorimetry_=YURI_COLORIMETRY_REC709;
 		}
 	} else if (iequals(p.get_name(),"format")) {

@@ -90,7 +90,7 @@ core::pRawVideoFrame rotate(const core::pRawVideoFrame& frame, size_t angle) {
 }
 }
 
-core::pFrame Rotate::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame Rotate::do_special_single_step(core::pRawVideoFrame frame)
 //bool Rotate::step()
 {
 //	if (!in[0]) return true;
@@ -111,11 +111,13 @@ core::pFrame Rotate::do_special_single_step(const core::pRawVideoFrame& frame)
 }
 bool Rotate::set_param(const core::Parameter &param)
 {
-	if (param.get_name() == "angle") {
-		angle_ = param.get<size_t>();
+	if (assign_parameters(param)
+			(angle_, "angle"))
+	{
 		if (angle_ != 90 && angle_!=180 && angle_!=270) angle_ = 0;
-	} else return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
-	return true;
+		return true;
+	}
+	return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
 }
 
 } /* namespace rotate */

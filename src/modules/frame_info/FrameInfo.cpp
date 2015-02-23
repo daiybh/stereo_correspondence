@@ -59,10 +59,10 @@ void print_frame(log::Log& log, core::pRawAudioFrame frame)
 void print_frame(log::Log& log, core::pFrame frame) {
 	if (auto f = dynamic_pointer_cast<core::RawVideoFrame>(frame)) {
 		print_frame(log, f);
-	} else if (auto f = dynamic_pointer_cast<core::CompressedVideoFrame>(frame)) {
-		print_frame(log, f);
-	} else if (auto f = dynamic_pointer_cast<core::RawAudioFrame>(frame)) {
-		print_frame(log, f);
+	} else if (auto f2 = dynamic_pointer_cast<core::CompressedVideoFrame>(frame)) {
+		print_frame(log, f2);
+	} else if (auto f3 = dynamic_pointer_cast<core::RawAudioFrame>(frame)) {
+		print_frame(log, f3);
 	} else {
 		log[log::info] << "Unknown format (" << frame->get_format() << ")";
 	}
@@ -121,7 +121,7 @@ FrameInfo::~FrameInfo() noexcept
 {
 }
 
-core::pFrame FrameInfo::do_simple_single_step(const core::pFrame& frame)
+core::pFrame FrameInfo::do_simple_single_step(core::pFrame frame)
 {
 	try {
 		if (print_all_ || !last_frame_ || !same_format(last_frame_, frame)) {
@@ -134,10 +134,10 @@ core::pFrame FrameInfo::do_simple_single_step(const core::pFrame& frame)
 }
 bool FrameInfo::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "print_all") {
-		print_all_ = param.get<bool>();
-	} else return core::IOFilter::set_param(param);
-	return true;
+	if(assign_parameters(param)
+			(print_all_, "print_all"))
+		return true;
+	return core::IOFilter::set_param(param);
 }
 
 } /* namespace frame_info */

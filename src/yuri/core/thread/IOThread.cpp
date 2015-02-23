@@ -12,8 +12,10 @@
 #include "yuri/exception/NotImplemented.h"
 #include "yuri/core/frame/Frame.h"
 #include "yuri/core/pipe/Pipe.h"
+#include "yuri/core/utils/assign_parameters.h"
 #include <algorithm>
 #include <stdexcept>
+#include <numeric>
 
 namespace yuri
 {
@@ -23,40 +25,10 @@ namespace core
 Parameters IOThread::configure()
 {
 	Parameters p = ThreadBase::configure();//;// = make_shared<Parameters>();
-//	p["cpu"]["Bind thread to cpu"]=-1;
 	p["fps_stats"]["Print out_ current FPS every n frames. Set to 0 to disable."]=0;
-//	p["debug"]["Change debug level. value 0 will keep inherited value from app, lower numbers will reduce verbosity, higher numbers will make output more verbose."]=0;
-//	p["node_name"]["Name of the node. Will be filled automatically by the builder."]="";
 	return p;
 }
 
-
-
-//pBasicFrame IOThread::allocate_frame_from_memory(const yuri::ubyte_t *mem, yuri::size_t size, bool large)
-//{
-//	pBasicFrame f = make_shared<BasicFrame>(1);
-//	if (!large) {
-//		f->set_plane(0,mem,size);
-//	} else {
-//		FixedMemoryAllocator::memory_block_t block = FixedMemoryAllocator::get_block(size);
-//		assert(block.first);
-//		std::copy(mem,mem+size,&block.first[0]);
-//		f->get_plane(0).set(block.first,size,block.second);
-//	}
-//	return f;
-//}
-//pBasicFrame IOThread::allocate_frame_from_memory(const plane_t& mem)
-//{
-//	pBasicFrame f = make_shared<BasicFrame>(1);
-//	f->set_plane(0,mem);
-//	return f;
-//}
-//
-//pBasicFrame IOThread::duplicate_frame(pBasicFrame frame)
-//{
-//	pBasicFrame f = frame->get_copy();
-//	return f;
-//}
 
 IOThread::IOThread(const log::Log &log_,pwThreadBase parent, position_t inp, position_t outp, const std::string& id):
 	ThreadBase(log_, parent, id), in_ports_(inp), out_ports_(outp),latency_(200_ms),
@@ -136,40 +108,46 @@ void IOThread::do_connect_in(position_t index, pPipe pipe)
 	if (in_[index]) {
 		log[log::debug] << "Disconnecting already connected pipe from in port " << index << "\n";
 	}
-	in_[index]=PipeConnector(pipe,dynamic_pointer_cast<PipeNotifiable>(get_this_ptr()));
-	active_pipes_ = std::accumulate(in_.begin(), in_.end(), 0, [](const size_t& ap, const PipeConnector&p){return ap + (p?1:0);});
-//	set_fds();
-
+	auto notify_ptr = dynamic_pointer_cast<PipeNotifiable>(get_this_ptr());
+	in_[index]=PipeConnector(pipe,notify_ptr, {});
+	active_pipes_ = std::accumulate(in_.begin(), in_.end(), size_t{}, [](const size_t& ap, const PipeConnector&p) {return ap + (p ? 1 : 0); });
 }
+
 void IOThread::connect_out(position_t index, pPipe pipe)
 {
 	TRACE_METHOD
 	do_connect_out(index, pipe);
 }
+
 void IOThread::do_connect_out(position_t index, pPipe pipe)
 {
 	TRACE_METHOD
 	if (index < 0 || index >= do_get_no_out_ports()) throw std::out_of_range("Output pipe out of Range");
 	if (out_[index]) log[log::debug] << "Disconnecting already connected pipe from out port " << index << "\n";
-	out_[index]=PipeConnector(pipe,dynamic_pointer_cast<PipeNotifiable>(get_this_ptr()));
+	auto notify_ptr = dynamic_pointer_cast<PipeNotifiable>(get_this_ptr());
+	// Output pipe should send source notifications!
+	out_[index]=PipeConnector(pipe,{}, notify_ptr);
 }
 bool IOThread::push_frame(position_t index, pFrame frame)
 {
 	TRACE_METHOD
 	if (!frame) return true;
-	if (index >= 0 && index < get_no_out_ports() && out_[index])
-		if(out_[index]->push_frame(frame)) {
-			if (fps_stats_ && ++streamed_frames_[index]>=fps_stats_) {
-				const size_t frames = streamed_frames_[index];
-				const timestamp_t start = first_frame_[index];
-				const timestamp_t now;
-				const duration_t dur = now-start;
-				log[log::info] << "Streamed " << frames << " in " << dur << ", that's " << (frames*1e6/dur.value) << " fps.";
-				first_frame_[index] = now;
-				streamed_frames_[index] = 0;
-			}
-			return true;
+	if (index >= 0 && index < get_no_out_ports() && out_[index]) {
+		while (!out_[index]->push_frame(frame)) {
+			wait_for(latency_);
+			if (!still_running()) return false;
 		}
+		if (fps_stats_ && ++streamed_frames_[index]>=fps_stats_) {
+			const size_t frames = streamed_frames_[index];
+			const timestamp_t start = first_frame_[index];
+			const timestamp_t now;
+			const duration_t dur = now-start;
+			log[log::info] << "Streamed " << frames << " in " << dur << ", that's " << (frames*1e6/dur.value) << " fps.";
+			first_frame_[index] = now;
+			streamed_frames_[index] = 0;
+		}
+		return true;
+	}
 	return false;
 }
 
@@ -269,10 +247,10 @@ bool IOThread::set_params(Parameters &parameters)
  */
 bool IOThread::set_param(const Parameter &parameter)
 {
-	if (parameter.get_name() == "fps_stats") {
-		fps_stats_ = parameter.get<yuri::size_t>();
-	} else return ThreadBase::set_param(parameter);
-	return true;
+	if (assign_parameters(parameter)
+			(fps_stats_, "fps_stats"))
+		return true;
+	return ThreadBase::set_param(parameter);
 }
 
 /*

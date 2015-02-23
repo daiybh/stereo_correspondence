@@ -60,7 +60,7 @@ core::pFrame JpegDecoder::do_convert_frame(core::pFrame input_frame, format_t ta
 	return do_special_single_step(frame);
 }
 
-core::pFrame JpegDecoder::do_special_single_step(const core::pCompressedVideoFrame& frame)
+core::pFrame JpegDecoder::do_special_single_step(core::pCompressedVideoFrame frame)
 {
 	format_t fmt = frame->get_format();
 	if ((fmt != core::compressed_frame::jpeg) &&
@@ -86,7 +86,7 @@ core::pFrame JpegDecoder::do_special_single_step(const core::pCompressedVideoFra
 
 		jpeg_create_decompress(cinfo);
 
-		jpeg_mem_src(cinfo, frame->data(), frame->size());
+		jpeg_mem_src(cinfo, frame->data(), static_cast<unsigned long>(frame->size()));
 
 
 		if (jpeg_read_header(cinfo,true)!=JPEG_HEADER_OK) {
@@ -116,7 +116,7 @@ core::pFrame JpegDecoder::do_special_single_step(const core::pCompressedVideoFra
 		for (size_t p=0;p<planes;++p) {
 			size_t plane_height = res.height * cinfo->comp_info[p].h_samp_factor/cinfo->comp_info[0].h_samp_factor;
 			row_pointers[p].resize(plane_height);
-			int ls = out_linesize*cinfo->comp_info[p].v_samp_factor/cinfo->comp_info[0].v_samp_factor;
+			auto ls = out_linesize*cinfo->comp_info[p].v_samp_factor/cinfo->comp_info[0].v_samp_factor;
 			for (size_t h = 0; h < plane_height; ++h) {
 				row_pointers[p][h]=PLANE_RAW_DATA(out_frame,p) + h*ls;
 			}
@@ -128,7 +128,7 @@ core::pFrame JpegDecoder::do_special_single_step(const core::pCompressedVideoFra
 		yuri::size_t processed=0;
 
 		while (cinfo->output_scanline < cinfo->image_height) {
-			/*if (!raw_)*/ processed = jpeg_read_scanlines(cinfo, &row_pointers[0][cinfo->output_scanline], res.height - cinfo->output_scanline);
+			/*if (!raw_)*/ processed = jpeg_read_scanlines(cinfo, &row_pointers[0][cinfo->output_scanline], static_cast<JDIMENSION>(res.height - cinfo->output_scanline));
 	//		else {
 	//			log[log::info] << "processing raw line " << cinfo.output_scanline;
 	//			//JSAMPARRAY arr_pointer = &row_pointers[0];
@@ -159,12 +159,11 @@ core::pFrame JpegDecoder::do_special_single_step(const core::pCompressedVideoFra
 
 bool JpegDecoder::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "format") {
-		output_format_ = core::raw_format::parse_format(param.get<std::string>());
-	} else if (param.get_name() == "fast") {
-		fast_ = param.get<bool>();
-	} else return core::SpecializedIOFilter<core::CompressedVideoFrame>::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(output_format_, "format", [](const core::Parameter&p){ return core::raw_format::parse_format(p.get<std::string>()); })
+			(fast_, "fast"))
+		return true;
+	return core::SpecializedIOFilter<core::CompressedVideoFrame>::set_param(param);
 }
 
 } /* namespace jpeg */

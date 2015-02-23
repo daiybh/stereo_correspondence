@@ -45,6 +45,15 @@ bool StreamSocket::connect(const std::string& address, uint16_t port)
 {
 	return do_connect(address, port);
 }
+bool StreamSocket::listen()
+{
+	return do_listen();
+}
+pStreamSocket StreamSocket::accept()
+{
+	return do_accept();
+}
+
 bool StreamSocket::data_available()
 {
 	return do_data_available();

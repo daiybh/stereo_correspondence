@@ -28,6 +28,8 @@ private:
 	virtual void				run();
 	virtual bool 				set_param(const core::Parameter& param);
 	virtual bool 				do_process_event(const std::string& event_name, const event::pBasicEvent& event);
+
+	bool						enabled_;
 };
 
 } /* namespace event_info */

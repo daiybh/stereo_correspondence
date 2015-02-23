@@ -11,6 +11,7 @@
 #ifndef FILEDUMP_H_
 #define FILEDUMP_H_
 #include "yuri/core/thread/IOFilter.h"
+#include "yuri/event/BasicEventProducer.h"
 #include <fstream>
 #include <string>
 
@@ -20,7 +21,7 @@ namespace dump
 {
 
 
-class FileDump: public core::IOFilter
+class FileDump: public core::IOFilter, public event::BasicEventProducer
 {
 public:
 	FileDump(log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters);
@@ -29,7 +30,7 @@ public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
 private:
-	virtual core::pFrame do_simple_single_step(const core::pFrame& frame) override;
+	virtual core::pFrame do_simple_single_step(core::pFrame frame) override;
 	virtual bool set_param(const core::Parameter &param) override;
 	std::ofstream dump_file;
 	std::string filename;

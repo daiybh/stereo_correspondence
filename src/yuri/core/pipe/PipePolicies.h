@@ -14,7 +14,7 @@
 #include "yuri/core/frame/Frame.h"
 #include "yuri/core/parameter/Parameters.h"
 #include <deque>
-
+#include <cassert>
 namespace yuri {
 namespace core {
 
@@ -39,7 +39,7 @@ protected:
 		frames_.push_back(frame);
 		return true;
 	}
-	virtual pFrame impl_pop_frame()
+	pFrame impl_pop_frame()
 	{
 		pFrame frame;
 		if (frames_.empty()) return frame;
@@ -50,8 +50,12 @@ protected:
 	size_t impl_get_size() const {
 		return frames_.size();
 	}
+	bool impl_is_full() const noexcept {
+		return false;
+	}
 private:
 	virtual void drop_frame(const pFrame& frame) = 0;
+
 	std::deque<pFrame> frames_;
 };
 
@@ -80,7 +84,9 @@ protected:
 	size_t impl_get_size() const {
 		return frame_?1:0;
 	}
-
+	bool impl_is_full() const noexcept {
+		return frame_?true:false;
+	}
 private:
 	virtual void drop_frame(const pFrame& frame) = 0;
 	pFrame frame_;
@@ -99,7 +105,7 @@ public:
 			return p;
 		}
 protected:
-	SizeLimitedPolicy(const Parameters& parameters):actual_size_(0),max_size_(0)
+	SizeLimitedPolicy(const Parameters& parameters):actual_size_(0),max_size_(0),last_was_full_(false)
 	{
 		/*! @TODO: Process parameters */
 		max_size_= parameters["size"].get<size_t>();
@@ -117,16 +123,21 @@ protected:
 		frame = frames_.front();
 		frames_.pop_front();
 		actual_size_-= frame->get_size();
+		last_was_full_ = false;
 		return frame;
 	}
 	size_t impl_get_size() const {
 		return frames_.size();
+	}
+	bool impl_is_full() const noexcept {
+		return actual_size_ == max_size_ || last_was_full_;
 	}
 private:
 	virtual void drop_frame(const pFrame& frame) = 0;
 	std::deque<pFrame> frames_;
 	yuri::size_t actual_size_;
 	yuri::size_t max_size_;
+	bool last_was_full_;
 };
 
 /*!
@@ -162,6 +173,9 @@ protected:
 	}
 	size_t impl_get_size() const {
 		return frames_.size();
+	}
+	bool impl_is_full() const noexcept {
+		return frames_.size() == max_count_;
 	}
 private:
 	virtual void drop_frame(const pFrame& frame) = 0;

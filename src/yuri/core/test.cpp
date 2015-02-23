@@ -111,7 +111,7 @@ int main(int argc, char** argv)
 	core::pPipe p = core::PipeGenerator::get_instance().generate("single_blocking", "pajpa", l, core::Parameters());
 //	core::pFrame f = yuri::make_shared<core::RawVideoFrame>(0, resolution_t{640,480});
 
-	size_t check_size = 640*480*3;
+	yuri::size_t check_size = 640*480*3;
 	l[log::info] << "Pre-allocated frames of size " << check_size << "B: " << core::FixedMemoryAllocator::preallocated_blocks(check_size);
 	core::pRawVideoFrame f = core::RawVideoFrame::create_empty(core::raw_format::rgb24,{640,480}, true);
 	l[log::info] << "Frame of with resolution " << f->get_resolution() << " has size " << f->get_size() << " bytes";

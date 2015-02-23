@@ -101,12 +101,13 @@ bool RawFileSource::read_chunk()
 			} else {
 				filepath = next_file();
 			}
-			file.open(filepath.c_str(),std::ifstream::in);
+			file.open(filepath.c_str(),std::ios::in|std::ios::binary);
 			if (file.fail()) {
 				log[log::warning] << "Failed to open " << filepath;
 				if (sequence_pos) {
 					log[log::info] << "Resetting sequence to the beginning";
 					sequence_pos=0;
+					loop_number++;
 				}
 				return true;
 			}
@@ -151,7 +152,7 @@ bool RawFileSource::read_chunk()
 				file.read(reinterpret_cast<char*>(PLANE_RAW_DATA(rframe,i)),std::min(plane_length, PLANE_DATA(rframe,i).size()));
 				if (static_cast<yuri::size_t>(file.gcount()) != plane_length ) {
 					if (first_read) {
-						if (!sequence || sequence_pos==0) {
+						if (!sequence || sequence_pos == 0) {
 							failed_read=true;
 							log[log::warning]<< "Wrong length of the file (read " << file.gcount() << ", expected " << plane_length << ")";
 						} else {
@@ -170,7 +171,7 @@ bool RawFileSource::read_chunk()
 			file.read(reinterpret_cast<char*>(cframe->get_data().data()), length);
 			if (static_cast<yuri::size_t>(file.gcount()) != length ) {
 				if (first_read) {
-					if (!sequence || sequence_pos==0) {
+					if (!sequence || sequence_pos == 0) {
 						failed_read=true;
 						log[log::warning]<< "Wrong length of the file (read " << file.gcount() << ", expected " << length << ")";
 					} else {
@@ -228,7 +229,7 @@ bool RawFileSource::set_param(const core::Parameter &parameter)
 		} else {
 			frame_type_ = frame_type_t::unknown;
 		}
-		log[log::info] << "output format " << output_format << std::endl;
+		log[log::info] << "output format " << output_format;
 	} else if (parameter.get_name() == "path") {
 		path=parameter.get<std::string>();
 		if (path.find("%")!=std::string::npos) {
@@ -255,15 +256,15 @@ std::string RawFileSource::next_file()
 		return path;
 	}
 //	log[log::info] << "Sequence specs found! '"<<match[1]<<"' XXX '"<<match[2]<<"' XXX '"<<match[3]<<"'";
-	size_t width =0;
+	size_t seq_width =0;
 	try {
-		width = lexical_cast<size_t>(match[2]);
+		seq_width = lexical_cast<size_t>(match[2]);
 	}
-	catch (bad_lexical_cast& e) {
+	catch (bad_lexical_cast& ) {
 		return path;
 	}
 	std::stringstream spath;
-	spath << match[1] << std::setfill('0') << std::setw(width) << sequence_pos++ << match[3];
+	spath << match[1] << std::setfill('0') << std::setw(seq_width) << sequence_pos++ << match[3];
 //	log[log::info] << "Returning path " << spath.str();
 	return spath.str();
 

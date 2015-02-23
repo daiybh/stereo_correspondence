@@ -51,7 +51,7 @@ private:
 	std::string app_name_;
 
 	virtual bool set_param(const core::Parameter &parameter) override;
-	virtual core::pFrame do_simple_single_step(const core::pFrame& frame) override;
+	virtual core::pFrame do_simple_single_step(core::pFrame frame) override;
 	virtual bool step() override;
 };
 

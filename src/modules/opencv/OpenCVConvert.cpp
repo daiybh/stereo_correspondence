@@ -37,7 +37,7 @@ OpenCVConvert::~OpenCVConvert() noexcept
 {
 }
 
-core::pFrame OpenCVConvert::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame OpenCVConvert::do_special_single_step(core::pRawVideoFrame frame)
 {
 	assert (frame);
 	if (frame->get_format() == format_) {

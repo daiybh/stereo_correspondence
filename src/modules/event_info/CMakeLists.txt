@@ -5,10 +5,17 @@ SET (MODULE event_info)
 SET (SRC register.cpp 
          EventInfo.cpp
 		 EventInfo.h
+		 EventTimer.cpp
+		 EventTimer.h
 		 PassEvent.cpp
 		 PassEvent.h
 		 )
 
+IF(UNIX AND NOT APPLE)
+SET(SRC ${SRC}
+		 EventDevice.cpp
+		 EventDevice.h)
+ENDIF()
 
  
 add_library(${MODULE} MODULE ${SRC})

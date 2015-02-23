@@ -39,7 +39,7 @@ SplitFrames::~SplitFrames() noexcept
 {
 }
 
-std::vector<core::pFrame> SplitFrames::do_single_step(const std::vector<core::pFrame>& frames)
+std::vector<core::pFrame> SplitFrames::do_single_step(std::vector<core::pFrame> frames)
 //bool SplitFrames::step()
 {
 //	if (!in[0]) return true;

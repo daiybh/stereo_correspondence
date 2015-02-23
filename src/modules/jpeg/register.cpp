@@ -7,6 +7,7 @@
 
 #include "JpegDecoder.h"
 #include "JpegEncoder.h"
+#include "jpeg_common.h"
 #include "yuri/core/thread/IOThreadGenerator.h"
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/compressed_frame_types.h"

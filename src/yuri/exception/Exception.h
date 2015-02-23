@@ -18,13 +18,13 @@ namespace yuri
 {
 namespace exception {
 
-class EXPORT Exception: public std::exception
+class Exception: public std::exception
 {
 public:
-	Exception();
-	Exception(std::string reason);
-	virtual ~Exception()  throw();
-	virtual const char* what() const throw();
+	EXPORT Exception();
+	EXPORT Exception(std::string reason);
+	EXPORT virtual ~Exception()  throw();
+	EXPORT virtual const char* what() const throw();
 protected:
 	std::string reason;
 };

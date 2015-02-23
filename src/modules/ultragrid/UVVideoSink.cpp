@@ -104,7 +104,7 @@ void UVVideoSink::child_ends_hook(core::pwThreadBase /*child*/, int /*code*/, si
 	request_end(core::yuri_exit_interrupted);
 }
 
-core::pFrame UVVideoSink::do_special_single_step(const core::pVideoFrame& frame)
+core::pFrame UVVideoSink::do_special_single_step(core::pVideoFrame frame)
 {
 	if (!frame) return {};
 	format_t yfmt = frame->get_format();

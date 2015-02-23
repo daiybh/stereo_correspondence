@@ -12,7 +12,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/raw_frame_types.h"
-#include "yuri/event/EventHelpers.h"
+#include "yuri/core/utils/assign_events.h"
 #include <cassert>
 #include <algorithm>
 #include <array>
@@ -165,7 +165,7 @@ void flip_dispatch(int yuv_pos, int bpp, bool flip_x, bool flip_y,
 
 }
 
-core::pFrame Flip::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame Flip::do_special_single_step(core::pRawVideoFrame frame)
 {
 	if (!flip_x_ && !flip_y_) return frame;
 	size_t	w = frame->get_width();
@@ -204,30 +204,21 @@ core::pFrame Flip::do_special_single_step(const core::pRawVideoFrame& frame)
 
 bool Flip::set_param(const core::Parameter &parameter)
 {
-	if (parameter.get_name()== "flip_x") {
-		flip_x_=parameter.get<bool>();
-	} else if (parameter.get_name()== "flip_y") {
-		flip_y_=parameter.get<bool>();
-	} else return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(parameter);
-	return true;
+	if(assign_parameters(parameter)
+			(flip_x_, "flip_x")
+			(flip_y_, "flip_y"))
+		return true;
+	return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(parameter);
 }
 
 
 bool Flip::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
-	try {
-
-		if (event_name == "flip_x") {
-			flip_x_ = event::lex_cast_value<bool>(event);
-		} else if (event_name == "flip_y") {
-			flip_y_ = event::lex_cast_value<bool>(event);
-		} else return false;
-	}
-	catch (std::bad_cast&) {
-		log[log::info] << "bad cast in " << event_name;
-		return false;
-	}
-	return true;
+	if (assign_events(event_name, event)
+			(flip_x_, "flip_x")
+			(flip_y_, "flip_y"))
+		return true;
+	return false;
 }
 }
 

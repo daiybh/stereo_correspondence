@@ -105,7 +105,7 @@ bool SageOutput::step()
 	return IOFilter::step();
 }
 
-core::pFrame SageOutput::do_simple_single_step(const core::pFrame& frame)
+core::pFrame SageOutput::do_simple_single_step(core::pFrame frame)
 {
 	if (fmt == 0 || !sail_info) {
 		core::pVideoFrame video_frame = std::dynamic_pointer_cast<core::VideoFrame>(frame);

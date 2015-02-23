@@ -17,24 +17,27 @@ namespace yuri {
 namespace core {
 
 
-class EXPORT PipeConnector {
-
+class PipeConnector {
 public:
-								PipeConnector() = default;
-								PipeConnector(pwPipeNotifiable thread);
-								PipeConnector(pPipe pipe, pwPipeNotifiable thread);
-								PipeConnector(const PipeConnector& orig);
-								~PipeConnector() noexcept;
-	pPipe			 			operator->();
-	void 						reset();
-	void 						reset(pPipe pipe);
-								operator bool() const;
-								operator pPipe();
-	pPipe  						get() const;
+	EXPORT 						PipeConnector() = default;
+	EXPORT 						PipeConnector(pwPipeNotifiable thread, pwPipeNotifiable thread_src);
+	EXPORT 						PipeConnector(pPipe pipe, pwPipeNotifiable thread, pwPipeNotifiable thread_src);
+	EXPORT 						PipeConnector(PipeConnector&& orig) noexcept;
+	EXPORT 						PipeConnector(const PipeConnector&) = delete;
+	EXPORT 						~PipeConnector() noexcept;
+	EXPORT PipeConnector&		operator=(PipeConnector&&) noexcept;
+	EXPORT PipeConnector&		operator=(const PipeConnector&) = delete;
+	EXPORT pPipe				operator->();
+	EXPORT void 				reset();
+	EXPORT void 				reset(pPipe pipe);
+	EXPORT 						operator bool() const;
+	EXPORT 						operator pPipe();
+	EXPORT pPipe  				get() const;
 private:
 	void 						set_pipe(pPipe pipe);
-	void						set_notifications(pwPipeNotifiable) noexcept;
+	void						set_notifications(pwPipeNotifiable, pwPipeNotifiable) noexcept;
 	pwPipeNotifiable			notifiable_;
+	pwPipeNotifiable			notifiable_src_;
 	pPipe				 		pipe_;
 
 

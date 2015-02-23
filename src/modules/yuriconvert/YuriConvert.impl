@@ -147,25 +147,29 @@ template<>
 void convert_line<core::raw_format::bgra32, core::raw_format::argb32>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
-	rgba_bgra(src, dest, width);
+//	rgba_bgra(src, dest, width);
+	rgba_abgr(src, dest, width);
 }
 template<>
 void convert_line<core::raw_format::argb32, core::raw_format::bgra32>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
-	rgba_bgra(src, dest, width);
+//	rgba_bgra(src, dest, width);
+	rgba_abgr(src, dest, width);
 }
 template<>
 void convert_line<core::raw_format::abgr32, core::raw_format::rgba32>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
-	rgba_bgra(src, dest, width);
+//	rgba_bgra(src, dest, width);
+	rgba_abgr(src, dest, width);
 }
 template<>
 void convert_line<core::raw_format::rgba32, core::raw_format::abgr32>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
 {
-	rgba_bgra(src, dest, width);
+//	rgba_bgra(src, dest, width);
+	rgba_abgr(src, dest, width);
 }
 
 void rgba_argb(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
@@ -536,6 +540,424 @@ void convert_line<core::raw_format::depth8, core::raw_format::y8>
 	dest+=width;
 }
 
+template<>
+void convert_line<core::raw_format::y8, core::raw_format::y16>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	const auto end = src + width;
+	while (src < end) {
+		*dest++ = 0;
+		*dest++ = *src++;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::y16, core::raw_format::y8>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	const auto end = src + 2 * width;
+	src++;
+	while (src < end) {
+		*dest++ = *src;
+		src+=2;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::yuyv422, core::raw_format::y8>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	const auto end = src + 2 * width;
+	while (src < end) {
+		*dest++ = *src;
+		src+=2;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::yuyv422, core::raw_format::y16>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	const auto end = src + 2 * width;
+	while (src < end) {
+		*dest++ = 0;
+		*dest++ = *src;
+		src+=2;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::yvyu422, core::raw_format::y8>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	return convert_line<core::raw_format::yuyv422, core::raw_format::y8>(src, dest, width);
+}
+
+template<>
+void convert_line<core::raw_format::yvyu422, core::raw_format::y16>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	return convert_line<core::raw_format::yuyv422, core::raw_format::y16>(src, dest, width);
+}
+
+template<>
+void convert_line<core::raw_format::uyvy422, core::raw_format::y8>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	const auto end = src + 2 * width;
+	++src;
+	while (src < end) {
+		*dest++ = *src;
+		src+=2;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::uyvy422, core::raw_format::y16>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	const auto end = src + 2 * width;
+	++src;
+	while (src < end) {
+		*dest++ = 0;
+		*dest++ = *src;
+		src+=2;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::vyuy422, core::raw_format::y8>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	return convert_line<core::raw_format::uyvy422, core::raw_format::y8>(src, dest, width);
+}
+
+template<>
+void convert_line<core::raw_format::vyuy422, core::raw_format::y16>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	return convert_line<core::raw_format::uyvy422, core::raw_format::y16>(src, dest, width);
+}
+
+template<>
+void convert_line<core::raw_format::y8, core::raw_format::yuyv422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + width;
+	while (src < end) {
+		*dest++ = *src++;
+		*dest++ = 128;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::y8, core::raw_format::yvyu422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	return convert_line<core::raw_format::y8, core::raw_format::yuyv422>(src, dest, width);
+}
+
+template<>
+void convert_line<core::raw_format::y8, core::raw_format::uyvy422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + width;
+	while (src < end) {
+		*dest++ = 128;
+		*dest++ = *src++;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::y8, core::raw_format::vyuy422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	return convert_line<core::raw_format::y8, core::raw_format::uyvy422>(src, dest, width);
+}
+
+template<>
+void convert_line<core::raw_format::y8, core::raw_format::yuv444>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + width;
+	while (src < end) {
+		*dest++ = *src++;
+		*dest++ = 128;
+		*dest++ = 128;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::y8, core::raw_format::yuv411>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + width;
+	while (src < end) {
+		*dest++ = *src++;
+		*dest++ = *src++;
+		*dest++ = 128;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::y16, core::raw_format::yuyv422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + width * 2;
+	++src;
+	while (src < end) {
+		*dest++ = *src;
+		*dest++ = 128;
+		src+=2;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::y16, core::raw_format::yvyu422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	return convert_line<core::raw_format::y8, core::raw_format::yuyv422>(src, dest, width);
+}
+
+template<>
+void convert_line<core::raw_format::y16, core::raw_format::uyvy422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + width * 2;
+	++src;
+	while (src < end) {
+		*dest++ = 128;
+		*dest++ = *src;
+		src+=2;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::y16, core::raw_format::vyuy422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	return convert_line<core::raw_format::y8, core::raw_format::uyvy422>(src, dest, width);
+}
+
+template<>
+void convert_line<core::raw_format::y16, core::raw_format::yuv444>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + width * 2;
+	++src;
+	while (src < end) {
+		*dest++ = *src;
+		*dest++ = 128;
+		*dest++ = 128;
+		src+=2;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::y16, core::raw_format::yuv411>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + width * 2 - 2*(width%2);
+	++src;
+	while (src < end) {
+		*dest++ = *src;
+		src+=2;
+		*dest++ = *src;
+		src+=2;
+		*dest++ = 128;
+	}
+}
+
+
+template<>
+void convert_line<core::raw_format::y8, core::raw_format::rgb24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + width;
+	while (src < end) {
+		*dest++ = *src;
+		*dest++ = *src;
+		*dest++ = *src++;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::rgb24, core::raw_format::y8>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + width;
+	while (src < end) {
+		*dest++ = static_cast<uint8_t>(
+						(static_cast<uint_fast16_t>(*(src+0)) + 
+						 static_cast<uint_fast16_t>(*(src+1)) +
+						 static_cast<uint_fast16_t>(*(src+2))) / 3);
+		src+=3;
+	}
+}
+
+/* ***************************************************************************
+ * 					Other YUV conversions
+ *************************************************************************** */
+
+template<>
+void convert_line<core::raw_format::yuv444, core::raw_format::yuv411>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + 3 * width - (width % 4);
+	while (src < end) {
+		
+		auto u = static_cast<uint8_t>((static_cast<uint_fast16_t>(*(src+1)) + *(src+4)  + *(src+7) + *(src+10)) >> 2);
+		auto v = static_cast<uint8_t>((static_cast<uint_fast16_t>(*(src+2)) + *(src+5)  + *(src+8) + *(src+11)) >> 2);
+		*dest++ = *(src+0);
+		*dest++ = *(src+3);
+		*dest++ = u;
+		*dest++ = *(src+6);
+		*dest++ = *(src+9);
+		*dest++ = v;
+		src+=12;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::yuv444, core::raw_format::yvu411>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + 3 * width - (width % 4);
+	while (src < end) {
+		
+		auto u = static_cast<uint8_t>((static_cast<uint_fast16_t>(*(src+1)) + *(src+4)  + *(src+7) + *(src+10)) >> 2);
+		auto v = static_cast<uint8_t>((static_cast<uint_fast16_t>(*(src+2)) + *(src+5)  + *(src+8) + *(src+11)) >> 2);
+		*dest++ = *(src+0);
+		*dest++ = *(src+3);
+		*dest++ = v;
+		*dest++ = *(src+6);
+		*dest++ = *(src+9);
+		*dest++ = u;
+		src+=12;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::yuv411, core::raw_format::yuyv422>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pix = 0; pix < width; pix+=4) {
+		*dest++ = *src++;
+		const auto y1 = *src++;
+		const auto u = *src++;
+		const auto y2 = *src++;
+		const auto y3 = *src++;
+		const auto v = *src++;
+		*dest++ = u;
+		*dest++ = y1;
+		*dest++ = v;
+		*dest++ = y2;
+		*dest++ = u;
+		*dest++ = y3;
+		*dest++ = v;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::yuyv422, core::raw_format::yuv411>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + 2 * width - (width % 4);
+	while (src < end) {
+		auto u = static_cast<uint8_t>((static_cast<uint_fast16_t>(*(src+1)) + *(src+5)) >> 1);
+		auto v = static_cast<uint8_t>((static_cast<uint_fast16_t>(*(src+3)) + *(src+7)) >> 1);
+		*dest++ = *(src+0);
+		*dest++ = *(src+2);
+		*dest++ = u;
+		*dest++ = *(src+4);
+		*dest++ = *(src+6);
+		*dest++ = v;
+		src+=8;
+	}
+}
+
+
+template<>
+void convert_line<core::raw_format::yvyu422, core::raw_format::yuv411>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + 2 * width - (width % 4);
+	while (src < end) {
+		auto u = static_cast<uint8_t>((static_cast<uint_fast16_t>(*(src+3)) + *(src+7)) >> 1);
+		auto v = static_cast<uint8_t>((static_cast<uint_fast16_t>(*(src+1)) + *(src+5)) >> 1);
+		*dest++ = *(src+0);
+		*dest++ = *(src+2);
+		*dest++ = u;
+		*dest++ = *(src+4);
+		*dest++ = *(src+6);
+		*dest++ = v;
+		src+=8;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::uyvy422, core::raw_format::yuv411>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + 2 * width - (width % 4);
+	while (src < end) {
+		auto u = static_cast<uint8_t>((static_cast<uint_fast16_t>(*(src+0)) + *(src+4)) >> 1);
+		auto v = static_cast<uint8_t>((static_cast<uint_fast16_t>(*(src+2)) + *(src+6)) >> 1);
+		*dest++ = *(src+1);
+		*dest++ = *(src+3);
+		*dest++ = u;
+		*dest++ = *(src+5);
+		*dest++ = *(src+7);
+		*dest++ = v;
+		src+=8;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::vyuy422, core::raw_format::yuv411>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	const auto end = src + 2 * width - (width % 4);
+	while (src < end) {
+		auto u = static_cast<uint8_t>((static_cast<uint_fast16_t>(*(src+2)) + *(src+6)) >> 1);
+		auto v = static_cast<uint8_t>((static_cast<uint_fast16_t>(*(src+0)) + *(src+4)) >> 1);
+		*dest++ = *(src+1);
+		*dest++ = *(src+3);
+		*dest++ = u;
+		*dest++ = *(src+5);
+		*dest++ = *(src+7);
+		*dest++ = v;
+		src+=8;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::yuyv422, core::raw_format::yvu411>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	return convert_line<core::raw_format::yvyu422, core::raw_format::yuv411>(src, dest, width);
+}
+
+template<>
+void convert_line<core::raw_format::yvyu422, core::raw_format::yvu411>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	return convert_line<core::raw_format::yuyv422, core::raw_format::yuv411>(src, dest, width);
+}
+
+template<>
+void convert_line<core::raw_format::uyvy422, core::raw_format::yvu411>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	return convert_line<core::raw_format::vyuy422, core::raw_format::yuv411>(src, dest, width);
+}
+
+template<>
+void convert_line<core::raw_format::vyuy422, core::raw_format::yvu411>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{	
+	return convert_line<core::raw_format::uyvy422, core::raw_format::yuv411>(src, dest, width);
+}
 
 /* ***************************************************************************
  * 					V210 conversions

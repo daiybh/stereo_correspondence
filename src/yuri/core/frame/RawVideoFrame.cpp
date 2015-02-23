@@ -12,6 +12,7 @@
 #include "raw_frame_types.h"
 #include "raw_frame_params.h"
 #include "yuri/core/thread/FixedMemoryAllocator.h"
+#include <numeric>
 namespace yuri {
 namespace core  {
 
@@ -91,7 +92,7 @@ pFrame RawVideoFrame::do_get_copy() const {
 
 size_t RawVideoFrame::do_get_size() const noexcept
 {
-	return std::accumulate(planes_.begin(), planes_.end(), 0,
+	return std::accumulate(planes_.begin(), planes_.end(), size_t{},
 			[](const size_t& a, const Plane& plane){return a + plane.get_size();});
 }
 
@@ -109,7 +110,7 @@ void RawVideoFrame::copy_parameters(Frame& other) const {
 std::tuple<size_t, size_t, resolution_t> RawVideoFrame::get_plane_params(const raw_format::raw_format_t& info, size_t plane, resolution_t resolution)
 {
 
-	const auto& p = info.planes[plane];
+	const auto& p = info.planes.at(plane);
 	return get_plane_params(p, resolution);
 }
 

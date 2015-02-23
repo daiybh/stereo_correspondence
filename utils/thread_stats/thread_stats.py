@@ -69,9 +69,11 @@ class ThreadStats(object):
         for i in self._task_list:
             if not i in self._task_names:
                 try:
-                    name = open('/tmp/%d/%d'%(int(self._pid),int(i)),'rt').read()
+                    #name = open('/tmp/%d/%d'%(int(self._pid),int(i)),'rt').read()
+                    name = open(os.path.join('/proc',str(self._pid),'task',str(i),'comm')).read()
                 except:
-                    continue
+                    name = 'Thread ' + str(i)
+#                    continue
                 self._task_names[i]=name
         
         
@@ -165,7 +167,9 @@ class ThreadStats(object):
     def dump_plot(self):
         plots = []
         for i in self._task_stats:
-            p = Gnuplot.PlotItems.Data(self._task_stats[i]['user'],with_='lines',title='Thread %s USER' % str(i))
+            thid = self._task_names[i] if i in self._task_names else 'Thread %d' % int(i)
+            thid = thid.strip()
+            p = Gnuplot.PlotItems.Data(self._task_stats[i]['user'],with_='lines',title=thid)
             plots.append(p)
         g2 = Gnuplot.Gnuplot()
         g2.title('Thread statistics')

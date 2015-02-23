@@ -48,7 +48,7 @@ void Dup::do_connect_out(position_t index, core::pPipe pipe)
 	MultiIOFilter::do_connect_out(index, pipe);
 }
 
-std::vector<core::pFrame> Dup::do_single_step(const std::vector<core::pFrame>& frames)
+std::vector<core::pFrame> Dup::do_single_step(std::vector<core::pFrame> frames)
 {
 	std::vector<core::pFrame> outframes;
 	if (!hard_dup_) {
@@ -63,11 +63,10 @@ std::vector<core::pFrame> Dup::do_single_step(const std::vector<core::pFrame>& f
 
 bool Dup::set_param(const core::Parameter &parameter)
 {
-	if (parameter.get_name() == "hard_dup") {
-		hard_dup_=parameter.get<bool>();
-	} else
-		return MultiIOFilter::set_param(parameter);
-	return true;
+	if (assign_parameters(parameter)
+			(hard_dup_, "hard_dup"))
+		return true;
+	return MultiIOFilter::set_param(parameter);
 }
 
 }

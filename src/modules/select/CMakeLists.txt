@@ -3,7 +3,10 @@ SET (MODULE select)
 
 # Set all source files module uses
 SET (SRC Select.cpp
-		 Select.h)
+		 Select.h
+		 Unselect.cpp
+		 Unselect.h
+		 register.cpp)
 
 
  

@@ -41,7 +41,7 @@ core::Parameters TestCard::configure()
 
 
 TestCard::TestCard(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("testcard")),resolution_{800, 600},
+core::IOThread(log_,parent,1,1,std::string("testcard")),resolution_(resolution_t{800, 600}),
 fps_(25.0),format_(core::raw_format::yuyv422)
 {
 	IOTHREAD_INIT(parameters)
@@ -75,14 +75,13 @@ void TestCard::run()
 }
 bool TestCard::set_param(const core::Parameter& param)
 {
-	if (iequals(param.get_name(), "resolution")) {
-		resolution_ = param.get<resolution_t>();
-	} else if (iequals(param.get_name(), "fps")) {
-		fps_ = param.get<double>();
-	} else if (iequals(param.get_name(), "format")) {
-		format_ = core::raw_format::parse_format(param.get<std::string>());
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(resolution_, 	"resolution")
+			(fps_,			"fps")
+			.parsed<std::string>
+				(format_,	"format", core::raw_format::parse_format))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace testcard */

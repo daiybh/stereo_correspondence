@@ -23,57 +23,60 @@ namespace libav {
 
 namespace {
 using namespace yuri::core::compressed_frame;
-std::unordered_map<format_t, CodecID> yuri_codec_map = {
-		{mpeg2, 					CODEC_ID_MPEG2VIDEO},
-		{mpeg1, 					CODEC_ID_MPEG1VIDEO},
+std::unordered_map<format_t, AVCodecID> yuri_codec_map = {
+		{mpeg2, 					AV_CODEC_ID_MPEG2VIDEO},
+		{mpeg1, 					AV_CODEC_ID_MPEG1VIDEO},
 //		{YURI_VIDEO_HUFFYUV, 		CODEC_ID_HUFFYUV},
-		{dv, 						CODEC_ID_DVVIDEO},
-		{mpeg2ts,					CODEC_ID_MPEG2TS},
-		{mjpg,						CODEC_ID_MJPEG},
-		{h264,						CODEC_ID_H264},
+		{dv, 						AV_CODEC_ID_DVVIDEO},
+		{mpeg2ts,					AV_CODEC_ID_MPEG2TS},
+		{mjpg,						AV_CODEC_ID_MJPEG},
+		{h264,						AV_CODEC_ID_H264},
 //		{YURI_VIDEO_FLASH,			CODEC_ID_FLASHSV2},
 //		{YURI_VIDEO_DIRAC,			CODEC_ID_DIRAC},
 //		{YURI_VIDEO_H263,			CODEC_ID_H263},
 //		{YURI_VIDEO_H263PLUS,		CODEC_ID_H263P},
-		{theora,					CODEC_ID_THEORA},
-		{vp8,						CODEC_ID_VP8},
+		{theora,					AV_CODEC_ID_THEORA},
+		{vp8,						AV_CODEC_ID_VP8},
 		{core::raw_audio_format::signed_16bit,
-									CODEC_ID_PCM_S16LE}
+									AV_CODEC_ID_PCM_S16LE}
 };
 }
 namespace {
 using namespace yuri::core::raw_format;
-std::unordered_map<format_t, PixelFormat> yuri_pixel_map = {
-		{rgb8,			 			PIX_FMT_RGB8},
-		{bgr8,			 			PIX_FMT_BGR8},
-		{rgb16,						PIX_FMT_RGB555},
-		{rgb16,						PIX_FMT_RGB565},
-		{bgr15,						PIX_FMT_BGR555},
-		{bgr16,						PIX_FMT_BGR565},
-		{rgb24,			 			PIX_FMT_RGB24},
-		{bgr24,			 			PIX_FMT_BGR24},
-		{rgba32,		 			PIX_FMT_RGBA},
-		{argb32,		 			PIX_FMT_ARGB},
-		{bgra32,		 			PIX_FMT_BGRA},
-		{abgr32,		 			PIX_FMT_ABGR},
-		{rgb48,						PIX_FMT_RGB48},
-		{bgr48,						PIX_FMT_BGR48},
-		{rgba64,					PIX_FMT_RGBA64},
-		{bgra64,					PIX_FMT_BGRA64},
+std::unordered_map<format_t, AVPixelFormat> yuri_pixel_map = {
+		{rgb8,			 			AV_PIX_FMT_RGB8},
+		{bgr8,			 			AV_PIX_FMT_BGR8},
+		{rgb16,						AV_PIX_FMT_RGB555},
+		{rgb16,						AV_PIX_FMT_RGB565},
+		{bgr15,						AV_PIX_FMT_BGR555},
+		{bgr16,						AV_PIX_FMT_BGR565},
+		{rgb24,			 			AV_PIX_FMT_RGB24},
+		{bgr24,			 			AV_PIX_FMT_BGR24},
+		{rgba32,		 			AV_PIX_FMT_RGBA},
+		{argb32,		 			AV_PIX_FMT_ARGB},
+		{bgra32,		 			AV_PIX_FMT_BGRA},
+		{abgr32,		 			AV_PIX_FMT_ABGR},
+		{rgb48,						AV_PIX_FMT_RGB48},
+		{bgr48,						AV_PIX_FMT_BGR48},
+#ifdef AV_PIX_FMT_RGBA64
+		{rgba64,					AV_PIX_FMT_RGBA64},
+#endif
+#ifdef AV_PIX_FMT_BGRA64
+		{bgra64,					AV_PIX_FMT_BGRA64},
+#endif
 
+		{y8,						AV_PIX_FMT_GRAY8},
+		{y16,						AV_PIX_FMT_GRAY16},
+		{yuv420p,					AV_PIX_FMT_YUV420P},
+		{yuv422p,					AV_PIX_FMT_YUV422P},
 
-		{y8,						PIX_FMT_GRAY8},
-		{y16,						PIX_FMT_GRAY16},
-		{yuv420p,					PIX_FMT_YUV420P},
-		{yuv422p,					PIX_FMT_YUV422P},
+		{yuv444p,					AV_PIX_FMT_YUV444P},
+		{yuyv422,					AV_PIX_FMT_YUYV422},
+		{uyvy422,					AV_PIX_FMT_UYVY422},
 
-		{yuv444p,					PIX_FMT_YUV444P},
-		{yuyv422,					PIX_FMT_YUYV422},
-		{uyvy422,					PIX_FMT_UYVY422},
+		{yuv411p,					AV_PIX_FMT_YUV411P},
 
-		{yuv411p,					PIX_FMT_YUV411P},
-
-		{yuv422_v210,				PIX_FMT_YUV422P10LE},
+		{yuv422_v210,				AV_PIX_FMT_YUV422P10LE},
 };
 
 using namespace yuri::core::raw_audio_format;
@@ -82,28 +85,28 @@ std::unordered_map<format_t, AVSampleFormat> yuri_audio_format_map = {
 };
 
 
-std::map<PixelFormat, PixelFormat> yuri_pixel_special_map = {
-{PIX_FMT_YUVJ420P, PIX_FMT_YUV420P},
-{PIX_FMT_YUVJ422P, PIX_FMT_YUV422P},
-{PIX_FMT_YUVJ444P, PIX_FMT_YUV444P},
+std::map<AVPixelFormat, AVPixelFormat> yuri_pixel_special_map = {
+{AV_PIX_FMT_YUVJ420P, AV_PIX_FMT_YUV420P},
+{AV_PIX_FMT_YUVJ422P, AV_PIX_FMT_YUV422P},
+{AV_PIX_FMT_YUVJ444P, AV_PIX_FMT_YUV444P},
 };
 
 }
 
 
-PixelFormat avpixelformat_from_yuri(yuri::format_t format)
+AVPixelFormat avpixelformat_from_yuri(yuri::format_t format)
 {
 	auto it = yuri_pixel_map.find(format);
-	return (it==yuri_pixel_map.end())?PIX_FMT_NONE:it->second;
+	return (it==yuri_pixel_map.end())?AV_PIX_FMT_NONE:it->second;
 }
-CodecID avcodec_from_yuri_format(yuri::format_t codec)
+AVCodecID avcodec_from_yuri_format(yuri::format_t codec)
 {
 	auto it = yuri_codec_map.find(codec);
-	return (it==yuri_codec_map.end())?CODEC_ID_NONE:it->second;
+	return (it==yuri_codec_map.end())?AV_CODEC_ID_NONE:it->second;
 }
 
 
-yuri::format_t yuri_pixelformat_from_av(PixelFormat format)
+yuri::format_t yuri_pixelformat_from_av(AVPixelFormat format)
 {
 	auto it = yuri_pixel_special_map.find(format);
 	if (it != yuri_pixel_special_map.end()) format = it->second;
@@ -122,7 +125,7 @@ yuri::format_t yuri_audio_from_av(AVSampleFormat format)
 	return 0;
 }
 
-yuri::format_t yuri_format_from_avcodec(CodecID codec)
+yuri::format_t yuri_format_from_avcodec(AVCodecID codec)
 {
 	for (auto f: yuri_codec_map) {
 		if (f.second == codec) return f.first;
@@ -132,7 +135,7 @@ yuri::format_t yuri_format_from_avcodec(CodecID codec)
 
 core::pRawVideoFrame yuri_frame_from_av(const AVFrame& av_frame)
 {
-	format_t fmt = libav::yuri_pixelformat_from_av(static_cast<PixelFormat>(av_frame.format));
+	format_t fmt = libav::yuri_pixelformat_from_av(static_cast<AVPixelFormat>(av_frame.format));
 	if (fmt == 0) return {};
 
 	core::pRawVideoFrame frame = core::RawVideoFrame::create_empty(fmt, {static_cast<dimension_t>(av_frame.width), static_cast<dimension_t>(av_frame.height)}, true);

@@ -46,7 +46,7 @@ OpenCVFaceDetect::~OpenCVFaceDetect() noexcept
 {
 }
 
-core::pFrame OpenCVFaceDetect::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame OpenCVFaceDetect::do_special_single_step(core::pRawVideoFrame frame)
 {
 	resolution_t res = frame->get_resolution();
 	cv::Mat in_mat(res.height,res.width,CV_8UC1,PLANE_RAW_DATA(frame,0));

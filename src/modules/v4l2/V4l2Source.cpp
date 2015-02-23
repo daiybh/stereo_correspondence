@@ -1,9 +1,9 @@
 /*!
  * @file 		V4l2Source.cpp
- * @author 		Zdenek Travnicek
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
  * @date 		17.5.2009
- * @date		16.2.2013
- * @copyright	Institute of Intermedia, CTU in Prague, 2009 - 2013
+ * @date		25.1.2015
+ * @copyright	Institute of Intermedia, CTU in Prague, 2009 - 2015
  * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
  */
@@ -21,9 +21,13 @@
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/frame/compressed_frame_params.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
+
+#include <errno.h>
+#include <sys/ioctl.h>
+
 namespace yuri {
 
-namespace io {
+namespace v4l2 {
 
 
 
@@ -33,69 +37,34 @@ MODULE_REGISTRATION_BEGIN("v4l2source")
 MODULE_REGISTRATION_END()
 
 namespace {
-	using namespace yuri::core::raw_format;
-	using namespace yuri::core::compressed_frame;
-	std::map<yuri::format_t, uint32_t> formats_map=
-			yuri::map_list_of<yuri::format_t, uint32_t>
-			(rgb24,		V4L2_PIX_FMT_RGB24)
-			(argb32, 	V4L2_PIX_FMT_RGB32)
-			(bgr24, 	V4L2_PIX_FMT_BGR24)
-			(bgra32, 	V4L2_PIX_FMT_BGR32)
-			(rgb15,		V4L2_PIX_FMT_RGB555)
-			(rgb16,		V4L2_PIX_FMT_RGB565)
-			(yuyv422, 	V4L2_PIX_FMT_YUYV)
-			(yvyu422, 	V4L2_PIX_FMT_YVYU)
-			(uyvy422, 	V4L2_PIX_FMT_UYVY)
-			(vyuy422, 	V4L2_PIX_FMT_VYUY)
-			//(yuv420p, V4L2_PIX_FMT_YUV420)
-//			(YURI_VIDEO_DV, V4L2_PIX_FMT_DV)
-//			(YURI_VIDEO_MJPEG, V4L2_PIX_FMT_MJPEG)
-//			(YURI_IMAGE_JPEG, V4L2_PIX_FMT_JPEG)
-			(bayer_bggr,V4L2_PIX_FMT_SBGGR8)
-			(bayer_rggb,V4L2_PIX_FMT_SRGGB8)
-			(bayer_grbg,V4L2_PIX_FMT_SGRBG8)
-			(bayer_gbrg,V4L2_PIX_FMT_SGBRG8)
-
-			(mjpg, 		V4L2_PIX_FMT_MJPEG)
-			(jpeg, 		V4L2_PIX_FMT_JPEG)
-
-			;
-
-
-	std::map<std::string, uint32_t> special_formats=yuri::map_list_of<std::string, uint32_t>
-		("S920", V4L2_PIX_FMT_SN9C20X_I420)
-		("BA81", V4L2_PIX_FMT_SBGGR8);
-
-	/** Converts yuri::format_t to v4l2 format
-	 * \param fmt V4l2 pixel format
-	 * \return yuri::format_t for the specified format.
-	 */
-	static uint32_t yuri_format_to_v4l2(yuri::format_t fmt)
+	int xioctl(int fd, unsigned long int request, void *arg)
 	{
-		if (formats_map.count(fmt)) return formats_map[fmt];
-		return 0;
-//		throw exception::Exception("Unknown format");
-	}
-	/** Converts v4l2 format to yuri::format_t
-	 * \param fmt Pixel format as yuri::format_t
-	 * \return v4l2 pixel format for the specified format.
-	 */
-	static yuri::format_t v4l2_format_to_yuri(uint32_t fmt)
-	{
-		for (const auto& f: formats_map) {
-			if (f.second==fmt) return f.first;
+		int r;
+		while((r = ioctl (fd, request, arg)) < 0) {
+			if (r==-1 && errno==EINTR) continue;
+			break;
 		}
-		return core::raw_format::unknown;
-		//	case V4L2_PIX_FMT_SN9C20X_I420:	return YURI_FMT_YUV420_PLANAR;
-//		throw exception::Exception("Unknown format");
+		return r;
 	}
+
+}
+
+
+#include "v4l2_constants.cpp"
+
+namespace {
+V4l2Source::methods parse_method(const std::string& method_s)
+{
+	if (iequals(method_s,"user")) return V4l2Source::METHOD_USER;
+	else if (iequals(method_s,"mmap")) return V4l2Source::METHOD_MMAP;
+	else if (iequals(method_s,"read")) return V4l2Source::METHOD_READ;
+	else return V4l2Source::METHOD_NONE;
+}
 }
 
 core::Parameters V4l2Source::configure()
 {
 	core::Parameters p = IOThread::configure();
-//	p["width"]["Width of the input image. Note that actual resolution from camera may differ."]=640;
-//	p["height"]["Height of the input image. Note that actual resolution from camera may differ."]=480;
 	p["resolution"]["Resolution of the image. Note that actual resolution may differ"]=resolution_t{640,480};
 	p["path"]["Path to the camera device. usually /dev/video0 or similar."]=std::string();
 	p["method"]["Method used to get images from camera. Possible values are: none, mmap, user, read. For experts only"]="none";
@@ -113,15 +82,17 @@ core::Parameters V4l2Source::configure()
 	p["input"]["Input number to tune"]=0;
 	p["illumination"]["Enable illumination (if present)"]=true;
 	p["combine"]["Combine frames (if camera sends them in chunks)."]=false;
-	p["fps"]["Number of frames per secod requested. The closes LOWER supported value will be selected."]=30;
+	p["fps"]["Number of frames per secod requested. The closes LOWER supported value will be selected."]=fraction_t{30,1};
 	return p;
 }
 
 
 V4l2Source::V4l2Source(log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters)
-	:core::IOThread(log_,parent,0,1,std::string("v4l2")),resolution({640,480}),
+	:core::IOThread(log_,parent,0,1,std::string("v4l2")),
+	 event::BasicEventConsumer(log),
+	 resolution({640,480}),
 	 method(METHOD_NONE),buffers(0),no_buffers(0),buffer_free(0),
-	 combine_frames(false),number_of_inputs(0),frame_duration(0)
+	 combine_frames(false),number_of_inputs(0),fps{30,1},frame_duration(0)
 {
 	IOTHREAD_INIT(parameters)
 	try {
@@ -146,6 +117,9 @@ V4l2Source::V4l2Source(log::Log &log_,core::pwThreadBase parent, const core::Par
 		initialize_capture();
 		// Enable illuminator, if requested by user
 		enable_iluminator();
+
+		enum_controls();
+
 
 	}
 	catch (exception::Exception &e)
@@ -176,8 +150,8 @@ void V4l2Source::run()
 		sleep(get_latency());
 		if (!still_running()) break;
 	}
-//	int frames=0;
-	while (/*frames++<1000 &&*/ still_running()) {
+	while (still_running()) {
+		process_events();
 		FD_ZERO(&set);
 		FD_SET(fd,&set);
 		tv.tv_sec=0;
@@ -201,10 +175,6 @@ void V4l2Source::run()
 //	IO_THREAD_POST_RUN
 }
 
-bool V4l2Source::step()
-{
-	return false;
-}
 bool V4l2Source::init_mmap()
 {
 	struct v4l2_requestbuffers req;
@@ -451,7 +421,6 @@ bool V4l2Source::read_frame()
 	}
 	if (output_frame && !buffer_free) {
 //		output_frame->set_time(0,0,frame_duration);
-//		if (out[0]) push_raw_video_frame(0,timestamp_frame(output_frame));
 		output_frame->set_duration(frame_duration);
 		push_frame(0, output_frame);
 		output_frame.reset();
@@ -477,23 +446,23 @@ bool V4l2Source::stop_capture()
 	}
 }
 
-int V4l2Source::xioctl(int fd, unsigned long int request, void *arg)
-{
-	int r;
-	while((r = ioctl (fd, request, arg)) < 0) {
-		if (r==-1 && errno==EINTR) continue;
-		break;
-	}
-	return r;
-}
+
 
 
 bool V4l2Source::set_param(const core::Parameter &param)
 {
-	log[log::info] << "Processing param " << param.get_name() << " = " << param.get<std::string>();
-	if (param.get_name() == "path") {
-		filename = param.get<std::string>();
-	} else if (param.get_name() == "format") {
+	if (assign_parameters(param)
+			(filename, "path")
+			(resolution, "resolution")
+			(input_number, "input")
+			(illumination, "illumination")
+			(combine_frames, "combine")
+			(fps, "fps")
+			(method, "method", [](const core::Parameter& p){return parse_method(p.get<std::string>());})
+			)
+		return true;
+
+	if (param.get_name() == "format") {
 		std::string format = param.get<std::string>();
 		format_t fmt = core::raw_format::parse_format(format);
 		if (!fmt) {
@@ -510,28 +479,6 @@ bool V4l2Source::set_param(const core::Parameter &param)
 			log[log::warning] << "Unsupported format specified. Trying YUV422";
 			pixelformat = V4L2_PIX_FMT_YUYV;
 		}
-
-//	} else if (param.get_name() == "width") {
-//		width = param.get<yuri::size_t>();
-//	} else if (param.get_name() == "height") {
-//		height = param.get<yuri::size_t>();
-	} else if (param.get_name() == "resolution") {
-		resolution = param.get<resolution_t>();
-	} else if (param.get_name() == "method") {
-		std::string method_s;
-		method_s = param.get<std::string>();
-		if (iequals(method_s,"user")) method = METHOD_USER;
-		else if (iequals(method_s,"mmap")) method = METHOD_MMAP;
-		else if (iequals(method_s,"read")) method = METHOD_READ;
-		else method=METHOD_NONE;
-	} else if (param.get_name() == "input") {
-		input_number = param.get<size_t>();
-	} else if (param.get_name() == "illumination") {
-			illumination = param.get<bool>();
-	} else if (param.get_name() == "combining") {
-		combine_frames = param.get<bool>();
-	} else if (param.get_name() == "fps") {
-		fps= param.get<yuri::size_t>();
 	} else return IOThread::set_param(param);
 	return true;
 
@@ -789,22 +736,23 @@ bool V4l2Source::set_frame_params()
 	strp.parm.capture.readbuffers=0;
 	strp.parm.capture.extendedmode=0;
 	strp.parm.capture.capturemode=0;
-	strp.parm.capture.timeperframe.numerator=1;
-	strp.parm.capture.timeperframe.denominator=fps;
+	// Numerator and denominator are switched because we're changing it from FPS to frame time...
+	strp.parm.capture.timeperframe.numerator=fps.denom;
+	strp.parm.capture.timeperframe.denominator=fps.num;
 	if (xioctl(fd,VIDIOC_S_PARM,&strp)<0) {
-		log[log::error] << "Failed to set frame parameters (FPS)" << std::endl;
+		log[log::error] << "Failed to set frame parameters (FPS)";
 		//throw exception::Exception ("Failed to set input format!");
 		return false;
 	}
 	if (xioctl(fd,VIDIOC_G_PARM,&strp)<0) {
-		log[log::error] << "Failed to verify frame parameters (FPS)" << std::endl;
+		log[log::error] << "Failed to verify frame parameters (FPS)";
 		//throw exception::Exception ("Failed to set input format!");
 		return false;
 	}
-	log[log::info] << "Driver reports current frame interval " << strp.parm.capture.timeperframe.numerator << "/"
-			<< strp.parm.capture.timeperframe.denominator << "s" << std::endl;
-	if (strp.parm.capture.timeperframe.denominator!=0) {
-		frame_duration = 1_s*strp.parm.capture.timeperframe.numerator/strp.parm.capture.timeperframe.denominator;
+	fps = {strp.parm.capture.timeperframe.denominator,strp.parm.capture.timeperframe.numerator};
+	log[log::info] << "Driver reports current frame interval " << !fps << "s";
+	if (fps.valid() || fps.num!=0) {
+		frame_duration = 1_s/fps.get_value();
 	} else {
 		frame_duration = 0_s;
 	}
@@ -860,36 +808,28 @@ bool V4l2Source::initialize_capture()
  */
 bool V4l2Source::enable_iluminator()
 {
-	if (illumination) {
-		struct v4l2_queryctrl queryctrl;
-		struct v4l2_control control;
-		memset (&queryctrl, 0, sizeof (queryctrl));
-		queryctrl.id=V4L2_CID_ILLUMINATORS_1;
+	return controls::set_control(fd, "iluminator", illumination, log);
+}
 
-		if (xioctl (fd, VIDIOC_QUERYCTRL, &queryctrl)<0) {
-		        log[log::error] << "Illuminator is not supported" << std::endl;
-		} else if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED) {
-			log[log::error] << "Illuminator is disabled" << std::endl;
-		} else {
-			log[log::debug] << "Trying to enable illuminator " << queryctrl.name << std::endl;
-			memset (&control, 0, sizeof (control));
-			control.id = V4L2_CID_ILLUMINATORS_1;
-			control.value = queryctrl.maximum;
-			if (xioctl (fd, VIDIOC_S_CTRL, &control)<0) {
-				log[log::error]<< "Failed to enable illuminator" << std::endl;
-			} else {
-				control.value = 0;
-				if (xioctl (fd, VIDIOC_G_CTRL, &control)>=0) {
-					if (control.value) {
-						log[log::info] << "Illuminator enabled." <<std::endl;
-					} else {
-						log[log::error] << "Illuminator set, but camera reports it's not..." << std::endl;
-					}
-				} else {
-					log[log::info]<<"Illuminator enabled, but failed to query it's status."<<std::endl;
-				}
-			}
-		}
+bool V4l2Source::enum_controls()
+{
+	controls_ = controls::get_control_list(fd, log);
+	log[log::info] << "Supported controls:";
+	for (const auto& c: controls_) {
+		log[log::info] << "\t'" << c.name << "' (" << c.short_name
+				<< "), value: " << c.value
+				<< ", range: <" << c.min_value<<", "<<c.max_value<<">";
+	}
+	return true;
+}
+
+bool V4l2Source::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
+{
+	auto it = std::find_if(controls_.cbegin(), controls_.cend(), [&event_name](const controls::control_info&info){return iequals(info.name, event_name);});
+	if (it != controls_.cend()) {
+		controls::set_control(fd, it->id, event, log);
+	} else if (!controls::set_control(fd, event_name, event, log)) {
+//		log[log::warning] << "set control failed " << event_name;
 	}
 	return true;
 }

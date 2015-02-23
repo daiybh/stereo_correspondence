@@ -14,14 +14,20 @@
 extern "C" {
 	#include "libavcodec/avcodec.h"
 }
+
+#if LIBAVUTIL_VERSION_MAJOR < 52
+#define YURI_USING_LEGACY_FFMPEG 1
+#include "legacy_libav.h"
+#else
+#endif
 namespace yuri {
 namespace libav {
 
-PixelFormat avpixelformat_from_yuri(yuri::format_t format);
-CodecID avcodec_from_yuri_format(yuri::format_t codec);
+AVPixelFormat avpixelformat_from_yuri(yuri::format_t format);
+AVCodecID avcodec_from_yuri_format(yuri::format_t codec);
 
-yuri::format_t yuri_pixelformat_from_av(PixelFormat format);
-yuri::format_t yuri_format_from_avcodec(CodecID codec);
+yuri::format_t yuri_pixelformat_from_av(AVPixelFormat format);
+yuri::format_t yuri_format_from_avcodec(AVCodecID codec);
 yuri::format_t yuri_audio_from_av(AVSampleFormat format);
 
 core::pRawVideoFrame yuri_frame_from_av(const AVFrame& frame);

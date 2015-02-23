@@ -93,7 +93,7 @@ X264Encoder::~X264Encoder() noexcept
 	}
 }
 
-core::pFrame X264Encoder::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame X264Encoder::do_special_single_step(core::pRawVideoFrame frame)
 {
 	auto it = supported_formats.find(frame->get_format());
 	if (it == supported_formats.end()) return {};

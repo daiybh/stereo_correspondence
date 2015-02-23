@@ -12,8 +12,18 @@
 #include "yuri/core/thread/IOThreadGenerator.h"
 #include "yuri/core/pipe/PipeGenerator.h"
 #include "yuri/core/utils/ModuleLoader.h"
+#include "yuri/core/utils/assign_parameters.h"
+#include "builder_utils.h"
 #define TIXML_USE_STL
+#ifdef YURI_WIN
+#pragma warning( push )
+// Disable "declaration of xxx hides class member
+#pragma warning( disable : 4458)
+#endif
 #include "yuri/core/tinyxml/tinyxml.h"
+#ifdef YURI_WIN
+#pragma warning(pop)
+#endif
 #ifdef YURI_CYGWIN
 #include <cstdlib>
 #endif
@@ -56,22 +66,6 @@ load_value(TiXmlElement* element, const std::string& name, T& value, const U& de
 	return true;
 }
 
-struct node_record_t {
-	std::string name;
-	std::string class_name;
-	Parameters 	parameters;
-	pIOThread	instance;
-};
-struct link_record_t {
-	std::string name;
-	std::string class_name;
-	Parameters 	parameters;
-	std::string source_node;
-	std::string target_node;
-	position_t	source_index;
-	position_t	target_index;
-	pPipe		pipe;
-};
 
 #ifdef YURI_CYGWIN
 // For some reason, there's no std::stoll under cygwin...
@@ -81,8 +75,8 @@ struct link_record_t {
 #endif
 
 }
-struct XmlBuilder::builder_pimpl_t:  public event::BasicEventParser {
-	builder_pimpl_t(log::Log& log_, XmlBuilder& builder):BasicEventParser(log_),log(log_),builder(builder){}
+struct XmlBuilder::builder_pimpl_t{
+	builder_pimpl_t(log::Log& log_, XmlBuilder& builder):log(log_),builder(builder){}
 	void load_file(const std::string&);
 
 	void process_modules();
@@ -96,27 +90,9 @@ struct XmlBuilder::builder_pimpl_t:  public event::BasicEventParser {
 	void process_routing();
 
 	void load_builtin_modules();
-	void load_module_dir(const std::string&);
-	void load_modules(const std::vector<std::string>&);
-
-	bool start_links();
-	bool prepare_nodes();
-	bool prepare_routing();
-	bool start_nodes();
-
-	void step();
-
-	virtual event::pBasicEventProducer find_producer(const std::string& name) override;
-	virtual event::pBasicEventConsumer find_consumer(const std::string& name) override;
-	virtual bool 				do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
-
-
-//	Parameters parse_general_params();
-
 
 	event::pBasicEvent parse_expression(const std::string expression);
 	Parameters parse_parameters(const TiXmlElement* element);
-//	Parameters parse_parameters(const TiXmlElement* element);
 
 	void verify_node_class(const std::string& class_name);
 	void verify_link_class(const std::string& class_name);
@@ -129,7 +105,7 @@ struct XmlBuilder::builder_pimpl_t:  public event::BasicEventParser {
 	TiXmlElement* root {nullptr};
 	std::string name;
 	std::string description;
-	std::vector<std::string> routing_info;
+//	std::vector<std::string> routing_info;
 
 
 	std::vector<std::string> module_dirs;
@@ -138,6 +114,7 @@ struct XmlBuilder::builder_pimpl_t:  public event::BasicEventParser {
 	std::map<std::string, event::pBasicEvent> input_events;
 	std::map<std::string, node_record_t> nodes;
 	std::map<std::string, link_record_t> links;
+	std::string routing;
 };
 
 #define VALID(x,msg) if (!(x)) { log[log::error] << msg; throw exception::InitializationFailed(msg); }
@@ -170,67 +147,51 @@ void XmlBuilder::builder_pimpl_t::process_modules()
 		if (node->QueryValueAttribute(path_attrib, &path)!=TIXML_SUCCESS) continue;
 		modules.push_back(std::move(path));
 	}
-	load_modules(modules);
+	builder::load_modules(log, modules);
 }
 
 void XmlBuilder::builder_pimpl_t::process_module_dirs()
 {
 //	log[log::verbose_debug] << "Loading <module_dir>s";
 	TiXmlElement * node = nullptr;
-	std::vector<std::string> module_dirs;
+	std::vector<std::string> module_dirs_local;
 	while((node = dynamic_cast<TiXmlElement*>(root->IterateChildren(module_dir_tag, node)))) {
 		std::string path;
 		if (node->QueryValueAttribute(path_attrib, &path)!=TIXML_SUCCESS) continue;
-		module_dirs.push_back(std::move(path));
+		module_dirs_local.push_back(std::move(path));
 	}
-	for (const auto& m: module_dirs) {
-		load_module_dir(m);
+	for (const auto& m: module_dirs_local) {
+		builder::load_module_dir(log, m);
 	}
 }
 
 void XmlBuilder::builder_pimpl_t::load_builtin_modules()
 {
-	for (const auto& path: module_loader::get_builtin_paths()) {
-		load_module_dir(path);
-	}
-}
-void XmlBuilder::builder_pimpl_t::load_module_dir(const std::string& path)
-{
-	load_modules(module_loader::find_modules_path(path));
-}
-void XmlBuilder::builder_pimpl_t::load_modules(const std::vector<std::string>& modules)
-{
-	for (const auto& module: modules) {
-		if (module_loader::load_module(module)) {
-			log[log::info] << "Loaded module " << module;
-		} else {
-			log[log::warning] << "Failed to load module " << module;
-		}
-	}
+	builder::load_builtin_modules(log);
 }
 
 void XmlBuilder::builder_pimpl_t::process_argv(const std::vector<std::string>& var)
 {
 	for (const std::string& param_pair: var) {
-//		log[log::info] << "Checking " << param_pair;
 		auto idx = param_pair.find('=');
-//		log[log::info] << "idx: " << idx;
 		if (idx == param_pair.npos) continue;
 		const std::string& val = param_pair.substr(idx+1);
 		Parameter p(param_pair.substr(0,idx));
-		if (event::pBasicEvent event = event::BasicEventParser::parse_expr(log, val,{})) {
-//			log[log::info] << "Got event" ;
+		/*if (event::pBasicEvent event = event::BasicEventParser::parse_expr(log, val, input_events)) {
 			p.set_value(event);
+			input_events[p.get_name()]=event;
 		} else {
-//			log[log::info] << "No event, assuming a string" ;
 			p=val;
-		}
+			input_events[p.get_name()]=val;
+		}*/
+		auto event = parse_expression(val);
+		p.set_value(event);
+		input_events[p.get_name()]=event;
 		argv[p.get_name()]=std::move(p);
+
 	}
-//	for (const auto&p: argv) {
-//		log[log::info] << "Found parameter " << p.first << ": " << p.second.get<std::string>();
-//	}
 }
+
 void XmlBuilder::builder_pimpl_t::process_variables()
 {
 	TiXmlElement * node = nullptr;
@@ -238,19 +199,19 @@ void XmlBuilder::builder_pimpl_t::process_variables()
 		input_events[av.first]=av.second.get_value();
 	}
 	while((node = dynamic_cast<TiXmlElement*>(root->IterateChildren(variable_tag, node)))) {
-		std::string name;
-		if (node->QueryValueAttribute(name_attrib, &name)!=TIXML_SUCCESS) continue;
+		std::string node_name;
+		if (node->QueryValueAttribute(name_attrib, &node_name)!=TIXML_SUCCESS) continue;
 //		log[log::info] << "Checking variable " << name;
 		std::string desc;
 		node->QueryValueAttribute(description_attrib, &desc);// This is optional
-		auto it = input_events.find(name);
+		auto it = input_events.find(node_name);
 		if (it != input_events.end()){
-			variables[name][desc].set_value(it->second);
+			variables[node_name][desc].set_value(it->second);
 		} else {
 			const char* text = node->GetText();
 			if (!text) text = "";
-			variables[name][desc]=parse_expression(text);
-			input_events[name]=variables[name].get_value();
+			variables[node_name][desc]=parse_expression(text);
+			input_events[node_name]=variables[node_name].get_value();
 		}
 	}
 //	for (const auto&p: variables) {
@@ -280,11 +241,11 @@ Parameters XmlBuilder::builder_pimpl_t::parse_parameters(const TiXmlElement* ele
 	if (element) {
 		const TiXmlElement * node = nullptr;
 		while((node = dynamic_cast<const TiXmlElement*>(element->IterateChildren(parameter_tag, node)))) {
-			std::string name;
-			if (node->QueryValueAttribute(name_attrib, &name)!=TIXML_SUCCESS) continue;
+			std::string node_name;
+			if (node->QueryValueAttribute(name_attrib, &node_name)!=TIXML_SUCCESS) continue;
 			const char* text = node->GetText();
 			if (!text) text = "";
-			params[name]=parse_expression(text);
+			params[node_name]=parse_expression(text);
 		}
 	}
 	return params;
@@ -294,17 +255,10 @@ void XmlBuilder::builder_pimpl_t::process_nodes()
 	TiXmlElement * node = nullptr;
 	while((node = dynamic_cast<TiXmlElement*>(root->IterateChildren(node_tag, node)))) {
 		node_record_t record;
-//		if (node->QueryValueAttribute(name_attrib, &record.name)!=TIXML_SUCCESS) continue;
-//		if (node->QueryValueAttribute(name_attrib, &record.class_name)!=TIXML_SUCCESS) continue;
 		VALID_XML(node->QueryValueAttribute(name_attrib, &record.name)==TIXML_SUCCESS)
 		VALID_XML(node->QueryValueAttribute(class_attrib, &record.class_name)==TIXML_SUCCESS)
 		record.parameters = parse_parameters(node);
-		verify_node_class(record.class_name);
-//		log[log::info] << "Storing node " << record.name;
-//		for (const auto&p: record.parameters) {
-//			log[log::info] << "proc_node: param: " << p.second.get_name() << " = " <<
-//					p.second.get<std::string>();
-//		}
+		builder::verify_node_class(record.class_name);
 		nodes[record.name]=std::move(record);
 	}
 }
@@ -327,11 +281,7 @@ void XmlBuilder::builder_pimpl_t::process_links()
 		record.target_node = target.substr(0,idx);
 		record.target_index = stoll(target.substr(idx+1));
 		record.parameters = parse_parameters(node);
-		verify_link_class(record.class_name);
-//		log[log::info] << "Storing node " << record.name;
-//		log[log::info] << "Parsed link " << record.name << " ["<<record.class_name <<"], from "
-//				<< record.source_node << ": " << record.source_index <<" to "
-//				<< record.target_node << ": " << record.target_index;
+		builder::verify_link_class(record.class_name);
 		links[record.name]=std::move(record);
 	}
 }
@@ -340,32 +290,25 @@ void XmlBuilder::builder_pimpl_t::process_routing()
 	TiXmlElement * node = nullptr;
 	if((node = dynamic_cast<TiXmlElement*>(root->IterateChildren(event_tag, node)))) {
 		const char* text = node->GetText();
-		if (text) routing_info.push_back(text);
+		//if (text) routing_info.push_back(text);
+		if (text) routing.append(text);
 	}
 }
-void XmlBuilder::builder_pimpl_t::verify_node_class(const std::string& class_name)
-{
-	if (!IOThreadGenerator::get_instance().is_registered(class_name)) {
-//		log[log::info] << "Node class " << class_name << " is not registered";
-		throw exception::InitializationFailed("Node class " + class_name + " is not registered");
-	}
-}
-void XmlBuilder::builder_pimpl_t::verify_link_class(const std::string& class_name)
-{
-	if (!PipeGenerator::get_instance().is_registered(class_name)) {
-//		log[log::info] << "Pipe class " << class_name << " is not registered";
-		throw exception::InitializationFailed("Node class " + class_name + " is not registered");
-	}
-}
+
 void XmlBuilder::builder_pimpl_t::verify_links()
 {
 	using map_elem = std::pair<std::string, position_t>;
 	std::map<map_elem, std::string> used_sources, used_targets;
 	for (const auto& link: links) {
-		auto s = nodes.find(link.second.source_node);
-		auto t = nodes.find(link.second.target_node);
-		VALID(s != nodes.end(),"Unknown source node " + link.second.source_node + " in link " +link.first)
-		VALID(t != nodes.end(),"Unknown target node " + link.second.target_node + " in link " +link.first)
+		const auto& src_node = link.second.source_node;
+		const auto& tgt_node = link.second.target_node;
+
+//		auto s = nodes.find(link.second.source_node);
+//		auto t = nodes.find(link.second.target_node);
+		VALID(is_special_link_target(src_node) || contains(nodes, src_node)
+				,"Unknown source node " + link.second.source_node + " in link " +link.first)
+		VALID(is_special_link_target(tgt_node) || contains(nodes, tgt_node)
+				,"Unknown target node " + link.second.target_node + " in link " +link.first)
 		map_elem selem {link.second.source_node, link.second.source_index};
 		map_elem telem {link.second.target_node, link.second.target_index};
 		auto s2 = used_sources.find(selem);
@@ -376,127 +319,7 @@ void XmlBuilder::builder_pimpl_t::verify_links()
 		used_targets[telem]=link.first;
 	}
 }
-bool XmlBuilder::builder_pimpl_t::start_links()
-{
-//	const auto& parent = builder.get_this_ptr();
-	for (auto& link: links) {
-		auto& record = link.second;
-		const auto& name = record.name;
-		const auto& class_name = record.class_name;
-		Parameters params = PipeGenerator::get_instance().configure(class_name);
-		if (!(record.pipe = PipeGenerator::get_instance().generate(class_name, name, log, params.merge(record.parameters)))) {
-			return false;
-		}
-		pIOThread source = get_node(record.source_node);
-		if (!source) {
-			log[log::error] << "Source node '" << record.source_node << "' for link " << name;
-			return false;
-		}
-		pIOThread target = get_node(record.target_node);
-		if (!target) {
-			log[log::error] << "Target node '" << record.target_node << "' for link " << name;
-			return false;
-		}
-		try {
-//			log[log::info] << "Connectin source";
-			source->connect_out(record.source_index, record.pipe);
-//			log[log::info] << "Connectin target";
-			target->connect_in(record.target_index, record.pipe);
-		}
-		catch (std::out_of_range& ) {
-			log[log::error] << "Pipe index out of range";
-			return false;
-		}
-		log[log::debug] << "Pipe " << name << " created successfully";
-	}
-	return true;
-}
-bool XmlBuilder::builder_pimpl_t::prepare_nodes()
-{
-	const auto& parent = builder.get_this_ptr();
-	for (auto& node: nodes) {
-		auto& record = node.second;
-		const auto& name = record.name;
-		const auto& class_name = record.class_name;
-		Parameters params = IOThreadGenerator::get_instance().configure(class_name);
-		params.merge(record.parameters);
-//		for (const auto&p: record.parameters) {
-//			log[log::info] << "prep_nodesX: param: " << p.second.get_name() << " = " <<
-//					p.second.get<std::string>();
-//		}
 
-		params["_node_name"]=name;
-//		for (const auto&p: params) {
-//			log[log::info] << "prep_nodes: param: " << p.second.get_name() << " = " <<
-//					p.second.get<std::string>();
-//		}
-		if (!(record.instance = IOThreadGenerator::get_instance().generate(class_name, log, parent, params))) {
-			return false;
-		}
-		log[log::debug] << "Node " << name << " created successfully";
-	}
-	return true;
-}
-bool XmlBuilder::builder_pimpl_t::prepare_routing()
-{
-//	const auto& parent = builder.get_this_ptr();
-	for (auto& ri: routing_info) {
-		if (!parse_routes(ri)) log[log::warning] << "Failed to parse routes";
-	}
-	return true;
-}
-
-bool XmlBuilder::builder_pimpl_t::start_nodes()
-{
-	for (auto& node: nodes) {
-		if (!builder.spawn_thread(node.second.instance)) return false;
-	}
-	return true;
-}
-pIOThread XmlBuilder::builder_pimpl_t::get_node(const std::string& name)
-{
-	pIOThread p;
-	auto it = nodes.find(name);
-	if (it != nodes.end()) {
-		p = it->second.instance;
-		if (p) log[log::debug] << "Found " << name;
-	}
-	if (!p) {
-		if (name == this->name || name == "@") {
-			p = dynamic_pointer_cast<IOThread>(builder.get_this_ptr());
-		}
-		if (p) log[log::debug] << "Resolved " << name << " as this";
-	}
-	return p;
-}
-
-event::pBasicEventProducer XmlBuilder::builder_pimpl_t::find_producer(const std::string& name)
-{
-	event::pBasicEventProducer p;
-	if (pIOThread node = get_node(name)) {
-		p = dynamic_pointer_cast<event::BasicEventProducer>(node);
-	}
-	return p;
-}
-event::pBasicEventConsumer XmlBuilder::builder_pimpl_t::find_consumer(const std::string& name)
-{
-	event::pBasicEventConsumer p;
-	if (pIOThread node = get_node(name)) {
-		p = dynamic_pointer_cast<event::BasicEventConsumer>(node);
-	}
-	return p;
-}
-bool XmlBuilder::builder_pimpl_t::do_process_event(const std::string& /*event_name*/, const event::pBasicEvent& /*event*/)
-{
-//	assert(false);
-//	return false;
-	return true;
-}
-void XmlBuilder::builder_pimpl_t::step()
-{
-	process_events();
-	run_routers();
-}
 #undef VALID
 #undef VALID_XML
 
@@ -504,12 +327,13 @@ Parameters XmlBuilder::configure()
 {
 	Parameters p = IOThread::configure();
 	p["filename"]["Path to  XML file."]="";
+	p["run_limit"]["Runtime limit in seconds"]=0.0;
 	return p;
 }
 
 
 XmlBuilder::XmlBuilder(const log::Log& log_, pwThreadBase parent, const Parameters& parameters)
-:IOThread(log_,parent,0,0,"XmlBuilder"),event::BasicEventParser(log)
+:GenericBuilder(log_,parent,"XmlBuilder")
 {
 	pimpl_.reset(new builder_pimpl_t(log,*this));
 	set_latency(10_ms);
@@ -518,7 +342,14 @@ XmlBuilder::XmlBuilder(const log::Log& log_, pwThreadBase parent, const Paramete
 
 	pimpl_->process_modules();
 	pimpl_->process_module_dirs();
-//	pimpl_->process_argv(argv);
+
+	// Emulate argv from params
+	std::vector<std::string> argv;
+	for (const auto& param: parameters) {
+		argv.push_back(param.first+"="+param.second.get<std::string>());
+	}
+	pimpl_->process_argv(argv);
+
 	pimpl_->process_variables();
 	Parameters general = pimpl_->process_general();
 	IOTHREAD_INIT(general.merge(parameters)); //TODO Shouldn't this be the other way round? general won't be used at all if used like this...
@@ -526,11 +357,12 @@ XmlBuilder::XmlBuilder(const log::Log& log_, pwThreadBase parent, const Paramete
 	pimpl_->process_nodes(); // TODO process all nodes
 	pimpl_->process_links(); // TODO process all links
 	pimpl_->verify_links();
-	log[log::info] << "File seems to be parsed successfully";
+	log[log::debug] << "File seems to be parsed successfully";
+	set_graph(pimpl_->nodes, pimpl_->links, pimpl_->routing);
 
 }
 XmlBuilder::XmlBuilder(const log::Log& log_, pwThreadBase parent, const std::string& filename, const std::vector<std::string>& argv, bool parse_only)
-:IOThread(log_,parent,0,0,"XmlBuilder"),event::BasicEventParser(log)
+:GenericBuilder(log_,parent,"XmlBuilder")
 {
 	pimpl_.reset(new builder_pimpl_t(log, *this));
 	set_latency(10_ms);
@@ -542,9 +374,6 @@ XmlBuilder::XmlBuilder(const log::Log& log_, pwThreadBase parent, const std::str
 		pimpl_->process_argv(argv);
 		pimpl_->process_variables();
 		Parameters general = pimpl_->process_general();
-//		for (const auto& p: general) {
-//			log[log::info] << "Found general: " << p.first << ": " << p.second.get<std::string>();
-//		}
 		IOTHREAD_INIT(general);
 	} catch (...) {
 		if (!parse_only) throw;
@@ -555,52 +384,24 @@ XmlBuilder::XmlBuilder(const log::Log& log_, pwThreadBase parent, const std::str
 	pimpl_->process_nodes(); // TODO process all nodes
 	pimpl_->process_links(); // TODO process all links
 	pimpl_->verify_links();
-	log[log::info] << "File seems to be parsed successfully";
+	log[log::debug] << "File seems to be parsed successfully";
+	set_graph(pimpl_->nodes, pimpl_->links, pimpl_->routing);
 }
 
 XmlBuilder::~XmlBuilder() noexcept {}
 
-void XmlBuilder::run()
-{
-	if (!pimpl_->prepare_nodes()) return;
-	if (!pimpl_->start_links()) return;
-	if (!pimpl_->prepare_routing()) return;
-	if (!pimpl_->start_nodes()) return;
-	IOThread::run();
-}
-bool XmlBuilder::step()
-{
-	process_events();
-	run_routers();
-	pimpl_->step();
-	return true;
-}
 
 bool XmlBuilder::set_param(const Parameter& parameter)
 {
-	if (parameter.get_name() == "filename") {
-		filename_ = parameter.get<std::string>();
-	} else return IOThread::set_param(parameter);
-	return true;
-}
-
-event::pBasicEventProducer XmlBuilder::find_producer(const std::string& name)
-{
-	return pimpl_->find_producer(name);
-}
-event::pBasicEventConsumer XmlBuilder::find_consumer(const std::string& name)
-{
-	return pimpl_->find_consumer(name);
-}
-bool XmlBuilder::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
-{
-	if (event_name == "stop") {
-		log[log::info] << "Received stop event. Quitting builder.";
-		request_end();
+	if (assign_parameters(parameter)
+			(filename_, "filename")
+			(max_run_time_, "run_limit", [](const core::Parameter& p){return 1_s * p.get<double>();}))
+	{
+		return true;
 	}
-	pimpl_->receive_event(event_name, event);
+	IOThread::set_param(parameter);
+	// Return always true so pass-through parameters work without warnings
 	return true;
-//	return pimpl_->do_process_event(event_name, event);
 }
 
 const std::string& XmlBuilder::get_app_name()
@@ -620,6 +421,26 @@ std::vector<variable_info_t> XmlBuilder::get_variables() const
 	}
 	return vars;
 }
+
+void XmlBuilder::run()
+{
+	start_time_ = timestamp_t{};
+	GenericBuilder::run();
+	log[log::info] << "Finishing run after " << (timestamp_t{} - start_time_);
+	finish_all_threads();
+}
+bool XmlBuilder::step()
+{
+	if (max_run_time_ > 1_ms) {
+		const auto& delta = timestamp_t{} - start_time_;
+		if (delta > max_run_time_) {
+			log[log::warning] << "Max run time reached ("<<delta<<"). Quitting";
+			request_end(core::yuri_exit_interrupted);
+		}
+	}
+	return GenericBuilder::step();
+}
+
 }
 }
 

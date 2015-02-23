@@ -16,6 +16,7 @@
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/frame/compressed_frame_params.h"
 #include <cassert>
+#include "libavcodec/version.h"
 namespace yuri {
 namespace rawavfile {
 
@@ -62,6 +63,13 @@ RawAVFile::RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core
 {
 	IOTHREAD_INIT(parameters)
 	set_latency (10_us);
+#ifdef BROKEN_FFMPEG
+// We probably using BROKEN port of ffmpeg (libav) or VERY old ffmpeg.
+	if (max_audio_streams_ > 0) {
+		log[log::warning] << "Using unsupported version of FFMPEG, probably the FAKE libraries distributed by libav project. Audio supoort disabled";
+		max_audio_streams_ = 0;
+	}
+#endif
 	resize(0,max_video_streams_+max_audio_streams_);
 	av_register_all();
 	if (filename.empty()) throw exception::InitializationFailed("No filename specified!");
@@ -174,7 +182,7 @@ void RawAVFile::run()
 	for (size_t i=0;i<video_streams_.size();++i) {
 		if (fps_>0) time_deltas[i] = 1_s/fps_;
 		else if (fps_ == 0.0) {
-			time_deltas[i] = 1_s*video_streams_[i]->r_frame_rate.den/video_streams_[i]->r_frame_rate.num;
+			time_deltas[i] = 1_s*video_streams_[i]->avg_frame_rate.den/video_streams_[i]->avg_frame_rate.num;
 			log[log::info] << "Delta " << i << " " << time_deltas[i];
 		}
 	}
@@ -254,8 +262,8 @@ void RawAVFile::run()
 	//			frames_[idx] = allocate_frame_from_memory(packet.data, packet.size);
 				frames_[idx] = f;
 				log[log::debug] << "Pushing packet with size: " << f->size();
-				duration_t dur = 1_s * packet.duration*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
-				if (!dur.value) dur = 1_s * video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
+				duration_t dur = 1_s * packet.duration*video_streams_[idx]->avg_frame_rate.den/video_streams_[idx]->avg_frame_rate.num;
+				if (!dur.value) dur = 1_s * video_streams_[idx]->avg_frame_rate.den/video_streams_[idx]->avg_frame_rate.num;
 
 	//			size_t pts = 1e3*packet.pts*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
 	//			size_t dts = 1e3*packet.dts*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
@@ -267,7 +275,7 @@ void RawAVFile::run()
 
 
 				log[log::debug] << "Found packet!"/* (pts: " << pts << ", dts: " << dts <<*/ ", dur: " << dur;
-				log[log::debug] << "num/den:" << video_streams_[idx]->r_frame_rate.num << "/" << video_streams_[idx]->r_frame_rate.den;
+				log[log::debug] << "num/den:" << video_streams_[idx]->avg_frame_rate.num << "/" << video_streams_[idx]->avg_frame_rate.den;
 				log[log::debug] << "orig pts: " << packet.pts << ", dts: " << packet.dts << ", dur: " << packet.duration;
 			} else {
 				int whole_frame = 0;
@@ -302,6 +310,10 @@ void RawAVFile::run()
 				frames_[idx] = f;
 			}
 		} else {
+#ifdef BROKEN_FFMPEG
+// We probably using BROKEN port of ffmpeg (libav) or VERY old ffmpeg.
+			continue;
+#else
 			size_t idx=max_audio_streams_+1;
 			for (size_t i=0;i<audio_streams_.size();++i) {
 				if (packet.stream_index == audio_streams_[i]->index) {
@@ -331,8 +343,8 @@ void RawAVFile::run()
 //			log[log::info] << "Decoded audio";
 //			continue;
 //			auto f = libav::yuri_frame_from_av(*av_frame);
-			size_t data_size = av_frame->nb_samples * av_frame->channels * 2 ;
-			auto f = core::RawAudioFrame::create_empty(audio_formats_out_[idx], av_frame->channels, av_frame->sample_rate, av_frame->data[0], data_size);
+			size_t data_size = av_frame->nb_samples * av_frame_get_channels(av_frame) * 2 ;
+			auto f = core::RawAudioFrame::create_empty(audio_formats_out_[idx], av_frame_get_channels(av_frame), av_frame->sample_rate, av_frame->data[0], data_size);
 			if (!f) {
 				log[log::warning] << "Failed to convert avframe, probably unsupported pixelformat";
 				continue;
@@ -344,8 +356,7 @@ void RawAVFile::run()
 //			}
 			push_frame(idx + max_video_streams_, f);
 			//frames_[idx + video_streams_.size()] = f;
-
-
+#endif
 		}
 	}
 	av_free(av_frame);

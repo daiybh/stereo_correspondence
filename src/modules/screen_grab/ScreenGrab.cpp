@@ -26,13 +26,12 @@ core::Parameters ScreenGrab::configure()
 	core::Parameters p = core::IOThread::configure();
 	p.set_description("ScreenGrab module.");
 	p["display"]["X display"]=std::string();
-	p["fps"]["Frames per second"]=10.0;
+	p["fps"]["Frames per second (set to 0 or negative, to grab at max. speed)"]=0.0;
 	p["position"]["Position of grabbed area"]="0x0";
 	p["resolution"]["Resolution of the grabbed image (set to 0x0 to grab full image)"]="0x0";
 	p["win_name"]["Window name (set to empty string to grab whole screen)"]=std::string();
 	p["pid"]["PID of application that created the window (set to 0 to grab whole screen)"]=0;
 	p["win_id"]["Window ID (set to 0 to grab whole screen)"]=0;
-//	p->set_max_pipes(1,1);
 	return p;
 }
 namespace {
@@ -97,7 +96,7 @@ Window find_child(Display* dpy, Window top, T val, F func)
 }
 
 ScreenGrab::ScreenGrab(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("screen_grab")),win(0),position_{0,0},
+core::IOThread(log_,parent,1,1,std::string("screen_grab")),fps_(0.0), win(0),position_{0,0},
 resolution_{0,0},pid(0),win_id_(0)
 {
 	IOTHREAD_INIT(parameters)
@@ -142,7 +141,20 @@ int error_handler(Display *, XErrorEvent *)
 void ScreenGrab::run()
 {
 	XSetErrorHandler(error_handler);
-	while(still_running() && step()) {	}
+	timestamp_t last_time_;
+	const duration_t delta = fps_>0.0?1_s/fps_:0_s;
+	while(still_running()) {
+		if (fps_ > 0.0) {
+			timestamp_t tnow;
+			const auto tdelta = tnow - last_time_;
+			if (tdelta < delta) {
+				sleep((delta-tdelta)/2.0);
+				continue;
+			}
+			last_time_ += delta;
+		}
+		step();
+	}
 	close_pipes();
 	XSetErrorHandler(nullptr);
 	dpy.reset();
@@ -193,22 +205,17 @@ bool ScreenGrab::step()
 
 bool ScreenGrab::set_param(const core::Parameter &param)
 {
-	if (param.get_name() == "display") {
-		display = param.get<std::string>();
-	} else if (param.get_name() == "fps") {
-		fps = param.get<double>();
-	} else if (param.get_name() == "position") {
-		position_ = param.get<coordinates_t>();
-	} else if (param.get_name() == "resolution") {
-		resolution_ = param.get<resolution_t>();
-	} else if (param.get_name() == "win_name") {
-		win_name = param.get<std::string>();
-	} else if (param.get_name() == "pid") {
-		pid = param.get<size_t>();
-	} else if (param.get_name() == "win_id") {
-		win_id_ = param.get<Window>();
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(display, "display")
+			(fps_, "fps")
+			(position_, "position")
+			(resolution_, "resolution")
+			(win_name, "win_name")
+			(pid, "pid")
+			(win_id_, "win_id"))
+		return true;
+
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace screen */

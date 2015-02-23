@@ -22,8 +22,9 @@ core::Parameters OSCReceiver::configure()
 {
 	core::Parameters p = core::IOThread::configure();
 	p.set_description("OSCReceiver");
-	p["socket_type"]="uv_udp";
+	p["socket_type"]="yuri_udp";
 	p["port"]=57120;
+	p["address"]="0.0.0.0";
 	//p->set_max_pipes(0,0);
 	return p;
 }
@@ -31,8 +32,9 @@ core::Parameters OSCReceiver::configure()
 
 OSCReceiver::OSCReceiver(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOThread(log_,parent,0,0,std::string("osc_receiver")),
-event::BasicEventProducer(log),port_(2000),socket_type_("uv_udp")
+event::BasicEventProducer(log),port_(2000),socket_type_("yuri_udp")
 {
+	set_latency(100_ms);
 	IOTHREAD_INIT(parameters)
 
 
@@ -50,7 +52,7 @@ void OSCReceiver::run()
 	log[log::info] << "Initializing socket of type '"<< socket_type_ << "'";
 	socket_ = core::DatagramSocketGenerator::get_instance().generate(socket_type_,log,"");
 	log[log::info] << "Binding socket";
-	if (!socket_->bind("",port_)) {
+	if (!socket_->bind(address_,port_)) {
 		log[log::fatal] << "Failed to bind socket!";
 		request_end(core::yuri_exit_interrupted);
 		return;
@@ -59,10 +61,7 @@ void OSCReceiver::run()
 	std::vector<uint8_t> buffer(65536);
 	ssize_t read_bytes=0;
 	while(still_running()) {
-		if (!socket_->data_available()) {
-			socket_->wait_for_data(100_ms);
-			continue;
-		} else {
+		if (socket_->wait_for_data(get_latency())) {
 			log[log::verbose_debug] << "reading data";
 			read_bytes = socket_->receive_datagram(&buffer[0],buffer.size());
 			if (read_bytes > 0) {
@@ -77,7 +76,6 @@ void OSCReceiver::run()
 				} else {
 					emit_event(std::get<0>(events_pair), make_shared<event::EventVector>(std::move(events)));
 				}
-
 			}
 		}
 	}
@@ -88,6 +86,8 @@ bool OSCReceiver::set_param(const core::Parameter& param)
 {
 	if (param.get_name() == "socket_type") {
 		socket_type_ = param.get<std::string>();
+	} else if (param.get_name() == "address") {
+		address_ = param.get<std::string>();
 	} else if (param.get_name() == "port") {
 		port_ = param.get<uint16_t>();
 	} else return core::IOThread::set_param(param);

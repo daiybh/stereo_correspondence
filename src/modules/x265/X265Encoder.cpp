@@ -82,7 +82,7 @@ X265Encoder::~X265Encoder() noexcept
 	}
 }
 
-core::pFrame X265Encoder::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame X265Encoder::do_special_single_step(core::pRawVideoFrame frame)
 {
 	auto it = supported_formats.find(frame->get_format());
 	if (it == supported_formats.end()) return {};

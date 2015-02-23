@@ -24,7 +24,7 @@ public:
 	virtual ~FrameInfo() noexcept;
 private:
 	
-	virtual core::pFrame do_simple_single_step(const core::pFrame& frame);
+	virtual core::pFrame do_simple_single_step(core::pFrame frame);
 	virtual bool set_param(const core::Parameter& param);
 	core::pFrame last_frame_;
 	bool print_all_;

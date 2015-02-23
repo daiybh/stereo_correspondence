@@ -22,6 +22,12 @@ must not be misrepresented as being the original software.
 distribution.
 */
 
+#include "yuri/core/utils/platform.h"
+#ifdef YURI_WIN
+// Disable "declaration of xxx hides class member
+#pragma warning( disable : 4458)
+#endif
+
 #include <ctype.h>
 
 #ifdef TIXML_USE_STL

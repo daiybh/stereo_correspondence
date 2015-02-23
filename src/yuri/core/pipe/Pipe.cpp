@@ -22,22 +22,36 @@ Pipe::Pipe(const std::string& name, const log::Log& log_):log(log_),name_(name),
 
 Pipe::~Pipe() noexcept
 {
-	log[log::info] << "Processed " << frames_passed_ << " frames, " << frames_dropped_ << " dropped.";
+	try {
+		log[log::info] << "Processed " << frames_passed_ << " frames, " << frames_dropped_ << " dropped.";
+	}
+	// We have to prevent any exception getting out
+	catch (...) {}
 }
 
 pFrame Pipe::pop_frame()
 {
 	lock_t _(frame_lock_);
+	const bool was_full = do_is_full();
 	pFrame f = do_pop_frame();
 	if (f) frames_passed_++;
+	if (was_full && is_blocking()) {
+		notify_source();
+	}
 	return f;
 }
 
 bool Pipe::push_frame(const pFrame &frame)
 {
 	lock_t _(frame_lock_);
+	const bool was_empty = is_empty();
 	if (!closed_ && do_push_frame(frame)) {
-		notify();
+		// It should be optimal to send notifications only
+		// for pipes that were originally empty.
+		// the condition should be removed if causing problems.
+		if (was_empty) {
+			notify();
+		}
 		return true;
 	}
 	return false;
@@ -60,8 +74,12 @@ size_t Pipe::get_size() const {
 }
 
 void Pipe::notify() {
-	if (!notifiable_.expired()) {
-		auto n = notifiable_.lock();
+	if (auto n = notifiable_.lock()) {
+		n->notify();
+	}
+}
+void Pipe::notify_source() {
+	if (auto n = notifiable_source_.lock()) {
 		n->notify();
 	}
 }
@@ -71,6 +89,11 @@ bool Pipe::is_empty() const {
 void Pipe::set_notifiable(pwPipeNotifiable notifiable) noexcept
 {
 	notifiable_ = notifiable;
+}
+
+void Pipe::set_notifiable_source(pwPipeNotifiable notifiable) noexcept
+{
+	notifiable_source_ = notifiable;
 }
 } /* namespace core */
 } /* namespace yuri */

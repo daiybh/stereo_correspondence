@@ -25,7 +25,7 @@ namespace ultragrid {
 
 void init_uv();
 
-typedef std::shared_ptr<::audio_frame2> audio_frame_t;
+typedef std::shared_ptr< ::audio_frame2> audio_frame_t;
 
 codec_t yuri_to_uv(format_t);
 format_t uv_to_yuri(codec_t );

@@ -20,11 +20,11 @@ namespace core {
 class RawAudioFrame;
 typedef shared_ptr<RawAudioFrame> pRawAudioFrame;
 
-EXPORT class RawAudioFrame: public AudioFrame
+class RawAudioFrame: public AudioFrame
 {
 public:
-	RawAudioFrame(format_t format, size_t channel_count, size_t sampling_frequency);
-	~RawAudioFrame() noexcept;
+	EXPORT RawAudioFrame(format_t format, size_t channel_count, size_t sampling_frequency);
+	EXPORT ~RawAudioFrame() noexcept;
 
 
 	/*!
@@ -35,7 +35,7 @@ public:
 	 * @param sample_count
 	 * @return
 	 */
-	static pRawAudioFrame create_empty(format_t format, size_t channel_count, size_t sampling_frequency, size_t sample_count);
+	EXPORT static pRawAudioFrame create_empty(format_t format, size_t channel_count, size_t sampling_frequency, size_t sample_count);
 
 	/*!
 	 * Creates an audio frame filled with data copied from a buffer
@@ -46,7 +46,7 @@ public:
 	 * @param size
 	 * @return
 	 */
-	static pRawAudioFrame create_empty(format_t format, size_t channel_count, size_t sampling_frequency, const uint8_t* data, size_t size);
+	EXPORT static pRawAudioFrame create_empty(format_t format, size_t channel_count, size_t sampling_frequency, const uint8_t* data, size_t size);
 
 	/*!
 	 * Creates an audio frame filled with data moved from from an uvector
@@ -56,7 +56,7 @@ public:
 	 * @param data
 	 * @return
 	 */
-	static pRawAudioFrame create_empty(format_t format, size_t channel_count, size_t sampling_frequency, uvector<uint8_t>&& data);
+	EXPORT static pRawAudioFrame create_empty(format_t format, size_t channel_count, size_t sampling_frequency, uvector<uint8_t>&& data);
 
 
 	/*!
@@ -124,15 +124,15 @@ private:
 	 * Implementation of copy, should be implemented in node classes only.
 	 * @return Copy of current frame
 	 */
-	virtual pFrame	do_get_copy() const;
+	EXPORT virtual pFrame	do_get_copy() const;
 	/*!
 	 * Implementation od get_size() method
 	 * @return Size of current frame
 	 */
-	virtual size_t	do_get_size() const noexcept;
+	EXPORT virtual size_t	do_get_size() const noexcept;
 
-	uvector<uint8_t> data_;
-	size_t				sample_size;
+	uvector<uint8_t>		data_;
+	size_t					sample_size;
 };
 
 }

@@ -23,7 +23,7 @@ BasicEventProducer::~BasicEventProducer()
 }
 namespace {
 template<class Cmp = std::owner_less<pwBasicEventConsumer>>
-constexpr bool targets_equal(const event_target_t& lhs, const event_target_t& rhs, Cmp cmp = Cmp()) {
+/* constexpr */  bool targets_equal(const event_target_t& lhs, const event_target_t& rhs, Cmp cmp = Cmp()) {
 	return (lhs.second == rhs.second) &&
 			!cmp(lhs.first, rhs.first) &&
 			!cmp(rhs.first, lhs.first);
@@ -107,7 +107,7 @@ std::vector<event_info_t> BasicEventProducer::list_events()
 }
 bool BasicEventProducer::verify_register_event(const::std::string& event_name)
 {
-	return event_name.size();
+	return !event_name.empty();
 }
 
 }

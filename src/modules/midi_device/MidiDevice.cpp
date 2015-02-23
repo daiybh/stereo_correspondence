@@ -140,12 +140,11 @@ void MidiDevice::run()
 }
 bool MidiDevice::set_param(const core::Parameter& param)
 {
-	if (iequals(param.get_name(), "device")) {
-		device_ = param.get<std::string>();
-	} else if (iequals(param.get_name(), "connection")) {
-		connection_ = param.get<std::string>();
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(device_, 		"device")
+			(connection_, 	"connection"))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace midi_device */

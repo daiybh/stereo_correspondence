@@ -8,6 +8,7 @@ SET(YURI_SRC ${YURI_SRC}
 	
 	core/frame/raw_frame_params.cpp core/frame/raw_frame_params.h
 	core/frame/raw_frame_types.h
+	core/frame/raw_frame_traits.h
 	core/frame/compressed_frame_types.h
 	core/frame/compressed_frame_params.cpp core/frame/compressed_frame_params.h
 	core/frame/raw_audio_frame_params.cpp core/frame/raw_audio_frame_params.h
@@ -26,7 +27,12 @@ SET(YURI_SRC ${YURI_SRC}
 	core/utils/ModuleLoader.cpp core/utils/ModuleLoader.h
 	core/utils/DirectoryBrowser.cpp core/utils/DirectoryBrowser.h
 	core/utils/MultiRegister.h
+	core/utils/irange.h
 	
+	core/thread/builder_utils.cpp
+	core/thread/builder_utils.h
+	core/thread/GenericBuilder.cpp
+	core/thread/GenericBuilder.h
 	core/thread/XmlBuilder.cpp
 	core/thread/XmlBuilder.h
 	
@@ -53,6 +59,7 @@ SET(YURI_SRC ${YURI_SRC}
 	core/socket/StreamSocket.cpp core/socket/StreamSocket.h
 	core/socket/DatagramSocketGenerator.h
 	core/socket/StreamSocketGenerator.h
+	core/socket/NullSockets.cpp core/socket/NullSockets.h
 	
 
 #	core/BasicFrame.cpp

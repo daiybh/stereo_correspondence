@@ -10,6 +10,7 @@
 #include "Fade.h"
 #include "yuri/core/Module.h"
 #include "yuri/event/BasicEventConversions.h"
+#include "yuri/core/utils/assign_events.h"
 namespace yuri {
 namespace fade {
 
@@ -23,7 +24,6 @@ core::Parameters Fade::configure()
 {
 	core::Parameters p = core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>::configure();
 	p.set_description("Fade");
-//	p-set_max_pipes(2,1);
 	return p;
 }
 
@@ -44,7 +44,7 @@ Fade::~Fade() noexcept
 //
 //}
 //std::vector<core::pFrame> Fade::do_single_step(const std::vector<core::pFrame>& frames)
-std::vector<core::pFrame> Fade::do_special_step(const std::tuple<core::pRawVideoFrame, core::pRawVideoFrame>& frames)
+std::vector<core::pFrame> Fade::do_special_step(std::tuple<core::pRawVideoFrame, core::pRawVideoFrame> frames)
 {
 	process_events();
 //	timestamp_t start_time;
@@ -81,12 +81,10 @@ bool Fade::set_param(const core::Parameter& param)
 }
 bool Fade::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
-	if (event_name == "state") {
-		transition_ = event::get_value<event::EventDouble>(event);
-		transition_ = std::min(std::max(transition_,0.0),1.0);
-		log[log::info] << "Set transition to " << transition_;
-	}
-	return true;
+	if (assign_events(event_name, event)
+			.ranged(transition_, 0.0, 1.0, "state"))
+		return true;
+	return false;
 }
 
 

@@ -74,7 +74,7 @@ public:
 	int process_audio(jack_nframes_t nframes);
 private:
 	
-	virtual core::pFrame do_special_single_step(const core::pRawAudioFrame& frame) override;
+	virtual core::pFrame do_special_single_step(core::pRawAudioFrame frame) override;
 	virtual bool set_param(const core::Parameter& param) override;
 
 	handle_t handle_;

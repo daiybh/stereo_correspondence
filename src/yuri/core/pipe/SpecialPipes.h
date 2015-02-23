@@ -27,21 +27,29 @@ public:
 		return make_shared<SpecialPipe<Policy, blocking>>(name, log_, params);
 	}
 private:
-	virtual bool 				do_push_frame(const pFrame &frame)
+	virtual bool 				do_push_frame(const pFrame &frame) override
 	{
 		return Policy<blocking>::impl_push_frame(frame);
 	}
-	virtual pFrame 				do_pop_frame()
+	virtual pFrame 				do_pop_frame() override
 	{
 		return Policy<blocking>::impl_pop_frame();
 	}
-	virtual size_t				do_get_size() const
+	virtual size_t				do_get_size() const override
 	{
 		return Policy<blocking>::impl_get_size();
 	}
-	virtual void 				drop_frame(const pFrame& frame)
+	virtual void 				drop_frame(const pFrame& frame) override
 	{
 		Pipe::drop_frame(frame);
+	}
+	virtual bool				do_is_blocking() const noexcept override
+	{
+		return blocking;
+	}
+	virtual bool 				do_is_full() const noexcept override
+	{
+		return Policy<blocking>::impl_is_full();
 	}
 };
 

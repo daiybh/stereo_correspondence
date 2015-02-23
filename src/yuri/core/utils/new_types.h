@@ -11,6 +11,7 @@
 #ifndef NEW_TYPES_H_
 #define NEW_TYPES_H_
 
+#include "platform.h"
 #include <chrono>
 #include <memory>
 #include <mutex>
@@ -20,12 +21,13 @@
 #include <ios>
 #include <ostream>
 #include <istream>
-#include "platform.h"
+#include <algorithm>
+
 
 namespace yuri {
 
 typedef ::size_t 		size_t;
-#if defined YURI_APPLE
+#if defined YURI_APPLE || YURI_WIN
 typedef int64_t			ssize_t;
 #else
 typedef ::ssize_t 		ssize_t;
@@ -63,12 +65,15 @@ struct geometry_t {
 	position_t	x;
 	position_t	y;
 	resolution_t get_resolution() const;
+	explicit operator bool() const { return width && height; }
 };
 
 struct resolution_t {
 	dimension_t	width;
 	dimension_t	height;
 	geometry_t get_geometry() const { return {width, height, 0, 0}; }
+	explicit operator bool() const { return width && height; }
+
 };
 
 inline resolution_t geometry_t::get_resolution() const
@@ -143,8 +148,10 @@ inline geometry_t intersection(const geometry_t& rect1, const geometry_t& rect2)
 	geometry_t rect_out;
 	rect_out.x = std::max(rect1.x, rect2.x);
 	rect_out.y = std::max(rect1.y, rect2.y);
-	rect_out.width = std::min(geometry_max_x(rect1),geometry_max_x(rect2))-rect_out.x;
-	rect_out.height = std::min(geometry_max_y(rect1),geometry_max_y(rect2))-rect_out.y;
+	const auto max_x = std::min(geometry_max_x(rect1),geometry_max_x(rect2));
+	const auto max_y = std::min(geometry_max_y(rect1),geometry_max_y(rect2));
+	rect_out.width = (max_x>rect_out.x)?max_x-rect_out.x:0;
+	rect_out.height = (max_y>rect_out.y)?max_y-rect_out.y:0;
 	return rect_out;
 }
 inline geometry_t intersection(const geometry_t& rect1, const resolution_t& rect2)
@@ -220,6 +227,43 @@ inline std::istream& operator>>(std::istream& is, geometry_t& geo)
 	if (!is.fail()) geo = g;
 	return is;
 }
+
+struct fraction_t {
+	int64_t num;
+	int64_t denom;
+	constexpr double get_value() const { return static_cast<double>(static_cast<long double>(num)/static_cast<long double>(denom));};
+	constexpr bool valid() const { return denom != 0;};
+};
+
+constexpr fraction_t operator! (const fraction_t& frac) {
+	return {frac.denom, frac.num};
+}
+
+inline std::ostream& operator<<(std::ostream& os, const fraction_t& frac)
+{
+	os << frac.num << "/" << frac.denom;
+	return os;
+}
+inline std::istream& operator>>(std::istream& is, fraction_t& frac)
+{
+	fraction_t f{0,1};
+	char c0;
+	is >> f.num;
+	if (is.fail()) return is;
+	if (is.eof() || is.peek() != '/') {
+		frac = f;
+		return is;
+	}
+	is >> c0;
+	if (is.fail() || c0 != '/') {
+		is.setstate(std::ios::failbit);
+		return is;
+	}
+	is >> f.denom;
+	if (!is.fail()) frac = f;
+	return is;
+}
+
 
 }
 

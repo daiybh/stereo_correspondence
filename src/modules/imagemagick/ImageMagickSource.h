@@ -25,7 +25,7 @@ public:
 	ImageMagickSource(const log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters);
 private:
 	virtual core::pFrame do_convert_frame(core::pFrame input_frame, format_t target_format) override;
-	virtual core::pFrame do_special_single_step(const core::pCompressedVideoFrame& frame) override;
+	virtual core::pFrame do_special_single_step(core::pCompressedVideoFrame frame) override;
 	virtual bool set_param(const core::Parameter& param);
 	yuri::format_t format_;
 };

@@ -2,6 +2,7 @@
 # Core library can use boost filessytem 
 #################################################################
 IF(NOT YURI_DISABLE_BOOST)
+	set( Boost_USE_STATIC_LIBS OFF )
 	find_package( Boost 1.49 COMPONENTS filesystem system)
 	IF(Boost_FILESYSTEM_FOUND)
 		add_definitions(-DHAVE_BOOST_FILESYSTEM)
@@ -12,9 +13,11 @@ ENDIF()
 #################################################################
 
 IF(NOT YURI_DISABLE_X11)
-	find_package( X11 )	
-	find_package( OpenGL )
+	find_package( X11 )		
 ENDIF()
+IF (NOT YURI_DISABLE_GL)
+    find_package( OpenGL )
+ENDIF() 
 IF(NOT YURI_DISABLE_LIBAV)
 	pkg_check_modules(libavcodec libavcodec)
 ENDIF()
@@ -39,24 +42,20 @@ ENDIF()
 #################################################################
 IF(Boost_SYSTEM_FOUND)
     SET (YURI_LINK ${YURI_LINK} ${Boost_LIBRARY_DIRS} )
-    IF(NOT WIN32)
+    #IF(NOT WIN32)
     SET (YURI_LIBS ${YURI_LIBS}	${Boost_LIBRARIES} )
-    ENDIF()
+    #ENDIF()
     SET (YURI_INCLUDE ${YURI_INCLUDE} ${Boost_INCLUDE_DIRS} )  
 ENDIF()
 #################################################################
 # Set up dependencies for helper libraries
 #################################################################
 SET (YURI_HELPER_LIBAV_LINK ${YURI_HELPER_LINK} ${libavcodec_LIBRARY_DIRS})
-SET (YURI_HELPER_X11_LINK ${YURI_HELPER_LINK} ${X11_LIBRARY_DIRS})
 		
 SET (YURI_HELPER_LIBAV_LIBS ${YURI_HELPER_LIBAV_LIBS} 
 		${LIBNAME} ${libavcodec_LIBRARIES})
-SET (YURI_HELPER_X11_LIBS ${YURI_HELPER_X11_LIBS} 
-		${LIBNAME} ${X11_LIBRARIES}	${OPENGL_gl_LIBRARY})
 
 SET (YURI_HELPER_LIBAV_INCLUDE  ${YURI_HELPER_LIBAV_INCLUDE}  ${libavcodec_INCLUDE_DIRS})
-SET (YURI_HELPER_X11_INCLUDE ${YURI_HELPER_X11_INCLUDE} ${X11_INCLUDE_DIRS} )
 
 IF(NOT YURI_DISABLE_CUDA AND CUDA_FOUND)
 	SET(YURI_HELPER_CUDA_INCLUDE ${YURI_HELPER_CUDA_INCLUDE} ${CUDA_INCLUDE_DIRS})
@@ -68,7 +67,11 @@ ENDIF()
 #################################################################
 # Adding CXXFLAGS and LDFLAGS for libyuri_core
 #################################################################
+IF(WIN32)
+add_definitions("-DYURI_MODULE_IN_TREE")
+else()
 add_definitions("-DYURI_MODULE_IN_TREE -DINSTALL_PREFIX=\\\"${CMAKE_INSTALL_PREFIX}\\\"")
+endif()
 link_directories ( ${YURI_LINK} ${YURI_HELPER_LIBAV_LINK} ${YURI_HELPER_X11_LINK})
 include_directories ( ${YURI_INCLUDE} ${YURI_HELPER_LIBAV_INCLUDE} ${YURI_HELPER_X11_INCLUDE})
 
@@ -100,14 +103,14 @@ ELSE()
 	SET(CORE_CUDA FALSE PARENT_SCOPE)
 	SET(CORE_CUDA FALSE)
 ENDIF()
-IF(NOT YURI_DISABLE_X11 AND X11_FOUND AND OPENGL_FOUND)
-	add_subdirectory(graphics)
-	SET(CORE_X11 TRUE PARENT_SCOPE)
-	SET(CORE_X11 TRUE)
-	add_definitions("-DYURI_HAVE_X11")
+IF(NOT YURI_DISABLE_OPENGL AND OPENGL_FOUND)
+	add_subdirectory(gl)
+	SET(CORE_GL TRUE PARENT_SCOPE)
+	SET(CORE_GL TRUE)
+	add_definitions("-DYURI_HAVE_GL")
 ELSE()
-	SET(CORE_X11 FALSE PARENT_SCOPE)
-	SET(CORE_X11 FALSE)
+	SET(CORE_GL FALSE PARENT_SCOPE)
+	SET(CORE_GL FALSE)
 ENDIF()
 
 #################################################################
@@ -149,15 +152,16 @@ IF(${CORE_LIBAV})
 	
 ENDIF()
 
-IF(${CORE_X11})
-	MESSAGE(STATUS "Building X11 helper library!")
-	add_library(${LIBNAME_HELPER_X11} ${YURI_HELPER_X11_SRC})
-	target_link_libraries ( ${LIBNAME_HELPER_X11} ${YURI_HELPER_X11_LIBS})
-	SET_TARGET_PROPERTIES( ${LIBNAME_HELPER_X11} PROPERTIES SOVERSION ${SO_VERSION} VERSION ${YURI_CORE_VERSION} )
-	install(TARGETS ${LIBNAME_HELPER_X11} 	RUNTIME DESTINATION bin
+IF(${CORE_GL})
+	MESSAGE(STATUS "Building OpenGL helper library!")
+	add_library(${LIBNAME_HELPER_GL} ${YURI_HELPER_GL_SRC})
+	target_link_libraries ( ${LIBNAME_HELPER_GL} ${YURI_HELPER_GL_LIBS})
+	SET_TARGET_PROPERTIES( ${LIBNAME_HELPER_GL} PROPERTIES SOVERSION ${SO_VERSION} VERSION ${YURI_CORE_VERSION} )
+	install(TARGETS ${LIBNAME_HELPER_GL} 	RUNTIME DESTINATION bin
 						LIBRARY DESTINATION lib 
 						ARCHIVE DESTINATION lib)
 ENDIF()
+
 
 IF(UNIX)
 	IF(APPLE)

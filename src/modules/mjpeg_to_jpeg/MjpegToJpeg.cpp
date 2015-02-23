@@ -170,7 +170,7 @@ core::pFrame MjpegToJpeg::do_convert_frame(core::pFrame input_frame, format_t ta
 	if (!f) return {};
 	return do_special_single_step(f);
 }
-core::pFrame MjpegToJpeg::do_special_single_step(const core::pCompressedVideoFrame& frame)
+core::pFrame MjpegToJpeg::do_special_single_step(core::pCompressedVideoFrame frame)
 {
 	if (!frame || frame->get_format() != core::compressed_frame::mjpg) return {};
 

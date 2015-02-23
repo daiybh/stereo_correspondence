@@ -54,7 +54,7 @@ std::vector<format_t> get_supported_fmts(log::Log& log) {
 
 }
 Crop::Crop(log::Log &log_, core::pwThreadBase parent,const core::Parameters &parameters):
-	base_type(log_,parent,"Crop"),event::BasicEventConsumer(log),geometry_{800,600,0,0}
+	base_type(log_,parent,"Crop"),event::BasicEventConsumer(log),geometry_(geometry_t{800,600,0,0})
 {
 	IOTHREAD_INIT(parameters)
 	set_supported_formats(get_supported_fmts(log));
@@ -93,7 +93,7 @@ geometry_t set_alignment(format_t format, geometry_t geometry)
 }
 }
 
-core::pFrame Crop::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame Crop::do_special_single_step(core::pRawVideoFrame frame)
 {
 	process_events();
 	const format_t format = frame->get_format();

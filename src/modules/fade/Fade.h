@@ -29,7 +29,7 @@ private:
 
 	virtual bool 				set_param(const core::Parameter& param) override;
 	virtual std::vector<core::pFrame>
-								do_special_step(const std::tuple<core::pRawVideoFrame, core::pRawVideoFrame>& frames) override;
+								do_special_step(std::tuple<core::pRawVideoFrame, core::pRawVideoFrame> frames) override;
 	virtual bool 				do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 
 	double						transition_;

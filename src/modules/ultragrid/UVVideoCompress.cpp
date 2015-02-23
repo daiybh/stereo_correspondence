@@ -39,7 +39,7 @@ bool UVVideoCompress::init_compressor(const std::string& params)
 	return (encoder_ != nullptr);
 }
 
-core::pFrame UVVideoCompress::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame UVVideoCompress::do_special_single_step(core::pRawVideoFrame frame)
 {
 	if (!uv_frame) {
 		uv_frame = ultragrid::allocate_uv_frame(frame);

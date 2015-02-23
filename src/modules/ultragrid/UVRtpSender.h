@@ -28,9 +28,9 @@ public:
 	virtual ~UVRtpSender() noexcept;
 private:
 	
-	virtual core::pFrame do_simple_single_step(const core::pFrame& frame) override;
-	virtual core::pFrame do_special_simple_single_step(const core::pVideoFrame& frame);
-	virtual core::pFrame do_special_simple_single_step(const core::pAudioFrame& frame);
+	virtual core::pFrame do_simple_single_step(core::pFrame frame) override;
+	virtual core::pFrame do_special_simple_single_step(core::pVideoFrame frame);
+	virtual core::pFrame do_special_simple_single_step(core::pAudioFrame frame);
 	virtual bool set_param(const core::Parameter& param);
 	rtp* rtp_session_;
 	tx* tx_session_;
@@ -38,6 +38,7 @@ private:
 	uint16_t	rx_port_;
 	uint16_t	tx_port_;
 	int			ttl_;
+	double 		fps_;
 
 };
 

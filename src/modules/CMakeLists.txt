@@ -1,15 +1,26 @@
+#################################################################
+# Stable modules
+#################################################################
+ 
 
+#################################################################
+# Unstable modules
+#################################################################
+
+IF(YURI_BUILD_UNSTABLE_MODULES) 
 
 add_subdirectory(anaglyph)
 add_subdirectory(audio_noise)
 add_subdirectory(audio_latency)
 add_subdirectory(bayer)
 add_subdirectory(black_white_generator)
+add_subdirectory(colors)
 add_subdirectory(color_key)
 add_subdirectory(color_picker)
 add_subdirectory(combine)
 add_subdirectory(convert_planes)
 add_subdirectory(crop)
+add_subdirectory(delay)
 add_subdirectory(diff)
 add_subdirectory(dup)
 add_subdirectory(event_info)
@@ -41,7 +52,7 @@ add_subdirectory(yuriconvert)
 add_subdirectory(vncclient)
 
 IF(UNIX)
-	add_subdirectory(yuri_tcp)
+	add_subdirectory(sockets)
 ENDIF()
 
 CHECK_INCLUDE_FILE_CXX (linux/videodev2.h HAVE_VIDEODEV2_H)
@@ -124,7 +135,7 @@ IF(${ImageMagick_Magick++_FOUND})
 ENDIF()
 
 pkg_check_modules(OpenCV opencv>=2.3.0)
-IF(${OpenCV_FOUND})
+IF(OpenCV_FOUND AND NOT YURI_DISABLE_OPENCV)
 	add_subdirectory(opencv)
 	#add_subdirectory(opencv_calib)
 ENDIF()
@@ -156,14 +167,11 @@ IF(${VORBISENC_FOUND})
     add_subdirectory(vorbis)
 ENDIF()
 
+
+
 pkg_check_modules(X264 x264)
 IF(${X264_FOUND})
     add_subdirectory(x264)
-ENDIF()
-
-pkg_check_modules(X265 x265)
-IF(${X265_FOUND})
-    add_subdirectory(x265)
 ENDIF()
 
 find_package( Boost 1.46 COMPONENTS regex)
@@ -179,6 +187,16 @@ IF (VIDEOMASTER_FOUND)
     add_subdirectory(delta)
 ENDIF()
 
+pkg_check_modules(GPUJPEG libgpujpeg)
+find_package(CUDA)
+IF(NOT YURI_DISABLE_GPUJPEG AND GPUJPEG_FOUND)
+	add_subdirectory(gpujpeg)	
+ENDIF()
+
+IF(Boost_REGEX_FOUND)
+    add_subdirectory(artnet)
+ENDIF()
+
 
 #### UV #####
 #IF(NOT YURI_DISABLE_ULTRAGRID)
@@ -189,6 +207,70 @@ IF(NOT YURI_DISABLE_ULTRAGRID)
 	add_subdirectory(ultragrid)	
 ENDIF()
 #############
+
+
+ENDIF(YURI_BUILD_UNSTABLE_MODULES)
+
+
+#################################################################
+# Experimental modules
+#################################################################
+
+IF(YURI_BUILD_EXPERIMENTAL_MODULES) 
+
+find_package( Boost 1.46 COMPONENTS regex)
+
+
+IF (Boost_REGEX_FOUND)
+	add_subdirectory(webserver)
+	add_subdirectory(file_picker)
+ENDIF()
+
+find_library(JSONCPP_LIBRARY jsoncpp)
+IF(JSONCPP_LIBRARY)
+	add_subdirectory(json_config)
+ENDIF()
+
+find_package(GLEW)
+IF(X11_FOUND AND GLEW_FOUND)
+	add_subdirectory(glx_window)
+ENDIF()
+pkg_check_modules(X265 x265)
+IF(${X265_FOUND})
+    add_subdirectory(x265)
+ENDIF()
+
+find_package(Freetype)
+IF(FREETYPE_FOUND)
+    add_subdirectory(freetype)
+ENDIF()
+
+pkg_check_modules(GPHOTO2 libgphoto2)
+IF(GPHOTO2_FOUND)
+add_subdirectory(gphoto)
+ENDIF() 
+
+
+find_path(FLYCAP_INCLUDE_DIR FlyCapture2.h
+			PATH_SUFFIXES flycapture)
+find_library(FLYCAP_LIBRARY flycapture)
+
+IF(FLYCAP_INCLUDE_DIR AND FLYCAP_LIBRARY)
+	add_subdirectory(flycap)
+ENDIF()
+
+
+pkg_check_modules(POPPLERCPP poppler-cpp)
+IF(POPPLERCPP_FOUND)
+	add_subdirectory(pdf_source)
+ENDIF()
+ENDIF(YURI_BUILD_EXPERIMENTAL_MODULES)
+
+#################################################################
+#################################################################
+# UNSUPPORTED MODULES, SHOULD NEVER BE COMPILED UNLESS PORTED
+#################################################################
+#################################################################
 
 
 IF(FALSE)

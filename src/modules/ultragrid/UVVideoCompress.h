@@ -64,7 +64,7 @@ protected:
 	bool init_compressor(const std::string& params);
 private:
 
-	virtual core::pFrame do_special_single_step(const core::pRawVideoFrame& frame) override;
+	virtual core::pFrame do_special_single_step(core::pRawVideoFrame frame) override;
 	virtual core::pFrame 		do_convert_frame(core::pFrame input_frame, format_t target_format) override;
 	struct module* encoder_;
 	detail::uv_video_compress_params uv_compress_params_;

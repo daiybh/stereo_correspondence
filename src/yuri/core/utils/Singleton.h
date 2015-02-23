@@ -15,23 +15,74 @@
 namespace yuri {
 namespace utils {
 
-template
+
+#if defined(YURI_WIN)
+	template
+		<class T
+		>
+	class SingletonHelper {
+	public:
+		virtual T& get_instance() = 0;
+	};
+
+	template<class T> EXPORT SingletonHelper<T>& get_instance_helper();
+#ifdef yuri2_8_core_EXPORTS
+	template<class T>
+	class SingletonHelperImpl: public SingletonHelper<T>{
+	public:
+		virtual T& get_instance() override {
+			static T instance_;
+			return instance_;
+		}
+	};
+	template<class T> EXPORT SingletonHelper<T>& get_instance_helper()
+	{
+		static SingletonHelperImpl<T> sing;
+		return sing;
+	}
+
+
+#endif
+#endif
+
+	template
 	<class T
 	>
 class Singleton: public T {
 public:
 	typedef T value_type;
+#if !defined(YURI_WIN)
 	static T& get_instance()
 	{
 		static T 	instance_;
 		return instance_;
 	}
+#else
+	
+//#if defined(yuri2_8_core_EXPORTS)
+	/*static T& instance()
+	{
+		static T 	instance_;
+		return instance_;
+	}
+*/
+	EXPORT static T& get_instance() {
+		return get_instance_helper<T>().get_instance();
+	}
+/*#else
+	EXPORT static T& get_instance();
+	
+#endif*/
+#endif
+
 private:
 	Singleton();
-	virtual ~Singleton() noexcept;
+	virtual ~Singleton() noexcept {};
 private:
 	Singleton(Singleton& rhs);
 };
+
+
 
 
 }

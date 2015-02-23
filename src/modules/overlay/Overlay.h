@@ -24,13 +24,13 @@ public:
 	static core::Parameters configure();
 	Overlay(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~Overlay() noexcept;
-	template<class kernel>
-	core::pRawVideoFrame combine(const core::pRawVideoFrame& frame_0, const core::pRawVideoFrame& frame_1);
+	template<bool rewrite, class kernel>
+	core::pRawVideoFrame combine(core::pRawVideoFrame frame_0, const core::pRawVideoFrame& frame_1);
 private:
 
 	//virtual bool step();
 //	virtual std::vector<core::pFrame> do_single_step(const std::vector<core::pFrame>&);
-	virtual std::vector<core::pFrame> do_special_step(const param_type&) override;
+	virtual std::vector<core::pFrame> do_special_step(param_type) override;
 	virtual bool set_param(const core::Parameter& param);
 	bool do_process_event(const std::string& event_name, const event::pBasicEvent& event);
 //	core::pBasicFrame frame_0;

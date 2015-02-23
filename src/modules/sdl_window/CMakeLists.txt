@@ -5,10 +5,18 @@ SET (MODULE sdl_window)
 SET (SRC SDLWindow.cpp
 		 SDLWindow.h)
 
-
- 
-add_library(${MODULE} MODULE ${SRC})
 include_directories(${SDL_INCLUDE_DIR})
-target_link_libraries(${MODULE} ${LIBNAME} ${SDL_LIBRARY})
+SET(LIBS ${LIBNAME} ${SDL_LIBRARY})
+
+IF(NOT YURI_DISABLE_OPENGL)
+    find_package(OpenGL)
+    if (OPENGL_FOUND)
+        add_definitions("-DYURI_SDL_OPENGL=1")
+        SET(LIBS ${LIBS} ${LIBNAME_HELPER_GL})
+    ENDIF()
+ENDIF()
+
+add_library(${MODULE} MODULE ${SRC})
+target_link_libraries(${MODULE}  ${LIBS})
 
 YURI_INSTALL_MODULE(${MODULE})

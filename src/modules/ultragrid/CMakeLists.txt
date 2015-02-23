@@ -21,12 +21,14 @@ SET(SRC
 	UVVideoSource.h
 	UVVideoCompress.cpp
 	UVVideoCompress.h
+	UVVideoDecompress.cpp
+	UVVideoDecompress.h
 	
         #${UV_BASE}/capture_filter.c
 	${UV_BASE}/debug.c
 	${UV_BASE}/host.c
 	${UV_BASE}/lib_common.c
-#	${UV_BASE}/messaging.cpp
+	${UV_BASE}/messaging.cpp
 	#${UV_BASE}/module.c
 	${UV_BASE}/ntp.c
 	${UV_BASE}/pdb.c
@@ -94,9 +96,11 @@ SET(SRC
 	${UV_BASE}/utils/config_file.c
 	${UV_BASE}/utils/list.c
 	#${UV_BASE}/utils/message_queue.cpp
+	${UV_BASE}/utils/misc.c
 	${UV_BASE}/utils/resource_manager.cpp
 	${UV_BASE}/utils/packet_counter.cpp
 	${UV_BASE}/utils/ring_buffer.c
+	${UV_BASE}/utils/timed_message.cpp
 	${UV_BASE}/utils/worker.cpp
 	
         #${UV_BASE}/vo_postprocess.c
@@ -186,7 +190,7 @@ IF(GPUJPEG_FOUND)
     SET (SRC ${SRC}
              UVJpegCompress.cpp
     		 UVJpegCompress.h
-    		 ${UV_BASE}/video_compress/jpeg.c)
+    		 ${UV_BASE}/video_compress/jpeg.cpp)
     		 
     SET(LIBS ${LIBS}  ${JPEG_LIBRARY})
     add_definitions(-DYURI_UV_JPEG_SUPPORTED)
@@ -197,7 +201,10 @@ IF(libavcodec_FOUND)
     SET (SRC ${SRC} 
              UVLibav.cpp
     		 UVLibav.h
+    		 UVLibavDecompress.cpp
+    		 UVLibavDecompress.h
     		 ${UV_BASE}/video_compress/libavcodec.c
+    		 ${UV_BASE}/video_decompress/libavcodec.c
     #		 ${UV_BASE}/gl_context.c
     #		 ${UV_BASE}/glx_common.c
     		 )

@@ -16,16 +16,16 @@ namespace yuri
 namespace core
 {
 
-class EXPORT ThreadChild
+class ThreadChild
 {
 public:
-								ThreadChild();
-								ThreadChild(yuri::thread&& thread,
+	EXPORT 						ThreadChild();
+	EXPORT 						ThreadChild(yuri::thread&& thread,
 			pThreadBase child, bool spawned=false);
-								~ThreadChild() noexcept;
-								ThreadChild(const ThreadChild&)=delete;
-								ThreadChild(ThreadChild&& rhs);
-	ThreadChild&				operator=(ThreadChild&& rhs);
+	EXPORT						~ThreadChild() noexcept;
+	EXPORT 						ThreadChild(const ThreadChild&)=delete;
+	EXPORT 						ThreadChild(ThreadChild&& rhs);
+	EXPORT ThreadChild&			operator=(ThreadChild&& rhs);
 	yuri::thread 				thread_ptr;
 	pThreadBase 				thread;
 	bool 						finished;

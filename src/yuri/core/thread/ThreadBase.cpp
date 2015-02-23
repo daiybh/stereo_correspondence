@@ -12,6 +12,7 @@
 #include "yuri/core/thread/ThreadSpawn.h"
 #include <sys/types.h>
 #include <string>
+#include "yuri/core/utils/assign_parameters.h"
 #ifdef YURI_LINUX
 #include <pthread.h>
 #include <sys/syscall.h>
@@ -39,7 +40,7 @@ Parameters ThreadBase::configure()
 
 
 ThreadBase::ThreadBase(const log::Log &_log, pwThreadBase parent, const std::string& id):log(_log),parent_(parent),
-	ending_(false), join_timeout(2.5_s),
+	ending_(false),interrupted_(false), join_timeout(2.5_s),
 	/*lastChild(0),*//*finishWhenChildEnds(false),*//*quitWhenChildsEnd(true),*///own_tid(0),
 	running_(false),node_id_(id)
 {
@@ -55,13 +56,18 @@ ThreadBase::~ThreadBase() noexcept
 void ThreadBase::operator()()
 {
 	TRACE_METHOD
+#ifdef YURI_LINUX
+	auto pname = std::string(node_id_).substr(0,15);
+    pthread_setname_np(pthread_self(), pname.c_str());
+#endif
 	running_ = true;
 	log[verbose_debug] << "Starting thread" << "\n";
 	run();
 	log[verbose_debug] << "Thread finished execution" << "\n";
-	request_end();
+	request_end(yuri_exit_finished);
 	running_ = false;
 	log[verbose_debug] << "Not running";
+	join_all_threads();
 }
 
 
@@ -69,9 +75,11 @@ void ThreadBase::finish() noexcept
 {
 	TRACE_METHOD
 	log[verbose_debug] << "finish()";
-//	finish_all_threads();
-	join_all_threads();
-	ending_=true;
+	finish_all_threads();
+//	join_all_threads();
+//	ending_=true;
+//	request_end(yuri_exit_interrupted);
+	interrupted_=true;
 }
 
 bool ThreadBase::still_running()
@@ -85,10 +93,11 @@ void ThreadBase::child_ends(pwThreadBase child, int code)
 {
 	TRACE_METHOD
 	log[verbose_debug] << "Received childs_end() from child with code "	<< code;
+	if (ending_) return;
 	{
-//		lock_t _(children_lock_);
 		child_ends_hook(child, code, children_.size());
 	}
+
 	request_finish_thread(child);
 }
 
@@ -100,13 +109,13 @@ void ThreadBase::request_end(int code)
 {
 	TRACE_METHOD
 	log[verbose_debug] << "request_end(): " << code;
-	ending_ = true;
-	if (pThreadBase parent =  parent_.lock()) {
-		log[log::debug] << "Notifying parent that about my end...";
-		parent->child_ends(get_this_ptr(),code);
-		parent_.reset(); // Parent knows I'm dead, so let's forget...
+	auto was_ending = ending_.exchange(true);
+	if (!was_ending) {
+		if (pThreadBase parent =  parent_.lock()) {
+			log[log::debug] << "Notifying parent that about my end...";
+			parent->child_ends(get_this_ptr(),code);
+		}
 	}
-//	finish();
 }
 
 /// Spawns new thread
@@ -233,12 +242,13 @@ void ThreadBase::do_join_thread(pwThreadBase child, bool /*check*/) noexcept
 	TRACE_METHOD
 	log[debug] << "Joining child (" <<children_.size() << ")" << "\n";
 //	if (check) {
-	if (children_.find(child)==children_.end()) {
+	auto&& it = children_.find(child);
+	if (it == children_.end()) {
 		log[warning] << "Trying to join unregistered child. " << "\n";
 		//delete thread;
 		return;
 	}
-	auto& child_ref = children_[child];
+	auto& child_ref = it->second;
 	if (!child_ref.finished) {
 		do_finish_thread(child,false);
 	}
@@ -273,8 +283,8 @@ void ThreadBase::request_finish_thread(pwThreadBase child)
 {
 	TRACE_METHOD
 //	lock_t l2(end_lock);
-	lock_t l(children_lock_);
-
+//	lock_t l(children_lock_);
+	lock_t _(ending_childs_mutex_);
 	do_request_finish_thread(child);
 }
 void ThreadBase::do_request_finish_thread(pwThreadBase child)
@@ -292,19 +302,24 @@ void ThreadBase::process_pending_requests()
 {
 	TRACE_METHOD
 //	lock_t _(children_lock);
-	log[log::verbose_debug] << ending_childs_.size() << " childs wait for finishing";
-	while (!ending_childs_.empty()) {
-		pwThreadBase child = ending_childs_.back();
-		ending_childs_.pop_back();
+	{
+		lock_t _(ending_childs_mutex_);
 
-		if (!child.expired()) {
-			log[debug] << "TB::ppr: Finishing child";
+		log[log::verbose_debug] << ending_childs_.size() << " childs wait for finishing";
+		while (!ending_childs_.empty()) {
+			pwThreadBase child = ending_childs_.back();
+			ending_childs_.pop_back();
 
-			finish_thread(child,true);
-		} else {
-			log[log::warning] << "Tried to finish an empty child";
+			if (!child.expired()) {
+				log[debug] << "TB::ppr: Finishing child";
+
+				finish_thread(child,true);
+			} else {
+				log[log::warning] << "Tried to finish an empty child";
+			}
 		}
 	}
+	if (interrupted_) request_end(yuri_exit_interrupted);
 }
 // Return true if the app should quit
 //bool ThreadBase::do_child_ended(size_t remaining_child_count)
@@ -376,7 +391,7 @@ pid_t retrieve_tid()
 
 }
 
-void ThreadBase::print_id(_debug_flags f)
+void ThreadBase::print_id(debug_flags_t f)
 {
 	log[f] << "Started as thread " << retrieve_tid() <<"\n";
 }
@@ -424,19 +439,21 @@ bool ThreadBase::set_params(const Parameters &parameters)
 }
 bool ThreadBase::set_param(const Parameter &parameter)
 {
-	if (parameter.get_name() == "cpu") {
-		cpu_affinity_=parameter.get<yuri::ssize_t>();
-	} else if (parameter.get_name() == "debug") {
-		/*int debug;
-		debug = parameter.get<yuri::sint_t>();
-		if (debug) {
-			yuri::sint_t orig = log.get_flags();
-			log.set_flags(((orig&flag_mask)<<debug)|(orig&~flag_mask));
-		}*/
-	} else if (parameter.get_name() == "_node_name") {
+	long debug = 0;
+	if (assign_parameters(parameter)
+			(cpu_affinity_, "cpu"))
+		return true;
+
+	if (assign_parameters(parameter)
+			(debug, "debug")) {
+		log.adjust_log_level(debug);
+		return true;
+	}
+
+
+	if (parameter.get_name() == "_node_name") {
 		node_name_ = parameter.get<std::string>();
 		log.set_label(get_node_name());
-//		set_log_id();
 	} else return false;
 	return true;
 }

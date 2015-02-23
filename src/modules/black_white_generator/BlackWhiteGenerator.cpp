@@ -109,7 +109,7 @@ core::pFrame prepare_white_frame(format_t format, resolution_t resolution)
 }
 
 BlackWhiteGenerator::BlackWhiteGenerator(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("black_white_generator")),duration_(40_ms),format_(core::raw_format::yuyv422),resolution_{1920,1080}
+core::IOThread(log_,parent,1,1,std::string("black_white_generator")),duration_(40_ms),format_(core::raw_format::yuyv422),resolution_(resolution_t{1920,1080})
 {
 	IOTHREAD_INIT(parameters)
 	if (!format_) throw exception::InitializationFailed("Output format not specified or unsupported");
@@ -142,14 +142,12 @@ void BlackWhiteGenerator::run()
 }
 bool BlackWhiteGenerator::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "format") {
-		format_ = core::raw_format::parse_format(param.get<std::string>());
-	} else if (param.get_name() == "resolution") {
-		resolution_ = param.get<resolution_t>();
-	} else if (param.get_name() == "frequency") {
-		duration_ = 1_s/param.get<double>();
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(format_, "format", [](const core::Parameter& p){ return core::raw_format::parse_format(p.get<std::string>());})
+			(resolution_, "resolution")
+			(duration_, "frequency", [](const core::Parameter& p) { return 1_s/p.get<double>(); }))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace black_white_generator */

@@ -66,7 +66,7 @@ PngEncoder::~PngEncoder() noexcept
 {
 }
 
-core::pFrame PngEncoder::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame PngEncoder::do_special_single_step(core::pRawVideoFrame frame)
 {
 	Timer t;
 	format_t input_format = frame->get_format();

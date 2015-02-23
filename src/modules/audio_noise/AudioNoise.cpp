@@ -98,9 +98,12 @@ amplitude_(1.0),sampling_frequency_(48000),channels_(2)
 		case signed_32bit:
 			generator_=make_unique<int_noise_generator<int32_t, signed_32bit>>(amplitude_,channels_,sampling_frequency_);
 			break;
+#ifndef YURI_WIN
+			// Windows doesn's support uniform_int_distribution for uin8_t...
 		case unsigned_8bit:
 			generator_=make_unique<int_noise_generator<uint8_t, unsigned_8bit>>(amplitude_,channels_,sampling_frequency_);
 			break;
+#endif
 		case unsigned_16bit:
 			generator_=make_unique<int_noise_generator<uint16_t, unsigned_16bit>>(amplitude_,channels_,sampling_frequency_);
 			break;
@@ -136,16 +139,13 @@ void AudioNoise::run()
 }
 bool AudioNoise::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "channels") {
-		channels_ = param.get<size_t>();
-	} else if (param.get_name() == "frequency") {
-		sampling_frequency_ = param.get<size_t>();
-	} else if (param.get_name() == "amplitude") {
-		amplitude_ = param.get<double>();
-	} else if (param.get_name() == "format") {
-		format_ = core::raw_audio_format::parse_format(param.get<std::string>());
-	} else return core::IOThread::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(channels_, "channels")
+			(sampling_frequency_, "frequency")
+			(amplitude_, "amplitude")
+			(format_, "format", [](const core::Parameter&p){ return core::raw_audio_format::parse_format(p.get<std::string>()); }))
+		return true;
+	return core::IOThread::set_param(param);
 }
 
 } /* namespace audio_noise */

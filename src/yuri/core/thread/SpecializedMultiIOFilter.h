@@ -27,7 +27,7 @@ template<class FrameType, class... Others, typename Iter>
 std::tuple<shared_ptr<FrameType>, shared_ptr<Others>...>
 verify_types(Iter frame_iter)
 {
-	shared_ptr<FrameType> frame = dynamic_pointer_cast<FrameType>(*frame_iter);
+	shared_ptr<FrameType> frame = dynamic_pointer_cast<FrameType>(std::move(*frame_iter));
 	if (!frame) throw std::runtime_error("Wrong type");
 	return std::tuple_cat(std::make_tuple(frame), verify_types<Others...>(frame_iter+1));
 }
@@ -46,16 +46,17 @@ public:
 
 	~SpecializedMultiIOFilter() noexcept {}
 private:
-	virtual std::vector<pFrame> do_single_step(const std::vector<pFrame>& frames) override final {
+	virtual std::vector<pFrame> do_single_step(std::vector<pFrame> frames) override final {
 		assert (frames.size() == input_frames_count);
 		try {
 //			Timer t;
-			const auto& p = verify_types<InFrameTypes...>(frames.begin());
+			auto p = verify_types<InFrameTypes...>(frames.begin());
 //			auto t1 = t.get_duration();
-			const auto& f = do_special_step(p);
+			frames.clear();
+			auto f = do_special_step(std::move(p));
 //			auto t2 = t.get_duration();
 //			log[log::info] << "Processing took "<<t2<<" in total, conversions " << t1 << " and module took " << (t2-t1);
-			return f;
+			return std::move(f);
 //			return do_special_step();
 		}
 		catch (std::exception& e) {
@@ -64,7 +65,7 @@ private:
 		}
 	}
 
-	virtual std::vector<pFrame> do_special_step(const param_type& frames) = 0;
+	virtual std::vector<pFrame> do_special_step(param_type frames) = 0;
 
 };
 

@@ -11,6 +11,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
 #include "yuri/core/frame/compressed_frame_types.h"
+#include "yuri/core/utils/assign_events.h"
 #include "jpeg_common.h"
 namespace yuri {
 namespace jpeg {
@@ -23,6 +24,7 @@ core::Parameters JpegEncoder::configure()
 	core::Parameters p = core::SpecializedIOFilter<core::RawVideoFrame>::configure();
 	p.set_description("JpegEncoder");
 	p["quality"]["Jpeg quality"]=90;
+	p["force_mjpeg"]["Force MJPEG format"]=false;
 	return p;
 }
 namespace {
@@ -31,32 +33,26 @@ void error_exit(jpeg_common_struct* /*cinfo*/)
 {
 	throw std::runtime_error("Error");
 }
-std::vector<format_t> supported_formats = {
-	core::raw_format::rgb24,
-	core::raw_format::bgr24,
-	core::raw_format::rgba32,
-	core::raw_format::bgra32,
-	core::raw_format::abgr32,
-	core::raw_format::argb32,
-	core::raw_format::yuv444,
-	core::raw_format::y8,
-};
+
 }
 
 JpegEncoder::JpegEncoder(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("jpeg_encoder")),
-quality_(90)
+BasicEventConsumer(log),
+quality_(90),force_mjpeg_(false)
 {
 	IOTHREAD_INIT(parameters)
-	set_supported_formats(supported_formats);
+    log[log::info] << "sf: " << get_jpeg_supported_formats().size();
+	set_supported_formats(get_jpeg_supported_formats());
 }
 
 JpegEncoder::~JpegEncoder() noexcept
 {
 }
 
-core::pFrame JpegEncoder::do_special_single_step(const core::pRawVideoFrame& frame)
+core::pFrame JpegEncoder::do_special_single_step(core::pRawVideoFrame frame)
 {
+	process_events();
 	unique_ptr<jpeg_compress_struct, function<void(jpeg_compress_struct*)>> cinfox(
 			new jpeg_compress_struct, [](jpeg_compress_struct* ptr)
 			{
@@ -80,19 +76,20 @@ core::pFrame JpegEncoder::do_special_single_step(const core::pRawVideoFrame& fra
 
 		uint8_t *buffer = nullptr;
 		unsigned long buffer_size = 0;
+		// Jpeg_mem_dest allocated buffer and it WILL BE LEAKED when an exception occurs...
 		jpeg_mem_dest(cinfo, &buffer, &buffer_size);
 		const auto& fi = core::raw_format::get_format_info(fmt);
 //		size_t bpp = core::raw_format::get_fmt_bpp(fmt)/8;
 		resolution_t res = frame->get_resolution();
-		cinfo->image_width = res.width;
-		cinfo->image_height = res.height;
+		cinfo->image_width = static_cast<JDIMENSION>(res.width);
+		cinfo->image_height = static_cast<JDIMENSION>(res.height);
 
 		// This is probably not correct for all formats, but it should work for all formats supported here.
-		cinfo->input_components = fi.planes[0].components.size();
+		cinfo->input_components = static_cast<int>(fi.planes[0].components.size());
 		cinfo->in_color_space = cs;
 
 		jpeg_set_defaults(cinfo);
-		jpeg_set_quality(cinfo, quality_, true);
+		jpeg_set_quality(cinfo, static_cast<int>(quality_), true);
 		jpeg_start_compress(cinfo, true);
 
 		uint8_t* data = PLANE_RAW_DATA(frame,0);
@@ -106,7 +103,13 @@ core::pFrame JpegEncoder::do_special_single_step(const core::pRawVideoFrame& fra
 		jpeg_finish_compress(cinfo);
 
 		log[log::verbose_debug] << "Buffer is now " << buffer_size << " bytes long";
-		if (buffer_size) return core::CompressedVideoFrame::create_empty(core::compressed_frame::jpeg, res, buffer, buffer_size);
+		auto out_fmt = force_mjpeg_?core::compressed_frame::mjpg:core::compressed_frame::jpeg;
+		if (buffer_size) {
+			auto outframe = core::CompressedVideoFrame::create_empty(out_fmt, res, buffer, buffer_size);
+			::free(buffer);
+			return outframe;
+		}
+		::free(buffer);
 
 	}
 	catch (std::runtime_error& ) {
@@ -123,10 +126,20 @@ core::pFrame JpegEncoder::do_convert_frame(core::pFrame input_frame, format_t ta
 }
 bool JpegEncoder::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "quality") {
-		quality_ = param.get<size_t>();
-	} else return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
-	return true;
+	if (assign_parameters(param)
+			(quality_, "quality")
+			(force_mjpeg_, "force_mjpeg"))
+		return true;
+	return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(param);
+}
+
+bool JpegEncoder::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
+{
+	if (assign_events(event_name, event)
+			.ranged(quality_, 0, 100, "quality")
+			(force_mjpeg_, "force_mjpeg"))
+		return true;
+	return false;
 }
 
 } /* namespace jpeg2 */

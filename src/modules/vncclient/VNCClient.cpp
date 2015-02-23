@@ -127,10 +127,10 @@ void store_uint(uint8_t *start, uint32_t data)
 }
 void store_geometry(uint8_t* start, const geometry_t& geometry)
 {
-	store_ushort(start+0,geometry.x);
-	store_ushort(start+2,geometry.y);
-	store_ushort(start+4,geometry.width);
-	store_ushort(start+6,geometry.height);
+	store_ushort(start+0, static_cast<uint16_t>(geometry.x));
+	store_ushort(start+2, static_cast<uint16_t>(geometry.y));
+	store_ushort(start+4, static_cast<uint16_t>(geometry.width));
+	store_ushort(start+6, static_cast<uint16_t>(geometry.height));
 }
 }
 
@@ -204,12 +204,11 @@ bool VNCClient::connect()
 
 bool VNCClient::set_param(const core::Parameter &p)
 {
-	if (iequals(p.get_name(), "address")) {
-		address = p.get<std::string>();
-	} else if (iequals(p.get_name(), "port")) {
-		port=p.get<uint16_t>();
-	} else return IOThread::set_param(p);
-	return true;
+	if(assign_parameters(p)
+			(address, "address")
+			(port, "port"))
+		return true;
+	return IOThread::set_param(p);
 }
 
 /** \brief Goes thru the handshake with the server, setting up necessary parameters
@@ -353,13 +352,13 @@ bool VNCClient::process_data()
 						uint8_t * pos = buffer_pos + 12, *outpos;
 						yuri::size_t pixel;
 						assert(pixel_format.bpp == 32);
-						for (uint16_t line=geometry.y; line < geometry.y+geometry.height; ++line) {
+						for (uint16_t line= static_cast<uint16_t>(geometry.y); line < static_cast<uint16_t>(geometry.y+geometry.height); ++line) {
 							outpos = &image[0]+3*resolution_.width*line+geometry.x*3;
-							for (uint16_t row = geometry.x; row < geometry.x + geometry.width; ++row) {
+							for (uint16_t row = static_cast<uint16_t>(geometry.x); row < geometry.x + geometry.width; ++row) {
 								pixel = get_pixel(pos);
-								*outpos++ = (pixel>>pixel_format.colors[2].shift)&pixel_format.colors[2].max;
-								*outpos++ = (pixel>>pixel_format.colors[1].shift)&pixel_format.colors[1].max;
-								*outpos++ = (pixel>>pixel_format.colors[0].shift)&pixel_format.colors[0].max;
+								*outpos++ = static_cast<uint8_t>((pixel>>pixel_format.colors[2].shift)&pixel_format.colors[2].max);
+								*outpos++ = static_cast<uint8_t>((pixel>>pixel_format.colors[1].shift)&pixel_format.colors[1].max);
+								*outpos++ = static_cast<uint8_t>((pixel>>pixel_format.colors[0].shift)&pixel_format.colors[0].max);
 								pos += pixel_format.bpp >> 3;
 							}
 						}; }
@@ -376,7 +375,7 @@ bool VNCClient::process_data()
 								b+=geometry.width*3;
 							}
 							b = &tmp[0];
-							for (uint16_t line=geometry.y; line < geometry.y+geometry.height; ++line) {
+							for (uint16_t line = static_cast<uint16_t>(geometry.y); line < geometry.y+geometry.height; ++line) {
 								pos = &image[0]+3*resolution_.width*line+geometry.x*3;
 								std::copy(b,b+geometry.width*3, pos);
 								b+=geometry.width*3;

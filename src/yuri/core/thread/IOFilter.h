@@ -20,21 +20,24 @@ namespace core {
 class IOFilter: public MultiIOFilter
 {
 public:
-	static Parameters		configure();
-							IOFilter(const log::Log &log_, pwThreadBase parent,
+	EXPORT static Parameters		
+							configure();
+	EXPORT 					IOFilter(const log::Log &log_, pwThreadBase parent,
 				const std::string& id = "FILTER");
-	virtual 				~IOFilter() noexcept;
+	EXPORT virtual 			~IOFilter() noexcept;
 
-	pFrame					simple_single_step(const pFrame& frame);
+	EXPORT pFrame			simple_single_step(pFrame frame);
 
-	void					set_supported_formats(const std::vector<format_t>& formats);
+	EXPORT void				set_supported_formats(const std::vector<format_t>& formats);
 	template<class T>
 	void					set_supported_formats(const std::map<format_t, T>& format_map);
-	const std::vector<format_t>& get_supported_formats() { return supported_formats_; }
-	void					set_supported_priority(bool);
+	EXPORT const std::vector<format_t>& 
+							get_supported_formats() { return supported_formats_; }
+	EXPORT void				set_supported_priority(bool);
 private:
-	virtual pFrame			do_simple_single_step(const pFrame& frame) = 0;
-	virtual std::vector<pFrame> do_single_step(const std::vector<pFrame>& frames);
+	EXPORT virtual pFrame	do_simple_single_step(pFrame frame) = 0;
+	EXPORT virtual std::vector<pFrame> 
+							do_single_step(std::vector<pFrame> frames);
 	std::vector<format_t>	supported_formats_;
 	pConvert				converter_;
 	bool 					priority_supported_;

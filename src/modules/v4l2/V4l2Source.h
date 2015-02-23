@@ -1,9 +1,9 @@
 /*!
  * @file 		V4l2Source.h
- * @author 		Zdenek Travnicek
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
  * @date 		17.5.2009
- * @date		16.2.2013
- * @copyright	Institute of Intermedia, CTU in Prague, 2009 - 2013
+ * @date		25.1.2015
+ * @copyright	Institute of Intermedia, CTU in Prague, 2009 - 2015
  * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
  */
@@ -13,26 +13,23 @@
 
 #include "yuri/core/thread/IOThread.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/event/BasicEventConsumer.h"
+#include "v4l2_controls.h"
+
 #include <iostream>
 #include <linux/videodev2.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <string>
-#include <errno.h>
 #include <sys/mman.h>
 #include <malloc.h>
 
 namespace yuri {
 
-namespace io {
+namespace v4l2 {
 
-#ifndef V4L2_CID_ILLUMINATORS_1
-#define V4L2_CID_ILLUMINATORS_1			(V4L2_CID_BASE+37)
-#endif
-
-class V4l2Source: public core::IOThread {
+class V4l2Source: public core::IOThread, public event::BasicEventConsumer {
 public:
 	/** Structure to hold buffer informations */
 	struct buffer_t {
@@ -55,18 +52,17 @@ public:
 	virtual void run();
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
-
+private:
 	virtual bool set_param(const core::Parameter &param);
-protected:
+
 	bool init_mmap();
 	bool init_user();
 	bool init_read();
 	bool start_capture();
 	bool stop_capture();
 	bool read_frame();
-	static int xioctl(int fd, unsigned long int request, void *arg);
 	bool prepare_frame(uint8_t *data, yuri::size_t size);
-	virtual bool step() override;
+//	virtual bool step() override;
 	bool open_file();
 	bool query_capabilities();
 	bool enum_inputs();
@@ -78,12 +74,15 @@ protected:
 	bool set_frame_params();
 	bool initialize_capture();
 	bool enable_iluminator();
+	bool enum_controls();
+	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
+
 
 	std::string filename;
 	int fd;
 	v4l2_capability cap;
 	v4l2_format fmt;
-	dimension_t /*width,height,*/imagesize;
+	dimension_t imagesize;
 	resolution_t resolution;
 	uint pixelformat;
 	methods method;
@@ -97,8 +96,10 @@ protected:
 	std::vector<int> supported_formats;
 	size_t number_of_inputs;
 
-	size_t fps;
+	fraction_t fps;
 	duration_t frame_duration;
+
+	std::vector<controls::control_info> controls_;
 };
 
 }

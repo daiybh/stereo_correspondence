@@ -56,6 +56,10 @@ pBasicEvent 					exp(const std::vector<pBasicEvent>& events);
 pBasicEvent 					pow(const std::vector<pBasicEvent>& events);
 pBasicEvent 					ln(const std::vector<pBasicEvent>& events);
 
+pBasicEvent 					geometry(const std::vector<pBasicEvent>& events);
+pBasicEvent 					get_width(const std::vector<pBasicEvent>& events);
+pBasicEvent 					get_height(const std::vector<pBasicEvent>& events);
+
 }
 
 

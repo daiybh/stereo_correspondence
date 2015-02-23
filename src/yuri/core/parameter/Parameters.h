@@ -23,16 +23,18 @@ public:
 	using iterator 				= map_type::iterator;
 	using const_iterator 		= map_type::const_iterator;
 
-								Parameters(const std::string& description = std::string()):description_(description) {}
-								Parameters(Parameters&& rhs):params_(std::move(rhs.params_)),description_(std::move(rhs.description_)){}
-	Parameters&					operator=(Parameters&& rhs) {params_=std::move(rhs.params_);description_ = std::move(rhs.description_);return *this;}
-								~Parameters() noexcept {}
-	Parameters&					merge(const Parameters& rhs);
-	Parameters&					merge(Parameters&& rhs);
-	void						set_description(const std::string& description);
-	const std::string&			get_description() const;
-	Parameter&					set_parameter(const Parameter& param);
-	Parameter&					set_parameter(Parameter&& param);
+	EXPORT 						Parameters(const std::string& description = std::string()):description_(description) {}
+	EXPORT 						Parameters(Parameters&& rhs):params_(std::move(rhs.params_)),description_(std::move(rhs.description_)){}
+	EXPORT 						Parameters(const Parameters& rhs):params_(rhs.params_),description_(rhs.description_){}
+	EXPORT Parameters&			operator=(Parameters&& rhs) {params_=std::move(rhs.params_);description_ = std::move(rhs.description_);return *this;}
+	EXPORT Parameters&			operator=(const Parameters& rhs) {params_=rhs.params_;description_ = rhs.description_;return *this;}
+	EXPORT 						~Parameters() noexcept {}
+	EXPORT Parameters&			merge(const Parameters& rhs);
+	EXPORT Parameters&			merge(Parameters&& rhs);
+	EXPORT void					set_description(const std::string& description);
+	EXPORT const std::string&	get_description() const;
+	EXPORT Parameter&			set_parameter(const Parameter& param);
+	EXPORT Parameter&			set_parameter(Parameter&& param);
 
 	template<typename T>
 	void
@@ -41,15 +43,15 @@ public:
 		set_parameter(Parameter(name, value));
 	}
 
-	Parameter&					operator[](const std::string& name);
-	const Parameter&			operator[](const std::string& name) const;
+	EXPORT Parameter&			operator[](const std::string& name);
+	EXPORT const Parameter&		operator[](const std::string& name) const;
 
-	iterator					begin() { return params_.begin(); }
-	const_iterator				begin() const { return params_.begin(); }
-	const_iterator				cbegin() { return params_.cbegin(); }
-	iterator					end() { return params_.end(); }
-	const_iterator				end() const { return params_.end(); }
-	const_iterator				cend() { return params_.cend(); }
+	EXPORT iterator				begin() { return params_.begin(); }
+	EXPORT const_iterator		begin() const { return params_.begin(); }
+	EXPORT const_iterator		cbegin() { return params_.cbegin(); }
+	EXPORT iterator				end() { return params_.end(); }
+	EXPORT const_iterator		end() const { return params_.end(); }
+	EXPORT const_iterator		cend() { return params_.cend(); }
 private:
 	map_type					params_;
 	std::string					description_;
