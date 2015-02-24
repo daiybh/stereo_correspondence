@@ -18,6 +18,8 @@
 namespace yuri {
 namespace pdf_source {
 
+enum class caching_mode_t: uint8_t;
+
 class PdfSource: public core::IOThread,
 				public event::BasicEventConsumer,
 				public event::BasicEventProducer
@@ -32,6 +34,9 @@ private:
 	virtual void run() override;
 	virtual bool set_param(const core::Parameter& param) override;
 	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
+
+	core::pFrame get_frame_from_index(int index);
+	core::pFrame get_frame_from_cache(int index);
 private:
 	std::string filename_;
 	std::unique_ptr<poppler::document> document_;
@@ -40,8 +45,13 @@ private:
 	double dpi_;
 	bool changed_;
 	int page_count_;
+	caching_mode_t caching_mode_;
+//	size_t cache_size_;
+
+	std::map<int, core::pFrame> frame_cache_;
 };
 
 } /* namespace pdf_source */
 } /* namespace yuri */
 #endif /* PDFSOURCE_H_ */
+
