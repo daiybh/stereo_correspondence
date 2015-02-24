@@ -88,9 +88,9 @@ int main(int argc, char**argv)
 	std::vector<std::string> params;
 	int verbosity = 0;
 	std::string filename;
+	std::string logfile;
+	std::ofstream logf;
 	std::vector<std::string> arguments;
-	logger.set_label("[YURI2] ");
-	logger.set_flags(log::info|log::show_level|log::use_colors);
 	bool show_info = false;
 #ifdef HAVE_BOOST_PROGRAM_OPTIONS
 	po::options_description options("General options");
@@ -105,13 +105,15 @@ int main(int argc, char**argv)
 		("list,l",po::value<std::string>()->implicit_value("classes"),"List registered classes (accepted values: classes, functions, formats, datagram_sockets, stream_sockets, pipes, converters)")
 		("class,L",po::value<std::string>(),"List details of a single class")
 		("convert,C",po::value<std::string>(), "Find conversion between format F1 and F2. Use syntax F1:F2.")
-		("app-info,a","Show info about XML file");
+		("app-info,a","Show info about XML file")
+		("log-file,o", po::value<std::string>(&logfile), "Log to a file");
 
 
 
 	po::positional_options_description p;
 	p.add("input-file", 1);
 	p.add("parameter", -1);
+
 
 	po::variables_map vm;
 	try {
@@ -123,6 +125,15 @@ int main(int argc, char**argv)
 		usage(options);
 		return 1;
 	}
+
+	if (!logfile.empty()) {
+		logf.open(logfile, std::ios::out|std::ios::app);
+		logger = yuri::log::Log(logf);
+		logger.set_flags(log::info|log::show_level);
+	} else {
+		logger.set_flags(log::info|log::show_level|log::use_colors);
+	}
+	logger.set_label("[YURI2] ");
 
 	if (verbosity < -3) verbosity = -3;
 	if (verbosity >  4) verbosity =  4;
