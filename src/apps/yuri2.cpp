@@ -129,11 +129,7 @@ int main(int argc, char**argv)
 	if (vm.count("quiet")) verbosity=-1;
 	else if (vm.count("verbose")) verbosity=1;
 
-	int log_params = logger.get_flags()&~log::flag_mask;
-	//cout << "Verbosity: " << verbosity << std::endl;
-	if (verbosity >=0)	logger.set_flags((log::info<<(verbosity))|log_params);
-	else logger.set_flags((log::info>>(-verbosity))|log_params);
-	//cout << "Verbosity: " << verbosity << ", flags: " << (l.get_flags()&flag_mask)<<std::endl;
+	logger.adjust_log_level(verbosity);
 	if (vm.count("help")) {
 		logger.set_quiet(true);
 		usage(options);
