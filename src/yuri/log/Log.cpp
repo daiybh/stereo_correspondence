@@ -64,6 +64,18 @@ logger_name_(""),output_flags_(info|show_level),quiet_(false)
 {
 }
 
+
+Log& Log::operator=(Log&& rhs) noexcept
+{
+	uid = rhs.uid;
+	out = std::move(rhs.out);
+	logger_name_ = std::move(rhs.logger_name_);
+	output_flags_ = std::move(rhs.output_flags_);
+	quiet_ = rhs.quiet_;
+	rhs.quiet_ = true;
+	return *this;
+}
+
 /**
  * Destroys an instance
  */

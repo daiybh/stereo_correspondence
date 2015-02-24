@@ -56,6 +56,8 @@ public:
 	EXPORT Log(std::ostream &out);
 	//! Constructs Log instance as a copy of @em log, with a new id
 	EXPORT Log(const Log& log);
+
+	Log& operator=(Log&& rhs) noexcept;
 	EXPORT virtual ~Log() noexcept;
 //	EXPORT void set_id(int id);
 	EXPORT void set_label(std::string s);
