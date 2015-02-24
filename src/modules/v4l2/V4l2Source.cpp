@@ -66,7 +66,7 @@ core::Parameters V4l2Source::configure()
 {
 	core::Parameters p = IOThread::configure();
 	p["resolution"]["Resolution of the image. Note that actual resolution may differ"]=resolution_t{640,480};
-	p["path"]["Path to the camera device. usually /dev/video0 or similar."]=std::string();
+	p["path"]["Path to the camera device. usually /dev/video0 or similar."]="/dev/video0";
 	p["method"]["Method used to get images from camera. Possible values are: none, mmap, user, read. For experts only"]="none";
 	std::string fmts;
 //	for (const auto& f: formats_map) {
@@ -78,7 +78,7 @@ core::Parameters V4l2Source::configure()
 //		fmts+=pf->short_names[0];
 //	}
 
-	p["format"][std::string("Format to capture in. Possible values are (")+fmts+")"]="YUV422";
+	p["format"]["Format to capture in."]=0;//"YUV422";
 	p["input"]["Input number to tune"]=0;
 	p["illumination"]["Enable illumination (if present)"]=true;
 	p["combine"]["Combine frames (if camera sends them in chunks)."]=false;
@@ -466,21 +466,17 @@ bool V4l2Source::set_param(const core::Parameter &param)
 		std::string format = param.get<std::string>();
 		format_t fmt = core::raw_format::parse_format(format);
 		if (!fmt) {
-			log[log::info] << "Specified not-raw format";
 			fmt = core::compressed_frame::parse_format(format);
-			log[log::info] << "Format parsed as: " << fmt;
+		}
+		if (!fmt) {
+			log[log::info] << "Input format not specified or not understood, the format will be detected automatically.";
 		}
 
 		pixelformat = yuri_format_to_v4l2(fmt);
-		if (!pixelformat) {
-			// Process special formats....
-//			else if (boost::iequals(format,"S920")) pixelformat = V4L2_PIX_FMT_SN9C20X_I420;
-//			else if (boost::iequals(format,"BA81")) pixelformat = V4L2_PIX_FMT_SBGGR8;
-			log[log::warning] << "Unsupported format specified. Trying YUV422";
-			pixelformat = V4L2_PIX_FMT_YUYV;
-		}
-	} else return IOThread::set_param(param);
-	return true;
+		return true;
+	}
+	return IOThread::set_param(param);
+
 
 }
 bool V4l2Source::prepare_frame(uint8_t *data, yuri::size_t size)
@@ -664,6 +660,9 @@ bool V4l2Source::set_format()
 		log[log::error] << "VIDIOC_G_FMT ioctl failed! (" << strerror(errno)
 							<< ")" << std::endl;
 		throw exception::Exception("Failed to get default format info!");
+	}
+	if (!pixelformat) {
+		if (!supported_formats.empty()) pixelformat = supported_formats[0];
 	}
 	fmt.fmt.pix.pixelformat=pixelformat;
 	fmt.fmt.pix.width=resolution.width;
