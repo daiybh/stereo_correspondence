@@ -60,6 +60,10 @@ pBasicEvent 					geometry(const std::vector<pBasicEvent>& events);
 pBasicEvent 					get_width(const std::vector<pBasicEvent>& events);
 pBasicEvent 					get_height(const std::vector<pBasicEvent>& events);
 
+pBasicEvent 					microseconds(const std::vector<pBasicEvent>& events);
+pBasicEvent 					milliseconds(const std::vector<pBasicEvent>& events);
+pBasicEvent 					seconds(const std::vector<pBasicEvent>& events);
+
 }
 
 

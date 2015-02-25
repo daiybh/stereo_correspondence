@@ -11,6 +11,7 @@
 #include "functions.h"
 #include "EventHelpers.h"
 #include <cmath>
+#include <cstdlib>
 namespace yuri {
 namespace event {
 
@@ -87,7 +88,7 @@ pBasicEvent simple_unary_function_wrapper(const std::string& name, const std::ve
 
 namespace functions {
 pBasicEvent str(const std::vector<pBasicEvent>& events) {
-	return generic_unary_oper<convert_to_string, EventString, EventBang, EventBool, EventInt, EventDouble, EventString, EventTime, EventVector, EventDict>("str",events);
+	return generic_unary_oper<convert_to_string, EventString, EventBang, EventBool, EventInt, EventDouble, EventString, EventTime, EventDuration, EventVector, EventDict>("str",events);
 //	if (events.size() != 1) throw bad_event_cast("Str supports only one parameter");
 //	switch (events[0]->get_type()) {
 //		case event_type_t::bang_event: return convert_to_string<EventBang>(events[0]);
@@ -200,11 +201,11 @@ pBasicEvent muls(const std::vector<pBasicEvent>& events)
 
 pBasicEvent add(const std::vector<pBasicEvent>& events)
 {
-	return generic_binary_oper2<std::plus, EventInt, EventDouble, EventString>("add", events);
+	return generic_binary_oper2<std::plus, EventInt, EventDouble, EventString, EventDuration>("add", events);
 }
 pBasicEvent sub(const std::vector<pBasicEvent>& events)
 {
-	return generic_binary_oper2<std::minus, EventInt, EventDouble>("sub", events);
+	return generic_binary_oper2<std::minus, EventInt, EventDouble, EventDuration>("sub", events);
 }
 pBasicEvent mul(const std::vector<pBasicEvent>& events)
 {
@@ -225,7 +226,7 @@ pBasicEvent fmod(const std::vector<pBasicEvent>& events)
 
 pBasicEvent eq(const std::vector<pBasicEvent>& events) {
 	if (events.size() == 2) {
-		return generic_binary_oper<std::equal_to, EventBool, EventBool, EventInt, EventDouble, EventString, EventTime>("eq",events);
+		return generic_binary_oper<std::equal_to, EventBool, EventBool, EventInt, EventDouble, EventString, EventTime, EventDuration>("eq",events);
 	} else if (events.size() == 3) {
 		if (events[0]->get_type() != events[1]->get_type() || events[1]->get_type() != events[2]->get_type()) throw bad_event_cast("eq requires all parameters to have same type");
 			switch (events[0]->get_type()) {
@@ -238,16 +239,16 @@ pBasicEvent eq(const std::vector<pBasicEvent>& events) {
 	throw bad_event_cast("Unsupported number of parameters for eq()");
 }
 pBasicEvent gt(const std::vector<pBasicEvent>& events) {
-	return generic_binary_oper<std::greater, EventBool, EventBool, EventInt, EventDouble, EventString, EventTime>("gt",events);
+	return generic_binary_oper<std::greater, EventBool, EventBool, EventInt, EventDouble, EventString, EventTime, EventDuration>("gt",events);
 }
 pBasicEvent ge(const std::vector<pBasicEvent>& events) {
-	return generic_binary_oper<std::greater_equal, EventBool, EventBool, EventInt, EventDouble, EventString, EventTime>("ge",events);
+	return generic_binary_oper<std::greater_equal, EventBool, EventBool, EventInt, EventDouble, EventString, EventTime, EventDuration>("ge",events);
 }
 pBasicEvent lt(const std::vector<pBasicEvent>& events) {
-	return generic_binary_oper<std::less, EventBool, EventBool, EventInt, EventDouble, EventString, EventTime>("lt",events);
+	return generic_binary_oper<std::less, EventBool, EventBool, EventInt, EventDouble, EventString, EventTime, EventDuration>("lt",events);
 }
 pBasicEvent le(const std::vector<pBasicEvent>& events) {
-	return generic_binary_oper<std::less_equal, EventBool, EventBool, EventInt, EventDouble, EventString, EventTime>("le",events);
+	return generic_binary_oper<std::less_equal, EventBool, EventBool, EventInt, EventDouble, EventString, EventTime, EventDuration>("le",events);
 }
 
 pBasicEvent	log_and(const std::vector<pBasicEvent>& events) {
@@ -270,14 +271,36 @@ pBasicEvent	bit_xor(const std::vector<pBasicEvent>& events) {
 }
 
 pBasicEvent	min(const std::vector<pBasicEvent>& events) {
-	return generic_binary_oper2<min_wrapper, EventBool, EventInt, EventDouble, EventTime, EventString>("min",events);
+	return generic_binary_oper2<min_wrapper, EventBool, EventInt, EventDouble, EventTime, EventString, EventDuration>("min",events);
 }
 pBasicEvent	max(const std::vector<pBasicEvent>& events) {
-	return generic_binary_oper2<max_wrapper, EventBool, EventInt, EventDouble, EventTime, EventString>("max",events);
+	return generic_binary_oper2<max_wrapper, EventBool, EventInt, EventDouble, EventTime, EventString, EventDuration>("max",events);
+}
+namespace {
+template<class T>
+struct abs_impl;
+
+template<>
+struct abs_impl<duration_t> {
+duration_t operator()(const duration_t& val)
+{
+	if (val < 0_ms) return -val;
+	return val;
+}
+};
+
+template<class T>
+struct abs_impl {
+T operator()(const T& val)
+{
+	return std::abs(val);
+}
+};
+
 }
 
 pBasicEvent	abs(const std::vector<pBasicEvent>& events) {
-	return generic_unary_oper2<std::logical_not, EventInt, EventDouble>("abs",events);
+	return generic_unary_oper2<abs_impl, EventInt, EventDouble, EventDuration>("abs",events);
 }
 typedef long double(*double_function_t)(long double);
 pBasicEvent	exp(const std::vector<pBasicEvent>& events) {
@@ -338,6 +361,58 @@ pBasicEvent get_height(const std::vector<pBasicEvent>& events) {
 			default:break;
 	}
 	throw bad_event_cast("Unsupported type of parameter in get_height()");
+}
+
+
+pBasicEvent microseconds(const std::vector<pBasicEvent>& events)
+{
+	if (events.size() != 1) throw bad_event_cast("microseconds supports only one parameter");
+	const auto& event = events[0];
+	switch (event->get_type()) {
+		case event_type_t::duration_event:
+			return event;
+		case event_type_t::integer_event:
+			return std::make_shared<EventDuration>(1_us * get_value<EventInt>(event));
+		case event_type_t::double_event:
+			return std::make_shared<EventDuration>(1_us * get_value<EventDouble>(event));
+		default: break;
+
+	}
+	throw bad_event_cast("Unsupported type of parameter in microseconds()");
+}
+
+pBasicEvent milliseconds(const std::vector<pBasicEvent>& events)
+{
+	if (events.size() != 1) throw bad_event_cast("milliseconds supports only one parameter");
+	const auto& event = events[0];
+	switch (event->get_type()) {
+		case event_type_t::duration_event:
+			return event;
+		case event_type_t::integer_event:
+			return std::make_shared<EventDuration>(1_ms * get_value<EventInt>(event));
+		case event_type_t::double_event:
+			return std::make_shared<EventDuration>(1_ms * get_value<EventDouble>(event));
+		default: break;
+
+	}
+	throw bad_event_cast("Unsupported type of parameter in milliseconds()");
+}
+
+pBasicEvent seconds(const std::vector<pBasicEvent>& events)
+{
+	if (events.size() != 1) throw bad_event_cast("seconds supports only one parameter");
+	const auto& event = events[0];
+	switch (event->get_type()) {
+		case event_type_t::duration_event:
+			return event;
+		case event_type_t::integer_event:
+			return std::make_shared<EventDuration>(1_s * get_value<EventInt>(event));
+		case event_type_t::double_event:
+			return std::make_shared<EventDuration>(1_s * get_value<EventDouble>(event));
+		default: break;
+
+	}
+	throw bad_event_cast("Unsupported type of parameter in seconds()");
 }
 
 }

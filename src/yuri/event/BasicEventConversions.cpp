@@ -123,6 +123,7 @@ FuncInitHelper fhelper_ {
 		 {"str", std::vector<event_type_t>({event_type_t::string_event}),event_type_t::string_event,functions::str},
 		 {"str", std::vector<event_type_t>({event_type_t::vector_event}),event_type_t::string_event,functions::str},
 		 {"str", std::vector<event_type_t>({event_type_t::dictionary_event}),event_type_t::string_event,functions::str},
+		 {"str", std::vector<event_type_t>({event_type_t::duration_event}),event_type_t::string_event,functions::str},
 
 		 {"double", std::vector<event_type_t>({event_type_t::integer_event}),event_type_t::double_event, functions::todouble},
 		 {"double", std::vector<event_type_t>({event_type_t::double_event}),event_type_t::double_event, functions::todouble},
@@ -156,9 +157,11 @@ FuncInitHelper fhelper_ {
 		 {"add", std::vector<event_type_t>({event_type_t::integer_event, event_type_t::integer_event}),event_type_t::integer_event,functions::add},
 		 {"add", std::vector<event_type_t>({event_type_t::double_event, event_type_t::double_event}),event_type_t::double_event,functions::add},
 		 {"add", std::vector<event_type_t>({event_type_t::string_event, event_type_t::string_event}),event_type_t::string_event,functions::add},
+		 {"add", std::vector<event_type_t>({event_type_t::duration_event, event_type_t::duration_event}),event_type_t::duration_event,functions::add},
 
 		 {"sub", std::vector<event_type_t>({event_type_t::integer_event, event_type_t::integer_event}),event_type_t::integer_event,functions::sub},
 		 {"sub", std::vector<event_type_t>({event_type_t::double_event, event_type_t::double_event}),event_type_t::double_event,functions::sub},
+		 {"sub", std::vector<event_type_t>({event_type_t::duration_event, event_type_t::duration_event}),event_type_t::duration_event,functions::sub},
 
 		 {"mul", std::vector<event_type_t>({event_type_t::integer_event, event_type_t::integer_event}),event_type_t::integer_event,functions::mul},
 		 {"mul", std::vector<event_type_t>({event_type_t::double_event, event_type_t::double_event}),event_type_t::double_event,functions::mul},
@@ -176,32 +179,38 @@ FuncInitHelper fhelper_ {
 		 {"eq", std::vector<event_type_t>({event_type_t::double_event, event_type_t::double_event}),event_type_t::boolean_event, functions::eq},
 		 {"eq", std::vector<event_type_t>({event_type_t::string_event, event_type_t::string_event}),event_type_t::boolean_event, functions::eq},
 		 {"eq", std::vector<event_type_t>({event_type_t::time_event, event_type_t::time_event}),event_type_t::boolean_event, functions::eq},
+		 {"eq", std::vector<event_type_t>({event_type_t::duration_event, event_type_t::duration_event}),event_type_t::boolean_event, functions::eq},
 		 {"eq", std::vector<event_type_t>({event_type_t::integer_event, event_type_t::integer_event, event_type_t::integer_event}),event_type_t::boolean_event, functions::eq},
 		 {"eq", std::vector<event_type_t>({event_type_t::double_event, event_type_t::double_event, event_type_t::double_event}),event_type_t::boolean_event, functions::eq},
+
 
 		 {"gt", std::vector<event_type_t>({event_type_t::boolean_event, event_type_t::boolean_event}),event_type_t::boolean_event, functions::gt},
 		 {"gt", std::vector<event_type_t>({event_type_t::integer_event, event_type_t::integer_event}),event_type_t::boolean_event, functions::gt},
 		 {"gt", std::vector<event_type_t>({event_type_t::double_event, event_type_t::double_event}),event_type_t::boolean_event, functions::gt},
 		 {"gt", std::vector<event_type_t>({event_type_t::string_event, event_type_t::string_event}),event_type_t::boolean_event, functions::gt},
 		 {"gt", std::vector<event_type_t>({event_type_t::time_event, event_type_t::time_event}),event_type_t::boolean_event, functions::gt},
+		 {"gt", std::vector<event_type_t>({event_type_t::duration_event, event_type_t::duration_event}),event_type_t::boolean_event, functions::gt},
 
 		 {"ge", std::vector<event_type_t>({event_type_t::boolean_event, event_type_t::boolean_event}),event_type_t::boolean_event, functions::ge},
 		 {"ge", std::vector<event_type_t>({event_type_t::integer_event, event_type_t::integer_event}),event_type_t::boolean_event, functions::ge},
 		 {"ge", std::vector<event_type_t>({event_type_t::double_event, event_type_t::double_event}),event_type_t::boolean_event, functions::ge},
 		 {"ge", std::vector<event_type_t>({event_type_t::string_event, event_type_t::string_event}),event_type_t::boolean_event, functions::ge},
 		 {"ge", std::vector<event_type_t>({event_type_t::time_event, event_type_t::time_event}),event_type_t::boolean_event, functions::ge},
+		 {"ge", std::vector<event_type_t>({event_type_t::duration_event, event_type_t::duration_event}),event_type_t::boolean_event, functions::ge},
 
 		 {"lt", std::vector<event_type_t>({event_type_t::boolean_event, event_type_t::boolean_event}),event_type_t::boolean_event, functions::lt},
 		 {"lt", std::vector<event_type_t>({event_type_t::integer_event, event_type_t::integer_event}),event_type_t::boolean_event, functions::lt},
 		 {"lt", std::vector<event_type_t>({event_type_t::double_event, event_type_t::double_event}),event_type_t::boolean_event, functions::lt},
 		 {"lt", std::vector<event_type_t>({event_type_t::string_event, event_type_t::string_event}),event_type_t::boolean_event, functions::lt},
 		 {"lt", std::vector<event_type_t>({event_type_t::time_event, event_type_t::time_event}),event_type_t::boolean_event, functions::lt},
+		 {"lt", std::vector<event_type_t>({event_type_t::duration_event, event_type_t::duration_event}),event_type_t::boolean_event, functions::lt},
 
 		 {"le", std::vector<event_type_t>({event_type_t::boolean_event, event_type_t::boolean_event}),event_type_t::boolean_event, functions::le},
 		 {"le", std::vector<event_type_t>({event_type_t::integer_event, event_type_t::integer_event}),event_type_t::boolean_event, functions::le},
 		 {"le", std::vector<event_type_t>({event_type_t::double_event, event_type_t::double_event}),event_type_t::boolean_event, functions::le},
 		 {"le", std::vector<event_type_t>({event_type_t::string_event, event_type_t::string_event}),event_type_t::boolean_event, functions::le},
 		 {"le", std::vector<event_type_t>({event_type_t::time_event, event_type_t::time_event}),event_type_t::boolean_event, functions::le},
+		 {"le", std::vector<event_type_t>({event_type_t::duration_event, event_type_t::duration_event}),event_type_t::boolean_event, functions::le},
 
 		 {"and", std::vector<event_type_t>({event_type_t::boolean_event, event_type_t::boolean_event}),event_type_t::boolean_event, functions::log_and},
 		 {"or",  std::vector<event_type_t>({event_type_t::boolean_event, event_type_t::boolean_event}),event_type_t::boolean_event, functions::log_or},
@@ -217,15 +226,18 @@ FuncInitHelper fhelper_ {
 		 {"min", std::vector<event_type_t>({event_type_t::double_event, event_type_t::double_event}),event_type_t::double_event, functions::min},
 		 {"min", std::vector<event_type_t>({event_type_t::string_event, event_type_t::string_event}),event_type_t::string_event, functions::min},
 		 {"min", std::vector<event_type_t>({event_type_t::time_event, event_type_t::time_event}),event_type_t::time_event, functions::min},
+		 {"min", std::vector<event_type_t>({event_type_t::duration_event, event_type_t::duration_event}),event_type_t::duration_event, functions::min},
 
 		 {"max", std::vector<event_type_t>({event_type_t::boolean_event, event_type_t::boolean_event}),event_type_t::boolean_event, functions::max},
 		 {"max", std::vector<event_type_t>({event_type_t::integer_event, event_type_t::integer_event}),event_type_t::integer_event, functions::max},
 		 {"max", std::vector<event_type_t>({event_type_t::double_event, event_type_t::double_event}),event_type_t::double_event, functions::max},
 		 {"max", std::vector<event_type_t>({event_type_t::string_event, event_type_t::string_event}),event_type_t::string_event, functions::max},
 		 {"max", std::vector<event_type_t>({event_type_t::time_event, event_type_t::time_event}),event_type_t::time_event, functions::max},
+		 {"max", std::vector<event_type_t>({event_type_t::duration_event, event_type_t::duration_event}),event_type_t::duration_event, functions::max},
 
 		 {"abs", std::vector<event_type_t>({event_type_t::integer_event}),event_type_t::integer_event, functions::abs},
 		 {"abs", std::vector<event_type_t>({event_type_t::double_event}),event_type_t::double_event, functions::abs},
+		 {"abs", std::vector<event_type_t>({event_type_t::duration_event}),event_type_t::duration_event, functions::abs},
 
 		 {"exp", std::vector<event_type_t>({event_type_t::double_event}),event_type_t::double_event, functions::exp},
 		 {"ln", std::vector<event_type_t>({event_type_t::double_event}),event_type_t::double_event, functions::ln},
@@ -244,6 +256,18 @@ FuncInitHelper fhelper_ {
 		 {"get_width", std::vector<event_type_t>({event_type_t::string_event}),event_type_t::integer_event, functions::get_width},
 		 {"get_height", std::vector<event_type_t>({event_type_t::integer_event}),event_type_t::integer_event, functions::get_height},
 		 {"get_height", std::vector<event_type_t>({event_type_t::string_event}),event_type_t::integer_event, functions::get_height},
+
+		 {"microseconds", std::vector<event_type_t>({event_type_t::integer_event}),event_type_t::duration_event, functions::microseconds},
+		 {"microseconds", std::vector<event_type_t>({event_type_t::double_event}),event_type_t::duration_event, functions::microseconds},
+		 {"microseconds", std::vector<event_type_t>({event_type_t::duration_event}),event_type_t::duration_event, functions::microseconds},
+
+		 {"milliseconds", std::vector<event_type_t>({event_type_t::integer_event}),event_type_t::duration_event, functions::milliseconds},
+		 {"milliseconds", std::vector<event_type_t>({event_type_t::double_event}),event_type_t::duration_event, functions::milliseconds},
+		 {"milliseconds", std::vector<event_type_t>({event_type_t::duration_event}),event_type_t::duration_event, functions::milliseconds},
+
+		 {"seconds", std::vector<event_type_t>({event_type_t::integer_event}),event_type_t::duration_event, functions::seconds},
+		 {"seconds", std::vector<event_type_t>({event_type_t::double_event}),event_type_t::duration_event, functions::seconds},
+		 {"seconds", std::vector<event_type_t>({event_type_t::duration_event}),event_type_t::duration_event, functions::seconds},
 
 
  };
