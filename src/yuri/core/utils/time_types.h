@@ -209,6 +209,9 @@ inline std::ostream& operator<<(std::ostream& os, const duration_t& duration)
 	const uint64_t minutes 	= (val / 1000000 / 60) % 60;
 	const uint64_t seconds	= (val / 1000000)% 60;
 	const uint64_t useconds	=  val % 1000000;
+	if (duration.value < 0) {
+		os << "-";
+	}
 	os << std::fixed << std::setw(2) << std::setfill('0') << hours << ":" << std::setw(2) << minutes << ":" << std::setw(2)<< seconds << "." << std::setw(6)<< useconds;
 	return os;
 }
