@@ -62,7 +62,7 @@ template<
 >
 class LogProxy {
 private:
-	typedef std::basic_ostream<char>& (*iomanip_t)(std::basic_ostream<char>&);
+	typedef std::basic_ostream<CharT, Traits>& (*iomanip_t)(std::basic_ostream<CharT, Traits>&);
 public:
 	typedef guarded_stream<CharT, Traits> gstream_t;
 	typedef std::basic_stringstream<CharT, Traits> sstream_t;
