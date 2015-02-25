@@ -98,6 +98,11 @@ namespace {
 		return stream << "STRING: " << event->get_value();
 	}
 	template<class Stream>
+	Stream& event_info_detail(const shared_ptr<EventDuration>& event, Stream& stream)
+	{
+		return stream << "DURATION: " << event->get_value();
+	}
+	template<class Stream>
 	Stream& event_info_detail(const shared_ptr<EventTime>& /*event*/, Stream& stream)
 	{
 		return stream << "TIME";//event->get_value() << "ns";
@@ -140,6 +145,7 @@ namespace {
 			case event_type_t::double_event: return event_info_cast<EventDouble>(event, stream);
 			case event_type_t::string_event: return event_info_cast<EventString>(event, stream);
 			case event_type_t::time_event: return event_info_cast<EventTime>(event, stream);
+			case event_type_t::duration_event: return event_info_cast<EventDuration>(event, stream);
 			case event_type_t::vector_event: return event_info_cast<EventVector>(event, stream);
 			case event_type_t::dictionary_event: return event_info_cast<EventDict>(event, stream);
 			default: break;
