@@ -53,6 +53,12 @@ protected:
 	{
 		return emit_event(event_name, make_shared<EventTime>(value));
 	}
+	// Overload for emitting a duration event
+	bool						emit_event(const std::string& event_name, duration_t value)
+	{
+		return emit_event(event_name, make_shared<EventDuration>(value));
+	}
+
 	// Overload for emitting an integer event
 	template<typename T>
 	typename std::enable_if<std::is_integral<T>::value, bool>::type
