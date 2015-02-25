@@ -26,7 +26,7 @@ public:
 	virtual ~Select() noexcept;
 private:
 	
-	virtual bool step() override;
+	virtual void run() override;
 	virtual bool set_param(const core::Parameter& param) override;
 	virtual void do_connect_in(position_t, core::pPipe pipe) override;
 	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;

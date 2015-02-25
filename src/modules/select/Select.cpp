@@ -11,7 +11,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/event/EventHelpers.h"
 #include "yuri/core/utils/assign_events.h"
-
+#include "yuri/core/utils/irange.h"
 namespace yuri {
 namespace select {
 
@@ -38,11 +38,19 @@ Select::~Select() noexcept
 {
 }
 
-bool Select::step()
+void Select::run()
 {
-	process_events();
-	push_frame(0, pop_frame(index_));
-	return true;
+	while (still_running()) {
+		// Wait for input frames
+		wait_for(get_latency());
+		// Process
+		process_events();
+		push_frame(0, pop_frame(index_));
+		for (auto i: irange(0, get_no_in_ports())) {
+			if (i!=index_) pop_frame(i);
+		}
+	}
+
 }
 bool Select::set_param(const core::Parameter& param)
 {
