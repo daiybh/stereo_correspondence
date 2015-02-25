@@ -27,6 +27,7 @@ enum class event_type_t {
 								double_event,
 								time_event,
 								string_event,
+								duration_event,
 
 								vector_event,
 								dictionary_event,
@@ -289,6 +290,8 @@ typedef EventBase<event_type_t::string_event, std::string>
 								EventString;
 typedef EventBase<event_type_t::time_event, timestamp_t>
 								EventTime;
+typedef EventBase<event_type_t::duration_event, duration_t>
+								EventDuration;
 
 
 template<class EventType>
@@ -325,6 +328,11 @@ template<>
 struct event_traits<EventTime> {
 	typedef timestamp_t stored_type;
 	static event_type_t event_type() { return event_type_t::time_event; }
+};
+template<>
+struct event_traits<EventDuration> {
+	typedef duration_t stored_type;
+	static event_type_t event_type() { return event_type_t::duration_event; }
 };
 template<>
 struct event_traits<EventVector> {
