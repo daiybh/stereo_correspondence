@@ -53,8 +53,23 @@ inline bool 		cmp_event_pair(const event_pair& a, const event_pair& b)
 					{
 						return a == b;
 					}
+
+// TODO: This is not scalable and should be redone... ideally by implementing operator>>(std::ostream&, duration_t);
+
 template<typename T>
-T 					lex_cast_value(const pBasicEvent& src) {
+typename std::enable_if<std::is_same<T,duration_t>::value, duration_t>::type
+					lex_cast_value(const pBasicEvent& src)
+{
+						const event_type_t type = src->get_type();
+							switch (type) {
+								case event_type_t::duration_event: return get_value<EventDuration>(src);
+								default: throw bad_event_cast("Unsupported event type");
+							}
+}
+
+template<typename T>
+typename std::enable_if<!std::is_same<T,duration_t>::value, T>::type
+ 					lex_cast_value(const pBasicEvent& src) {
 						const event_type_t type = src->get_type();
 						switch (type) {
 							case event_type_t::bang_event: throw bad_event_cast("No conversion for BANG values");
