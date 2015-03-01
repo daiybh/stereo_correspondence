@@ -73,7 +73,7 @@ private:
 	int uid;
 	// Output stream
 	yuri::shared_ptr<guarded_stream<char> > out;
-	yuri::mutex lock;
+
 	std::string logger_name_;
 	long output_flags_;
 	bool quiet_;
