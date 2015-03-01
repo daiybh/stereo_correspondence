@@ -11,7 +11,7 @@ SET (SRC register.cpp
 		 PassEvent.h
 		 )
 
-IF(UNIX AND NOT APPLE)
+IF(YURI_PLATFORM_LINUX)
 SET(SRC ${SRC}
 		 EventDevice.cpp
 		 EventDevice.h)

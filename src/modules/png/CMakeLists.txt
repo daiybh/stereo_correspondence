@@ -9,7 +9,7 @@ SET (SRC PngEncoder.cpp
 		 register.cpp)
 
 
- 
+include_directories(${PNG_PNG_INCLUDE_DIR}) 
 add_library(${MODULE} MODULE ${SRC})
 target_link_libraries(${MODULE} ${LIBNAME} ${PNG_LIBRARIES})
 

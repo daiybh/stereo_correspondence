@@ -12,6 +12,8 @@ if (NOT HAVE_FRAME_GET_CHANNELS)
     add_definitions(-DBROKEN_FFMPEG)
 endif()
 
+include_directories(${libavcodec_INCLUDE_DIRS})
+link_directories(${libavcodec_LIBRARY_DIRS})
 # You shouldn't need to edit anything below this line 
 add_library(${MODULE} MODULE ${SRC})
 target_link_libraries(${MODULE} ${LIBNAME}  ${LIBNAME_HELPER_LIBAV} ${libavformat_LIBRARIES})
