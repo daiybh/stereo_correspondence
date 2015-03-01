@@ -57,7 +57,7 @@ sockaddr_in6* get_inet_addr6(sockaddr* addr)
 bool is_address_multicast6(sockaddr_in6* addr)
 {
 	if (!addr) return false;
-	return IN6_IS_ADDR_MULTICAST(addr->sin6_addr.s6_addr);
+	return IN6_IS_ADDR_MULTICAST((struct in6_addr *)(addr->sin6_addr.s6_addr));
 }
 
 bool register_multicast(YuriNetSocket& socket, sockaddr* addr)
@@ -75,8 +75,13 @@ bool register_multicast(YuriNetSocket& socket, sockaddr* addr)
 	if (is_address_multicast6(iaddr6)) {
 		u_char ttl = 2;
 		ipv6_mreq mcast_req = {iaddr6->sin6_addr, 0};
-		return (::setsockopt(socket.get_socket(), IPPROTO_IP, IPV6_MULTICAST_HOPS, &ttl, sizeof(ttl)) == 0) &&
-				(::setsockopt (socket.get_socket(), IPPROTO_IP, IPV6_ADD_MEMBERSHIP, &mcast_req, sizeof(mcast_req)) == 0);
+		return (::setsockopt(socket.get_socket(), IPPROTO_IP, IPV6_MULTICAST_HOPS, &ttl, sizeof(ttl)) == 0) 
+// This seems not be implemented in FreeBSD 
+#ifdef IPV6_ADD_MEMBERSHIP
+&& (::setsockopt (socket.get_socket(), IPPROTO_IP, IPV6_ADD_MEMBERSHIP, &mcast_req, sizeof(mcast_req)) == 0)
+#endif
+;
+
 	}
 	return false;
 }
