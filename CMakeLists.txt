@@ -28,12 +28,33 @@ ENDIF()
 #################################################################
 # Add strict warning if building under linux
 #################################################################
+SET(YURI_PLATFORM_LINUX FALSE)
+SET(YURI_PLATFORM_APPLE FALSE)
+SET(YURI_PLATFORM_BSD	FALSE)
+SET(YURI_PLATFORM_WIN32 FALSE)
+
 IF (UNIX)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra -std=c++0x -ffast-math")
 	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -Wextra -std=gnu11 -ffast-math")
-ENDIF ()
-IF(WIN32)
+
+	IF("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+		MESSAGE(STATUS "Building for Linux")
+		SET(YURI_PLATFORM_LINUX TRUE)
+	ELSEIF("${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD")
+		SET(YURI_PLATFORM_BSD TRUE)
+		MESSAGE(STATUS "Building for BSD")
+	ELSEIF(APPLE)
+		SET(YURI_PLATFORM_APPLE TRUE)
+		MESSAGE(STATUS "Building for Apple")
+	ELSE()
+		MESSAGE(STATUS "Unknown platform: ${CMAKE_SYSTEM_NAME}, build may be incomplete")
+	ENDIF()
+ELSEIF(WIN32)
 	add_definitions( -DBOOST_ALL_NO_LIB )
+	SET(YURI_PLATFORM_WIN32 TRUE)
+	MESSAGE(STATUS "Building for Windows")
+ELSE()
+	MESSAGE(STATUS "Unknown platform: ${CMAKE_SYSTEM_NAME}, build may be incomplete")
 ENDIF()
 
 add_definitions("-DYURI_USE_CXX11") 
@@ -92,7 +113,7 @@ OPTION (YURI_DISABLE_OPENGL "Explicitly disable building of opengl helpers and r
 OPTION (YURI_DISABLE_IEEE1394 "Disable building of IEEE1394 sources" OFF)
 OPTION (YURI_DISABLE_ASIO "Disable building of boost::asio helpers" ON)
 OPTION (YURI_DISABLE_DECKLINK "Disable building of decklink API helpers" OFF)
-OPTION (YURI_DISABLE_PNG "Disable building of CUDA helpers" OFF)
+OPTION (YURI_DISABLE_PNG "Disable building of PNG module" OFF)
 OPTION (YURI_DISABLE_BOOST "Disable boost dependencies" OFF)
 OPTION (YURI_DISABLE_GPUJPEG  "Disable GPUJPEG library" ON)
 OPTION (YURI_DISABLE_OPENCV "Disable OpenCV modules" OFF)
@@ -108,4 +129,5 @@ OPTION (YURI_BUILD_EXPERIMENTAL_MODULES "Enable building of experimental modules
 #################################################################
 add_subdirectory(src)
 add_subdirectory(doc)
+
 
