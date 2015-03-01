@@ -16,9 +16,7 @@
 #ifndef YURI_USE_CXX11
 #define YURI_USE_CXX11 1
 #endif
-#endif
-
-#ifndef YURI_USE_CXX11
+#else
 #error C++11 mode is required!
 #endif
 
@@ -69,6 +67,15 @@
 	#define YURI_POSIX 1
 	#define EXPORT
 	#define IMPORT	
+	#define PACK_START
+	#define PACK_END			__attribute__((packed))
+	#define DEPRECATED			__attribute__((deprecated))
+#elif defined __FreeBSD__ 
+	#define YURI_BSD 1
+	#define YURI_POSIX 1
+	#define EXPORT
+	#define IMPORT
+	#define MODULE_EXPORT
 	#define PACK_START
 	#define PACK_END			__attribute__((packed))
 	#define DEPRECATED			__attribute__((deprecated))
