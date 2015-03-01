@@ -162,12 +162,13 @@ IF(${CORE_GL})
 						ARCHIVE DESTINATION lib)
 ENDIF()
 
-
 IF(UNIX)
 	IF(APPLE)
 		SET( YURI_LIBS ${YURI_LIBS} dl)
+	ELSEIF(YURI_PLATFORM_LINUX)
+		SET( YURI_LIBS ${YURI_LIBS} dl rt )
 	ELSE()
-		SET( YURI_LIBS ${YURI_LIBS} rt dl)
+		SET( YURI_LIBS ${YURI_LIBS} rt )
 	ENDIF()
 ENDIF()
 #################################################################

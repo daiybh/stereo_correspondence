@@ -65,6 +65,8 @@ template<event_type_t type, class Value>
 class EventBase: public BasicEvent {
 public:
 	typedef Value 				stored_type;
+								EventBase()
+									:BasicEvent(type) {}
 								EventBase(const Value& value)
 									:BasicEvent(type),value_(value) {}
 								EventBase(Value&& value)
@@ -140,7 +142,7 @@ class EventVector: public EventBase<event_type_t::vector_event, std::vector<pBas
 {
 public:
 								EventVector()
-									:EventBase<event_type_t::vector_event, std::vector<pBasicEvent>>({})
+									:EventBase<event_type_t::vector_event, std::vector<pBasicEvent>>()
 									{}
 								EventVector(const std::vector<pBasicEvent>& value)
 									:EventBase<event_type_t::vector_event, std::vector<pBasicEvent>>(value)
@@ -254,7 +256,7 @@ class EventDict: public EventBase<event_type_t::dictionary_event, std::map<std::
 {
 public:
 								EventDict()
-									:EventBase<event_type_t::dictionary_event, std::map<std::string, pBasicEvent>>({})
+									:EventBase<event_type_t::dictionary_event, std::map<std::string, pBasicEvent>>()
 									{}
 								EventDict(const std::map<std::string, pBasicEvent>& value)
 									:EventBase<event_type_t::dictionary_event, std::map<std::string, pBasicEvent>>(value)
