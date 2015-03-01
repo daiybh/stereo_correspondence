@@ -33,7 +33,7 @@ const std::map<debug_flags_t, std::string> level_names= {
 	{trace,"TRACE"}};
 
 const std::map<debug_flags_t, std::string> level_colors = {
-#ifdef YURI_LINUX
+#if defined(YURI_LINUX) || defined(YURI_BSD)
 {fatal,"\033[4;31;42m"}, // Red, underscore, bg
 {error,"\033[31m"}, // Red
 {warning,"\033[35m"},
