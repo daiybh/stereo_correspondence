@@ -10,7 +10,7 @@
 #include "AudioLatency.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_audio_frame_types.h"
-
+#include <cmath>
 namespace yuri {
 namespace audio_latency {
 
