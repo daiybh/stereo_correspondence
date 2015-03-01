@@ -7,7 +7,8 @@ SET (SRC VorbisEncoder.cpp
 		 register.cpp)
 
 
- 
+include_directories(${VORBISENC_INCLUDE_DIRS})
+link_directories(${VORBISENC_LIBRARY_DIRS}) 
 add_library(${MODULE} MODULE ${SRC})
 target_link_libraries(${MODULE} ${LIBNAME} ${VORBISENC_LIBRARIES})
 
