@@ -53,7 +53,7 @@ core::node_record_t parse_argument(log::Log& log, const std::string& arg, int i)
 			const auto param_name  =  std::string(res[1].first,res[1].second);
 			const auto param_value = std::string(std::string(res[2].first,res[2].second));
 			++it;
-			if (auto parsed_event = event::BasicEventParser::parse_expr(log, param_value, {})) {
+			if (auto parsed_event = event::BasicEventParser::parse_expr(log, param_value, std::map<std::string,event::pBasicEvent>{})) {
 				node.parameters[param_name]= parsed_event;
 			} else {
 				node.parameters[param_name] = param_value;

@@ -10,8 +10,9 @@
 
 #include <iostream>
 #include <boost/cstdint.hpp>
-#if defined __linux__
+#if defined __linux__ || defined(__FreeBSD__)
 #include <dlfcn.h>
+#define test_posix
 #elif defined _WIN32
 #include <windows.h>
 #endif
@@ -19,14 +20,14 @@
 
 bool test_file(const std::string& filename)
 {
-#if defined __linux__
+#if defined test_posix
 	void *handle=dlopen(filename.c_str(),RTLD_NOW|RTLD_GLOBAL);
 #elif defined _WIN32
 	HINSTANCE handle = LoadLibrary(filename.c_str());
 #endif
 	if (!handle) {
 		std::cerr << "Failed to open file " << filename
-#if defined __linux__
+#if defined test_posix
 			<<": " << dlerror() 
 #endif
 			<<"\n";
@@ -34,7 +35,7 @@ bool test_file(const std::string& filename)
 	}
 	typedef const char * (*get_name_t)(void);
 	typedef void (*register_module_t)(void);
-#if defined __linux__
+#if defined test_posix
 	// The ugly cast to uintptr_t is here for the sole purpose of silencing g++ warnings.
 	get_name_t get_name = reinterpret_cast<get_name_t>(reinterpret_cast<uintptr_t>(dlsym(handle,"yuri2_8_module_get_name")));
 	register_module_t register_module = reinterpret_cast<register_module_t>(reinterpret_cast<uintptr_t>(dlsym(handle,"yuri2_8_module_register")));
@@ -60,7 +61,7 @@ bool test_file(const std::string& filename)
 			std::cerr << "Module " << name << " seem valid\n";
 		}
 	}
-#if defined __linux__
+#if defined test_posix
 	dlclose(handle);
 #elif defined _WIN32
 	FreeLibrary(handle);

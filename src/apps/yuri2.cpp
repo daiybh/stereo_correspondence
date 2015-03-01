@@ -38,7 +38,7 @@ yuri::shared_ptr<yuri::core::XmlBuilder> builder;
 yuri::log::Log logger(std::clog);
 
 
-#if defined YURI_LINUX || defined YURI_APPLE
+#if defined YURI_POSIX
 #include <signal.h>
 #include <string.h>
 static void sigHandler(int sig, siginfo_t *siginfo, void *context);
@@ -247,7 +247,7 @@ int main(int argc, char**argv)
 		return 0;
 	}
 
-#if defined YURI_LINUX || defined YURI_APPLE
+#if defined YURI_POSIX
 	memset (&act, '\0', sizeof(act));
 	act.sa_sigaction = &sigHandler;
 	act.sa_flags = SA_SIGINFO;
