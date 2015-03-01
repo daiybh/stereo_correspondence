@@ -104,4 +104,17 @@
 //}
 #endif
 
+
+#if defined (__arm__)
+	#define YURI_ARCH_ARM 1
+#elif defined( __x86_64__)
+	#define YURI_ARCH_X86 1
+	#define YURI_ARCH_X86_64 1
+#elif defined(__i386__)
+	#define YURI_ARCH_X86 1
+	#define YURI_ARCH_X86_32 1
+#else
+	#error Unsupported/untested architecture
+#endif
+
 #endif /* PLATFORM_H_ */
