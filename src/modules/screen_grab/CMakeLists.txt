@@ -8,7 +8,7 @@ SET (SRC ScreenGrab.cpp
 
 
 # You shouldn't need to edit anything below this line
-include_directories(${X11_INCLUDE_DIRS}) 
+include_directories(${X11_Xlib_INCLUDE_PATH}) 
 add_library(${MODULE} MODULE ${SRC})
 target_link_libraries(${MODULE} ${LIBNAME} ${X11_LIBRARIES})
 
