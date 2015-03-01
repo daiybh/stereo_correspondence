@@ -136,7 +136,7 @@ response_t WebServer::find_response(request_t request)
 		}
 		catch (not_modified& /* redirect */) {
 //				log[log::info] << "Returning 304 for resource";
-			return response_t{http_code::not_modified,{},{}};
+			return response_t{http_code::not_modified,parameters_t{},{}};
 
 		}
 		catch (std::runtime_error& e) {
@@ -227,7 +227,7 @@ bool data_finished(const std::string& data)
 }
 request_t WebServer::read_request(core::socket::pStreamSocket client)
 {
-	request_t request {{},{},client};
+	request_t request {{},parameters_t{},client};
 	std::vector<char> data(0);
 	data.resize(1024);
 	std::string request_string;

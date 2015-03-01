@@ -41,10 +41,11 @@ url_t parse_url(const std::string& uri, const std::string& host = {});
  *                      Tags                          *
  **************************************************** */
 namespace tag {
+using str_str_map = std::map<std::string, std::string>;
 std::string doctype();
 
 std::string gen_tag(const std::string& tag, const std::string& text);
-std::string gen_inline_tag(const std::string& tag, const std::string& text, std::map<std::string, std::string> = {});
+std::string gen_inline_tag(const std::string& tag, const std::string& text, str_str_map = str_str_map{});
 std::string gen_empty_tag(const std::string& tag);
 
 std::string indent(const std::string& text, const std::string& ind = "\t");

@@ -89,7 +89,7 @@ webpage_t get_default_page_stub()
 }
 response_t get_default_response (http_code code, const std::string& reason)
 {
-	response_t response {code,{},{}};
+	response_t response {code, parameters_t{}, {}};
 	webpage_t page = get_default_page_stub();
 	page.title=get_code_name(code)+" ("+yuri_version_full+")";
 	page.body=tag::header(std::to_string(http_code_to_int(code))+" "+get_code_name(code));
@@ -104,7 +104,7 @@ response_t get_default_response (http_code code, const std::string& reason)
 
 response_t get_redirect_response (http_code code, const std::string& location)
 {
-	response_t response {code,{},{}};
+	response_t response {code, parameters_t{}, {}};
 	webpage_t page = get_default_page_stub();
 	page.title=get_code_name(code)+" ("+yuri_version_full+")";
 	page.body=tag::header(std::to_string(http_code_to_int(code))+" "+get_code_name(code));

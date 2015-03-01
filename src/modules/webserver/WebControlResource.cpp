@@ -64,7 +64,7 @@ webserver::response_t WebControlResource::do_process_request(const webserver::re
 		const auto& val = x.second;
 		if (!val.empty()) {
 			log[log::info] << "Sending command " << cmd << " = " << val;
-			auto event = event::BasicEventParser::parse_expr(log,val,{});
+			auto event = event::BasicEventParser::parse_expr(log,val,std::map<std::string,event::pBasicEvent>{});
 			if (!event) {
 				event = std::make_shared<event::EventString>(val);
 			}
