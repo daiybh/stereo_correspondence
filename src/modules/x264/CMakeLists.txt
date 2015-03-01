@@ -8,6 +8,8 @@ SET (SRC X264Encoder.cpp
 
 
  
+include_directories(${X264_INCLUDE_DIRS})
+link_directories(${X264_LIBRARY_DIRS})
 add_library(${MODULE} MODULE ${SRC})
 target_link_libraries(${MODULE} ${LIBNAME} ${X264_LIBRARIES}) 
 

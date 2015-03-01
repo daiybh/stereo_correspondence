@@ -13,6 +13,10 @@
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 //#include "yuri/core/thread/ConverterThread.h"
+#ifndef _STDINT_H
+// x264 expects stdint.h to be included ot emits a warning. We include <cstdint>, this is simply to prevent that warning.
+#define _STDINT_H 1
+#endif
 extern "C" {
 #include <x264.h>
 }
