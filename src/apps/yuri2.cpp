@@ -106,7 +106,8 @@ int main(int argc, char**argv)
 		("class,L",po::value<std::string>(),"List details of a single class")
 		("convert,C",po::value<std::string>(), "Find conversion between format F1 and F2. Use syntax F1:F2.")
 		("app-info,a","Show info about XML file")
-		("log-file,o", po::value<std::string>(&logfile), "Log to a file");
+		("log-file,o", po::value<std::string>(&logfile), "Log to a file")
+		("input,I", po::value<std::string>()->implicit_value("all"), "Enumerate devices");
 
 
 
@@ -151,7 +152,7 @@ int main(int argc, char**argv)
 		version();
 		return 1;
 	}
-	if (vm.count("list") || vm.count("class")) {
+	if (vm.count("list") || vm.count("class") || vm.count("input")) {
 		builder.reset(new core::XmlBuilder(logger, core::pwThreadBase(), filename, arguments, true ));
 		log::Log l_(std::cout);
 		l_.set_flags(log::info);
@@ -159,6 +160,9 @@ int main(int argc, char**argv)
 		if (vm.count("class")) {
 			std::string class_name = vm["class"].as<std::string>();
 			yuri::app::list_single_class(l_, class_name, verbosity);
+		} else if (vm.count("input")) {
+			std::string class_name = vm["input"].as<std::string>();
+			yuri::app::list_input_class(l_, class_name, verbosity);
 		} else {
 			std::string list_what = vm["list"].as<std::string>();
 			yuri::app::list_registered_items(l_, list_what, verbosity);

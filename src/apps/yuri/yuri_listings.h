@@ -18,6 +18,8 @@ namespace app {
 
 void list_registered_items(yuri::log::Log& l_, const std::string& what, int verbosity = 0);
 void list_single_class(yuri::log::Log& l_, const std::string& name, int verbosity = 0);
+void list_input_class(yuri::log::Log& l_, const std::string& name, int verbosity = 0);
+
 const std::string& get_format_name_no_throw(yuri::format_t fmt);
 
 void list_params(yuri::log::Log& l_, const yuri::core::Parameters& params, int verbosity = 0);
@@ -28,6 +30,11 @@ void list_stream_sockets(yuri::log::Log& l_, int verbosity = 0);
 void list_functions(yuri::log::Log& l_, int verbosity = 0);
 void list_pipes(yuri::log::Log& l_, int verbosity = 0);
 void list_converters(yuri::log::Log& l_, int verbosity = 0);
+void list_inputs(yuri::log::Log& l_, int verbosity = 0);
+
+
+
+
 
 
 }

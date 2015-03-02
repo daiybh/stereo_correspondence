@@ -15,6 +15,7 @@
 #include "yuri/core/socket/StreamSocketGenerator.h"
 #include "yuri/core/thread/ConverterRegister.h"
 #include "yuri/core/pipe/PipeGenerator.h"
+#include "yuri/core/thread/InputRegister.h"
 
 #include "yuri/event/BasicEventConversions.h"
 
@@ -37,6 +38,7 @@ void list_registered_items(yuri::log::Log& l_, const std::string& list_what, int
 	else if (iequals(list_what,"functions")) list_functions(l_, verbosity);
 	else if (iequals(list_what,"converters")) list_converters(l_, verbosity);
 	else if (iequals(list_what,"pipes")) list_pipes(l_, verbosity);
+	else if (iequals(list_what,"input")) list_inputs(l_, verbosity);
 	else list_registered(l_, verbosity);
 }
 
@@ -289,6 +291,44 @@ void list_converters(yuri::log::Log& l_, int /* verbosity */)
 			l_[log::info] << "\t\t" << d.first << ", priority: " << d.second;
 		}
 	}
+}
+void list_inputs(yuri::log::Log& l_, int /* verbosity */)
+{
+	using namespace yuri;
+	const auto& conv = core::InputRegister::get_instance();
+	const auto& keys = conv.list_keys();
+	for (const auto& k: keys) {
+		l_[log::info] << k;
+	}
+}
+
+void list_input_class(yuri::log::Log& l_, const std::string& name, int /*verbosity*/)
+{
+	const auto& conv = core::InputRegister::get_instance();
+	if (name == "all") {
+		l_[log::info] << "Enumerating all input classes";
+		const auto& keys = conv.list_keys();
+		for (const auto& k: keys) {
+			l_[log::info] << "input class: " << k;
+			list_input_class(l_, k);
+		}
+		return;
+	}
+
+	try {
+		auto enumerate = conv.find_value(name);
+		auto devices = enumerate();
+		l_[log::info] << "Found " << devices.size() << " devices";
+		for (const auto d: devices) {
+			l_[log::info] << "\tDevice " << d.device_name << " with " << d.configurations.size() << " configurations";
+			print_cfgs(l_, log::info, d);
+		}
+
+	}
+	catch (...) {
+		l_[log::info] << "No input thread found for " << name;
+	}
+
 }
 
 }
