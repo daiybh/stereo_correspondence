@@ -4,7 +4,9 @@ CHECK_INCLUDE_FILES (linux/videodev2.h HAVE_VIDEODEV2_H)
 SET (SRC V4l2Source.cpp
 		 V4l2Source.h
 		 v4l2_controls.cpp
-		 v4l2_controls.h)
+		 v4l2_controls.h
+		 v4l2_device.h
+		 v4l2_device.cpp)
 
 
 # You shouldn't need to edit anything below this line 

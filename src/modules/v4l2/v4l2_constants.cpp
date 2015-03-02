@@ -42,7 +42,7 @@ std::map<std::string, uint32_t> special_formats = {
  * \param fmt V4l2 pixel format
  * \return yuri::format_t for the specified format.
  */
-static uint32_t yuri_format_to_v4l2(yuri::format_t fmt)
+uint32_t yuri_format_to_v4l2(yuri::format_t fmt)
 {
 	if (formats_map.count(fmt)) return formats_map[fmt];
 	return 0;
@@ -52,7 +52,7 @@ static uint32_t yuri_format_to_v4l2(yuri::format_t fmt)
  * \param fmt Pixel format as yuri::format_t
  * \return v4l2 pixel format for the specified format.
  */
-static yuri::format_t v4l2_format_to_yuri(uint32_t fmt)
+yuri::format_t v4l2_format_to_yuri(uint32_t fmt)
 {
 	for (const auto& f: formats_map) {
 		if (f.second==fmt) return f.first;
@@ -62,5 +62,40 @@ static yuri::format_t v4l2_format_to_yuri(uint32_t fmt)
 //		throw exception::Exception("Unknown format");
 }
 
+std::string get_short_yuri_fmt_name(format_t fmt)
+{
+	try {
+		const auto& fi = core::raw_format::get_format_info(fmt);
+		if (fi.short_names.size() > 0) {
+			return fi.short_names[0];
+		}
+	} catch (...) {}
+	try {
+		const auto& fi = core::compressed_frame::get_format_info(fmt);
+		if (fi.short_names.size() > 0) {
+			return fi.short_names[0];
+		}
+	} catch (...) {}
+	return {};
 }
 
+std::string get_long_yuri_fmt_name(format_t fmt)
+{
+	try {
+		const auto& fi = core::raw_format::get_format_info(fmt);
+		return fi.name;
+	} catch (...) {}
+	try {
+		const auto& fi = core::compressed_frame::get_format_info(fmt);
+		return fi.name;
+	} catch (...) {}
+	return {};
+}
+
+std::string get_yuri_fmt_name_from_pixel_format(uint32_t format)
+{
+	auto f = v4l2_format_to_yuri(format);
+	return get_long_yuri_fmt_name(f);
+}
+
+}

@@ -13,6 +13,7 @@
 #include <linux/videodev2.h>
 #include "yuri/event/EventHelpers.h"
 #include "yuri/log/Log.h"
+#include "v4l2_device.h"
 namespace yuri {
 
 namespace v4l2 {
@@ -27,17 +28,17 @@ struct control_info {
 	int32_t max_value;
 };
 
-std::vector<control_info> get_control_list(int fd, log::Log& log);
+std::vector<control_info> get_control_list(v4l2_device& dev, log::Log& log);
 
 std::string get_control_name(int control);
 int get_control_by_name(std::string name);
 
-bool set_control(int fd, int id, bool value, log::Log& log);
-bool set_control(int fd, int id, int32_t value, log::Log& log);
-bool set_control(int fd, int id, const event::pBasicEvent& value, log::Log& log);
-bool set_control(int fd, const std::string& name, bool value, log::Log& log);
-bool set_control(int fd, const std::string& name, int32_t value, log::Log& log);
-bool set_control(int fd, const std::string& name, const event::pBasicEvent& value, log::Log& log);
+bool set_control(v4l2_device& dev, int id, bool value, log::Log& log);
+bool set_control(v4l2_device& dev, int id, int32_t value, log::Log& log);
+bool set_control(v4l2_device& dev, int id, const event::pBasicEvent& value, log::Log& log);
+bool set_control(v4l2_device& dev, const std::string& name, bool value, log::Log& log);
+bool set_control(v4l2_device& dev, const std::string& name, int32_t value, log::Log& log);
+bool set_control(v4l2_device& dev, const std::string& name, const event::pBasicEvent& value, log::Log& log);
 
 }
 }

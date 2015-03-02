@@ -20,29 +20,6 @@ namespace v4l2 {
 namespace controls {
 
 namespace {
-	int xioctl(int fd, unsigned long int request, void *arg)
-	{
-		int r;
-		while((r = ioctl (fd, request, arg)) < 0) {
-			if (r==-1 && errno==EINTR) continue;
-			break;
-		}
-		return r;
-	}
-
-	enum class control_support_t {
-			supported,
-			not_supported,
-			disabled,
-	};
-
-	struct control_state_t {
-		control_support_t supported;
-		int32_t value;
-		int32_t min_value;
-		int32_t max_value;
-		std::string name;
-	};
 
 	template<class T>
 	int32_t get_event_value(const control_state_t& state, const T& value)
@@ -177,96 +154,43 @@ namespace {
 		return 0;
 	}
 
-	control_state_t is_control_supported_impl(int fd, uint32_t id, log::Log& log)
+	bool set_user_control(v4l2_device& dev, uint32_t id, bool value, log::Log& /* log */)
 	{
-		struct v4l2_queryctrl queryctrl;
-		std::memset (&queryctrl, 0, sizeof (queryctrl));
-		queryctrl.id=id;
-
-		if (xioctl (fd, VIDIOC_QUERYCTRL, &queryctrl) < 0) {
-			log[log::debug]<< "Control " << queryctrl.name << " not supported";
-			return {control_support_t::not_supported, 0, 0, 0, {}};
-		} else if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED) {
-			log[log::debug]<< "Control " << queryctrl.name << " disabled";
-			return {control_support_t::disabled, 0, 0, 0, {}};
-		}
-		return {control_support_t::supported, 0, queryctrl.minimum, queryctrl.maximum, reinterpret_cast<char*>(queryctrl.name)};
-	}
-
-	control_state_t is_user_control_supported(int fd, uint32_t id, log::Log& log)
-	{
-		auto state = is_control_supported_impl(fd, id, log);
-		if (state.supported == control_support_t::supported) {
-			struct v4l2_control control;
-			std::memset (&control, 0, sizeof (control));
-			control.id = id;
-			if (xioctl (fd, VIDIOC_G_CTRL, &control)>=0) {
-				state.value = control.value;
-			}
-		}
-		return state;
-	}
-	bool set_user_control_impl(int fd, uint32_t id, control_state_t state, int32_t value, log::Log& log)
-	{
-		struct v4l2_control control;
-		std::memset (&control, 0, sizeof (control));
-		control.id = id;
-		control.value = clip_value(value, state.min_value, state.max_value);
-
-		if (xioctl (fd, VIDIOC_S_CTRL, &control) < 0) {
-			log[log::debug]<< "Failed to enable control " << state.name;
-			return false;
-
-		} else {
-			control.value = 0;
-			if (xioctl (fd, VIDIOC_G_CTRL, &control)>=0) {
-				log[log::info] << "Control " << state.name << " set to " << control.value;
-			} else {
-				log[log::warning] << "Failed to set value for " << state.name;
-				return false;
-			}
-		}
-		return true;
-	}
-
-	bool set_user_control(int fd, uint32_t id, bool value, log::Log& log)
-	{
-		auto state = is_control_supported_impl(fd, id, log);
+		auto state = dev.is_control_supported(id);
 		if (state.supported != control_support_t::supported) {
 			return false;
 		}
-		return set_user_control_impl(fd, id, std::move(state), value?state.max_value:state.min_value, log);
+		return dev.set_user_control(id, std::move(state), value?state.max_value:state.min_value);
 	}
-	bool set_user_control(int fd, uint32_t id, int32_t value, log::Log& log)
+	bool set_user_control(v4l2_device& dev, uint32_t id, int32_t value, log::Log& /* log */)
 	{
-		auto state = is_control_supported_impl(fd, id, log);
+		auto state = dev.is_control_supported(id);
 		if (state.supported != control_support_t::supported) {
 			return false;
 		}
-		return set_user_control_impl(fd, id, std::move(state), value, log);
+		return dev.set_user_control(id, std::move(state), value);
 	}
 
 
-	bool set_user_control(int fd, uint32_t id, const event::pBasicEvent& event, log::Log& log)
+	bool set_user_control(v4l2_device& dev, uint32_t id, const event::pBasicEvent& event, log::Log& /* log */)
 	{
-		auto state = is_control_supported_impl(fd, id, log);
+		auto state = dev.is_control_supported(id);
 		if (state.supported != control_support_t::supported) {
 			return false;
 		}
 
 		if (event->get_type() == event::event_type_t::boolean_event) {
-			return set_user_control_impl(fd, id, std::move(state), event::get_value<event::EventBool>(event), log);
+			return dev.set_user_control(id, std::move(state), event::get_value<event::EventBool>(event));
 		}
 		if (event->get_type() == event::event_type_t::integer_event) {
 			auto value = get_event_value(state, *dynamic_pointer_cast<event::EventInt>(event));
-			return set_user_control_impl(fd, id, std::move(state), value, log);
+			return dev.set_user_control(id, std::move(state), value);
 		}
 		if (event->get_type() == event::event_type_t::double_event) {
 			auto value = get_event_value(state, *dynamic_pointer_cast<event::EventDouble>(event));
-			return set_user_control_impl(fd, id, std::move(state), value, log);
+			return dev.set_user_control(id, std::move(state), value);
 		}
 		return false;
-		//return set_control_impl(fd, id, std::move(state), value, log);
 	}
 
 	const std::map<int, std::string> camera_controls = {
@@ -371,76 +295,41 @@ namespace {
 	}
 
 
-	control_state_t is_camera_control_supported(int fd, uint32_t id, log::Log& log)
+	bool set_camera_control(v4l2_device& dev, uint32_t id, bool value, log::Log& /* log */)
 	{
-		auto state = is_control_supported_impl(fd, id, log);
-		if (state.supported == control_support_t::supported) {
-			v4l2_ext_control control {id, 0, {0}, {0}};
-			v4l2_ext_controls controls {V4L2_CID_CAMERA_CLASS, 1, 0, {0,0}, &control};
-			if (xioctl (fd, VIDIOC_G_EXT_CTRLS, &controls)>=0) {
-				state.value = control.value;
-			}
-		}
-		return state;
-	}
-
-
-	bool set_camera_control_impl(int fd, uint32_t id, control_state_t state, int32_t value, log::Log& log)
-	{
-		v4l2_ext_control control {id, 0, {0}, {clip_value(value, state.min_value, state.max_value)}};
-		v4l2_ext_controls controls {V4L2_CID_CAMERA_CLASS, 1, 0, {0,0}, &control};
-
-		if (xioctl (fd, VIDIOC_S_EXT_CTRLS, &controls) < 0) {
-			log[log::debug]<< "Failed to enable control " << state.name;
-			return false;
-
-		} else {
-			control.value = 0;
-//			if (xioctl (fd, VIDIOC_G_EXT_CTRLS, &control)>=0) {
-				log[log::info] << "Control " << state.name << " set to " << control.value;
-//			} else {
-//				log[log::warning] << "Failed to set value for " << state.name;
-//				return false;
-//			}
-		}
-		return true;
-	}
-
-	bool set_camera_control(int fd, uint32_t id, bool value, log::Log& log)
-	{
-		auto state = is_control_supported_impl(fd, id, log);
+		auto state = dev.is_control_supported(id);
 		if (state.supported != control_support_t::supported) {
 			return false;
 		}
-		return set_camera_control_impl(fd, id, std::move(state), value?state.max_value:state.min_value, log);
+		return dev.set_camera_control(id, std::move(state), value?state.max_value:state.min_value);
 	}
-	bool set_camera_control(int fd, uint32_t id, int32_t value, log::Log& log)
+	bool set_camera_control(v4l2_device& dev, uint32_t id, int32_t value, log::Log& /* log */)
 	{
-		auto state = is_control_supported_impl(fd, id, log);
+		auto state = dev.is_control_supported(id);
 		if (state.supported != control_support_t::supported) {
 			return false;
 		}
-		return set_camera_control_impl(fd, id, std::move(state), value, log);
+		return dev.set_camera_control(id, std::move(state), value);
 	}
 
 
-	bool set_camera_control(int fd, uint32_t id, const event::pBasicEvent& event, log::Log& log)
+	bool set_camera_control(v4l2_device& dev, uint32_t id, const event::pBasicEvent& event, log::Log& /* log */)
 	{
-		auto state = is_control_supported_impl(fd, id, log);
+		auto state = dev.is_control_supported(id);
 		if (state.supported != control_support_t::supported) {
 			return false;
 		}
 
 		if (event->get_type() == event::event_type_t::boolean_event) {
-			return set_camera_control_impl(fd, id, std::move(state), event::get_value<event::EventBool>(event), log);
+			return dev.set_camera_control(id, std::move(state), event::get_value<event::EventBool>(event));
 		}
 		if (event->get_type() == event::event_type_t::integer_event) {
 			auto value = get_event_value(state, *dynamic_pointer_cast<event::EventInt>(event));
-			return set_camera_control_impl(fd, id, std::move(state), value, log);
+			return dev.set_camera_control(id, std::move(state), value);
 		}
 		if (event->get_type() == event::event_type_t::double_event) {
 			auto value = get_event_value(state, *dynamic_pointer_cast<event::EventDouble>(event));
-			return set_camera_control_impl(fd, id, std::move(state), value, log);
+			return dev.set_camera_control(id, std::move(state), value);
 		}
 		return false;
 		//return set_control_impl(fd, id, std::move(state), value, log);
@@ -448,36 +337,36 @@ namespace {
 
 
 	template<class T>
-	bool set_control_generic(int fd, int id, const T& value, log::Log& log)
+	bool set_control_generic(v4l2_device& dev, int id, const T& value, log::Log& log)
 	{
-		if (contains(user_controls, id)) return set_user_control(fd, id, value, log);
-		if (contains(camera_controls, id)) return set_camera_control(fd, id, value, log);
+		if (contains(user_controls, id)) return set_user_control(dev, id, value, log);
+		if (contains(camera_controls, id)) return set_camera_control(dev, id, value, log);
 		return false;
 	}
 
 	template<class T>
-	bool set_control_generic(int fd, const std::string& name, const T& value, log::Log& log)
+	bool set_control_generic(v4l2_device& dev, const std::string& name, const T& value, log::Log& log)
 	{
 		auto id = get_user_control_by_name(name);
-		if (id) return set_user_control(fd, id, value, log);
+		if (id) return set_user_control(dev, id, value, log);
 		auto cid = get_camera_control_by_name(name);
-		if (cid) return set_camera_control(fd, id, value, log);
+		if (cid) return set_camera_control(dev, id, value, log);
 		return false;
 	}
 }
 
 
-std::vector<control_info> get_control_list(int fd, log::Log& log)
+std::vector<control_info> get_control_list(v4l2_device& dev, log::Log& /* log */)
 {
 	std::vector<control_info> ctrls;
 	for (const auto& c: user_controls) {
-		auto state = is_user_control_supported(fd, c.first, log);
+		auto state = dev.is_user_control_supported(c.first);
 		if (state.supported == control_support_t::supported) {
 			ctrls.push_back({c.first, state.name, c.second, state.value, state.min_value, state.max_value});
 		}
 	}
 	for (const auto& c: camera_controls) {
-		auto state = is_camera_control_supported(fd, c.first, log);
+		auto state = dev.is_camera_control_supported(c.first);
 		if (state.supported == control_support_t::supported) {
 			ctrls.push_back({c.first, state.name, c.second, state.value, state.min_value, state.max_value});
 		}
@@ -501,30 +390,30 @@ int get_control_by_name(std::string name)
 }
 
 
-bool set_control(int fd, int id, bool value, log::Log& log)
+bool set_control(v4l2_device& dev, int id, bool value, log::Log& log)
 {
-	return set_control_generic(fd, id, value, log);
+	return set_control_generic(dev, id, value, log);
 }
-bool set_control(int fd, int id, int32_t value, log::Log& log)
+bool set_control(v4l2_device& dev, int id, int32_t value, log::Log& log)
 {
-	return set_control_generic(fd, id, value, log);
+	return set_control_generic(dev, id, value, log);
 }
-bool set_control(int fd, int id, const event::pBasicEvent& value, log::Log& log)
+bool set_control(v4l2_device& dev, int id, const event::pBasicEvent& value, log::Log& log)
 {
-	return set_control_generic(fd, id, value, log);
+	return set_control_generic(dev, id, value, log);
 }
 
-bool set_control(int fd, const std::string& name, bool value, log::Log& log)
+bool set_control(v4l2_device& dev, const std::string& name, bool value, log::Log& log)
 {
-	return set_control_generic(fd, name, value, log);
+	return set_control_generic(dev, name, value, log);
 }
-bool set_control(int fd, const std::string& name, int32_t value, log::Log& log)
+bool set_control(v4l2_device& dev, const std::string& name, int32_t value, log::Log& log)
 {
-	return set_control_generic(fd, name, value, log);
+	return set_control_generic(dev, name, value, log);
 }
-bool set_control(int fd, const std::string& name, const event::pBasicEvent& value, log::Log& log)
+bool set_control(v4l2_device& dev, const std::string& name, const event::pBasicEvent& value, log::Log& log)
 {
-	return set_control_generic(fd, name, value, log);
+	return set_control_generic(dev, name, value, log);
 }
 
 
