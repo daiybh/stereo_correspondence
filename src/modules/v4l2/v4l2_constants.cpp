@@ -92,10 +92,10 @@ std::string get_long_yuri_fmt_name(format_t fmt)
 	return {};
 }
 
-std::string get_yuri_fmt_name_from_pixel_format(uint32_t format)
-{
-	auto f = v4l2_format_to_yuri(format);
-	return get_long_yuri_fmt_name(f);
-}
+//std::string get_yuri_fmt_name_from_pixel_format(uint32_t format)
+//{
+//	auto f = v4l2_format_to_yuri(format);
+//	return get_long_yuri_fmt_name(f);
+//}
 
 }

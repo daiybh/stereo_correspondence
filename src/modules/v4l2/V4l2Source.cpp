@@ -166,6 +166,16 @@ V4l2Source::~V4l2Source() noexcept{
 
 }
 
+namespace {
+std::string parse_v4l2_fmt(uint32_t f) {
+	std::string out(4,' ');
+	out[0]=f&0xFF;
+	out[1]=(f>>8)&0xFF;
+	out[2]=(f>>16)&0xFF;
+	out[3]=(f>>24)&0xFF;
+	return out;
+}
+}
 
 std::unique_ptr<v4l2_device> V4l2Source::open_device()
 {
@@ -174,19 +184,38 @@ std::unique_ptr<v4l2_device> V4l2Source::open_device()
 		// Failure to set format is fatal, unless it's for input_ == 0
 		throw std::runtime_error("Failed to set input");
 	}
-	auto pixfmt = yuri_format_to_v4l2(format_);
-	if (!pixfmt) {
-		auto fmts = fd_->enum_formats();
-		for (auto f: fmts) {
-			auto yuri_fmt = v4l2_format_to_yuri(f);
-			if (yuri_fmt) {
-				log[log::info] << "Auto selecting format: "<< get_long_yuri_fmt_name(yuri_fmt);
-				format_=yuri_fmt;
-				pixfmt = f;
-				break;
+
+	auto fmts = fd_->enum_formats();
+	format_t autoselect = format_;
+	log[log::debug] << "Supported formats: ";
+	for (auto f: fmts) {
+		auto yuri_fmt = v4l2_format_to_yuri(f);
+		if (yuri_fmt) {
+			if (!autoselect) {
+				autoselect=yuri_fmt;
 			}
+			log[log::debug] << "\t" << get_long_yuri_fmt_name(yuri_fmt) << " (" << get_short_yuri_fmt_name(yuri_fmt) << ")";
+		} else {
+			log[log::debug] << "\tUnknown format: " << parse_v4l2_fmt(f);
 		}
 	}
+
+	if (!format_ && autoselect) {
+		log[log::info] << "Auto selecting format: "<< get_long_yuri_fmt_name(autoselect);
+		format_ = autoselect;
+	}
+
+	auto pixfmt = yuri_format_to_v4l2(format_);
+	auto res = fd_->enum_resolutions(pixfmt);
+	log[log::debug] << "Supported resolutions for " <<   get_long_yuri_fmt_name(format_);
+	for(auto r: res) {
+		auto l = log[log::debug];
+		l << "\t" << r << ", fps: ";
+		auto fps_list = fd_->enum_fps(pixfmt, r);
+		core::utils::print_list(l, fps_list);
+	}
+
+
 	auto info = fd_->set_format(pixfmt, resolution_);
 	imagesize_ = info.imagesize;
 	resolution_ = info.resolution;
