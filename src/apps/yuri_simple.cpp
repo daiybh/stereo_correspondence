@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 		arguments.push_back(s);
 	}
 
-
+	l.set_flags(yuri::log::info|yuri::log::show_level|yuri::log::use_colors);
 	int ret = 0;
 	try {
 		builder = std::make_shared<yuri::simple::SimpleBuilder> (l, yuri::core::pwThreadBase{}, arguments);
