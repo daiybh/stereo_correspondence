@@ -27,6 +27,7 @@ SET(YURI_SRC ${YURI_SRC}
 	core/utils/ModuleLoader.cpp core/utils/ModuleLoader.h
 	core/utils/DirectoryBrowser.cpp core/utils/DirectoryBrowser.h
 	core/utils/MultiRegister.h
+	core/utils/SingleRegister.h
 	core/utils/irange.h
 	core/utils/make_list.h
 	
