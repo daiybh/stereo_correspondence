@@ -53,6 +53,9 @@ SET(YURI_SRC ${YURI_SRC}
 	core/thread/ConverterRegister.h
 	core/thread/Convert.cpp core/thread/Convert.h
 	
+	core/thread/InputThread.h
+	core/thread/InputRegister.h
+	
 	core/parameter/Parameters.cpp core/parameter/Parameters.h
 	core/parameter/Parameter.h
 	
