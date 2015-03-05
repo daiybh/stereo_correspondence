@@ -101,6 +101,7 @@ struct compute_value<false> {
 	template<typename T, typename T2>
 	static auto eval(T p, T2 out) -> typename std::remove_reference<decltype(*out)>::type
 	{
+		(void)out;
 		return p;
 	}
 	template<typename T, typename T2, typename T3>
