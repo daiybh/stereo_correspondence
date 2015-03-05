@@ -32,11 +32,6 @@ IF (NOT HAVE_STDINT_H)
 ENDIF()
 
 
-# This wont't work as the linking for this program fails with unresolved symbols from libboost_system
-#IF(NOT YURI_DISABLE_ASIO)
-#	CHECK_INCLUDE_FILE_CXX ("boost/asio.hpp" HAVE_BOOST_ASIO_H)
-#ENDIF()
-
 #################################################################
 # Set up dependencies for libyuri_core
 #################################################################
