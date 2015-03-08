@@ -5,7 +5,7 @@ SET(YURI_SRC ${YURI_SRC}
 	core/frame/CompressedVideoFrame.cpp core/frame/CompressedVideoFrame.h
 	core/frame/AudioFrame.cpp core/frame/AudioFrame.h
 	core/frame/RawAudioFrame.cpp core/frame/RawAudioFrame.h
-	
+	core/frame/EventFrame.cpp core/frame/EventFrame.h 
 	core/frame/raw_frame_params.cpp core/frame/raw_frame_params.h
 	core/frame/raw_frame_types.h
 	core/frame/raw_frame_traits.h
