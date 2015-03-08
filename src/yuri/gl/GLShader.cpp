@@ -13,11 +13,6 @@
 #include <iostream>
 #include <GL/glext.h>
 #include <algorithm>
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::ifstream;
-using std::ios;
 
 namespace yuri {
 
@@ -36,12 +31,12 @@ GLShader::~GLShader() noexcept
 
 bool GLShader::load_file(const std::string& filename)
 {
-	ifstream file;
-	file.open(filename.c_str(),ios::binary);
+	std::ifstream file;
+	file.open(filename.c_str(),std::ios::binary);
 	if (file.bad()) return false;
-	file.seekg(0,ios::end);
+	file.seekg(0,std::ios::end);
 	shader_size = file.tellg();
-	file.seekg(0,ios::beg);
+	file.seekg(0,std::ios::beg);
 	if (!shader_size) return false;
 	if (shader_text) delete [] shader_text;
 	shader_text = new GLchar[shader_size];
@@ -68,7 +63,7 @@ bool GLShader::compile()
 	GLint compiled;
 	glGetObjectParameterivARB(shader_object, GL_COMPILE_STATUS, &compiled);
 	if (compiled) {
-		log[log::debug] << "Shader " << shader_object << " compiled without problems." << endl;
+		log[log::debug] << "Shader " << shader_object << " compiled without problems.";
 		return true;
 	}
 	GLint blen = 0;
@@ -78,7 +73,7 @@ bool GLShader::compile()
 	{
 	 GLchar* compiler_log = new GLchar[blen];
 	 glGetInfoLogARB(shader_object, blen, &slen, compiler_log);
-	 log[log::error] << "compiler_log:" <<  compiler_log <<endl;
+	 log[log::error] << "compiler_log:" <<  compiler_log;
 	 delete [] compiler_log;
 	}
 	return false;

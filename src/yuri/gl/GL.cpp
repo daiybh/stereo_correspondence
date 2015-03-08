@@ -206,7 +206,7 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, 
 
 	if (textures[tid].tid[0]==static_cast<GLuint>(-1)) {
 		textures[tid].gen_texture(0);
-		log[log::info] << "Generated texture " << textures[tid].tid[0] <<"\n";
+		log[log::info] << "Generated texture " << textures[tid].tid[0];
 	}
 
 	GLuint &tex = textures[tid].tid[0];
@@ -566,7 +566,7 @@ bool GL::prepare_texture(index_t tid, unsigned texid, const uint8_t *data, size_
 	glBindTexture(GL_TEXTURE_2D, textures[tid].tid[texid]);
 	err = glGetError();
 	if (err) {
-		log[log::error]<< "Error " << err << " while binding texture" <<"\n";
+		log[log::error]<< "Error " << err << " while binding texture";
 		return false;
 	}
 	if (data) {
@@ -584,7 +584,7 @@ bool GL::prepare_texture(index_t tid, unsigned texid, const uint8_t *data, size_
 	}
 	err = glGetError();
 	if (err) {
-		log[log::error] << "Error " << err /*<< ":" << glGetString(err) */<< " uploading tex. data" <<"\n";
+		log[log::error] << "Error " << err /*<< ":" << glGetString(err) */<< " uploading tex. data";
 		return false;
 	}
 	if (!update) {
@@ -595,7 +595,7 @@ bool GL::prepare_texture(index_t tid, unsigned texid, const uint8_t *data, size_
 		glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAX_ANISOTROPY_EXT,32.0);
 		err = glGetError();
 		if (err) {
-			log[log::error] << "Error " << err << " setting texture params" <<"\n";
+			log[log::error] << "Error " << err << " setting texture params";
 			return false;
 		}
 	}
