@@ -83,18 +83,33 @@ public:
 			other.dummy_ = true;
 		}
 	}
+
 	/*!
 	 * @brief			Provides ostream like operator << for inserting messages
 	 * @tparam	T		Type of message to insert
 	 * @param	val_	Message to write
 	 */
 	template<typename T>
-	LogProxy& operator<<(const T& val_)
+	LogProxy& operator<<(const T& val_) &
 	{
 		if (!dummy_) {
 			buffer_ << val_;
 		}
 		return *this;
+	}
+
+	/*!
+	 * @brief			Provides ostream like operator << for inserting messages
+	 * @tparam	T		Type of message to insert
+	 * @param	val_	Message to write
+	 */
+	template<typename T>
+	LogProxy&& operator<<(const T& val_) &&
+	{
+		if (!dummy_) {
+			buffer_ << val_;
+		}
+		return std::move(*this);
 	}
 	/*!
 	 * @brief 			Overloaded operator<< for manipulators
