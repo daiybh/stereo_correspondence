@@ -157,7 +157,8 @@ namespace {
 bool EventInfo::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
 	if (enabled_) {
-		auto l = log[log::info] << "Received an event '" << event_name << "': ";
+		// This move is necessary only for GCC4.7 which doesn't support ref-qualified member functions
+		auto l = std::move(log[log::info] << "Received an event '" << event_name << "': ");
 		print_event_info(event, l);
 	}
 	return true;
