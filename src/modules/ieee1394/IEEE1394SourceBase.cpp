@@ -28,30 +28,30 @@ IEEE1394SourceBase::IEEE1394SourceBase(const log::Log &log_, core::pwThreadBase 
 	rom1394_directory rom_dir;
 	handle = raw1394_new_handle();
 	if (!handle) {
-		log[log::fatal] << "Can't get libraw1394 handle! (" << errno << " - " << strerror(errno) << ")" << std::endl;
+		log[log::fatal] << "Can't get libraw1394 handle! (" << errno << " - " << strerror(errno) << ")";
 		throw (exception::Exception("Can't get libraw1394 handle!"));
 		//return; // Should throw an exception::Exception here
 	}
-	this->log[log::debug] << "Got new libraw1394 handle" << std::endl;
+	this->log[log::debug] << "Got new libraw1394 handle";
 	numcards = raw1394_get_port_info(handle, pinf, 16);
 	if (numcards<1) {
-		if (numcards) log[log::error] << "No ieee1394 cards detected, aborting!" << std::endl;
-			else log[log::error] << "Couln't get ieee1394 cards info, aborting!" << std::endl;
+		if (numcards) log[log::error] << "No ieee1394 cards detected, aborting!";
+			else log[log::error] << "Couln't get ieee1394 cards info, aborting!";
 		}
-	log[log::info] << "Found " << numcards << " ieee1394 cards." << std::endl;
+	log[log::info] << "Found " << numcards << " ieee1394 cards.";
 	if (numcards<(port-1)) {
-		log[log::fatal] << "There's no port " << port << " to connect to." << std::endl;
+		log[log::fatal] << "There's no port " << port << " to connect to.";
 		throw (exception::Exception("Port doesn't exist"));
 	}
 	if (raw1394_set_port(handle, port)<0) {
-		log[log::error] << "Couln't set port ("<< port << ")!" << std::endl;
+		log[log::error] << "Couln't set port ("<< port << ")!";
 		throw (exception::Exception("Failed to set port"));
 	}
-	log[log::info] << "Selected card " << pinf[0].name << std::endl;
+	log[log::info] << "Selected card " << pinf[0].name;
 	int nodes= raw1394_get_nodecount(handle);
 
 	//node = 0xffc0;
-	log[log::info]<< nodes  << "nodes on the bus. Local node id: " << (raw1394_get_local_id (handle)&0x3f) << std::endl;
+	log[log::info]<< nodes  << "nodes on the bus. Local node id: " << (raw1394_get_local_id (handle)&0x3f);
 	if (nodes<1) {
 		throw(exception::Exception("No nodes on the bus!"));
 	} else if (nodes==1) {
@@ -86,7 +86,7 @@ IEEE1394SourceBase::IEEE1394SourceBase(const log::Log &log_, core::pwThreadBase 
 		case ROM1394_NODE_TYPE_DC: log[log::info] << "Node " << (node&0x3f) <<
 				" is DC node";break;
 		case ROM1394_NODE_TYPE_SBP2: log[log::info] << "Node " << (node&0x3f) <<
-		" is SBP2 node" << std::endl; break;
+		" is SBP2 node"; break;
 		case ROM1394_NODE_TYPE_CPU: log[log::info] << "Node " << (node&0x3f) <<
 		" is CPU node"; break;
 		default:
@@ -95,12 +95,12 @@ IEEE1394SourceBase::IEEE1394SourceBase(const log::Log &log_, core::pwThreadBase 
 		}
 		throw(exception::Exception("Not an AVC unit!"));
 	}
-	if (rom_dir.label) log[log::info] << "Node " << (node&0x3f) << ": " << rom_dir.label << std::endl;
+	if (rom_dir.label) log[log::info] << "Node " << (node&0x3f) << ": " << rom_dir.label;
 	rom1394_free_directory(&rom_dir);
 	channel = iec61883_cmp_connect (handle, node, &oplug,
 		raw1394_get_local_id (handle), &iplug, &bandwidth);
 	if (channel<0) channel=63;
-	log[log::info] << "Connected to plug " << oplug << " of node " << (node&0x3f) << ", using channel " << channel << "." << std::endl;
+	log[log::info] << "Connected to plug " << oplug << " of node " << (node&0x3f) << ", using channel " << channel << ".";
 
 
 }
@@ -120,11 +120,11 @@ int IEEE1394SourceBase::receive_frame(unsigned char*data, int len, unsigned int 
 
 int IEEE1394SourceBase::process_frame(unsigned char *data, int len, int complete)
 {
-	log[log::debug] << "Received " << (complete?"":"in") << "complete frame with size " << len << " b." << std::endl;
+	log[log::debug] << "Received " << (complete?"":"in") << "complete frame with size " << len << " b.";
 	if (complete) {
 		if (out[0]) out[0]->push_frame(data,len);
 		else {
-			log[log::warning] << "Received frame and don't have pipe to put it into, throwing away" << std::endl;
+			log[log::warning] << "Received frame and don't have pipe to put it into, throwing away";
 		}
 	}
 	return 0;
@@ -146,7 +146,7 @@ void IEEE1394SourceBase::run()
 	if (!start_receiving()) {
 		log[log::error] << "Failed to start receiving (" <<
 		raw1394_get_rcode(raw1394_get_errcode(handle)) << "," <<
-		raw1394_get_ack(raw1394_get_errcode(handle)) << ")" << std::endl;
+		raw1394_get_ack(raw1394_get_errcode(handle)) << ")";
 
 		return;
 	}
