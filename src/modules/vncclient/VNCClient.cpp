@@ -297,7 +297,7 @@ bool VNCClient::process_data()
 	uint32_t len;
 	switch (state) {
 		case awaiting_data:
-			log[log::debug] << "Processing data, starting with " << static_cast<uint32_t>(buffer_pos[0]) << ", valid: " << buffer_valid<< std::endl;
+			log[log::debug] << "Processing data, starting with " << static_cast<uint32_t>(buffer_pos[0]) << ", valid: " << buffer_valid;
 			switch(buffer_pos[0]) {
 				case 0:if (buffer_valid < 4) return false;
 					remaining_rectangles = get_ushort(buffer_pos+2);
