@@ -131,9 +131,8 @@ public:
 
 	~LogProxy() noexcept {
 		if (!dummy_) {
-			// TODO: Creating a copy of str() just for detecting the trailing newline shouldn't be necessary...
-			const typename gstream_t::string_t str = buffer_.str();
-			if (str.size()>0 && str[str.size()-1]!=stream_.widen('\n')) buffer_<<stream_.widen('\n');
+			/*const typename gstream_t::string_t str = buffer_.str();
+			if (str.size()>0 && str[str.size()-1]!=stream_.widen('\n')) */ buffer_<<stream_.widen('\n');
 			// Avoiding unnecessary copy of the rdbuf by writing it directly
 			stream_ << buffer_.rdbuf();
 		}
