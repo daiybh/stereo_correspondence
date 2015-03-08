@@ -243,26 +243,26 @@ bool DeckLinkBase::init_decklink()
 			break;
 		}
 		if (!device) {
-			log[log::warning] << "Did not receive valid device for index " << idx << std::endl;
+			log[log::warning] << "Did not receive valid device for index " << idx;
 		} else {
 			device->Release();
 			device = 0;
-			log[log::debug] << "Skipping device " << idx << std::endl;
+			log[log::debug] << "Skipping device " << idx;
 		}
 		idx++;
 	}
 	if (device_index != idx) {
-		log[log::fatal] << "There is no device with index " << device_index << " connected to he system." << std::endl;
+		log[log::fatal] << "There is no device with index " << device_index << " connected to he system.";
 		return false;
 	}
 	if (!device) {
-		log[log::fatal] << "Device not allocated properly!" << std::endl;
+		log[log::fatal] << "Device not allocated properly!";
 		return false;
 	}
 	const char * device_name = 0;
 	device->GetDisplayName(&device_name);
 	if (device_name) {
-		log[log::info] << "Using blackmagic device: " << device_name << std::endl;
+		log[log::info] << "Using blackmagic device: " << device_name;
 		std::free (const_cast<char*>(device_name)); // Calling free becaus it's allocated inside decklink api using malloc
 	}
 	return true;
