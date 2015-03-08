@@ -30,18 +30,18 @@ namespace log {
  */
 enum debug_flags_t: long {
 	silent 			=	0,
-	fatal 			=	1,                                                    //!< Fatal error, application will probably quit
-	error	 		=	2,                                                    //!< Fatal error, application will probably quit
-	warning	 		=	3,                                                  //!< Warning, application should continue (but may not work correctly)
-	info			=	4,                                                      //!< Information about execution
-	debug 			=	5,                                                    //!< Debug information not needed during normal usage
-	verbose_debug	=	6,                                               //!< Verbose debug, used for debugging only
-	trace			=	7,                                                     //!< Tracing information, should never be needed during normal work
-	flag_mask		=   7,//!< Mask representing all flags
-	show_time		=	1L << 4,                                                 //!< Enables outputing actual time with the output
-	show_thread_id	=	1L << 5,                                             //!< Enables showing thread id
-	show_level		=	1L << 6,                                                //!< Enables showing debug level name
-	use_colors		=	1L << 7                                                 //!< Enable usage of colors
+	fatal 			=	1,			//!< Fatal error, application will probably quit
+	error	 		=	2,			//!< Error, application will recover, but some data or state may be lost
+	warning	 		=	3,			//!< Warning, application should continue (but may not work correctly)
+	info			=	4,			//!< Information about execution
+	debug 			=	5,			//!< Debug information not needed during normal usage
+	verbose_debug	=	6,			//!< Verbose debug, used for debugging only
+	trace			=	7,			//!< Tracing information, should never be needed during normal work
+	flag_mask		=   7,			//!< Mask representing all flags
+	show_time		=	1L << 4,	//!< Enables output of actual time with the output
+	show_thread_id	=	1L << 5,	//!< Enables showing thread id
+	show_level		=	1L << 6,	//!< Enables showing debug level name
+	use_colors		=	1L << 7		//!< Enable usage of colors
 };
 
 typedef debug_flags_t  debug_flags;
@@ -56,8 +56,10 @@ public:
 	EXPORT Log(std::ostream &out);
 	//! Constructs Log instance as a copy of @em log, with a new id
 	EXPORT Log(const Log& log);
+	EXPORT Log(Log&& log) noexcept;
 
-	Log& operator=(Log&& rhs) noexcept;
+
+	EXPORT Log& operator=(Log&& rhs) noexcept;
 	EXPORT virtual ~Log() noexcept;
 //	EXPORT void set_id(int id);
 	EXPORT void set_label(std::string s);
@@ -72,13 +74,11 @@ private:
 	// ID of current Log
 	int uid;
 	// Output stream
-	yuri::shared_ptr<guarded_stream<char> > out;
+	std::shared_ptr<guarded_stream<char> > out;
 
 	std::string logger_name_;
 	long output_flags_;
 	bool quiet_;
-	std::string print_time() const;
-	std::string print_level(debug_flags flags) const ;
 };
 
 }
