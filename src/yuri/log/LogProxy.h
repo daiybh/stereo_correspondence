@@ -77,7 +77,8 @@ public:
 	* @brief			Move constructor. Invalides the original LogProxy object
 	*/
 
-	LogProxy(LogProxy&& other) :stream_(other.stream_), dummy_(std::move(other.dummy_)) {
+	LogProxy(LogProxy&& other) noexcept
+		:stream_(other.stream_), dummy_(std::move(other.dummy_)) {
 		if (!dummy_) {
 			buffer_ << other.buffer_.str();
 			other.dummy_ = true;
