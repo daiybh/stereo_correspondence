@@ -92,6 +92,18 @@
 		// GCC 4.7.x doesn't support std::map::emplace ...
 		#define EMPLACE_UNSUPPORTED  1
 	#endif
+	#if GCC_VERSION < 40801
+		// GCC < 4.8.1 doesn't support ref qualified member functions...
+		#define REF_QUALIFIED_MF_UNSUPPORTED  1
+	#endif
+#endif
+
+#ifdef __clang__
+	#ifdef __has_feature
+		#if !__has_feature(cxx_reference_qualified_functions)
+			#define REF_QUALIFIED_MF_UNSUPPORTED  1
+		#endif
+	#endif
 #endif
 
 #ifdef YURI_ANDROID
