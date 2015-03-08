@@ -84,7 +84,7 @@ public:
 			other.dummy_ = true;
 		}
 	}
-
+#ifndef REF_QUALIFIED_MF_UNSUPPORTED
 	/*!
 	 * @brief			Provides ostream like operator << for inserting messages
 	 * @tparam	T		Type of message to insert
@@ -112,6 +112,21 @@ public:
 		}
 		return std::move(*this);
 	}
+#else
+	/*!
+	 * @brief			Provides ostream like operator << for inserting messages
+	 * @tparam	T		Type of message to insert
+	 * @param	val_	Message to write
+	 */
+	template<typename T>
+	LogProxy& operator<<(const T& val_)
+	{
+		if (!dummy_) {
+			buffer_ << val_;
+		}
+		return *this;
+	}
+#endif
 	/*!
 	 * @brief 			Overloaded operator<< for manipulators
 	 *
