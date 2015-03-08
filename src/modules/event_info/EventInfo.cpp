@@ -156,8 +156,10 @@ namespace {
 
 bool EventInfo::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
-	if (enabled_)
-		print_event_info(event, log[log::info] << "Received an event '" << event_name << "': ");
+	if (enabled_) {
+		auto l = log[log::info] << "Received an event '" << event_name << "': ";
+		print_event_info(event, l);
+	}
 	return true;
 }
 } /* namespace event_info */
