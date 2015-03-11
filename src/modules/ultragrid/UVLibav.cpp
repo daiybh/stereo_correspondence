@@ -40,7 +40,7 @@ core::Parameters UVLibav::configure()
 
 
 UVLibav::UVLibav(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-ultragrid::UVVideoCompress(log_,parent, "uv_libav", UV_COMPRESS_DETAIL_TILE(libavcodec))
+ultragrid::UVVideoCompress(log_,parent, "uv_libav", UV_COMPRESS_DETAIL(libavcodec_info))
 {
 	IOTHREAD_INIT(parameters)
 

@@ -51,7 +51,7 @@ core::IOThread(log_,parent,0,1,std::string("uv_rtp_receiver"))
 //		log[log::fatal] << "Failed to prepare tx session";
 //		throw exception::InitializationFailed("Failed to prepare tx session");
 //	}
-        m_participants = pdb_init();
+        m_participants = pdb_init(0);
 	if (!(rtp_session_ = rtp_init(destination_.c_str(),
 				rx_port_, tx_port_, ttl_,
 				5000*1048675.0, 0, rtp_recv_callback, (uint8_t *) m_participants, false, true))) {

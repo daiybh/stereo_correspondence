@@ -12,11 +12,8 @@
 #include "yuri/core/frame/CompressedVideoFrame.h"
 
 #include "yuri/core/thread/ConverterThread.h"
-extern "C" {
 #include "video_decompress.h"
 #include "uv_video.h"
-
-}
 
 namespace yuri {
 namespace ultragrid {

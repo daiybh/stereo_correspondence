@@ -12,8 +12,8 @@
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
 #include "YuriUltragrid.h"
-extern "C" {
 #include "transmit.h"
+extern "C" {
 #include "rtp/rtp.h"
 }
 #include "uv_video.h"

@@ -47,17 +47,16 @@ core::pFrame UVVideoCompress::do_special_single_step(core::pRawVideoFrame frame)
 		ultragrid::copy_to_uv_frame(frame, uv_frame);
 	}
 
-	video_frame * out_uv_frame  = nullptr;
+	shared_ptr<video_frame> out_uv_frame;
 	if (uv_compress_params_.compress_func) {
-		out_uv_frame  = uv_compress_params_.compress_func(encoder_, uv_frame.get());
+		out_uv_frame  = uv_compress_params_.compress_func(encoder_, uv_frame);
 	} else if (uv_compress_params_.compress_tile_func) {
-		out_uv_frame = uv_compress_params_.compress_tile_func(encoder_, uv_frame.get());
+		out_uv_frame = uv_compress_params_.compress_tile_func(encoder_, uv_frame);
 	}
 
 	// Should I clean up out_uv_frame?
 	if (out_uv_frame) {
 		core::pFrame out_frame = ultragrid::copy_from_from_uv(out_uv_frame, log);
-                VIDEO_FRAME_DISPOSE(out_uv_frame);
 		if (out_frame) return {out_frame};
 	}
 	return {};

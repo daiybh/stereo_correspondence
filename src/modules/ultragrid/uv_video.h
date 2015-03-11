@@ -11,9 +11,7 @@
 #ifndef UV_VIDEO_H_
 #define UV_VIDEO_H_
 #include <memory>
-extern "C" {
-	#include "video.h"
-}
+#include "video.h"
 
 // Using shared_ptr because it can erase the type of deleter
 using video_frame_t = std::shared_ptr<video_frame>;

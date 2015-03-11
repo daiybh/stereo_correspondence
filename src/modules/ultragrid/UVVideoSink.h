@@ -16,19 +16,13 @@
 #include "video.h"
 //#include <unordered_set>
 
-// Getting rid of UGLY macros
-#ifdef min
-#undef min
-#endif
-#ifdef max
-#undef max
-#endif
+struct module;
 
 namespace yuri {
 namespace ultragrid {
 namespace detail {
 
-typedef function<void* (char *, unsigned int)> 	display_init_t;
+typedef function<void* (struct module *, const char *, unsigned int)> 	display_init_t;
 typedef function<void (void *)> 				display_run_t;
 typedef function<void (void *)>					display_done_t;
 typedef function<video_frame* (void *)>			display_getf_t;

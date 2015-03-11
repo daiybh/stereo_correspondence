@@ -33,7 +33,7 @@ core::Parameters UVRTDxt::configure()
 
 
 UVRTDxt::UVRTDxt(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-ultragrid::UVVideoCompress(log_,parent, "uv_rtdxt", UV_COMPRESS_DETAIL(dxt_glsl)),
+ultragrid::UVVideoCompress(log_,parent, "uv_rtdxt", UV_COMPRESS_DETAIL(rtdxt_info)),
 format_(core::compressed_frame::dxt1)
 {
 	IOTHREAD_INIT(parameters)
