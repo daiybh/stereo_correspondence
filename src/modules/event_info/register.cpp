@@ -10,6 +10,7 @@
 #include "EventInfo.h"
 #include "PassEvent.h"
 #include "EventTimer.h"
+#include "EventToFrame.h"
 #if YURI_LINUX
 #include "EventDevice.h"
 #endif
@@ -19,6 +20,7 @@ MODULE_REGISTRATION_BEGIN("event_misc")
 		REGISTER_IOTHREAD("event_info", event_info::EventInfo)
 		REGISTER_IOTHREAD("pass_event", pass_events::PassEvent)
 		REGISTER_IOTHREAD("event_timer", event_timer::EventTimer)
+		REGISTER_IOTHREAD("event_to_frame", event_to_frame::EventToFrame)
 #if YURI_LINUX
 		REGISTER_IOTHREAD("event_device", event_device::EventDevice)
 #endif
