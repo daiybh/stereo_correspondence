@@ -15,6 +15,7 @@
 #include "yuri/core/frame/compressed_frame_params.h"
 #include "yuri/core/frame/RawAudioFrame.h"
 #include "yuri/core/frame/raw_audio_frame_params.h"
+#include "yuri/core/frame/EventFrame.h"
 
 namespace yuri {
 namespace frame_info {
@@ -55,6 +56,12 @@ void print_frame(log::Log& log, core::pRawAudioFrame frame)
 	log[log::info] << "Frame with format '" << fname << "', sampling rate " << frame->get_sampling_frequency()
 					<< "Hz, " << frame->get_channel_count() << " channels";
 }
+void print_frame(log::Log& log, core::pEventFrame frame)
+{
+
+	log[log::info] << "Event Frame with name '" << frame->get_name()
+			<< "' and value '" << event::lex_cast_value<std::string>(frame->get_event()) << "'";
+}
 
 void print_frame(log::Log& log, core::pFrame frame) {
 	if (auto f = dynamic_pointer_cast<core::RawVideoFrame>(frame)) {
@@ -63,6 +70,8 @@ void print_frame(log::Log& log, core::pFrame frame) {
 		print_frame(log, f2);
 	} else if (auto f3 = dynamic_pointer_cast<core::RawAudioFrame>(frame)) {
 		print_frame(log, f3);
+	} else if (auto f4 = dynamic_pointer_cast<core::EventFrame>(frame)) {
+		print_frame(log, f4);
 	} else {
 		log[log::info] << "Unknown format (" << frame->get_format() << ")";
 	}
@@ -102,6 +111,11 @@ bool same_format(const core::pFrame& a, const core::pFrame& b)
 		auto fa = dynamic_pointer_cast<core::RawAudioFrame>(a);
 		auto fb = dynamic_pointer_cast<core::RawAudioFrame>(b);
 		if (fa && fb) return same_format(fa, fb);
+	}
+	{
+		auto fa = dynamic_pointer_cast<core::EventFrame>(a);
+		auto fb = dynamic_pointer_cast<core::EventFrame>(b);
+		if (fa && fb) return false;
 	}
 	return true;
 }
