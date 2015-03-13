@@ -9,6 +9,11 @@
 
 #ifndef MAKE_LIST_H_
 #define MAKE_LIST_H_
+#include "yuri/core/utils/new_types.h"
+#include "yuri/core/utils.h"
+
+#include <string>
+#include <vector>
 
 namespace yuri {
 namespace core {
