@@ -60,15 +60,15 @@ struct OSCBool{
 	bool value;
 	OSCBool(bool value):value(std::move(value)) {}
 	template<class Iterator>
-	OSCBool(Iterator& first, const Iterator& last):value(false)
+	OSCBool(Iterator&, const Iterator&):value(false)
 	{
-		if (!parse(first,last)) throw std::invalid_argument("Not enough data for bool");
+//		if (!parse(first,last)) throw std::invalid_argument("Not enough data for bool");
 	}
-	template<class Iterator>
-	bool parse(Iterator& first, const Iterator& last)
-	{
-		return true;
-	}
+//	template<class Iterator>
+//	bool parse(Iterator& first, const Iterator& last)
+//	{
+//		return true;
+//	}
 	std::string get_type() const {
 		return value?"T":"F";
 	}
@@ -190,6 +190,30 @@ struct OSCTimestamp {
 	}
 };
 
+struct OSCNil{
+	OSCNil() {}
+	template<class Iterator>
+	OSCNil(Iterator&, const Iterator&)
+	{
+//		if (!parse(first,last)) throw std::invalid_argument("Not enough data for nil");
+	}
+//	template<class Iterator>
+//	bool parse(Iterator& first, const Iterator& last)
+//	{
+//		return true;
+//	}
+	std::string get_type() const {
+		return "N";
+	}
+	event::pBasicEvent get_event() const {
+		return std::make_shared<event::EventBang>();
+	}
+	std::string encode() const {
+		return {};
+	}
+
+};
+
 
 //
 //template<class Iterator>
@@ -256,6 +280,7 @@ named_event parse_packet(Iterator& first, const Iterator& last, log::Log& log)
 		log[log::verbose_debug] << "Found name " << name.value;
 		if (name.value == "#bundle") {
 			OSCTimestamp ts(first, last);
+			(void)ts;
 			while (first!=last) {
 				OSCInt size(first, last);
 				log[log::verbose_debug] << "Element of size " << size.value;
@@ -307,6 +332,13 @@ named_event parse_packet(Iterator& first, const Iterator& last, log::Log& log)
 							events.push_back(event);
 						}
 						log[log::verbose_debug] << "bool value: " << val.value;
+					}; break;
+					case 'N': {
+						OSCNil val;
+						if (auto event = val.get_event()) {
+							events.push_back(event);
+						}
+						log[log::verbose_debug] << "bang value";
 					}; break;
 					case 'm': {
 						OSCMidi val(first,last);
