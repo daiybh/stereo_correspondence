@@ -14,6 +14,7 @@
 //#include <boost/algorithm/string.hpp>
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/utils.h"
 #include <cstdlib>
@@ -137,11 +138,27 @@ BMDDisplayMode parse_format(const std::string& fmt)
 	return bmdModeUnknown;
 }
 
+std::string bm_mode_to_yuri(BMDDisplayMode fmt)
+{
+	for (const auto& m: mode_strings) {
+		if (m.second == fmt) return m.first;
+	}
+	return "none";
+}
+
 BMDVideoConnection parse_connection(const std::string& fmt)
 {
 	if (connection_strings.count(fmt))
 		return connection_strings[fmt];
 	else return bmdVideoConnectionHDMI;
+}
+std::string bm_connection_to_yuri(BMDVideoConnection fmt)
+{
+	for (auto f: connection_strings) {
+		if (f.second == fmt)
+			return f.first;
+	}
+	return "none";
 }
 BMDPixelFormat convert_yuri_to_bm(format_t fmt)
 {
@@ -182,6 +199,127 @@ BMDDisplayMode get_next_format(BMDDisplayMode fmt)
 		return mode_strings.begin()->second;
 	return it->second;
 }
+
+namespace {
+
+void push_cfg_connections(core::InputDeviceInfo& device, core::InputDeviceConfig&& cfg, const std::vector<std::string> conns)
+{
+	if (conns.empty()) {
+		device.configurations.push_back(std::move(cfg));
+	} else {
+		for (const auto& con: conns) {
+			auto cfg2 = cfg;
+			cfg2.params["connection"]=con;
+			device.configurations.push_back(std::move(cfg2));
+		}
+	}
+}
+
+core::InputDeviceInfo enum_input_device(IDeckLink* dev, uint16_t device_index)
+{
+	core::InputDeviceInfo device;
+	device.main_param_order={"device","connection", "format", "stereo", "pixel_format"};
+	const char * device_name = nullptr;
+	dev->GetDisplayName(&device_name);
+	if (device_name) {
+		device.device_name=device_name;
+		std::free (const_cast<char*>(device_name));
+	} else {
+		device.device_name="Unknown Decklink device";
+	}
+
+	IDeckLinkAttributes *attr = nullptr;
+	IDeckLinkInput *input = nullptr;
+	dev->QueryInterface(IID_IDeckLinkAttributes,reinterpret_cast<void**>(&attr));
+
+	if (dev->QueryInterface(IID_IDeckLinkInput,reinterpret_cast<void**>(&input))!=S_OK) {
+		// Not an input device
+		return device;
+	}
+
+	bool detection_supported;
+	if(attr->GetFlag(BMDDeckLinkSupportsInputFormatDetection, &detection_supported) != S_OK) {
+		detection_supported = false;
+	} else {
+		if (!detection_supported) {
+			detection_supported = false;
+		} else {
+			detection_supported = true;
+		}
+	}
+	std::vector<std::string> connections;
+	int64_t connection_mask;
+	attr->GetInt(bmdDeckLinkConfigVideoInputConnection,&connection_mask);
+	// It would be nice to detect supported formats based on connection,
+	// but there doesn't seem to be a way to do it in the SDK now...
+	for (auto f: connection_strings) {
+			if (connection_mask & f.second) {
+				connections.push_back(f.first);
+			}
+	}
+
+	IDeckLinkDisplayModeIterator* mode_iter = nullptr;
+	if (input->GetDisplayModeIterator(&mode_iter) != S_OK) {
+		return device;
+	}
+	IDeckLinkDisplayMode* mode = nullptr;
+	while (mode_iter->Next(&mode) == S_OK) {
+		core::InputDeviceConfig cfg;
+		cfg.params["device"]=device_index;
+		auto m = mode->GetDisplayMode();
+		cfg.params["format"]=bm_mode_to_yuri(m);
+		for (const auto& pixfmt: pixel_format_map) {
+			BMDDisplayModeSupport sup;
+			IDeckLinkDisplayMode* res_mode = nullptr;
+			if (input->DoesSupportVideoMode(m,pixfmt.first, bmdVideoInputFlagDefault, &sup, &res_mode) == S_OK) {
+				if (sup == bmdDisplayModeSupported || sup == bmdDisplayModeSupportedWithConversion) {
+					try {
+						const auto& fi = get_format_info(pixfmt.second);
+						if (fi.short_names.empty()) continue;
+						auto cfg2 = cfg;
+						cfg2.params["pixel_format"]=fi.short_names[0];
+						cfg2.params["stereo"]=false;
+
+						if (res_mode->GetFlags() & bmdDisplayModeSupports3D) {
+							auto cfg3 = cfg2;
+							cfg3.params["stereo"]=true;
+							push_cfg_connections(device, std::move(cfg3), connections);
+						}
+						push_cfg_connections(device, std::move(cfg2), connections);
+					}
+					catch (...) {
+
+					}
+				}
+			}
+		}
+
+	}
+
+	return device;
+}
+}
+
+std::vector<core::InputDeviceInfo> DeckLinkBase::enumerate_inputs()
+{
+	std::vector<core::InputDeviceInfo> devices;
+	IDeckLinkIterator *iter = CreateDeckLinkIteratorInstance();
+	if (!iter) return devices;
+	uint16_t idx = 0;
+	IDeckLink* dev;
+	while (iter->Next(&dev)==S_OK) {
+		if (!dev) {
+			continue;
+		}
+		devices.push_back(enum_input_device(dev, idx));
+
+		dev->Release();
+		idx++;
+	}
+
+	return devices;
+}
+
 DeckLinkBase::DeckLinkBase(const log::Log &log_, core::pwThreadBase parent, position_t inp, position_t outp, const std::string& name)
 	:IOThread(log_,parent,inp,outp,name),device(0),device_index(0),connection(bmdVideoConnectionHDMI),
 	 mode(bmdModeHD1080p25),pixel_format(bmdFormat8BitYUV),
