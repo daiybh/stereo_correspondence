@@ -38,7 +38,7 @@ device_(0),mode_(-1)
 	std::stringstream strs;
 	strs << "decklink:"<< device_;
 	if (mode_ >= 0) {
-		strs << ":"<<mode_<<":2vuy";
+		strs << ":"<<mode_<<":UYVY";
 	}
 	if (!connection_.empty()) {
 		strs << ":connection="<<connection_;

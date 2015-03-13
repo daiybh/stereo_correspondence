@@ -319,6 +319,8 @@ IF(DECKLINK_FOUND)
         DeckLinkAPIDispatch.cpp
         UVDecklink.h
         UVDecklink.cpp
+        ${UV_BASE}/blackmagic_common.h
+        ${UV_BASE}/blackmagic_common.cpp
         ${UV_BASE}/video_capture/decklink.h
         ${UV_BASE}/video_capture/decklink.cpp
         )
