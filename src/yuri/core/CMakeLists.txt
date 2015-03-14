@@ -30,6 +30,7 @@ SET(YURI_SRC ${YURI_SRC}
 	core/utils/SingleRegister.h
 	core/utils/irange.h
 	core/utils/make_list.h
+	core/utils/trace_method.h
 	
 	core/thread/builder_utils.cpp
 	core/thread/builder_utils.h

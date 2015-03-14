@@ -27,15 +27,6 @@
 typedef int pid_t;
 #endif
 
-
-//#define YURI_EXIT_OK				0
-//#define YURI_EXIT_USER_BREAK		1
-//#define YURI_EXIT_FINISHED			2
-#ifdef YURI_WIN
-#define TRACE_METHOD
-#else
-#define TRACE_METHOD log[log::trace] << __PRETTY_FUNCTION__ << " @ " << __FILE__ << ":" << __LINE__;
-#endif
 namespace yuri
 {
 namespace core
@@ -44,7 +35,7 @@ namespace core
 const int yuri_exit_finished = 0;
 const int yuri_exit_interrupted = 1;
 
-class ThreadBase :public enable_shared_from_this<ThreadBase>
+class ThreadBase :public std::enable_shared_from_this<ThreadBase>
 {
 public:
 	EXPORT static Parameters	configure();

@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <numeric>
+#include "yuri/core/utils/trace_method.h"
 
 namespace yuri
 {

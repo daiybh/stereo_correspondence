@@ -22,6 +22,8 @@
 #include "yuri/core/utils/Timer.h"
 #include "yuri/core/utils.h"
 #include <cassert>
+
+#include "yuri/core/utils/trace_method.h"
 namespace yuri
 {
 namespace core
@@ -421,6 +423,7 @@ bool ThreadBase::bind_to_cpu(size_t cpu)
 
 bool ThreadBase::set_params(const Parameters &parameters)
 {
+	TRACE_METHOD
 	bool all_ok = true;
 	for (const auto& param_pair: parameters) {
 		const auto& parameter = param_pair.second;
@@ -439,6 +442,7 @@ bool ThreadBase::set_params(const Parameters &parameters)
 }
 bool ThreadBase::set_param(const Parameter &parameter)
 {
+	TRACE_METHOD
 	long debug = 0;
 	if (assign_parameters(parameter)
 			(cpu_affinity_, "cpu"))
@@ -459,6 +463,7 @@ bool ThreadBase::set_param(const Parameter &parameter)
 }
 std::string ThreadBase::get_node_name() const
 {
+	TRACE_METHOD
 	if (node_name_.empty()) {
 		return std::string("[")+node_id_+"] ";
 	} else {
