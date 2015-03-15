@@ -123,6 +123,17 @@ OPTION (YURI_DISABLE_GRABBER "Disable node fb_grabber in GL helper" OFF)
 OPTION (YURI_BUILD_UNSTABLE_MODULES "Enable building of unstable modules" ON)
 OPTION (YURI_BUILD_EXPERIMENTAL_MODULES "Enable building of experimental modules" ON)
 
+OPTION (YURI_DISABLE_TESTS "Disable unit tests" ON )
+
+#################################################################
+# Conditionaly enable testing
+#################################################################
+
+IF( NOT YURI_DISABLE_TESTS )
+	enable_testing()
+ENDIF()
+
+
 #################################################################
 # And finally submerge into source directories
 #################################################################
