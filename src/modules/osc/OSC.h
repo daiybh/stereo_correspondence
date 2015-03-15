@@ -14,6 +14,7 @@
 #include "yuri/core/utils/make_unique.h"
 #include "yuri/event/BasicEvent.h"
 #include "yuri/event/EventHelpers.h"
+#include "yuri/log/Log.h"
 
 namespace yuri {
 namespace osc {
@@ -393,6 +394,10 @@ inline std::string encode_osc(const std::string& event_name, const event::pBasic
 			}; break;
 		case event::event_type_t::boolean_event: {
 			OSCBool val(event::get_value<event::EventBool>(event));
+			osc_string+=OSCString(","+val.get_type()).encode() + val.encode();
+			}; break;
+		case event::event_type_t::bang_event: {
+			OSCNil val;
 			osc_string+=OSCString(","+val.get_type()).encode() + val.encode();
 			}; break;
 
