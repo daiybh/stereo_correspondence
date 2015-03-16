@@ -368,6 +368,36 @@ named_event parse_packet(Iterator& first, const Iterator& last, log::Log& log)
 }
 
 
+inline std::pair<std::string, std::string>
+get_osc_type_value(const event::pBasicEvent& event)
+{
+	switch(event->get_type())
+	{
+	case event::event_type_t::integer_event: {
+		OSCInt val(event::get_value<event::EventInt>(event));
+		return std::make_pair(val.get_type(), val.encode());
+		}; break;
+	case event::event_type_t::double_event: {
+		OSCFloat val(event::get_value<event::EventDouble>(event));
+		return std::make_pair(val.get_type(), val.encode());
+		}; break;
+	case event::event_type_t::string_event: {
+		OSCString val(event::get_value<event::EventString>(event));
+		return std::make_pair(val.get_type(), val.encode());
+		}; break;
+	case event::event_type_t::boolean_event: {
+		OSCBool val(event::get_value<event::EventBool>(event));
+		return std::make_pair(val.get_type(), val.encode());
+		}; break;
+	case event::event_type_t::bang_event: {
+		OSCNil val;
+		return std::make_pair(val.get_type(), val.encode());
+		}; break;
+	default: break;
+	}
+	return std::make_pair("", "");
+}
+
 
 inline std::string encode_osc(const std::string& event_name, const event::pBasicEvent& event, bool bundle=true)
 {
@@ -380,28 +410,24 @@ inline std::string encode_osc(const std::string& event_name, const event::pBasic
 		osc_string += OSCString(event_name).encode();
 		switch(event->get_type())
 		{
-		case event::event_type_t::integer_event: {
-			OSCInt val(event::get_value<event::EventInt>(event));
-			osc_string+=OSCString(","+val.get_type()).encode() + val.encode();
-			}; break;
-		case event::event_type_t::double_event: {
-			OSCFloat val(event::get_value<event::EventDouble>(event));
-			osc_string+=OSCString(","+val.get_type()).encode() + val.encode();
-			}; break;
-		case event::event_type_t::string_event: {
-			OSCString val(event::get_value<event::EventString>(event));
-			osc_string+=OSCString(","+val.get_type()).encode() + val.encode();
-			}; break;
-		case event::event_type_t::boolean_event: {
-			OSCBool val(event::get_value<event::EventBool>(event));
-			osc_string+=OSCString(","+val.get_type()).encode() + val.encode();
-			}; break;
+		case event::event_type_t::integer_event:
+		case event::event_type_t::double_event:
+		case event::event_type_t::string_event:
+		case event::event_type_t::boolean_event:
 		case event::event_type_t::bang_event: {
-			OSCNil val;
-			osc_string+=OSCString(","+val.get_type()).encode() + val.encode();
+			auto v = get_osc_type_value(event);
+			osc_string+=OSCString(","+v.first).encode() + v.second;
+		}; break;
+		case event::event_type_t::vector_event: {
+			std::string types=",";
+			std::string vals;
+			for (auto e: event::get_value<event::EventVector>(event)) {
+				auto v = get_osc_type_value(e);
+				types += v.first;
+				vals += v.second;
+			}
+			osc_string+=OSCString(types).encode() + vals;
 			}; break;
-
-
 		default:
 			break;
 		}
