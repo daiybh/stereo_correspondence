@@ -4,7 +4,8 @@ include_directories ( ${Boost_INCLUDE_DIRS} )
 link_directories (${Boost_LIBRARY_DIRS})
 
 add_executable(yuri_test_suite test_base.cpp
-								time_tests.cpp)
+								time_tests.cpp
+								test_irange.cpp)
 target_link_libraries (yuri_test_suite ${LIBNAME})
 
 add_executable(yuri_test_register test_register.cpp)
