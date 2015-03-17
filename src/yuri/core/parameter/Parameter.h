@@ -88,8 +88,8 @@ T Parameter::get_indexed(const std::string& index) const {
 	// TODO: OK, this is ugly, but EventDict still doesn't pass the map interface...
 	const auto& tmp_val = dict_value->get_value();
 	auto it = tmp_val.find(index);
-	if (it == tmp_val.end()) return std::range_error("No index " + index + " in the value");
-	return event::lex_cast_value<T>(*it);
+	if (it == tmp_val.end()) throw std::range_error("No index " + index + " in the value");
+	return event::lex_cast_value<T>(it->second);
 }
 
 
