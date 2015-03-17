@@ -47,6 +47,7 @@ public:
 	EXPORT const std::string&	get_description() const { return description_; }
 
 	EXPORT void					set_value(event::pBasicEvent value) { value_ = value; }
+	EXPORT void					set_description(std::string desc) { description_ = std::move(desc); }
 	EXPORT Parameter&			operator[](const std::string& desc){description_=desc; return *this;}
 
 	template<typename T>
