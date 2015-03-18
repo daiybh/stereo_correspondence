@@ -7,7 +7,7 @@ SET (SRC RenderText.cpp
 
 
  
-include_directories( ${FREETYPE_INCLUDE_DIR_freetype2} )
+include_directories( ${FREETYPE_INCLUDE_DIR_freetype2} ${FREETYPE_INCLUDE_DIR_ft2build})
 add_library(${MODULE} MODULE ${SRC})
 target_link_libraries(${MODULE} ${LIBNAME} ${FREETYPE_LIBRARY})
 
