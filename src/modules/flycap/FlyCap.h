@@ -11,7 +11,14 @@
 #define FLYCAP_H_
 
 #include "yuri/core/thread/IOThread.h"
+#ifdef YURI_CYGWIN
+#define YURI_FLYCAP_C_ONLY
+#endif
+#ifndef YURI_FLYCAP_C_ONLY
 #include "FlyCapture2.h"
+#else
+#include "C/FlyCapture2_C.h"
+#endif
 namespace yuri {
 namespace flycap {
 
@@ -34,8 +41,11 @@ private:
 	size_t index_;
 	size_t serial_;
 	bool keep_format_;
+#ifndef	YURI_FLYCAP_C_ONLY
 	FlyCapture2::Camera camera_;
-
+#else
+	fc2Context ctx_;
+#endif
 	duration_t shutdown_delay_;
 };
 

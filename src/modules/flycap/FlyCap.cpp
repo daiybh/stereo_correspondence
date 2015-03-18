@@ -44,6 +44,7 @@ bool operator()(const resolution_t& a, const resolution_t& b) const
 	return (a.width < b.width) || ((a.width==b.width) && (a.height < b. height));
 }
 };
+#ifndef YURI_FLYCAP_C_ONLY
 const std::map<resolution_t, std::map<format_t, FlyCapture2::VideoMode>, cmp_resolution> video_modes = {
 		{{160,120}, {
 				{yuv444, FlyCapture2::VIDEOMODE_160x120YUV444}},
@@ -108,6 +109,9 @@ FlyCapture2::FrameRate get_fps(size_t fps)
 	if (it == frame_rates.end()) return FlyCapture2::NUM_FRAMERATES;
 	return it->second;
 }
+#else
+// TODO implement this
+#endif 
 }
 
 
@@ -117,7 +121,7 @@ format_(core::raw_format::y8),fps_(30),index_(0),serial_(0),keep_format_(false),
 shutdown_delay_(100_ms)
 {
 	IOTHREAD_INIT(parameters)
-
+#ifndef YURI_FLYCAP_C_ONLY
 	auto mode = get_mode(resolution_, format_);
 	if (mode == FlyCapture2::NUM_VIDEOMODES) {
 		throw exception::InitializationFailed("Unsupported video format");
@@ -203,7 +207,68 @@ shutdown_delay_(100_ms)
 		sleep(shutdown_delay_);
 		throw exception::InitializationFailed("Failed to start capture");
 	}
+#else
+	fc2Error error;
+	fc2CreateContext(&ctx_);
+	unsigned int numCameras;
+	fc2GetNumOfCameras(ctx_, &numCameras);
+	log[log::info] << "Number of cameras detected: " << numCameras;
+	fc2PGRGuid guid;
+	if (!serial_) {
+		error = fc2GetCameraFromIndex( ctx_, index_, &guid );
+		if (error != FC2_ERROR_OK)
+		{
+			throw exception::InitializationFailed("Failed to get camera with index " + std::to_string(index_));
+		}
+	} else {
+		error = fc2GetCameraFromSerialNumber( ctx_, serial_, &guid );
+		if (error != FC2_ERROR_OK)
+		{
+			throw exception::InitializationFailed("Failed to get camera with serial " + std::to_string(serial_));
+		}
+	}
+	error = fc2Connect( ctx_, &guid );
+	if (error != FC2_ERROR_OK)
+	{
+		throw exception::InitializationFailed("Failed to connect to camera");
+	}
+	fc2CameraInfo cam_info;
+	error = fc2GetCameraInfo(ctx_,  &cam_info );
+	if (error != FC2_ERROR_OK)
+	{
+		fc2Disconnect(ctx_);
+		// It takes a while to shutdown background process in FlyCapture2...
+		sleep(shutdown_delay_);
+		throw exception::InitializationFailed("Failed to query camera info");
+	}
+	log[log::info] << "Connected to " << cam_info.modelName << ", from "
+	<< cam_info.vendorName << ", serial number: " << cam_info.serialNumber;
 
+	if (!keep_format_) {
+		error = fc2SetVideoModeAndFrameRate(ctx_, 
+				FC2_VIDEOMODE_1280x960Y8, FC2_FRAMERATE_30);
+		if (error != FC2_ERROR_OK)
+		{
+			fc2Disconnect(ctx_);
+			// It takes a while to shutdown background process in FlyCapture2...
+			sleep(shutdown_delay_);
+			throw exception::InitializationFailed("Failed to set resolution");
+		}
+	} else {
+		log[log::info] << "Keeping current format";
+}
+	error = fc2StartCapture(ctx_);
+	if (error != FC2_ERROR_OK) {
+		fc2Disconnect(ctx_);
+		// It takes a while to shutdown background process in FlyCapture2...
+		sleep(shutdown_delay_);
+		throw exception::InitializationFailed("Failed to start capture");
+	}
+	
+
+
+
+#endif
 }
 
 FlyCap::~FlyCap() noexcept
@@ -212,15 +277,37 @@ FlyCap::~FlyCap() noexcept
 
 void FlyCap::run()
 {
+#ifdef YURI_FLYCAP_C_ONLY
+	fc2Image image;
+	fc2CreateImage(&image);;
+#endif
 	while(still_running()) {
+#ifndef YURI_FLYCAP_C_ONLY
 		FlyCapture2::Image image;
 		camera_.RetrieveBuffer(&image);
-		auto frame = core::RawVideoFrame::create_empty(core::raw_format::y8, resolution_t{1280, 960}, image.GetData(), image.GetDataSize());
+		auto res = resolution_t{ image.GetCols(), image.GetRows()};
+		if (image.GetPixelFormat() != FlyCapture2::PIXEL_FORMAT_MONO8) {
+			log[log::warning] << "Expected mono8 image, got something different";
+			continue;
+		}
+		auto frame = core::RawVideoFrame::create_empty(core::raw_format::y8, res, image.GetData(), image.GetDataSize());
+#else
+		fc2RetrieveBuffer(ctx_, &image);
+		auto res = resolution_t{ image.cols, image.rows };
+		if (image.format != FC2_PIXEL_FORMAT_MONO8) {
+			log[log::warning] << "Expected mono8 image, got something different";
+			continue;
+		}
+		auto frame = core::RawVideoFrame::create_empty(core::raw_format::y8, res, image.pData, image.dataSize);
+#endif
 		push_frame(0, std::move(frame));
 	}
+#ifndef YURI_FLYCAP_C_ONLY
 	camera_.StopCapture();
 	log[log::info] << "Disconnecting from camera";
 	camera_.Disconnect();
+#else
+#endif
 	sleep(shutdown_delay_);
 }
 bool FlyCap::set_param(const core::Parameter& param)
