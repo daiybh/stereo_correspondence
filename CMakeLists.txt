@@ -153,21 +153,58 @@ int main() {
 }
 ")
 
+SET(TEST_FOR_TO_STOI "#include <string>
+int main() {
+	auto x = std::stoi("5");
+}
+")
+
+SET(TEST_FOR_TO_STOL "#include <string>
+int main() {
+	auto x = std::stol("5");
+}
+")
+
 SET(TEST_FOR_TO_STOUL "#include <string>
 int main() {
 	auto x = std::stoul("5");
 }
 ")
 
+SET(TEST_FOR_TO_STRTOI "#include <cstdlib>
+int main() {
+	auto x = std::strtoi("5", nullptr, 10);
+}
+")
+
 CHECK_CXX_SOURCE_COMPILES(TEST_FOR_TO_STRING HAVE_TO_STRING)
-CHECK_CXX_SOURCE_COMPILES(TEST_FOR_TO_STOUL HAVE_TO_STOUL)
+CHECK_CXX_SOURCE_COMPILES(TEST_FOR_TO_STRTOI HAVE_STRTOI)
+CHECK_CXX_SOURCE_COMPILES(TEST_FOR_TO_STOI HAVE_STOI)
+CHECK_CXX_SOURCE_COMPILES(TEST_FOR_TO_STOL HAVE_STOL)
+CHECK_CXX_SOURCE_COMPILES(TEST_FOR_TO_STOUL HAVE_STOUL)
 
 IF(NOT HAVE_TO_STRING)
 	MESSAGE(STATUS "Platform is missing std::to_string(), compiling replacement")
 	add_definitions("-DYURI_STD_TO_STRING_MISSING")
 ENDIF()
 
-IF(NOT HAVE_TO_STOUL)
+IF(NOT HAVE_STRTOI)
+	MESSAGE(STATUS "Platform is missing std::strtoi(), compiling replacement")
+	add_definitions("-DYURI_STD_STRTOI_MISSING")
+ENDIF()
+
+
+IF(NOT HAVE_STOI)
+	MESSAGE(STATUS "Platform is missing std::stoi(), compiling replacement")
+	add_definitions("-DYURI_STD_STOI_MISSING")
+ENDIF()
+
+IF(NOT HAVE_STOL)
+	MESSAGE(STATUS "Platform is missing std::stol(), compiling replacement")
+	add_definitions("-DYURI_STD_STOL_MISSING")
+ENDIF()
+
+IF(NOT HAVE_STOUL)
 	MESSAGE(STATUS "Platform is missing std::stoul(), compiling replacement")
 	add_definitions("-DYURI_STD_STOUL_MISSING")
 ENDIF()
