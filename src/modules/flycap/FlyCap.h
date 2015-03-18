@@ -33,6 +33,7 @@ private:
 
 	size_t index_;
 	size_t serial_;
+	bool keep_format_;
 	FlyCapture2::Camera camera_;
 
 	duration_t shutdown_delay_;

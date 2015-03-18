@@ -31,6 +31,7 @@ core::Parameters FlyCap::configure()
 	p["fps"]["Capture framerate"]=30;
 	p["index"]["Index of camera to use"]=0;
 	p["serial"]["Serial number of camera to user (overrides index)"]=0;
+	p["keep_format"]["Keep currently format (skips setting of format)"]=false;
 	return p;
 }
 
@@ -112,7 +113,7 @@ FlyCapture2::FrameRate get_fps(size_t fps)
 
 FlyCap::FlyCap(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOThread(log_,parent,1,1,std::string("flycap")),resolution_(resolution_t{1280,960}),
-format_(core::raw_format::y8),fps_(30),index_(0),serial_(0),
+format_(core::raw_format::y8),fps_(30),index_(0),serial_(0),keep_format_(false),
 shutdown_delay_(100_ms)
 {
 	IOTHREAD_INIT(parameters)
@@ -183,15 +184,17 @@ shutdown_delay_(100_ms)
 	log[log::info] << "Connected to " << cam_info.modelName << ", from "
 			<< cam_info.vendorName << ", serial number: " << cam_info.serialNumber;
 
+	if (!keep_format_) {
 
-	error = camera_.SetVideoModeAndFrameRate(
-			mode, fps);
-	if (error != FlyCapture2::PGRERROR_OK)
-	{
-		camera_.Disconnect();
-		// It takes a while to shutdown background process in FlyCapture2...
-		sleep(shutdown_delay_);
-		throw exception::InitializationFailed("Failed to set resolution");
+		error = camera_.SetVideoModeAndFrameRate(
+				mode, fps);
+		if (error != FlyCapture2::PGRERROR_OK)
+		{
+			camera_.Disconnect();
+			// It takes a while to shutdown background process in FlyCapture2...
+			sleep(shutdown_delay_);
+			throw exception::InitializationFailed("Failed to set resolution");
+		}
 	}
 	error = camera_.StartCapture();
 	if (error != FlyCapture2::PGRERROR_OK) {
@@ -227,6 +230,7 @@ bool FlyCap::set_param(const core::Parameter& param)
 			(fps_,			"fps")
 			(serial_,		"serial")
 			(index_, 		"index")
+			(keep_format_,	"keep_format")
 			.parsed<std::string>
 				(format_, 	"format", core::raw_format::parse_format))
 		return true;
