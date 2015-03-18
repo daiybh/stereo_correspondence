@@ -12,7 +12,7 @@
 #ifndef PLATFORM_H_
 #define PLATFORM_H_
 
-#if __cplusplus >= 201103L
+#if __cplusplus >= 201103L || _MSC_VER >= 1800
 #ifndef YURI_USE_CXX11
 #define YURI_USE_CXX11 1
 #endif
@@ -117,12 +117,12 @@
 #endif
 
 
-#if defined (__arm__)
+#if defined (__arm__) || defined(_M_ARM)
 	#define YURI_ARCH_ARM 1
-#elif defined( __x86_64__)
+#elif defined( __x86_64__) || defined(_M_X64)
 	#define YURI_ARCH_X86 1
 	#define YURI_ARCH_X86_64 1
-#elif defined(__i386__)
+#elif defined(__i386__) || defined(_M_IX86)
 	#define YURI_ARCH_X86 1
 	#define YURI_ARCH_X86_32 1
 #else
