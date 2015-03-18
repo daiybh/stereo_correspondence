@@ -74,7 +74,7 @@ public:
 protected:
 	SingleFramePolicy(const Parameters&) {}
 	~SingleFramePolicy() noexcept {}
-	bool impl_push_frame(const pFrame &frame);
+	EXPORT bool impl_push_frame(const pFrame &frame);
 	pFrame impl_pop_frame()
 	{
 		pFrame frame = frame_;
@@ -115,7 +115,7 @@ protected:
 	{
 		max_size_ = max_size;
 	}
-	bool impl_push_frame(const pFrame &frame);
+	EXPORT bool impl_push_frame(const pFrame &frame);
 	pFrame impl_pop_frame()
 	{
 		pFrame frame;
@@ -162,7 +162,7 @@ protected:
 	{
 		max_count_ = max_count;
 	}
-	bool impl_push_frame(const pFrame &frame);
+	EXPORT bool impl_push_frame(const pFrame &frame);
 	pFrame impl_pop_frame()
 	{
 		pFrame frame;
