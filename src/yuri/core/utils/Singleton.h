@@ -16,7 +16,7 @@ namespace yuri {
 namespace utils {
 
 
-#if defined(YURI_WIN)
+#if defined(YURI_WIN) || defined(YURI_CYGWIN)
 	template
 		<class T
 		>
@@ -51,7 +51,7 @@ namespace utils {
 class Singleton: public T {
 public:
 	typedef T value_type;
-#if !defined(YURI_WIN)
+#if !defined(YURI_WIN) & !defined(YURI_CYGWIN)
 	static T& get_instance()
 	{
 		static T 	instance_;
