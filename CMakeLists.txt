@@ -155,33 +155,33 @@ int main() {
 
 SET(TEST_FOR_TO_STOI "#include <string>
 int main() {
-	auto x = std::stoi("5");
+	auto x = std::stoi(\"5\");
 }
 ")
 
 SET(TEST_FOR_TO_STOL "#include <string>
 int main() {
-	auto x = std::stol("5");
+	auto x = std::stol(\"5\");
 }
 ")
 
 SET(TEST_FOR_TO_STOUL "#include <string>
 int main() {
-	auto x = std::stoul("5");
+	auto x = std::stoul(\"5\");
 }
 ")
 
 SET(TEST_FOR_TO_STRTOI "#include <cstdlib>
 int main() {
-	auto x = std::strtoi("5", nullptr, 10);
+	auto x = std::strtoi(\"5\", nullptr, 10);
 }
 ")
 
-CHECK_CXX_SOURCE_COMPILES(TEST_FOR_TO_STRING HAVE_TO_STRING)
-CHECK_CXX_SOURCE_COMPILES(TEST_FOR_TO_STRTOI HAVE_STRTOI)
-CHECK_CXX_SOURCE_COMPILES(TEST_FOR_TO_STOI HAVE_STOI)
-CHECK_CXX_SOURCE_COMPILES(TEST_FOR_TO_STOL HAVE_STOL)
-CHECK_CXX_SOURCE_COMPILES(TEST_FOR_TO_STOUL HAVE_STOUL)
+CHECK_CXX_SOURCE_COMPILES("${TEST_FOR_TO_STRING}" HAVE_TO_STRING)
+CHECK_CXX_SOURCE_COMPILES("${TEST_FOR_TO_STRTOI}" HAVE_STRTOI)
+CHECK_CXX_SOURCE_COMPILES("${TEST_FOR_TO_STOI}" HAVE_STOI)
+CHECK_CXX_SOURCE_COMPILES("${TEST_FOR_TO_STOL}" HAVE_STOL)
+CHECK_CXX_SOURCE_COMPILES("${TEST_FOR_TO_STOUL}" HAVE_STOUL)
 
 IF(NOT HAVE_TO_STRING)
 	MESSAGE(STATUS "Platform is missing std::to_string(), compiling replacement")
