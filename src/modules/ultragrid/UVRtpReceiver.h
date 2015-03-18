@@ -11,6 +11,9 @@
 #define UVRTPRECEIVER_H_
 
 #include "yuri/core/thread/IOThread.h"
+#ifdef YURI_CYGWIN
+#include <sys/time.h>
+#endif
 struct pdb;
 struct rtp;
 //struct rx;

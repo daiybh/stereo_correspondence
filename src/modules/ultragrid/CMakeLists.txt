@@ -130,12 +130,13 @@ if (X11_FOUND)
 endif()
 
 IF(OPENSSL_FOUND)
-    SET(SRC ${SRC}
-    	#${UV_BASE}/crypto/openssl_encrypt.c
-    	#${UV_BASE}/crypto/openssl_decrypt.c
-	)
+    	SET(SRC ${SRC}
+    		${UV_BASE}/crypto/openssl_encrypt.c
+    		${UV_BASE}/crypto/openssl_decrypt.c
+		)
 	SET(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
 ENDIF()
+
 IF(SPEEX_FOUND)
     SET(LIBS ${LIBS} ${SPEEX_LIBRARIES} ${SPEEXDSP_LIBRARIES})
 ENDIF()
@@ -244,7 +245,7 @@ SET (SRC ${SRC}
 		 )
 		 
 # Screen
-if (X11_FOUND)
+if (X11_FOUND AND NOT YURI_PLATFORM_CYGWIN)
     SET (SRC ${SRC}
              UVScreen.cpp
     	     UVScreen.h
@@ -318,6 +319,39 @@ IF(DECKLINK_FOUND)
     SET(LIBS ${LIBS} ${DECKLINK_LIBRARIES}) 
     add_definitions(-DYURI_UV_DECKLINK_SUPPORTED)
 
+ENDIF()
+
+IF(YURI_PLATFORM_CYGWIN)
+	SET(SRC ${SRC}
+		${UV_BASE}/utils/vf_split.cpp
+		#${UV_BASE}/vo_postprocess.c
+		${UV_BASE}/utils/message_queue.cpp
+		${UV_BASE}/capture_filter.c
+		${UV_BASE}/capture_filter/blank.c
+		${UV_BASE}/capture_filter/every.c
+		${UV_BASE}/capture_filter/logo.cpp
+		${UV_BASE}/capture_filter/none.c
+		#${UV_BASE}/capture_filter/resize.cpp
+		#${UV_BASE}/capture_filter/resize_utils.cpp
+		${UV_BASE}/capture_filter/scale.c
+		
+		${UV_BASE}/crypto/crc_32.c
+		${UV_BASE}/audio/audio.c
+		${UV_BASE}/audio/resampler.c
+		${UV_BASE}/rtp/fec.cpp
+		${UV_BASE}/vo_postprocess.c
+		${UV_BASE}/vo_postprocess/3d-interlaced.c
+		${UV_BASE}/vo_postprocess/double-framerate.c
+		${UV_BASE}/vo_postprocess/interlace.c
+		#${UV_BASE}/vo_postprocess/scale.c
+		${UV_BASE}/vo_postprocess/split.c
+		
+		#${UV_BASE}/video_capture/DirectShowGrabber.h
+		#${UV_BASE}/video_capture/DirectShowGrabber.cpp
+		
+		#UVDShow.h
+		#UVDShow.cpp
+		)
 ENDIF()
 
 add_library(${MODULE} MODULE ${SRC})
