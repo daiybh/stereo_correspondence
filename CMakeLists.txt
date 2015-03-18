@@ -41,7 +41,7 @@ SET(YURI_PLATFORM_CYGWIN FALSE)
 IF (UNIX OR MINGW OR CYGWIN)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra -std=c++0x -ffast-math")
 	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -Wextra -std=gnu11 -ffast-math")
-
+	SET(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS}")
 	IF("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 		MESSAGE(STATUS "Building for Linux")
 		SET(YURI_PLATFORM_LINUX TRUE)
@@ -141,6 +141,36 @@ IF( NOT YURI_DISABLE_TESTS )
 	enable_testing()
 ENDIF()
 
+#################################################################
+# Test for missing std functions
+#################################################################
+
+INCLUDE (CheckCXXSourceCompiles)
+
+SET(TEST_FOR_TO_STRING "#include <string>
+int main() {
+	auto x = std::to_string(5);
+}
+")
+
+SET(TEST_FOR_TO_STOUL "#include <string>
+int main() {
+	auto x = std::stoul("5");
+}
+")
+
+CHECK_CXX_SOURCE_COMPILES(TEST_FOR_TO_STRING HAVE_TO_STRING)
+CHECK_CXX_SOURCE_COMPILES(TEST_FOR_TO_STOUL HAVE_TO_STOUL)
+
+IF(NOT HAVE_TO_STRING)
+	MESSAGE(STATUS "Platform is missing std::to_string(), compiling replacement")
+	add_definitions("-DYURI_STD_TO_STRING_MISSING")
+ENDIF()
+
+IF(NOT HAVE_TO_STOUL)
+	MESSAGE(STATUS "Platform is missing std::stoul(), compiling replacement")
+	add_definitions("-DYURI_STD_STOUL_MISSING")
+ENDIF()
 
 #################################################################
 # And finally submerge into source directories

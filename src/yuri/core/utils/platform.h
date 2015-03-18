@@ -129,4 +129,6 @@
 	#error Unsupported/untested architecture
 #endif
 
+#include "platform_hacks.h"
+
 #endif /* PLATFORM_H_ */
