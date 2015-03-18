@@ -1,3 +1,6 @@
+# Disable warnings on cygwin
+set(CMAKE_LEGACY_CYGWIN_WIN32 0) # Remove when CMake >= 2.8.4 is required
+
 cmake_minimum_required (VERSION 2.8.0)
 PROJECT(yuri2 CXX)
 ENABLE_LANGUAGE(C)
@@ -32,8 +35,10 @@ SET(YURI_PLATFORM_LINUX FALSE)
 SET(YURI_PLATFORM_APPLE FALSE)
 SET(YURI_PLATFORM_BSD	FALSE)
 SET(YURI_PLATFORM_WIN32 FALSE)
+SET(YURI_PLATFORM_CYGWIN FALSE)
 
-IF (UNIX)
+
+IF (UNIX OR MINGW OR CYGWIN)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra -std=c++0x -ffast-math")
 	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -Wextra -std=gnu11 -ffast-math")
 
@@ -46,6 +51,9 @@ IF (UNIX)
 	ELSEIF(APPLE)
 		SET(YURI_PLATFORM_APPLE TRUE)
 		MESSAGE(STATUS "Building for Apple")
+	ELSEIF(CYGWIN)
+		SET(YURI_PLATFORM_CYGWIN TRUE)
+		MESSAGE(STATUS "Building for Cygwin")
 	ELSE()
 		MESSAGE(STATUS "Unknown platform: ${CMAKE_SYSTEM_NAME}, build may be incomplete")
 	ENDIF()
