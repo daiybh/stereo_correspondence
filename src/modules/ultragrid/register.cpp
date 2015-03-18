@@ -46,7 +46,10 @@
 
 #include "UVTestcard.h"
 #include "UVUdpSocket.h"
+
+#if YURI_UV_UYVY_SUPPORTED
 #include "UVUyvy.h"
+#endif
 
 #if YURI_UV_V4L2_SUPPORTED
 #include "UVV4l2.h"
@@ -106,8 +109,9 @@ MODULE_REGISTRATION_BEGIN("ultragrid")
 #endif
 
 		REGISTER_IOTHREAD("uv_testcard",uv_testcard::UVTestcard)
-
+#ifdef YURI_UV_UYVY_SUPPORTED
 		REGISTER_IOTHREAD("uv_uyvy",uv_uyvy::UVUyvy)
+#endif
 
 #if YURI_UV_V4L2_SUPPORTED
 		REGISTER_IOTHREAD("uv_v4l2",uv_v4l2::UVV4l2)

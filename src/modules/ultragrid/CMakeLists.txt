@@ -226,6 +226,13 @@ IF(GLEW_FOUND)
     		 
     SET(LIBS ${LIBS} ${GLEW_LIBRARY})
     add_definitions(-DYURI_UV_RTDXT_SUPPORTED)
+
+# UYVY
+	SET (SRC ${SRC}
+         UVUyvy.cpp
+		 UVUyvy.h
+		 ${UV_BASE}/video_compress/uyvy.cpp)
+	add_definitions(-DYURI_UV_UYVY_SUPPORTED)
 ENDIF()
 
 # RTP
@@ -269,12 +276,6 @@ SET (SRC ${SRC}
 		 UVUdpSocket.h
 		 )
 
-# UYVY
-SET (SRC ${SRC}
-         UVUyvy.cpp
-		 UVUyvy.h
-		 ${UV_BASE}/video_compress/uyvy.cpp)
-		 
 # V4L2
 pkg_check_modules(libv4l2 libv4l2)
 IF (libv4l2_FOUND)
