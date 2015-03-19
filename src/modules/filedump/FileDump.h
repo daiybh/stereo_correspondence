@@ -15,6 +15,26 @@
 #include <fstream>
 #include <string>
 
+
+/*
+ * If compiled with boost regex support, then following format specifiers
+ * are supported inside of the filename:
+ *
+ * 	%n - module name
+ * 	%t - timestamp from the incomming frame
+ * 	%f - frame type (short)
+ * 	%F - frame type (long)
+ * 	%T - timestamp at the time of dump
+ * 	%H - local hostname
+ * 	%D - local domain
+ * 	%s - sequence number
+ * 	%S - system name (eg. Linux-3.19.0)
+ * 	%O - OS (eg. Linux)
+ * 	%v - yuri version
+ * 	%% - literal %
+ *
+ */
+
 namespace yuri
 {
 namespace dump
@@ -32,12 +52,16 @@ public:
 private:
 	virtual core::pFrame do_simple_single_step(core::pFrame frame) override;
 	virtual bool set_param(const core::Parameter &param) override;
+	std::string generate_filename(const core::pFrame& frame);
 	std::ofstream dump_file;
 	std::string filename;
 
 	int seq_chars;
 	size_t seq_number, dumped_frames, dump_limit;
 
+
+	bool use_regex_; //!< Filename contains format specifiers
+	bool single_file_; //!< Output is in a single file
 
 };
 
