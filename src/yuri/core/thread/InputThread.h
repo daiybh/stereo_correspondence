@@ -31,15 +31,15 @@ struct InputDeviceInfo {
 	std::vector<std::string> main_param_order;
 };
 
-void print_cfgs(log::Log& log, log::debug_flags flags, const core::InputDeviceInfo& info);
+EXPORT void print_cfgs(log::Log& log, log::debug_flags flags, const core::InputDeviceInfo& info);
 
 
 
 namespace detail {
 
-bool is_last_key(const std::vector<core::InputDeviceConfig>& cfgs, const std::string& key, const std::vector<std::string>& used);
-std::vector<std::string> unused_keys(const core::InputDeviceConfig& cfg, const std::vector<std::string>& used);
-void print_cfgs_k(log::Log& log, log::debug_flags flags, const std::vector<core::InputDeviceConfig>& cfgs, std::vector<std::string> order, std::vector<std::string> used, std::string prefix);
+EXPORT bool is_last_key(const std::vector<core::InputDeviceConfig>& cfgs, const std::string& key, const std::vector<std::string>& used);
+EXPORT std::vector<std::string> unused_keys(const core::InputDeviceConfig& cfg, const std::vector<std::string>& used);
+EXPORT void print_cfgs_k(log::Log& log, log::debug_flags flags, const std::vector<core::InputDeviceConfig>& cfgs, std::vector<std::string> order, std::vector<std::string> used, std::string prefix);
 
 
 
