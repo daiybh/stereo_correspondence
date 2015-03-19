@@ -33,6 +33,7 @@ using InputRegister = yuri::utils::Singleton<generator::SingleRegister<
 }
 }
 
+SINGLETON_DECLARE_HELPER(yuri::core::InputRegister)
 
 
 #endif /* INPUTREGISTER_H_ */
