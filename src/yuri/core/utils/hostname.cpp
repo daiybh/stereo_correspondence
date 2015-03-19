@@ -10,7 +10,6 @@
 
 
 #include "hostname.h"
-#include "platform.h"
 
 #ifdef YURI_POSIX
 #include <array>

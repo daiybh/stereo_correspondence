@@ -11,15 +11,16 @@
 #define SRC_YURI_CORE_UTILS_HOSTNAME_H_
 
 #include <string>
+#include "platform.h"
 
 namespace yuri {
 namespace core {
 namespace utils {
 
-std::string get_hostname();
-std::string get_domain();
-std::string get_sysname();
-std::string get_sysver();
+EXPORT std::string get_hostname();
+EXPORT std::string get_domain();
+EXPORT std::string get_sysname();
+EXPORT std::string get_sysver();
 
 }
 }
