@@ -295,18 +295,15 @@ void list_converters(yuri::log::Log& l_, int /* verbosity */)
 void list_inputs(yuri::log::Log& l_, int /* verbosity */)
 {
 	using namespace yuri;
-#if !defined( YURI_WIN) && !defined(YURI_CYGWIN) 
 	const auto& conv = core::InputRegister::get_instance();
 	const auto& keys = conv.list_keys();
 	for (const auto& k: keys) {
 		l_[log::info] << k;
 	}
-#endif
 }
 
 void list_input_class(yuri::log::Log& l_, const std::string& name, int /*verbosity*/)
 {
-#if !defined( YURI_WIN) && !defined(YURI_CYGWIN)
 	const auto& conv = core::InputRegister::get_instance();
 	if (name == "all") {
 		l_[log::info] << "Enumerating all input classes";
@@ -331,7 +328,6 @@ void list_input_class(yuri::log::Log& l_, const std::string& name, int /*verbosi
 	catch (...) {
 		l_[log::info] << "No input thread found for " << name;
 	}
-#endif
 }
 
 }
