@@ -15,15 +15,40 @@
 #ifdef YURI_POSIX
 #include <unistd.h>
 #include <sys/utsname.h>
+#elif defined(YURI_WIN)
+#include <WinSock2.h>
+#include <Windows.h>
+#include <array>
+#pragma comment(lib, "Ws2_32.lib")
 #else
 #endif
 namespace yuri {
 namespace core {
 namespace utils {
 
+#if defined(YURI_WIN)
+	namespace detail {
+		void init_wsa() {
+			static bool initialized = false;
+			if (!initialized) {
+				WORD req = MAKEWORD(2, 2);
+				WSADATA data;
+				WSAStartup(req, &data);
+				initialized = true;
+			}
+		}
+	}
+#endif
+
+
 std::string get_hostname()
 {
 #ifdef YURI_POSIX
+	std::array<char, 255> name;
+	gethostname(&name[0], sizeof(name));
+	return std::string(&name[0]);
+#elif defined(YURI_WIN)
+	detail::init_wsa();
 	std::array<char, 255> name;
 	gethostname(&name[0], sizeof(name));
 	return std::string(&name[0]);
@@ -52,7 +77,7 @@ std::string get_sysname()
 	utsname uts;
 	uname(&uts);
 	return std::string(uts.sysname);
-#elif define(YURI_WIN)
+#elif defined(YURI_WIN)
 	return "Windows";
 #else
 	// Unsupported platform
@@ -66,8 +91,13 @@ std::string get_sysver()
 	utsname uts;
 	uname(&uts);
 	return std::string(uts.sysname) + "-" + std::string(uts.release);
-#elif define(YURI_WIN)
-	return "Windows";
+#elif defined(YURI_WIN)
+	OSVERSIONINFO ver;
+	ZeroMemory(&ver, sizeof(OSVERSIONINFO));
+	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	GetVersionEx(&ver);
+	auto v = std::string(ver.szCSDVersion);
+	return "Windows-"+std::to_string(ver.dwMajorVersion)+"." + std::to_string(ver.dwMinorVersion) + v;
 #else
 	// Unsupported platform
 	return {};
