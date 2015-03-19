@@ -49,7 +49,7 @@ std::string get_hostname()
 	gethostname(&name[0], sizeof(name));
 	return std::string(&name[0]);
 #elif defined(YURI_WIN)
-	detail::init_wsa();
+	init_wsa();
 	std::array<char, 255> name;
 	gethostname(&name[0], sizeof(name));
 	return std::string(&name[0]);
