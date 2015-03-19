@@ -65,6 +65,11 @@ public:
 	 * @param field_order Field order to set
 	 */
 	EXPORT void			set_field_order(field_order_t field_order);
+	/*!
+	 * Sets essential video info from other frame (interlacing, field_order)
+	 * @param other Source frame
+	 */
+	EXPORT void 	copy_video_params(const VideoFrame &other);
 
 protected:
 	/*!

@@ -38,14 +38,19 @@ void VideoFrame::set_field_order(field_order_t field_order)
 	field_order_ = field_order;
 }
 
+void VideoFrame::copy_video_params(const VideoFrame &other)
+{
+	set_interlacing(other.get_interlacing());
+	set_field_order(other.get_field_order());
+	copy_basic_params(other);
+}
 
 void VideoFrame::copy_parameters(Frame& other) const
 {
 	try {
 		VideoFrame& frame = dynamic_cast<VideoFrame&>(other);
 		frame.set_resolution(resolution_);
-		frame.set_interlacing(interlacing_);
-		frame.set_field_order(field_order_);
+		frame.copy_video_params(*this);
 	}
 	catch (std::bad_cast&) {
 		throw std::runtime_error("Tried to set VideoFrame params to a type not related to VideoFrame");
