@@ -12,6 +12,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <stdexcept>
 namespace yuri {
 namespace core {
 namespace generator {
