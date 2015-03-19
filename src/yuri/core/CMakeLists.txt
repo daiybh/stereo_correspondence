@@ -32,7 +32,7 @@ SET(YURI_SRC ${YURI_SRC}
 	core/utils/make_list.h
 	core/utils/trace_method.h
 	core/utils/hostname.cpp core/utils/hostname.h
-	core/utils/frame_info.h
+	core/utils/frame_info.cpp core/utils/frame_info.h
 	
 	core/thread/builder_utils.cpp
 	core/thread/builder_utils.h
