@@ -16,7 +16,7 @@
 #include "yuri/core/frame/RawAudioFrame.h"
 #include "yuri/core/frame/raw_audio_frame_params.h"
 #include "yuri/core/frame/EventFrame.h"
-
+#include "yuri/core/utils/global_time.h"
 namespace yuri {
 namespace frame_info {
 
@@ -37,18 +37,38 @@ core::Parameters FrameInfo::configure()
 }
 
 namespace {
+std::string get_interlace_info(const core::pVideoFrame& frame)
+{
+	switch (frame->get_interlacing()) {
+		case interlace_t::progressive: return "progressive";
+		case interlace_t::segmented_frame: return "segmented frame";
+		case interlace_t::splitted: return "splitted frame";
+		case interlace_t::interlaced: {
+			switch (frame->get_field_order()) {
+				case field_order_t::top_field_first: return "interlaced, top-field-first";
+				case field_order_t::bottom_field_first: return "interlaced, bottom-field-first";
+				default:
+					return "interlaced, unknown field order";
+			}
+		}
+	}
+}
+
+void print_video_frame(log::Log& log, std::string fname, const core::pVideoFrame& frame)
+{
+	log[log::info] << "Frame with format '" << fname << "', resolution " << frame->get_resolution() << ", " << get_interlace_info(frame);
+
+}
 
 void print_frame(log::Log& log, core::pRawVideoFrame frame)
 {
-	//const auto& fi = core::raw_format::get_format_info(frame->get_format());
 	const std::string& fname = core::raw_format::get_format_name(frame->get_format());
-	log[log::info] << "Frame with format '" << fname << "', resolution " << frame->get_resolution();
+	print_video_frame(log, fname, frame);
 }
 void print_frame(log::Log& log, core::pCompressedVideoFrame frame)
 {
-	//const auto& fi = core::raw_format::get_format_info(frame->get_format());
 	const std::string& fname = core::compressed_frame::get_format_name(frame->get_format());
-	log[log::info] << "Frame with format '" << fname << "', resolution " << frame->get_resolution();
+	print_video_frame(log, fname, frame);
 }
 void print_frame(log::Log& log, core::pRawAudioFrame frame)
 {
@@ -142,7 +162,7 @@ core::pFrame FrameInfo::do_simple_single_step(core::pFrame frame)
 		if (print_all_ || !last_frame_ || !same_format(last_frame_, frame)) {
 			print_frame(log, frame);
 			if (print_time_) {
-				log[log::info] << "\tTimestamp: " << frame->get_timestamp();
+				log[log::info] << "\tTimestamp: " << (frame->get_timestamp() - core::utils::get_global_start_time());
 			}
 
 		}
