@@ -59,17 +59,6 @@ inline std::string to_string( long double value )
 }
 #endif
 
-#ifdef YURI_STD_STRTOI_MISSING
-#include <cstdlib>
-namespace std {
-inline int strtoi(const char* str, char** str_end, int base)
-{
-	return static_cast<int>(strtol(str, str_end, base));
-}
-}
-#endif
-
-
 #if defined(YURI_STD_STOI_MISSING) || defined(YURI_STD_STOL_MISSING) || defined(YURI_STD_STOUL_MISSING)
 #include <cstdlib>
 #include <string>
@@ -85,7 +74,7 @@ inline long stol(const std::string& s)
 #ifdef YURI_STD_STOI_MISSING
 inline int stoi(const std::string& s)
 {
-	return std::strtoi(s.c_str(), nullptr, 10);
+	return std::strtol(s.c_str(), nullptr, 10);
 }
 #endif
 
