@@ -13,12 +13,13 @@
 #include "platform.h"
 
 #ifdef YURI_POSIX
+#include <array>
 #include <unistd.h>
 #include <sys/utsname.h>
 #elif defined(YURI_WIN)
+#include <array>
 #include <WinSock2.h>
 #include <Windows.h>
-#include <array>
 #pragma comment(lib, "Ws2_32.lib")
 #else
 #endif
