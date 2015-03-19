@@ -109,6 +109,7 @@ core::pFrame JpegDecoder::do_special_single_step(core::pCompressedVideoFrame fra
 
 		resolution_t res = {cinfo->image_width, cinfo->image_height};
 		core::pRawVideoFrame out_frame = core::RawVideoFrame::create_empty(output_format_, res);
+		out_frame->copy_video_params(*frame);
 		size_t out_linesize = PLANE_DATA(out_frame, 0).get_line_size();
 		size_t planes = 1; // Only 1 plane supported
 

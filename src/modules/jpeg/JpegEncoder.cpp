@@ -106,6 +106,7 @@ core::pFrame JpegEncoder::do_special_single_step(core::pRawVideoFrame frame)
 		auto out_fmt = force_mjpeg_?core::compressed_frame::mjpg:core::compressed_frame::jpeg;
 		if (buffer_size) {
 			auto outframe = core::CompressedVideoFrame::create_empty(out_fmt, res, buffer, buffer_size);
+			outframe->copy_video_params(*frame);
 			::free(buffer);
 			return outframe;
 		}
