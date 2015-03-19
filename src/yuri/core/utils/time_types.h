@@ -217,9 +217,10 @@ inline std::ostream& operator<<(std::ostream& os, const duration_t& duration)
 }
 /// TODO: Not implemented...
 //template<class Stream>
-inline std::ostream& operator<<(std::ostream& os, const timestamp_t&)
+inline std::ostream& operator<<(std::ostream& os, const timestamp_t& t)
 {
-	os << "Timestamp []";
+	const auto d = duration_t(t.value.time_since_epoch());
+	os << d;
 	return os;
 }
 
