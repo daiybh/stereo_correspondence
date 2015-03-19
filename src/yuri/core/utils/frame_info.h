@@ -17,7 +17,7 @@ namespace yuri {
 namespace core {
 namespace utils {
 
-std::string get_frame_type_name(format_t fmt, bool short_name);
+EXPORT std::string get_frame_type_name(format_t fmt, bool short_name);
 }
 }
 }
