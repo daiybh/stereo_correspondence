@@ -32,6 +32,7 @@ core::Parameters FrameInfo::configure()
 	core::Parameters p = core::IOFilter::configure();
 	p.set_description("FrameInfo");
 	p["print_all"]["Print info about every frame. If set to false, only frames after change will be printed"]=false;
+	p["print_time"]["Print timestamps of the siplayed frames"]=false;
 	return p;
 }
 
@@ -140,6 +141,10 @@ core::pFrame FrameInfo::do_simple_single_step(core::pFrame frame)
 	try {
 		if (print_all_ || !last_frame_ || !same_format(last_frame_, frame)) {
 			print_frame(log, frame);
+			if (print_time_) {
+				log[log::info] << "\tTimestamp: " << frame->get_timestamp();
+			}
+
 		}
 	}
 	catch (std::exception&){}
@@ -149,7 +154,8 @@ core::pFrame FrameInfo::do_simple_single_step(core::pFrame frame)
 bool FrameInfo::set_param(const core::Parameter& param)
 {
 	if(assign_parameters(param)
-			(print_all_, "print_all"))
+			(print_all_, "print_all")
+			(print_time_, "print_time"))
 		return true;
 	return core::IOFilter::set_param(param);
 }

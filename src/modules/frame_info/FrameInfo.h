@@ -28,6 +28,7 @@ private:
 	virtual bool set_param(const core::Parameter& param);
 	core::pFrame last_frame_;
 	bool print_all_;
+	bool print_time_;
 };
 
 } /* namespace frame_info */
