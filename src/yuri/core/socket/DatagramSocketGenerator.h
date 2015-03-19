@@ -45,4 +45,6 @@ typedef utils::Singleton<BasicDatagramSocketGenerator<core::socket::DatagramSock
 }
 }
 
+SINGLETON_DECLARE_HELPER(yuri::core::DatagramSocketGenerator)
+
 #endif /* DATAGRAMSOCKETGENERATOR_H_ */

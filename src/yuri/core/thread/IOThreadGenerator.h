@@ -32,7 +32,7 @@ public:
 	BasicIOThreadGenerator(){}
 };
 
-typedef utils::Singleton<BasicIOThreadGenerator<core::IOThread, std::string>> IOThreadGenerator;
+using IOThreadGenerator = utils::Singleton<BasicIOThreadGenerator<core::IOThread, std::string>>;
 
 #ifdef YURI_MODULE_IN_TREE
 #define REGISTER_IOTHREAD(name, type) namespace { bool reg_ ## type = yuri::IOThreadGenerator::get_instance().register_generator(name,type::generate, type::configure); }
@@ -44,6 +44,7 @@ typedef utils::Singleton<BasicIOThreadGenerator<core::IOThread, std::string>> IO
 
 
 }
+SINGLETON_DECLARE_HELPER(yuri::IOThreadGenerator)
 
 
 

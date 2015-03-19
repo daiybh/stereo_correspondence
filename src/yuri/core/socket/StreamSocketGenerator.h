@@ -45,4 +45,6 @@ typedef utils::Singleton<BasicStreamSocketGenerator<core::socket::StreamSocket, 
 }
 }
 
+SINGLETON_DECLARE_HELPER(yuri::core::StreamSocketGenerator)
+
 #endif /* STREAMSOCKETGENERATOR_H_ */

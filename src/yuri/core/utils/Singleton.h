@@ -2,8 +2,8 @@
  * @file 		Singleton.h
  * @author 		Zdenek Travnicek <travnicek@iim.cz>
  * @date 		8.9.2013
- * @date		21.11.2013
- * @copyright	Institute of Intermedia, CTU in Prague, 2013
+ * @date		19.03.2015
+ * @copyright	Institute of Intermedia, CTU in Prague, 2013 - 2015
  * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
  */
@@ -15,35 +15,25 @@
 namespace yuri {
 namespace utils {
 
+template<class T> EXPORT T& get_instance_helper();
 
-#if defined(YURI_WIN) || defined(YURI_CYGWIN)
-	template
-		<class T
-		>
-	class SingletonHelper {
-	public:
-		virtual T& get_instance() = 0;
-	};
+#define SINGLETON_DECLARE_HELPER(S) \
+namespace yuri {\
+namespace utils {  \
+	template<> EXPORT typename S::value_type& get_instance_helper<typename S::value_type>();\
+}\
+}
 
-	template<class T> EXPORT SingletonHelper<T>& get_instance_helper();
-#ifdef yuri2_8_core_EXPORTS
-	template<class T>
-	class SingletonHelperImpl: public SingletonHelper<T>{
-	public:
-		virtual T& get_instance() override {
-			static T instance_;
-			return instance_;
-		}
-	};
-	template<class T> EXPORT SingletonHelper<T>& get_instance_helper()
-	{
-		static SingletonHelperImpl<T> sing;
-		return sing;
-	}
-
-
-#endif
-#endif
+#define SINGLETON_DEFINE_HELPER(S) \
+namespace yuri {\
+namespace utils {  \
+	template<> typename S::value_type& get_instance_helper<typename S::value_type>() \
+	{\
+		static  S::value_type instance;\
+		return instance; \
+	}\
+}\
+}
 
 	template
 	<class T
@@ -51,29 +41,9 @@ namespace utils {
 class Singleton: public T {
 public:
 	typedef T value_type;
-#if !defined(YURI_WIN) & !defined(YURI_CYGWIN)
-	static T& get_instance()
-	{
-		static T 	instance_;
-		return instance_;
-	}
-#else
-	
-//#if defined(yuri2_8_core_EXPORTS)
-	/*static T& instance()
-	{
-		static T 	instance_;
-		return instance_;
-	}
-*/
 	EXPORT static T& get_instance() {
-		return get_instance_helper<T>().get_instance();
+		return get_instance_helper<T>();
 	}
-/*#else
-	EXPORT static T& get_instance();
-	
-#endif*/
-#endif
 
 private:
 	Singleton();

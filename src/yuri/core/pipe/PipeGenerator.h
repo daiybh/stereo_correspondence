@@ -24,15 +24,14 @@ template<
 class BasicPipeGenerator: public BasicGenerator<T, KeyType,
 		Parameters,
 		generator::DefaultErrorPolicy,
-		function<shared_ptr<T> (const std::string&, const log::Log&, const Parameters&)>>
+		std::function<std::shared_ptr<T> (const std::string&, const log::Log&, const Parameters&)>>
 {
 public:
 	BasicPipeGenerator(){}
 	~BasicPipeGenerator() noexcept {}
 };
 
-// TODO: Pipe generator
-typedef utils::Singleton<BasicPipeGenerator<Pipe, std::string>> PipeGenerator;
+using PipeGenerator = utils::Singleton<BasicPipeGenerator<Pipe, std::string>>;
 
 #define REGISTER_PIPE(name, type) namespace { bool reg_ ## type = yuri::core::PipeGenerator::get_instance().register_generator(name,type::generate, type::configure); }
 
@@ -40,5 +39,6 @@ typedef utils::Singleton<BasicPipeGenerator<Pipe, std::string>> PipeGenerator;
 }
 }
 
+SINGLETON_DECLARE_HELPER(yuri::core::PipeGenerator)
 
 #endif /* PIPEGENERATOR_H_ */

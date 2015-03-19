@@ -18,7 +18,7 @@ SET(YURI_SRC ${YURI_SRC}
 	
 	core/pipe/Pipe.cpp core/pipe/Pipe.h
 	core/pipe/PipePolicies.cpp core/pipe/PipePolicies.h
-	core/pipe/PipeGenerator.h
+	core/pipe/PipeGenerator.h core/pipe/PipeGenerator.cpp
 	core/pipe/SpecialPipes.cpp core/pipe/SpecialPipes.h
 	core/pipe/PipeNotification.cpp core/pipe/PipeNotification.h
 	
@@ -42,6 +42,7 @@ SET(YURI_SRC ${YURI_SRC}
 	core/thread/XmlBuilder.h
 	
 	core/thread/IOThread.cpp core/thread/IOThread.h
+	core/thread/IOThreadGenerator.cpp core/thread/IOThreadGenerator.h
 	core/thread/IOFilter.cpp core/thread/IOFilter.h
 	core/thread/MultiIOFilter.cpp core/thread/MultiIOFilter.h
 
@@ -53,11 +54,11 @@ SET(YURI_SRC ${YURI_SRC}
 
 	core/thread/ConverterThread.cpp core/thread/ConverterThread.h
 	core/thread/ConvertUtils.cpp core/thread/ConvertUtils.h
-	core/thread/ConverterRegister.h
+	core/thread/ConverterRegister.cpp core/thread/ConverterRegister.h
 	core/thread/Convert.cpp core/thread/Convert.h
 	
 	core/thread/InputThread.h core/thread/InputThread.cpp
-	core/thread/InputRegister.h
+	core/thread/InputRegister.h core/thread/InputRegister.cpp
 	
 	core/parameter/Parameters.cpp core/parameter/Parameters.h
 	core/parameter/Parameter.h
@@ -65,8 +66,8 @@ SET(YURI_SRC ${YURI_SRC}
 	core/socket/socket_errors.h
 	core/socket/DatagramSocket.cpp core/socket/DatagramSocket.h
 	core/socket/StreamSocket.cpp core/socket/StreamSocket.h
-	core/socket/DatagramSocketGenerator.h
-	core/socket/StreamSocketGenerator.h
+	core/socket/DatagramSocketGenerator.cpp core/socket/DatagramSocketGenerator.h
+	core/socket/StreamSocketGenerator.cpp core/socket/StreamSocketGenerator.h
 	core/socket/NullSockets.cpp core/socket/NullSockets.h
 	
 

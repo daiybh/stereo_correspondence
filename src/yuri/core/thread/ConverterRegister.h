@@ -54,9 +54,10 @@ namespace core {
 
 
 
-typedef utils::Singleton<generator::MultiRegister<
+using ConverterRegister =
+		utils::Singleton<generator::MultiRegister<
 		converter_key,
-		value_type>> 		ConverterRegister;
+			value_type>>;
 
 #ifdef YURI_MODULE_IN_TREE
 #define REGISTER_CONVERTER(format1, format2, name, cost) namespace { bool reg_ ## type = yuri::core::ConverterRegister::get_instance().add_value(std::make_pair(format1, format2), std::make_pair(name, cost)); }
@@ -69,6 +70,7 @@ typedef utils::Singleton<generator::MultiRegister<
 }
 }
 
+SINGLETON_DECLARE_HELPER(yuri::core::ConverterRegister)
 
 
 #endif /* CONVERTERGENERATOR_H_ */
