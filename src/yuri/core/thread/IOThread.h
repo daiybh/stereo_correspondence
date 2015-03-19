@@ -246,6 +246,7 @@ private:
 	std::vector<yuri::size_t> 	streamed_frames_;
 	std::vector<timestamp_t>	first_frame_;
 	Timer 						pts_timer_;
+	std::vector<size_t>			next_indices_;
 };
 
 

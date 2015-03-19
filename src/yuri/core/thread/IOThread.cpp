@@ -133,6 +133,13 @@ bool IOThread::push_frame(position_t index, pFrame frame)
 {
 	TRACE_METHOD
 	if (!frame) return true;
+	const auto cur_idx = frame->get_index();
+	if (cur_idx == 0) {
+		const auto idx = next_indices_[index]++;
+		frame->set_index(idx);
+	} else {
+		next_indices_[index] = cur_idx+1;
+	}
 	if (index >= 0 && index < get_no_out_ports() && out_[index]) {
 		while (!out_[index]->push_frame(frame)) {
 			wait_for(latency_);
@@ -171,6 +178,7 @@ void IOThread::resize(position_t inp, position_t outp)
 	out_.resize(out_ports_);
 	streamed_frames_.resize(out_ports_,0);
 	first_frame_.resize(out_ports_);
+	next_indices_.resize(out_ports_, 0);
 }
 
 void IOThread::close_pipes()
