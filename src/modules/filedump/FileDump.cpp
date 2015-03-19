@@ -180,7 +180,7 @@ FileDump::~FileDump() noexcept
 
 std::string FileDump::generate_filename(const core::pFrame& frame)
 {
-	if (!use_regex_ and !single_file_) {
+	if (!use_regex_ && !single_file_) {
 		return append_to_filename(filename, seq_number++, seq_chars);
 	}
 #ifdef HAVE_BOOST_REGEX
@@ -269,7 +269,7 @@ core::pFrame FileDump::do_simple_single_step(core::pFrame frame)
 	} else {
 		written=false;
 	}
-	if (seq_chars) {
+	if (!single_file_) {
 		dump_file.close();
 		if (written) {
 			emit_event("sequence",seq_number);
