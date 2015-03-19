@@ -1102,6 +1102,7 @@ core::pRawVideoFrame convert_formats(const core::pRawVideoFrame& frame, const Yu
 	const size_t width 			= frame->get_width();
 	const size_t height			= frame->get_height();
 	core::pRawVideoFrame outframe 	= allocate_frame<fmt_out>(width, height);
+	outframe->copy_video_params(*frame);
 //	const size_t linesize_in 	= get_linesize<fmt_in>(width);
 //	const size_t linesize_out 	= get_linesize<fmt_out>(width);
 	const size_t linesize_in 	= PLANE_DATA(frame,0).get_line_size();
