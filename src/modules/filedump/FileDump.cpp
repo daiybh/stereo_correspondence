@@ -165,6 +165,11 @@ FileDump::FileDump(log::Log &log_,core::pwThreadBase parent, const core::Paramet
 		use_regex_ = true;
 		single_file_ = false;
 	}
+	// The filename has to be generated beforehand, when single_file is enabled.
+	if (use_regex_ && single_file_) {
+		filename = generate_filename({});
+		use_regex_ = false;
+	}
 #else
 	single_file_ = seq_number <= 0;
 #endif
@@ -207,7 +212,7 @@ std::string FileDump::generate_filename(const core::pFrame& frame)
 					ss << timestamp_t{};
 					break;
 				case 't':
-					ss << frame->get_timestamp();
+					if (frame) ss << frame->get_timestamp();
 					break;
 				case 'H':
 					ss << core::utils::get_hostname();
@@ -225,10 +230,10 @@ std::string FileDump::generate_filename(const core::pFrame& frame)
 					ss << yuri_version;
 					break;
 				case 'f':
-					ss << core::utils::get_frame_type_name(frame->get_format(), true);
+					if (frame) ss << core::utils::get_frame_type_name(frame->get_format(), true);
 					break;
 				case 'F':
-					ss << core::utils::get_frame_type_name(frame->get_format(), false);
+					if (frame) ss << core::utils::get_frame_type_name(frame->get_format(), false);
 					break;
 				case '%':
 					ss << "%";
