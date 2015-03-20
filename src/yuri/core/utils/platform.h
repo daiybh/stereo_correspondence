@@ -53,6 +53,9 @@
 	#if defined __CYGWIN__
 		#define YURI_CYGWIN 1
 	#endif
+	#ifdef __STRICT_ANSI__
+		#undef __STRICT_ANSI__
+	#endif
 #elif defined __linux__ 
 	#define YURI_LINUX 1
 	#define YURI_POSIX 1
