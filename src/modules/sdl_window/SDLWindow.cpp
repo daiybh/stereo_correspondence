@@ -138,7 +138,7 @@ void SDLWindow::run()
 {
 	print_id();
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0) {
-		throw exception::InitializationFailed("Failed to initialize SDL");
+		throw exception::InitializationFailed("Failed to initialize SDL ("+std::string(SDL_GetError())+")");
 	}
 	if (!(surface_ = SDL_SetVideoMode(static_cast<int>(resolution_.width), static_cast<int>(resolution_.height), sdl_bpp_,
 			  SDL_HWSURFACE |  SDL_DOUBLEBUF | SDL_RESIZABLE |
