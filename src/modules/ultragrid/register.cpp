@@ -64,6 +64,9 @@
 #include "UVDecklink.h"
 #endif
 
+#if YURI_UV_PORTAUDIO_SUPPORTED
+#include "UVPortaudioInput.h"
+#endif
 namespace yuri {
 
 
@@ -126,6 +129,9 @@ MODULE_REGISTRATION_BEGIN("ultragrid")
 		REGISTER_IOTHREAD("uv_decklink_input",uv_decklink::UVDecklink)
 #endif
 
+#if YURI_UV_PORTAUDIO_SUPPORTED
+		REGISTER_IOTHREAD("uv_portaudio_input", ultragrid::UVPortaudioInput)
+#endif
 		REGISTER_DATAGRAM_SOCKET("uv_udp",uv_udp::UVUdpSocket)
 
 MODULE_REGISTRATION_END()

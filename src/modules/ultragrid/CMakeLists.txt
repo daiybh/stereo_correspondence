@@ -11,6 +11,7 @@ find_package(X11)
 find_package(OpenSSL)
 pkg_check_modules(SPEEX speex speexdsp)
 find_package(VIDEOMASTER)
+pkg_check_modules(PORTAUDIO portaudio-2.0)
 
 SET(SRC 
     YuriUltragrid.cpp
@@ -319,6 +320,15 @@ IF(DECKLINK_FOUND)
     SET(LIBS ${LIBS} ${DECKLINK_LIBRARIES}) 
     add_definitions(-DYURI_UV_DECKLINK_SUPPORTED)
 
+ENDIF()
+
+IF(PORTAUDIO_FOUND)
+	SET (SRC ${SRC}
+		${UV_BASE}/audio/capture/portaudio.c
+		UVPortaudioInput.h
+		UVPortaudioInput.cpp)
+	SET(LIBS ${LIBS} ${PORTAUDIO_LIBRARIES}) 
+	add_definitions(-DYURI_UV_PORTAUDIO_SUPPORTED)
 ENDIF()
 
 IF(YURI_PLATFORM_CYGWIN)
