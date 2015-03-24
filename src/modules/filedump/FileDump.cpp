@@ -20,6 +20,7 @@
 #include "yuri/core/utils/hostname.h"
 #include "yuri/version.h"
 #include "yuri/core/utils/frame_info.h"
+#include "yuri/core/utils/global_time.h"
 #include <boost/regex.hpp>
 #endif
 namespace yuri

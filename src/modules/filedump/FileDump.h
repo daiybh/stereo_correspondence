@@ -25,9 +25,12 @@
  * 	%f - frame type (short)
  * 	%F - frame type (long)
  * 	%T - timestamp at the time of dump
+ * 	%m - milliseconds since start
+ * 	%M - microseconds since start
  * 	%H - local hostname
  * 	%D - local domain
  * 	%s - sequence number
+ * 	%i - frame index
  * 	%S - system name (eg. Linux-3.19.0)
  * 	%O - OS (eg. Linux)
  * 	%v - yuri version
