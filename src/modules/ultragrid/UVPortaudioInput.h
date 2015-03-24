@@ -29,6 +29,7 @@ private:
 
 	int device_idx_;
 	void* device_;
+	int channels_;
 };
 
 } /* namespace ultragrid */

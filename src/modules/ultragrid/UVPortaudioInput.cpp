@@ -31,18 +31,20 @@ core::Parameters UVPortaudioInput::configure()
 	core::Parameters p = core::IOThread::configure();
 	p.set_description("UVPortaudioInput");
 	p["index"]["Device index (-1 for default)"]=-1;
+	p["channels"]["Number of capture channels"]=2;
 	return p;
 }
 
 
 UVPortaudioInput::UVPortaudioInput(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("uv"))
+core::IOThread(log_,parent,1,1,std::string("uv")),channels_(2)
 {
 	IOTHREAD_INIT(parameters)
 	std::string param_str;
 	if (device_idx_ >= 0) {
-		param_str=":"+std::to_string(device_idx_);
+		param_str=std::to_string(device_idx_);
 	}
+	audio_capture_channels = channels_;
 	device_ = portaudio_capture_init(const_cast<char*>(param_str.c_str()));
 	if (!device_) throw exception::InitializationFailed("Failed to initialize ALSA device");
 }
@@ -76,7 +78,8 @@ void UVPortaudioInput::run()
 bool UVPortaudioInput::set_param(const core::Parameter& param)
 {
 	if (assign_parameters(param)
-			(device_idx_, "index"))
+			(device_idx_, 	"index")
+			(channels_, 	"channels"))
 		return true;
 	return core::IOThread::set_param(param);
 }
