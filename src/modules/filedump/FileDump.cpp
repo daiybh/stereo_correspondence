@@ -78,7 +78,7 @@ std::string append_to_filename(const std::string& filename, const T& value, int 
 
 #ifdef HAVE_BOOST_REGEX
 
-const boost::regex specifier_pattern ("%(0?\\d+[s]|[ntfFTHDSOv%])");
+const boost::regex specifier_pattern ("%(0?\\d+[simM]|[ntfFTHDSOv%])");
 
 template<class S1, class S2>
 std::string to_s(const std::pair<S1, S2>& p)
@@ -110,8 +110,11 @@ std::pair<bool,bool> contains_specifiers(const std::string& fname)
 			case 't':
 			case 'T':
 			case 's':
+			case 'i':
 			case 'f':
 			case 'F':
+			case 'm':
+			case 'M':
 				seq_spec = true;
 				break;
 			default:
@@ -196,6 +199,7 @@ std::string FileDump::generate_filename(const core::pFrame& frame)
 		auto end = filename.cend();
 		boost::smatch what;
 		std::stringstream ss;
+		const timestamp_t current_timestamp;
 		while(boost::regex_search(beg, end, what, specifier_pattern, boost::match_default)) {
 			assert (std::distance(what[0].first, what[0].second) > 0);
 			if (beg != what[0].first) {
@@ -206,14 +210,25 @@ std::string FileDump::generate_filename(const core::pFrame& frame)
 				case 's':
 					ss << parse_and_replace(to_s(what[0]), seq_number);
 					break;
+				case 'i':
+					ss << parse_and_replace(to_s(what[0]), frame->get_index());
+					break;
 				case 'n':
 					ss << get_node_name();
 					break;
 				case 'T':
-					ss << timestamp_t{};
+					ss << current_timestamp;
 					break;
 				case 't':
 					if (frame) ss << frame->get_timestamp();
+					break;
+				case 'm':
+					if (frame) ss << parse_and_replace(to_s(what[0]),
+							(frame->get_timestamp() - core::utils::get_global_start_time()).value/1000);
+					break;
+				case 'M':
+					if (frame) ss << parse_and_replace(to_s(what[0]),
+							(frame->get_timestamp() - core::utils::get_global_start_time()).value);
 					break;
 				case 'H':
 					ss << core::utils::get_hostname();
