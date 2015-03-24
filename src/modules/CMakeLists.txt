@@ -266,6 +266,9 @@ pkg_check_modules(POPPLERCPP poppler-cpp)
 IF(POPPLERCPP_FOUND)
 	add_subdirectory(pdf_source)
 ENDIF()
+
+add_subdirectory(wav)
+
 ENDIF(YURI_BUILD_EXPERIMENTAL_MODULES)
 
 #################################################################
