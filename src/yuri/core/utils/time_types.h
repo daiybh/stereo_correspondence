@@ -201,6 +201,13 @@ operator*(const T& b, const duration_t& a)
 	return duration_t(static_cast<detail::duration_rep>(a.value*b));
 }
 
+inline duration_t abs(const duration_t& dur) {
+	return dur < 0_us ? -dur : dur;
+}
+
+inline duration_t abs_diff(const duration_t& dura, const duration_t& durb) {
+	return abs(dura - durb);
+}
 //template<class Stream>
 inline std::ostream& operator<<(std::ostream& os, const duration_t& duration)
 {
