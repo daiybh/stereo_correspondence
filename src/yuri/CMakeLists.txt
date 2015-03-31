@@ -3,9 +3,12 @@
 #################################################################
 IF(NOT YURI_DISABLE_BOOST)
 	set( Boost_USE_STATIC_LIBS OFF )
-	find_package( Boost 1.49 COMPONENTS filesystem system)
+	find_package( Boost 1.49 COMPONENTS filesystem system regex)
 	IF(Boost_FILESYSTEM_FOUND)
 		add_definitions(-DHAVE_BOOST_FILESYSTEM)
+	ENDIF()
+	IF(Boost_REGEX_FOUND)
+		add_definitions(-DHAVE_BOOST_REGEX)		
 	ENDIF()
 ENDIF()
 #################################################################

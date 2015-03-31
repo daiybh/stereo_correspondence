@@ -34,6 +34,7 @@ SET(YURI_SRC ${YURI_SRC}
 	core/utils/hostname.cpp core/utils/hostname.h
 	core/utils/frame_info.cpp core/utils/frame_info.h
 	core/utils/global_time.cpp core/utils/global_time.h
+	core/utils/string_generator.cpp core/utils/string_generator.h
 	
 	core/thread/builder_utils.cpp
 	core/thread/builder_utils.h
