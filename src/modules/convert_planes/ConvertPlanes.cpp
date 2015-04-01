@@ -545,8 +545,7 @@ core::pFrame dispatch(core::pRawVideoFrame frame, format_t target) {
 	if (source == yuv422p && target == uyvy422) frame_out =  merge_planes_422p_yuyv<yuv422p, uyvy422>(frame);
 	if (source == yuv422p && target == vyuy422) frame_out =  merge_planes_422p_yuyv<yuv422p, vyuy422>(frame);
 	if (frame_out) {
-		frame_out->set_duration(frame->get_duration());
-		frame_out->set_timestamp(frame->get_timestamp());
+		frame_out->copy_video_params(*frame);
 	}
 	return frame_out;
 }
