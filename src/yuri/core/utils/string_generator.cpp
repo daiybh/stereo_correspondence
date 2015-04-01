@@ -47,7 +47,7 @@ bool is_extended_generator_supported()
 
 namespace {
 
-const boost::regex specifier_pattern ("%(0?\\d+[simM]|[ntfFTrHDSOv%])");
+const boost::regex specifier_pattern ("%(0?\\d+[simM]|[simMntfFTrHDSOv%])");
 
 template<class S1, class S2>
 std::string to_s(const std::pair<S1, S2>& p)
@@ -58,12 +58,13 @@ std::string to_s(const std::pair<S1, S2>& p)
 template<class Value>
 std::string parse_and_replace(const std::string& spec, const Value& value)
 {
-	boost::regex pat ("%(0?)(\\d+)([[:alpha:]])");
+	boost::regex pat ("%(0?)(\\d*)([[:alpha:]])");
 	boost::smatch what;
 	std::stringstream ss;
 	if (boost::regex_match(spec, what, pat)) {
 		const bool zero = what[1].first!=what[1].second;
-		const auto count = std::stoul(to_s(what[2]));
+		const auto count = what[2].first==what[2].second?
+						0:std::stoul(to_s(what[2]));
 		print_formated_value(ss, value, count, zero);
 	}
 	return ss.str();
