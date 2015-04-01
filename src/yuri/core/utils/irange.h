@@ -39,6 +39,11 @@ irange(T first, T2 end) {
         return {first, static_cast<T>(end)};
 }
 
+template<typename T>
+typename std::enable_if<std::is_arithmetic<T>::value, irange_t<T>>::type
+irange(T end) {
+        return {static_cast<T>(0), end};
+}
 
 
 }
