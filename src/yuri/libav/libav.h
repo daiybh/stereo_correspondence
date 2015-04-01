@@ -23,6 +23,11 @@ extern "C" {
 namespace yuri {
 namespace libav {
 
+/*!
+ * Initializes libav (registers codecs etc.) Can be safely called from multiple threads and multiple times.
+ */
+void init_libav();
+
 AVPixelFormat avpixelformat_from_yuri(yuri::format_t format);
 AVCodecID avcodec_from_yuri_format(yuri::format_t codec);
 

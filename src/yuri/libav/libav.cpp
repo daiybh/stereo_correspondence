@@ -15,9 +15,15 @@
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/raw_audio_frame_types.h"
 
+extern "C" {
+	#include <libavformat/avformat.h>
+}
+
+
 #include <unordered_map>
 #include <map>
 #include <cassert>
+#include <atomic>
 namespace yuri {
 namespace libav {
 
@@ -91,6 +97,17 @@ std::map<AVPixelFormat, AVPixelFormat> yuri_pixel_special_map = {
 {AV_PIX_FMT_YUVJ444P, AV_PIX_FMT_YUV444P},
 };
 
+std::mutex libav_initialization_mutex;
+std::atomic<bool> libav_initialized {false};
+
+}
+
+void init_libav()
+{
+	if (libav_initialized) return;
+	lock_t _(libav_initialization_mutex);
+	av_register_all();
+	libav_initialized = true;
 }
 
 
