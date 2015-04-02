@@ -59,6 +59,12 @@ long adjust_level_flag(long f, long delta)
 }
 
 template<class Stream>
+void print_date_time(Stream& os)
+{
+	os << core::utils::generate_string("%lx ");
+}
+
+template<class Stream>
 void print_date(Stream& os)
 {
 	os << core::utils::generate_string("%lT ");
@@ -169,11 +175,17 @@ LogProxy<char> Log::operator[](debug_flags f) const
 			print_level(lp, f);
 		}
 		lp <<  uid << ": ";
-		if (output_flags_&show_date) {
-			print_date(lp);
-		}
-		if (output_flags_&show_time) {
-			print_time(lp);
+		if (output_flags_&show_date && output_flags_&show_time) {
+			// Printing date and time together should be slightly faster than printing it separately.
+			// It also prevent problems with inconsistencies.
+			print_date_time(lp);
+		} else {
+			if (output_flags_&show_date) {
+				print_date(lp);
+			}
+			if (output_flags_&show_time) {
+				print_time(lp);
+			}
 		}
 		lp << logger_name_;
 	}
