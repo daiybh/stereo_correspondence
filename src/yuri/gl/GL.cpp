@@ -352,7 +352,7 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, 
 
 				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 //				GLenum e = glGetError();
-//				log[log::error] << "compressed texture, " << e <<"\n";
+//				log[log::error] << "compressed texture, " << e;
 				delete[] image;
 				textures[tid].wh = wh;
 			}
@@ -361,7 +361,7 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, 
 
 			yuri::size_t remaining=PLANE_SIZE(frame,0), w2=w, h2=h, next_level = fsize, offset = 0, level =0;
 			while (next_level <= remaining) {
-				log[log::debug] << "next_level: " << next_level << ", rem: " << remaining <<"\n";
+				log[log::debug] << "next_level: " << next_level << ", rem: " << remaining;
 				glCompressedTexSubImage2D(GL_TEXTURE_2D, level++, 0, 0, w2, h2,	format, next_level, PLANE_RAW_DATA(frame,0)+offset);
 				if (!mipmaps) break;
 				w2>>=1;h2>>=1;
@@ -385,7 +385,7 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, 
 	}
 	/*
 	log[log::debug] << "Generated texture " << wh << "x" << wh << " from image " <<
-			w << "x" << h << " (" << tx << ", " << ty << ")" <<"\n";
+			w << "x" << h << " (" << tx << ", " << ty << ")";
 	 */
 
 	if (!fs_color_get.empty()) {

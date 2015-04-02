@@ -46,7 +46,7 @@ bool GLProgram::link()
 		/*view_matrix = glGetUniformLocation(program,"view_matrix");
 		model_matrix = glGetUniformLocation(program,"model_matrix");
 		projection_matrix  = glGetUniformLocation(program,"projection_matrix");
-		cerr << "vm: " << view_matrix << ", mm: " << model_matrix << ", pm: " << projection_matrix << "\n";*/
+		cerr << "vm: " << view_matrix << ", mm: " << model_matrix << ", pm: " << projection_matrix;*/
 		log[log::debug] << "Shader program linked";
 		return true;
 	}
@@ -76,14 +76,14 @@ void GLProgram::stop()
 bool GLProgram::load_shader_file(GLuint type, const std::string& source)
 {
 	GLShader shader(log,type);
-	log[log::debug]<<"Loading shader" <<"\n";
+	log[log::debug]<<"Loading shader";
 	if (!shader.load_file(source)) {
-	log[log::error] << "Failed to load shader " << source << "\n";
+	log[log::error] << "Failed to load shader " << source;
 		return false;
 	}
-	log[log::verbose_debug]<<"Compiling " << source << "\n";
+	log[log::verbose_debug]<<"Compiling " << source;
 	if (!shader.compile()) {
-	    log[log::error] << "Failed to compile shader "<< source << "\n";
+	    log[log::error] << "Failed to compile shader "<< source;
 	    return false;
 	}
 	return attach_shader(shader);
@@ -92,16 +92,16 @@ bool GLProgram::load_shader_file(GLuint type, const std::string& source)
 bool GLProgram::load_shader(GLuint type, const std::string& source)
 {
 	GLShader shader(log,type);
-	log[log::debug]<<"Loading shader" << "\n";
-	log[log::verbose_debug] << source << "\n";
+	log[log::debug]<<"Loading shader";
+	log[log::verbose_debug] << source;
 	if (!shader.load(source)) {
-	log[log::error] << "Failed to load shader " << source << "\n";
+	log[log::error] << "Failed to load shader " << source;
 		return false;
 	}
-	log[log::debug]<<"Compiling shader" << "\n";
-	log[log::verbose_debug] << source << "\n";
+	log[log::debug]<<"Compiling shader";
+	log[log::verbose_debug] << source;
 	if (!shader.compile()) {
-	    log[log::error] << "Failed to compile shader "<< source << "\n";
+	    log[log::error] << "Failed to compile shader "<< source;
 	    return false;
 	}
 	return attach_shader(shader);
