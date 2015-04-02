@@ -107,7 +107,7 @@ void IOThread::do_connect_in(position_t index, pPipe pipe)
 	TRACE_METHOD
 	if (index < 0 || index >= do_get_no_in_ports()) throw std::out_of_range("Input pipe out of Range");
 	if (in_[index]) {
-		log[log::debug] << "Disconnecting already connected pipe from in port " << index << "\n";
+		log[log::debug] << "Disconnecting already connected pipe from in port " << index;
 	}
 	auto notify_ptr = dynamic_pointer_cast<PipeNotifiable>(get_this_ptr());
 	in_[index]=PipeConnector(pipe,notify_ptr, {});
@@ -124,7 +124,7 @@ void IOThread::do_connect_out(position_t index, pPipe pipe)
 {
 	TRACE_METHOD
 	if (index < 0 || index >= do_get_no_out_ports()) throw std::out_of_range("Output pipe out of Range");
-	if (out_[index]) log[log::debug] << "Disconnecting already connected pipe from out port " << index << "\n";
+	if (out_[index]) log[log::debug] << "Disconnecting already connected pipe from out port " << index;
 	auto notify_ptr = dynamic_pointer_cast<PipeNotifiable>(get_this_ptr());
 	// Output pipe should send source notifications!
 	out_[index]=PipeConnector(pipe,{}, notify_ptr);
@@ -170,7 +170,7 @@ pFrame	IOThread::pop_frame(position_t index)
 void IOThread::resize(position_t inp, position_t outp)
 {
 	TRACE_METHOD
-	log[log::debug] << "Resizing to " << inp << " input ports and " << outp << " output ports." << "\n";
+	log[log::debug] << "Resizing to " << inp << " input ports and " << outp << " output ports.";
 	if (inp >= 0) in_ports_	= inp;
 	if (outp>= 0) out_ports_= outp;
 //	PipeConnector pc(dynamic_pointer_cast<PipeNotifiable>(get_this_ptr()));

@@ -46,7 +46,6 @@ ThreadBase::ThreadBase(const log::Log &_log, pwThreadBase parent, const std::str
 	/*lastChild(0),*//*finishWhenChildEnds(false),*//*quitWhenChildsEnd(true),*///own_tid(0),
 	running_(false),node_id_(id)
 {
-//	log[debug] << "Parent " << (void *)(parent.lock().get()) << "\n";
 }
 
 ThreadBase::~ThreadBase() noexcept
@@ -63,9 +62,9 @@ void ThreadBase::operator()()
     pthread_setname_np(pthread_self(), pname.c_str());
 #endif
 	running_ = true;
-	log[verbose_debug] << "Starting thread" << "\n";
+	log[verbose_debug] << "Starting thread";
 	run();
-	log[verbose_debug] << "Thread finished execution" << "\n";
+	log[verbose_debug] << "Thread finished execution";
 	request_end(yuri_exit_finished);
 	running_ = false;
 	log[verbose_debug] << "Not running";
@@ -167,7 +166,7 @@ void ThreadBase::finish_all_threads(bool join)
 {
 	TRACE_METHOD
 	lock_t l(children_lock_);
-	log[debug] << "Finishing all childs" << "\n";
+	log[debug] << "Finishing all childs";
 	for (auto& child: children_) {
 		do_finish_thread(child.first, join);
 	}
@@ -182,10 +181,8 @@ void ThreadBase::join_all_threads() noexcept
 	log[debug] << "Joining all childs";
 	lock_t l(children_lock_);
 	yuri::size_t s = children_.size();
-	log[debug] << s << "\n";
 	while (children_.size()) {
-		log[verbose_debug] << "There's " << children_.size() << "threads left "
-			<< "\n";
+		log[verbose_debug] << "There's " << children_.size() << "threads left";
 		auto child=children_.begin();
 		do_join_thread(child->first,true);
 	}
@@ -242,11 +239,11 @@ void ThreadBase::do_finish_thread(pwThreadBase child, bool join) noexcept
 void ThreadBase::do_join_thread(pwThreadBase child, bool /*check*/) noexcept
 {
 	TRACE_METHOD
-	log[debug] << "Joining child (" <<children_.size() << ")" << "\n";
+	log[debug] << "Joining child (" <<children_.size() << ")";
 //	if (check) {
 	auto&& it = children_.find(child);
 	if (it == children_.end()) {
-		log[warning] << "Trying to join unregistered child. " << "\n";
+		log[warning] << "Trying to join unregistered child. ";
 		//delete thread;
 		return;
 	}
@@ -274,11 +271,11 @@ void ThreadBase::do_join_thread(pwThreadBase child, bool /*check*/) noexcept
 
 //#endif
 	}
-	log[debug] << "Deleting child" << "\n";
+	log[debug] << "Deleting child";
 	children_.erase(child);
 //	if (do_child_ended(children_.size())) request_end(yuri_exit_finished);
 	//delete thread;
-	log[debug] << "Child joined (" << children_.size() << " left)" << "\n";
+	log[debug] << "Child joined (" << children_.size() << " left)";
 }
 
 void ThreadBase::request_finish_thread(pwThreadBase child)
@@ -375,7 +372,7 @@ void ThreadBase::child_ends_hook(pwThreadBase, int code, size_t remaining_child_
 //	own_tid = syscall(SYS_gettid);
 //	return own_tid;
 //#else
-//	log[warning] << "TID not supported under this platform"<< "\n";
+//	log[warning] << "TID not supported under this platform";
 //	return 0;
 //#endif
 //}
@@ -386,7 +383,7 @@ pid_t retrieve_tid()
 #if defined(YURI_LINUX) && !defined(YURI_ANDROID)
 	return syscall(SYS_gettid);
 #else
-//	log[warning] << "TID not supported under this platform"<< "\n";
+//	log[warning] << "TID not supported under this platform";
 	return 0;
 #endif
 }
@@ -395,7 +392,7 @@ pid_t retrieve_tid()
 
 void ThreadBase::print_id(debug_flags_t f)
 {
-	log[f] << "Started as thread " << retrieve_tid() <<"\n";
+	log[f] << "Started as thread " << retrieve_tid();
 }
 
 bool ThreadBase::bind_to_cpu(size_t cpu)
@@ -407,16 +404,16 @@ bool ThreadBase::bind_to_cpu(size_t cpu)
 	pthread_t thread = pthread_self();
 	int ret = pthread_setaffinity_np(thread,sizeof(cpu_set_t),&cpus);
 	if (ret) {
-		log[error] << "Failed to set CPU affinity. Error " << ret << "\n";
+		log[error] << "Failed to set CPU affinity. Error " << ret;
 		return false;
 	}
 	std::string cpu_s = "";
 	for (int i = 0; i< CPU_SETSIZE; ++i) {
 		if (CPU_ISSET(i,&cpus)) cpu_s += lexical_cast<std::string>(i)+std::string(" ");
 	}
-	log[info] << "CPU affinity set for CPUS: " << cpu_s << "\n";
+	log[info] << "CPU affinity set for CPUS: " << cpu_s;
 #else
-	log[warning] << "Setting CPU affinity not supported under this platform" << "\n";
+	log[warning] << "Setting CPU affinity not supported under this platform";
 #endif
 	return true;
 }

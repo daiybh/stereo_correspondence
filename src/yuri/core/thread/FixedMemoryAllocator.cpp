@@ -62,7 +62,6 @@ bool FixedMemoryAllocator::do_allocate_blocks(yuri::size_t size, yuri::size_t co
 	uint8_t *tmp;
 	if (!memory_pool.count(size)) memory_pool[size]=std::vector<uint8_t*>();
 	for (yuri::size_t i=0;i<count;++i) {
-//		std::cerr << "Allocating " << size << "\n";
 		tmp = new uint8_t[size];
 		if (!tmp) return false;
 		memory_pool[size].push_back(tmp);
@@ -157,11 +156,11 @@ FixedMemoryAllocator::FixedMemoryAllocator(log::Log &_log, pwThreadBase parent, 
 		throw exception::InitializationFailed("Wrong arguments");
 	} else {
 		if (!allocate_blocks(block_size,count)) {
-			log[log::error] << "Failed to pre-allocate requested blocks" << "\n";
+			log[log::error] << "Failed to pre-allocate requested blocks";
 			throw exception::InitializationFailed("Failed to allocate memory");
 		}
 	}
-	log[log::info] << "Preallocated " << count << " block of " << block_size << " bytes." << "\n";
+	log[log::info] << "Preallocated " << count << " block of " << block_size << " bytes.";
 }
 /** \brief Destructor tries to remove all blocks with the size the user requested.
  *
