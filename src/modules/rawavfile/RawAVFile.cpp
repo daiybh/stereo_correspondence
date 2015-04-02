@@ -1,8 +1,11 @@
 /*!
- * RawAVFile.cpp
+ * @file 		RawAVFile.cpp
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
+ * @date		09.02.2012
+ *  * @date		02.04.2015
+ * @copyright	Institute of Intermedia, CTU in Prague, 2012 - 2015
+ * 				Distributed under BSD Licence, details in file doc/LICENSE
  *
- *  Created on: Feb 9, 2012
- *      Author: neneko
  */
 
 #include "RawAVFile.h"
