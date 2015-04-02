@@ -31,6 +31,20 @@ namespace utils {
  * 	%s - (*) sequence number
  * 	%i - (*) frame index
  *
+ * Complex specifiers
+ *
+ * 	%lY - Current year (localtime)
+ * 	%lM - Current month (localtime)
+ * 	%ld - Current day in month (localtime)
+ * 	%lD - Current day of year (localtime)
+ * 	%lH - Current hour 0-23 (localtime)
+ * 	%lh - Current hour 0-11 (localtime)
+ * 	%lm - Current minute (localtime)
+ * 	%ls - Current second (localtime)
+ * 	%lT - Curent date (YYYY-MM-DD)
+ * 	%lt - Current time (HH:MM:SS)
+ * 	%lx - Current date time (YYY-MM-DD HH:MM:SS)
+ *
  * 	These specifiers are constant and should evaluate to the same value during the whole run of application
  *
  * 	%n - module name (currently unsupported)
