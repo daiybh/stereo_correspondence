@@ -47,7 +47,7 @@ bool is_extended_generator_supported()
 
 namespace {
 
-const boost::regex specifier_pattern ("%(0?\\d+[simM]|[simMntfFTrHDSOv%])");
+const boost::regex specifier_pattern ("%(0?\\d+[simMo]|[simMontfFTrHDSOv%])");
 
 template<class S1, class S2>
 std::string to_s(const std::pair<S1, S2>& p)
@@ -96,6 +96,7 @@ std::pair<bool, bool> analyze_string_specifiers(const std::string& pattern)
 			case 'F':
 			case 'm':
 			case 'M':
+			case 'o':
 			case 'r':
 				seq_spec = true;
 				break;
@@ -147,6 +148,10 @@ std::string generate_string(const std::string& pattern, index_t sequence, const 
 			case 'M':
 				if (frame) ss << parse_and_replace(to_s(what[0]),
 						(frame->get_timestamp() - core::utils::get_global_start_time()).value);
+				break;
+			case 'o':
+				if (frame) ss << parse_and_replace(to_s(what[0]),
+						(frame->get_timestamp() - core::utils::get_global_start_time()).value/1000000);
 				break;
 			case 'H':
 				ss << core::utils::get_hostname();

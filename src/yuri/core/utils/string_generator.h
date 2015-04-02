@@ -27,6 +27,7 @@ namespace utils {
  * 	%r - resolution of video frame
  * 	%m - (*) milliseconds since start
  * 	%M - (*) microseconds since start
+ * 	%o - (*) seconds since start
  * 	%s - (*) sequence number
  * 	%i - (*) frame index
  *
