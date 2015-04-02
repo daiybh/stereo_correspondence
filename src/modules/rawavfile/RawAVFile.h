@@ -9,6 +9,7 @@
 #define AVDEMUXER_H_
 #include "yuri/libav/libav.h"
 #include "yuri/core/thread/IOFilter.h"
+#include "yuri/event/BasicEventConsumer.h"
 #include "yuri/core/utils/managed_resource.h"
 extern "C" {
 	#include <libavformat/avformat.h>
@@ -21,7 +22,7 @@ namespace rawavfile {
 
 
 
-class RawAVFile: public core::IOThread {
+class RawAVFile: public core::IOThread, public event::BasicEventConsumer {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
@@ -33,6 +34,7 @@ public:
 private:
 
 	virtual void 		run() override;
+	virtual bool 		do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 
 	bool				open_file(const std::string& filename);
 	bool				push_ready_frames();
@@ -48,6 +50,7 @@ private:
 
 
 	std::string 		filename_;
+	std::string 		next_filename_;
 
 	std::vector<stream_detail_t>
 						video_streams_;

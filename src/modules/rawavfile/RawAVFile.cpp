@@ -1,4 +1,4 @@
-/*
+/*!
  * RawAVFile.cpp
  *
  *  Created on: Feb 9, 2012
@@ -16,6 +16,7 @@
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/frame/compressed_frame_params.h"
 #include "yuri/core/utils/irange.h"
+#include "yuri/core/utils/assign_events.h"
 #include <cassert>
 #include "libavcodec/version.h"
 namespace yuri {
@@ -73,6 +74,7 @@ core::Parameters RawAVFile::configure()
 // TODO: number of output streams should be -1 and custom connect_out should be implemented.
 RawAVFile::RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core::Parameters &parameters)
 	:IOThread(_log,parent,0,1024,"RawAVSource"),
+	 BasicEventConsumer(log),
 	fmtctx_(nullptr,avformat_free_context),video_format_out_(0),
 	decode_(true),fps_(0.0),max_video_streams_(1),max_audio_streams_(1),
 	loop_(true)
@@ -107,7 +109,7 @@ bool RawAVFile::open_file(const std::string& filename)
 	audio_streams_.clear();
 	frames_.clear();
 
-
+	fmtctx_.reset();
 	avformat_open_input(&fmtctx_.get_ptr_ref(), filename.c_str(),0, 0);
 	if (!fmtctx_) {
 		log[log::error] << "Failed to allocate Format context";
@@ -198,6 +200,17 @@ bool RawAVFile::open_file(const std::string& filename)
 //				<<". Decoding to " << get_format_name_no_throw(video_formats_out_[i]);
 		}
 	}
+
+
+	for (auto i: irange(video_streams_.size())) {
+		if (fps_>0) video_streams_[i].delta = 1_s/fps_;
+		else if (fps_ == 0.0) {
+			video_streams_[i].delta = 1_s*video_streams_[i].stream->avg_frame_rate.den/video_streams_[i].stream->avg_frame_rate.num;
+			log[log::info] << "Delta " << i << " " << video_streams_[i].delta;
+		}
+	}
+
+
 	return true;
 }
 
@@ -233,13 +246,21 @@ bool RawAVFile::push_ready_frames()
 bool RawAVFile::process_file_end()
 {
 	if (loop_) {
-		log[log::debug] << "Seeking to the beginning";
-		av_seek_frame(fmtctx_, 0, 0,AVSEEK_FLAG_BACKWARD);
-		for (auto& s: video_streams_) {
-			avcodec_flush_buffers(s.ctx);
-		}
-		for (auto& s: audio_streams_) {
-			avcodec_flush_buffers(s.ctx);
+		if (next_filename_.empty()) {
+
+			log[log::debug] << "Seeking to the beginning";
+			av_seek_frame(fmtctx_, 0, 0,AVSEEK_FLAG_BACKWARD);
+			for (auto& s: video_streams_) {
+				avcodec_flush_buffers(s.ctx);
+			}
+			for (auto& s: audio_streams_) {
+				avcodec_flush_buffers(s.ctx);
+			}
+		} else {
+			log[log::info] << "Opening: " << next_filename_;
+			filename_ = std::move(next_filename_);
+			next_filename_.clear();
+			return open_file(filename_);
 		}
 		return true;
 	}
@@ -347,16 +368,9 @@ void RawAVFile::run()
 	AVFrame *av_frame = avcodec_alloc_frame();
 	next_times_.resize(video_streams_.size(),timestamp_t{});
 
-	for (auto i: irange(video_streams_.size())) {
-		if (fps_>0) video_streams_[i].delta = 1_s/fps_;
-		else if (fps_ == 0.0) {
-			video_streams_[i].delta = 1_s*video_streams_[i].stream->avg_frame_rate.den/video_streams_[i].stream->avg_frame_rate.num;
-			log[log::info] << "Delta " << i << " " << video_streams_[i].delta;
-		}
-	}
-
 
 	while (still_running()) {
+		process_events();
 		if (!push_ready_frames()) {
 			sleep(get_latency());
 			continue;
@@ -411,6 +425,17 @@ bool RawAVFile::set_param(const core::Parameter &parameter)
 			(loop_, 			"loop"))
 		return true;
 	return IOThread::set_param(parameter);
+}
+
+bool RawAVFile::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
+{
+	if (assign_events(event_name, event)
+		(next_filename_, "filename")) {
+		log[log::info] << "Next filename: " << next_filename_;
+		return true;
+	}
+	log[log::info] << "Unknown event: " << event_name;
+	return false;
 }
 
 } /* namespace video */
