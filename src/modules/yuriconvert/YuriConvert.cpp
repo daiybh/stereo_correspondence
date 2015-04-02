@@ -401,7 +401,7 @@ core::pFrame YuriConvertor::do_convert_frame(core::pFrame input_frame, format_t 
 	} else {
 
 		log[log::debug] << "Unknown format combination " << core::raw_format::get_format_name(frame->get_format()) << " -> "
-				<< core::raw_format::get_format_name(target_format) << "\n";
+				<< core::raw_format::get_format_name(target_format);
 		return outframe;
 	}
 
