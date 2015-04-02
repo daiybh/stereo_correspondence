@@ -77,7 +77,7 @@ RawAVFile::RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core
 	 BasicEventConsumer(log),
 	fmtctx_(nullptr,avformat_free_context),video_format_out_(0),
 	decode_(true),fps_(0.0),max_video_streams_(1),max_audio_streams_(1),
-	loop_(true)
+	loop_(true),reset_(false)
 {
 	IOTHREAD_INIT(parameters)
 	set_latency (10_us);
@@ -321,6 +321,10 @@ bool RawAVFile::decode_video_frame(index_t idx, const AVPacket& packet, AVFrame*
 
 bool RawAVFile::decode_audio_frame(index_t idx, const AVPacket& packet, AVFrame* av_frame, bool& keep_packet)
 {
+#ifdef BROKEN_FFMPEG
+// We are probably using BROKEN port of ffmpeg (libav) or VERY old ffmpeg.
+	return false;
+#else
 	keep_packet = false;
 	int whole_frame = 0;
 
@@ -343,9 +347,9 @@ bool RawAVFile::decode_audio_frame(index_t idx, const AVPacket& packet, AVFrame*
 		log[log::warning] << "Failed to convert avframe, probably unsupported pixelformat";
 		return false;
 	}
-	push_frame(idx + max_video_streams_, f);
+	push_frame(idx + max_video_streams_, std::move(f));
 	return true;
-
+#endif
 }
 
 namespace {
@@ -371,6 +375,11 @@ void RawAVFile::run()
 
 	while (still_running()) {
 		process_events();
+		if (reset_) {
+			log[log::info] << "RESET";
+			process_file_end();
+			reset_ = false;
+		}
 		if (!push_ready_frames()) {
 			sleep(get_latency());
 			continue;
@@ -392,11 +401,7 @@ void RawAVFile::run()
 					continue;
 			}
 		} else {
-#ifdef BROKEN_FFMPEG
-// We are probably using BROKEN port of ffmpeg (libav) or VERY old ffmpeg.
-			continue;
-#else
-			idx = find_in_stream_group(packet.stream_index, video_streams_);
+			idx = find_in_stream_group(packet.stream_index, audio_streams_);
 			if (idx<0) {
 				continue;
 			}
@@ -404,8 +409,6 @@ void RawAVFile::run()
 			if (!decode_audio_frame(idx, packet, av_frame, keep_packet)) {
 				continue;
 			}
-
-#endif
 		}
 	}
 	av_free(av_frame);
@@ -429,12 +432,18 @@ bool RawAVFile::set_param(const core::Parameter &parameter)
 
 bool RawAVFile::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
+	if (event->get_type() == event::event_type_t::bang_event) {
+		if (event_name == "reset") {
+			reset_ = true;
+			return true;
+		}
+	}
 	if (assign_events(event_name, event)
-		(next_filename_, "filename")) {
-		log[log::info] << "Next filename: " << next_filename_;
+		(next_filename_, "filename")
+		(reset_, "reset")) {
 		return true;
 	}
-	log[log::info] << "Unknown event: " << event_name;
+
 	return false;
 }
 

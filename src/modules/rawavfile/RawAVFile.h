@@ -69,6 +69,7 @@ private:
 	size_t 				max_audio_streams_;
 
 	bool 				loop_;
+	bool				reset_;
 };
 
 } /* namespace video */
