@@ -20,6 +20,7 @@ namespace yuri {
 namespace rawavfile {
 
 
+
 class RawAVFile: public core::IOThread {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
@@ -27,6 +28,8 @@ public:
 	RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~RawAVFile() noexcept;
 	virtual bool 		set_param(const core::Parameter &param);
+
+	struct 				stream_detail_t;
 private:
 
 	virtual void 		run() override;
@@ -37,21 +40,13 @@ private:
 
 	bool				process_undecoded_frame(index_t idx, const AVPacket& packet);
 	bool				decode_video_frame(index_t idx, const AVPacket& packet, AVFrame* av_frame, bool& keep_packet);
+	bool				decode_audio_frame(index_t idx, const AVPacket& packet, AVFrame* av_frame, bool& keep_packet);
 	core::utils::managed_resource<AVFormatContext>
 						fmtctx_;
 
 
-	struct stream_detail_t {
-		stream_detail_t(AVStream* stream=nullptr, AVCodec* codec = nullptr, format_t fmt = 0, format_t fmt_out = 0)
-		:stream(stream),ctx(stream?stream->codec:nullptr),codec(codec),format(fmt),format_out(fmt_out) {}
-		AVStream* stream;
-		AVCodecContext *ctx;
-		AVCodec* codec;
-		format_t format;
-		format_t format_out;
-		resolution_t resolution;
-		duration_t delta;
-	};
+
+
 	std::string 		filename_;
 
 	std::vector<stream_detail_t>
