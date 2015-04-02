@@ -70,6 +70,7 @@ private:
 
 	bool 				loop_;
 	bool				reset_;
+	bool				allow_empty_;
 };
 
 } /* namespace video */

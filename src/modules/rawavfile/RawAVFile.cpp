@@ -68,6 +68,7 @@ core::Parameters RawAVFile::configure()
 	p["max_video"]["Maximal number of video streams to process"]=1;
 	p["max_audio"]["Maximal number of audio streams to process"]=0;
 	p["loop"]["Loop the video"]=true;
+	p["allow_empty"]["Allow empty input file"]=false;
 	return p;
 }
 
@@ -77,7 +78,7 @@ RawAVFile::RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core
 	 BasicEventConsumer(log),
 	fmtctx_(nullptr,avformat_free_context),video_format_out_(0),
 	decode_(true),fps_(0.0),max_video_streams_(1),max_audio_streams_(1),
-	loop_(true),reset_(false)
+	loop_(true),reset_(false),allow_empty_(false)
 {
 	IOTHREAD_INIT(parameters)
 	set_latency (10_us);
@@ -91,10 +92,16 @@ RawAVFile::RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core
 	resize(0,max_video_streams_+max_audio_streams_);
 	libav::init_libav();
 
-	if (filename_.empty()) throw exception::InitializationFailed("No filename specified!");
 
-	if (!open_file(filename_)) throw exception::InitializationFailed("Failed to open file");
-
+	if (filename_.empty()) {
+		if (!allow_empty_) throw exception::InitializationFailed("No filename specified!");
+		log[log::info] << "No filename specified, starting without an active video";
+	} else {
+		if (!open_file(filename_)) {
+			if (!allow_empty_) throw exception::InitializationFailed("Failed to open file");
+			log[log::warning] << "Failed to open file, but allow_empty was specified, so waiting for new filename";
+		}
+	}
 
 }
 
@@ -147,7 +154,7 @@ bool RawAVFile::open_file(const std::string& filename)
 		return false;
 	}
 
-	frames_.resize(video_streams_.size() + audio_streams_.size());
+	frames_.resize(video_streams_.size());
 	if (!decode_) {
 		for (size_t i=0;i<video_streams_.size();++i) {
 			video_streams_[i].format = libav::yuri_format_from_avcodec(video_streams_[i].ctx->codec_id);
@@ -196,8 +203,6 @@ bool RawAVFile::open_file(const std::string& filename)
 			audio_streams_[i].format = libav::yuri_format_from_avcodec(audio_streams_[i].ctx->codec_id);
 			audio_streams_[i].format_out = libav::yuri_audio_from_av(audio_streams_[i].ctx->sample_fmt);
 			log[log::info] << "Found audio stream, format:" << audio_streams_[i].format << " to " << audio_streams_[i].format_out;
-			// << get_format_name_no_throw(audio_formats_[i]) <<
-//				<<". Decoding to " << get_format_name_no_throw(video_formats_out_[i]);
 		}
 	}
 
@@ -210,7 +215,7 @@ bool RawAVFile::open_file(const std::string& filename)
 		}
 	}
 
-
+	next_times_.resize(video_streams_.size(),timestamp_t{});
 	return true;
 }
 
@@ -246,10 +251,9 @@ bool RawAVFile::push_ready_frames()
 bool RawAVFile::process_file_end()
 {
 	if (loop_) {
-		if (next_filename_.empty()) {
-
+		if (next_filename_.empty() && fmtctx_) {
 			log[log::debug] << "Seeking to the beginning";
-			av_seek_frame(fmtctx_, 0, 0,AVSEEK_FLAG_BACKWARD);
+			av_seek_frame(fmtctx_, 0, 0, AVSEEK_FLAG_BACKWARD);
 			for (auto& s: video_streams_) {
 				avcodec_flush_buffers(s.ctx);
 			}
@@ -375,22 +379,34 @@ void RawAVFile::run()
 
 	while (still_running()) {
 		process_events();
-		if (reset_) {
-			log[log::info] << "RESET";
-			process_file_end();
-			reset_ = false;
+		if (!fmtctx_) {
+			if (next_filename_.empty()) {
+				wait_for_events(10_ms);
+				continue;
+			}
 		}
+
+		if (reset_ || !fmtctx_) {
+			log[log::info] << "RESET";
+			if (!process_file_end()) {
+				if (!loop_) break;
+			}
+			reset_ = false;
+			if (!fmtctx_) {
+				next_times_.clear();
+				continue;
+			}
+		}
+
 		if (!push_ready_frames()) {
 			sleep(get_latency());
 			continue;
 		}
 
 		if (!keep_packet && av_read_frame(fmtctx_,&packet)<0) {
-			if (!process_file_end()) {
-				break;
-			}
+			reset_ = true;
+			continue;
 		}
-
 
 		auto idx = find_in_stream_group(packet.stream_index, video_streams_);
 		if (idx>=0) {
@@ -425,7 +441,8 @@ bool RawAVFile::set_param(const core::Parameter &parameter)
 			(fps_, 				"fps")
 			(max_video_streams_,"max_video")
 			(max_audio_streams_,"max_audio")
-			(loop_, 			"loop"))
+			(loop_, 			"loop")
+			(allow_empty_,		"allow_empty"))
 		return true;
 	return IOThread::set_param(parameter);
 }
