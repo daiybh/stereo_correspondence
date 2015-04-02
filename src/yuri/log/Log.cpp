@@ -122,7 +122,7 @@ Log& Log::operator=(Log&& rhs) noexcept
  */
 Log::~Log() noexcept
 {
-	(*this)[verbose_debug] << "Destroying logger " << uid;
+	if (out) (*this)[verbose_debug] << "Destroying logger " << uid;
 }
 
 /**
