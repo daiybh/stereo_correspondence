@@ -146,6 +146,7 @@ FuncInitHelper fhelper_ {
 		 {"pass", std::vector<event_type_t>({event_type_t::boolean_event}),event_type_t::boolean_event, functions::pass},
 		 {"pass", std::vector<event_type_t>({event_type_t::integer_event}),event_type_t::integer_event, functions::pass},
 		 {"pass", std::vector<event_type_t>({event_type_t::double_event}),event_type_t::double_event, functions::pass},
+		 {"pass", std::vector<event_type_t>({event_type_t::string_event}),event_type_t::string_event, functions::pass},
 		 {"pass", std::vector<event_type_t>({event_type_t::time_event}),event_type_t::time_event, functions::pass},
 		 {"pass", std::vector<event_type_t>({event_type_t::vector_event}),event_type_t::vector_event, functions::pass},
 		 {"pass", std::vector<event_type_t>({event_type_t::dictionary_event}),event_type_t::dictionary_event, functions::pass},
