@@ -11,9 +11,7 @@
 #include "Log.h"
 #include <map>
 #include "yuri/core/utils.h"
-#if !defined YURI_ANDROID && !defined(YURI_WIN)
-#include <boost/date_time/posix_time/posix_time.hpp>
-#endif
+#include "yuri/core/utils/string_generator.h"
 namespace yuri
 {
 namespace log
@@ -61,12 +59,17 @@ long adjust_level_flag(long f, long delta)
 }
 
 template<class Stream>
+void print_date(Stream& os)
+{
+	os << core::utils::generate_string("%lT ");
+}
+
+template<class Stream>
 void print_time(Stream& os)
 {
-#if !defined(YURI_ANDROID) && !defined(YURI_WIN)
-	os << " " + boost::posix_time::to_simple_string(boost::posix_time::microsec_clock::local_time().time_of_day());
-#endif
+	os << core::utils::generate_string("%lt ");
 }
+
 
 template<class Stream>
 void print_level(Stream& os, debug_flags flags)
@@ -165,10 +168,14 @@ LogProxy<char> Log::operator[](debug_flags f) const
 		if (output_flags_&show_level) {
 			print_level(lp, f);
 		}
-		lp <<  uid << ": "  << logger_name_;
+		lp <<  uid << ": ";
+		if (output_flags_&show_date) {
+			print_date(lp);
+		}
 		if (output_flags_&show_time) {
 			print_time(lp);
 		}
+		lp << logger_name_;
 	}
 	return std::move(lp);
 }
