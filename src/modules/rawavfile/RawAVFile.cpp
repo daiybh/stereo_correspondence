@@ -213,7 +213,13 @@ bool RawAVFile::open_file(const std::string& filename)
 	for (auto i: irange(video_streams_.size())) {
 		if (fps_>0) video_streams_[i].delta = 1_s/fps_;
 		else if (fps_ == 0.0) {
-			video_streams_[i].delta = 1_s*video_streams_[i].stream->avg_frame_rate.den/video_streams_[i].stream->avg_frame_rate.num;
+			const auto& den = video_streams_[i].stream->avg_frame_rate.den;
+			const auto& num = video_streams_[i].stream->avg_frame_rate.num;
+			if (num) video_streams_[i].delta = 1_s*den/num;
+			else {
+				log[log::warning] << "No framerate specified for stream " << i << ", using default 25fps";
+				video_streams_[i].delta = 1_s/25;
+			}
 			log[log::info] << "Delta " << i << " " << video_streams_[i].delta;
 		}
 	}
