@@ -80,7 +80,7 @@ int stereo_frames_needed(stereo_mode_t mode) {
 }
 
 GlxWindow::GlxWindow(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,2,1,std::string("glx_window")),
+core::IOThread(log_,parent,2,2,std::string("glx_window")),
 BasicEventConsumer(log),
 BasicEventProducer(log),
 gl_(log),
@@ -91,7 +91,7 @@ read_back_{false},stereo_mode_{stereo_mode_t::none},decorations_{false},
 swap_eyes_{false},delta_x_{0.0},delta_y_{0.0},needs_move_{false},
 show_cursor_{true}
 {
-	set_latency(10_ms);
+	set_latency(100_ms);
 	IOTHREAD_INIT(parameters)
 	if (stereo_mode_ == stereo_mode_t::quadbuffer) {
 		add_attribute(GLX_STEREO, attributes_);
@@ -146,7 +146,12 @@ void GlxWindow::run()
 				push_frame(0, left);
 			}
 			swap_buffers();
+		} else if (needs_redraw_) {
+			if (redraw_display()) {
+				swap_buffers();
+			}
 		}
+		needs_redraw_ = false;
 	}
 }
 
@@ -243,10 +248,12 @@ void GlxWindow::resize_window(resolution_t res)
 bool GlxWindow::process_x11_events()
 {
 	XEvent event_;
-	if (XCheckWindowEvent(display_.get(),
+	bool processed_any = false;
+	while (XCheckWindowEvent(display_.get(),
 				win_,
 				StructureNotifyMask|KeyPressMask|KeyReleaseMask|
-				ButtonPressMask|ButtonReleaseMask|PointerMotionMask,
+				ButtonPressMask|ButtonReleaseMask|PointerMotionMask|
+				ExposureMask,
 				&event_))
 		{
 			switch (event_.type) {
@@ -260,6 +267,7 @@ bool GlxWindow::process_x11_events()
 										static_cast<dimension_t>(event_.xconfigure.height),
 										event_.xconfigure.x,
 										event_.xconfigure.y});
+				needs_redraw_ = true;
 				break;
 			case KeyPress:
 //				emit_event("key"+std::to_string(event_.xkey.keycode));
@@ -293,10 +301,14 @@ bool GlxWindow::process_x11_events()
 				emit_event("mouse_x",event_.xmotion.x, 0, geometry_.width);
 				emit_event("mouse_y",event_.xmotion.y, 0, geometry_.height);
 				} break;
+			case Expose:
+				needs_redraw_ = true;
+				break;
 			}
-			return true;
+			processed_any = true;
 		}
-		return false;
+		return processed_any;
+
 }
 namespace {
 typedef struct
@@ -377,42 +389,58 @@ void draw_part(gl::GL& gl_, int i, core::pFrame frame, bool fx, bool fy, float x
 bool GlxWindow::display_frames()
 {
 	if (!fetch_frames()) return false;
+	display_frames_impl(frames_);
+
+	using std::swap;
+	swap(old_frames_,frames_);
+	frames_.clear();
+	return true;
+}
+
+bool GlxWindow::redraw_display()
+{
+	if (static_cast<int>(old_frames_.size()) < stereo_frames_needed(stereo_mode_))
+	{
+		return false;
+	}
+	return display_frames_impl(old_frames_);
+}
+
+bool GlxWindow::display_frames_impl(const std::vector<core::pFrame>& frames)
+{
 	glDrawBuffer(GL_BACK_LEFT);
 	gl_.clear();
 	gl_.set_texture_delta(0,  delta_x_,  delta_y_);
 	gl_.set_texture_delta(1, -delta_x_, -delta_y_);
 	switch(stereo_mode_) {
 		case stereo_mode_t::none:
-			draw_part(gl_, 0, frames_[0], flip_x_, flip_y_);
+			draw_part(gl_, 0, frames[0], flip_x_, flip_y_);
 			break;
 		case stereo_mode_t::quadbuffer:
 			{
 				draw_part(gl_, 0, frames_[0], flip_x_, flip_y_);
 				glDrawBuffer(GL_BACK_RIGHT);
 				gl_.clear();
-				draw_part(gl_, 1, frames_[1], flip_x_, flip_y_);
+				draw_part(gl_, 1, frames[1], flip_x_, flip_y_);
 			}; break;
 		case stereo_mode_t::anaglyph:
 				glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
-				draw_part(gl_, 0, frames_[0], flip_x_, flip_y_);
+				draw_part(gl_, 0, frames[0], flip_x_, flip_y_);
 				glColorMask(GL_FALSE, GL_TRUE, GL_TRUE, GL_FALSE);
-				draw_part(gl_, 1, frames_[1], flip_x_, flip_y_);
+				draw_part(gl_, 1, frames[1], flip_x_, flip_y_);
 				break;
 
 		case stereo_mode_t::side_by_side:
 			{
-				draw_part(gl_, 0, frames_[0], flip_x_, flip_y_, -1.0, -1.0, 0.0, 1.0);
-				draw_part(gl_, 1, frames_[1], flip_x_, flip_y_,  0.0, -1.0, 1.0, 1.0);
+				draw_part(gl_, 0, frames[0], flip_x_, flip_y_, -1.0, -1.0, 0.0, 1.0);
+				draw_part(gl_, 1, frames[1], flip_x_, flip_y_,  0.0, -1.0, 1.0, 1.0);
 			}; break;
 		case stereo_mode_t::top_bottom:
 			{
-				draw_part(gl_, 0, frames_[0], flip_x_, flip_y_, -1.0, -1.0, 1.0, 0.0);
-				draw_part(gl_, 1, frames_[1], flip_x_, flip_y_,  -1.0, 0.0, 1.0, 1.0);
+				draw_part(gl_, 0, frames[0], flip_x_, flip_y_, -1.0, -1.0, 1.0, 0.0);
+				draw_part(gl_, 1, frames[1], flip_x_, flip_y_,  -1.0, 0.0, 1.0, 1.0);
 			}; break;
 		default:break;
-	}
-	for (auto& f: frames_) {
-		f.reset();
 	}
 	return true;
 }

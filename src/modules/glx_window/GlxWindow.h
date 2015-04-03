@@ -51,7 +51,8 @@ private:
 	bool swap_buffers();
 	bool fetch_frames();
 	bool display_frames();
-
+	bool display_frames_impl(const std::vector<core::pFrame>& frames);
+	bool redraw_display();
 private:
 	gl::GL					gl_;
 	using display_deleter = std::function<void(Display*)>;
@@ -74,6 +75,8 @@ private:
 	bool 					decorations_;
 	std::vector<core::pFrame>
 							frames_;
+	std::vector<core::pFrame>
+							old_frames_;
 	core::pConvert			converter_;
 	std::vector<format_t>	supported_formats_;
 	bool 					swap_eyes_;
@@ -81,6 +84,7 @@ private:
 	float					delta_y_;
 	bool 					needs_move_;
 	bool					show_cursor_;
+	bool					needs_redraw_;
 };
 
 } /* namespace glx_window */
