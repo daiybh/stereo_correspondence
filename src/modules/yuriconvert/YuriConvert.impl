@@ -334,6 +334,56 @@ void convert_line<core::raw_format::rgb24, core::raw_format::bgr24>
 	bgr_rgb(src, dest, width);
 }
 
+// LE 16bit rgb -> 8bit rgb
+void rgb48_rgb (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*(src+1);
+		*dest++=*(src+3);
+		*dest++=*(src+5);
+		src+=6;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::rgb48, core::raw_format::rgb24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	rgb48_rgb(src, dest, width);
+}
+
+template<>
+void convert_line<core::raw_format::bgr48, core::raw_format::bgr24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	rgb48_rgb(src, dest, width);
+}
+
+// LE 16bit rgb -> 8bit bgr
+void rgb48_bgr (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++=*(src+5);
+		*dest++=*(src+3);
+		*dest++=*(src+1);
+		src+=6;
+	}
+}
+
+template<>
+void convert_line<core::raw_format::rgb48, core::raw_format::bgr24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	rgb48_bgr(src, dest, width);
+}
+
+template<>
+void convert_line<core::raw_format::bgr48, core::raw_format::rgb24>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	rgb48_bgr(src, dest, width);
+}
+
 /* ***************************************************************************
  * 					YUV conversions
  *************************************************************************** */
