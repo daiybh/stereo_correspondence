@@ -92,9 +92,9 @@ int main(int argc, char**argv)
 	std::ofstream logf;
 	std::vector<std::string> arguments;
 	bool show_info = false;
+#ifdef HAVE_BOOST_PROGRAM_OPTIONS
 	bool show_time = true;
 	bool show_date = false;
-#ifdef HAVE_BOOST_PROGRAM_OPTIONS
 	po::options_description options("General options");
 	options.add_options()
 		("help,h","print help")
@@ -201,7 +201,7 @@ int main(int argc, char**argv)
 				if (i<argc-1) {
 					list_what=argv[++i];
 				}
-				builder.reset(new core::XmlBuilder(l, core::pwThreadBase(), filename, arguments, true ));
+				builder.reset(new core::XmlBuilder(logger, core::pwThreadBase(), filename, arguments, true ));
 				log::Log l_(std::cout);
 				l_.set_flags(log::info);
 				l_.set_quiet(true);

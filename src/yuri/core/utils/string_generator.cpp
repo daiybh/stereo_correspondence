@@ -30,12 +30,12 @@ bool is_extended_generator_supported()
 	return false;
 }
 
-std::pair<bool, bool> analyze_string_specifiers(const std::string& pattern)
+std::pair<bool, bool> analyze_string_specifiers(const std::string& /* pattern */)
 {
 	return std::make_pair(false, false);
 }
 
-std::string generate_string(const std::string& pattern, const yuri::core::pFrame& frame = {})
+std::string generate_string(const std::string& pattern, index_t /*  sequence */, const yuri::core::pFrame& /* frame */)
 {
 	return pattern;
 }
