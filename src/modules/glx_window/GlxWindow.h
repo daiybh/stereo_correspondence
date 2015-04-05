@@ -46,6 +46,7 @@ private:
 	void move_window(coordinates_t coord);
 	void resize_window(resolution_t res);
 	bool show_decorations(bool decorations);
+	bool set_on_top(bool on_top);
 	bool process_x11_events();
 	bool resize_event(geometry_t geometry);
 	bool swap_buffers();
@@ -73,6 +74,7 @@ private:
 	bool					read_back_;
 	stereo_mode_t			stereo_mode_;
 	bool 					decorations_;
+	bool					on_top_;
 	std::vector<core::pFrame>
 							frames_;
 	std::vector<core::pFrame>
@@ -90,4 +92,5 @@ private:
 } /* namespace glx_window */
 } /* namespace yuri */
 #endif /* GLXWINDOW_H_ */
+
 

@@ -13,6 +13,7 @@
 #include <X11/Xatom.h>
 #include "yuri/core/thread/Convert.h"
 #include "yuri/core/utils/assign_events.h"
+#include <cstring>
 namespace yuri {
 namespace glx_window {
 
@@ -38,6 +39,7 @@ core::Parameters GlxWindow::configure()
 	p["delta_x"]["Horizontal correction (-1.0, 1.0)"]=0.0f;
 	p["delta_y"]["Vertical correction (-1.0, 1.0)"]=0.0f;
 	p["show_cursor"]["Enable or disable cursor in the window"]=true;
+	p["on_top"]["Stay on top"]=false;
 	return p;
 }
 
@@ -88,7 +90,7 @@ display_str_{":0"},display_(nullptr,[](Display*d) { XCloseDisplay(d);}),
 screen_number_{0},attributes_{GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None},
 geometry_{800,600,0,0},visual_{nullptr},flip_x_{false},flip_y_{false},
 read_back_{false},stereo_mode_{stereo_mode_t::none},decorations_{false},
-swap_eyes_{false},delta_x_{0.0},delta_y_{0.0},needs_move_{false},
+on_top_{false},swap_eyes_{false},delta_x_{0.0},delta_y_{0.0},needs_move_{false},
 show_cursor_{true}
 {
 	set_latency(100_ms);
@@ -116,8 +118,10 @@ void GlxWindow::run()
 		request_end(core::yuri_exit_interrupted);
 	} else {
 		show_decorations(decorations_);
+
 		show_window();
 		move_window({geometry_.x, geometry_.y});
+		set_on_top(on_top_);
 		// Let's keep local converter until MultiIOThread supports this behaviour.
 		converter_.reset(new core::Convert(log, get_this_ptr(), core::Convert::configure()));
 		add_child(converter_);
@@ -336,6 +340,42 @@ bool GlxWindow::show_decorations(bool decorations)
 	return true;
 }
 
+bool GlxWindow::set_on_top(bool on_top)
+{
+//	wm_hints hints;
+
+	Atom nwsa = None;
+	nwsa=XInternAtom(display_.get(),"_NET_WM_STATE_ABOVE",1);
+	if (nwsa == None) {
+		log[log::warning] << "Display doesn't support _NET_WM_STATE_ABOVE property";
+		return false;
+	}
+	Atom nws = None;
+	nws=XInternAtom(display_.get(),"_NET_WM_STATE",1);
+	if (nws == None) {
+		log[log::warning] << "Display doesn't support _NET_WM_STATE property";
+		return false;
+	}
+	XClientMessageEvent xclient;
+	std::memset( &xclient, 0, sizeof (xclient) );
+
+	xclient.type = ClientMessage;
+	xclient.window = win_;
+	xclient.message_type = nws;
+	xclient.format = 32;
+	xclient.data.l[0] = on_top?1:0;
+	xclient.data.l[1] = nwsa;
+	xclient.data.l[2] = 0;
+	xclient.data.l[3] = 0;
+	xclient.data.l[4] = 0;
+	XSendEvent( display_.get(),
+	  root_,  False,
+	  SubstructureRedirectMask | SubstructureNotifyMask,
+	  (XEvent *)&xclient );
+	log[log::info] << "setting on top: " << on_top;
+	return true;
+}
+
 bool GlxWindow::resize_event(geometry_t geometry)
 {
 	glViewport(0, 0, geometry.width, geometry.height);
@@ -452,6 +492,7 @@ bool GlxWindow::set_param(const core::Parameter& param)
 			(flip_y_, "flip_y")
 			(read_back_, "read_back")
 			(decorations_, "decorations")
+			(on_top_, "on_top")
 			(swap_eyes_, "swap_eyes")
 			(delta_x_, "delta_x")
 			(delta_y_, "delta_y")
