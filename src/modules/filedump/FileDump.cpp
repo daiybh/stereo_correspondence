@@ -111,9 +111,11 @@ std::string FileDump::generate_filename(const core::pFrame& frame)
 
 core::pFrame FileDump::do_simple_single_step(core::pFrame frame)
 {
+	if (dumped_frames >= dump_limit && dump_limit) {
+		return {};
+	}
 	if (!single_file_) {
 		const auto seq_filename = generate_filename(frame);
-		++seq_number;
 		log[log::debug] << "New filename " << seq_filename;
 		dump_file.open(seq_filename.c_str(), std::ios::binary | std::ios::out);
 		emit_event("filename",seq_filename);
@@ -136,6 +138,7 @@ core::pFrame FileDump::do_simple_single_step(core::pFrame frame)
 		if (written) {
 			emit_event("sequence",seq_number);
 		}
+		++seq_number;
 	}
 	if (written) {
 		emit_event("frame");
