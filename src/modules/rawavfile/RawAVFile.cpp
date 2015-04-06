@@ -303,8 +303,9 @@ bool RawAVFile::decode_video_frame(index_t idx, const AVPacket& packet, AVFrame*
 	int whole_frame = 0;
 
 	keep_packet = false;
-	int decoded_size = avcodec_decode_video2(video_streams_[idx].ctx, av_frame, &whole_frame,&packet);
+	int decoded_size = avcodec_decode_video2(video_streams_[idx].ctx, av_frame, &whole_frame, &packet);
 	if (!whole_frame) {
+		log[log::verbose_debug] << "Didn't get whole frame";
 		return false;
 	}
 	if (decoded_size < 0) {
@@ -312,7 +313,7 @@ bool RawAVFile::decode_video_frame(index_t idx, const AVPacket& packet, AVFrame*
 		return false;
 	}
 
-	if (decoded_size != packet.size) {
+	if (packet.size && decoded_size != packet.size) {
 		keep_packet = true;
 		log[log::debug] << "Used only " << decoded_size << " bytes out of " << packet.size;
 	}
@@ -381,10 +382,15 @@ void RawAVFile::run()
 {
 	AVPacket packet;
 	av_init_packet(&packet);
+	AVPacket empty_packet;
+	av_init_packet(&empty_packet);
+	empty_packet.data = nullptr;
+	empty_packet.size = 0;
 	bool keep_packet = false;
+	bool finishing = false;
 	AVFrame *av_frame = avcodec_alloc_frame();
-	next_times_.resize(video_streams_.size(),timestamp_t{});
 
+	next_times_.resize(video_streams_.size(),timestamp_t{});
 
 	while (still_running()) {
 		process_events();
@@ -413,7 +419,22 @@ void RawAVFile::run()
 		}
 
 		if (!keep_packet && av_read_frame(fmtctx_,&packet)<0) {
-			reset_ = true;
+			finishing = true;
+		}
+
+
+		if (finishing) {
+			bool done = true;
+			for (auto i: irange(video_streams_.size())) {
+				if (!frames_[i]) {
+					decode_video_frame(i, empty_packet, av_frame, keep_packet);
+				}
+				if (frames_[i]) done = false;
+			}
+			if (done) {
+				finishing = false;
+				reset_ = true;
+			}
 			continue;
 		}
 
@@ -438,6 +459,7 @@ void RawAVFile::run()
 	}
 	av_free(av_frame);
 	av_free_packet(&packet);
+	av_free_packet(&empty_packet);
 }
 
 bool RawAVFile::set_param(const core::Parameter &parameter)
