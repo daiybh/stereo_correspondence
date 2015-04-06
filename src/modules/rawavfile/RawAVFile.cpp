@@ -72,6 +72,7 @@ core::Parameters RawAVFile::configure()
 	p["max_audio"]["Maximal number of audio streams to process"]=0;
 	p["loop"]["Loop the video"]=true;
 	p["allow_empty"]["Allow empty input file"]=false;
+	p["enable_experimental"]["Enable experimental codecs"]=true;
 	return p;
 }
 
@@ -81,7 +82,7 @@ RawAVFile::RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core
 	 BasicEventConsumer(log),
 	fmtctx_(nullptr,avformat_free_context),video_format_out_(0),
 	decode_(true),fps_(0.0),max_video_streams_(1),max_audio_streams_(1),
-	loop_(true),reset_(false),allow_empty_(false)
+	loop_(true),reset_(false),allow_empty_(false),enable_experimental_(true)
 {
 	IOTHREAD_INIT(parameters)
 	set_latency (10_us);
@@ -138,6 +139,7 @@ bool RawAVFile::open_file(const std::string& filename)
 			log[log::debug] << "Found video stream with id " << i << ".";
 			if (video_streams_.size() < max_video_streams_ && fmtctx_->streams[i]->codec) {
 				video_streams_.push_back({fmtctx_->streams[i], nullptr, 0, video_format_out_});
+				if (enable_experimental_) fmtctx_->streams[i]->codec->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
 			} else {
 				fmtctx_->streams[i]->discard = AVDISCARD_ALL;
 			}
@@ -473,7 +475,8 @@ bool RawAVFile::set_param(const core::Parameter &parameter)
 			(max_video_streams_,"max_video")
 			(max_audio_streams_,"max_audio")
 			(loop_, 			"loop")
-			(allow_empty_,		"allow_empty"))
+			(allow_empty_,		"allow_empty")
+			(enable_experimental_,"enable_experimental"))
 		return true;
 	return IOThread::set_param(parameter);
 }
