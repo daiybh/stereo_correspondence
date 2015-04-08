@@ -70,6 +70,11 @@ struct combine_base {
 			*dest_pix++ = 255;
 		}
 	}
+	static void advance(plane_t::const_iterator& src_pix, plane_t::iterator& dest_pix) {
+		src_pix += s;
+		dest_pix += d;
+
+	}
 };
 
 template <format_t f1, format_t f2>
@@ -374,6 +379,14 @@ inline void fill_line(ssize_t& pixel, const ssize_t& max_pixel, plane_t::const_i
 	}
 }
 template<class kernel>
+inline void advance_line(ssize_t& pixel, const ssize_t& max_pixel, plane_t::const_iterator& src_pix, plane_t::iterator& dest_pix)
+{
+	for (; pixel < max_pixel; ++pixel) {
+		kernel::advance(src_pix, dest_pix);
+	}
+}
+
+template<class kernel>
 inline void fill_multiple_lines(ssize_t& line, const ssize_t& max_line,
 		const plane_t::const_iterator& src, const plane_t::iterator& dest,
 		const size_t linesize_0, const size_t linesize_out, const size_t width)
@@ -385,6 +398,7 @@ inline void fill_multiple_lines(ssize_t& line, const ssize_t& max_line,
 		fill_line<kernel>(pixel, width, src_pix, dest_pix);
 	}
 }
+
 template<bool rewrite>
 core::pRawVideoFrame get_out_frame(core::pRawVideoFrame& frame, format_t format, resolution_t res0);
 
@@ -394,9 +408,10 @@ core::pRawVideoFrame get_out_frame<false>(core::pRawVideoFrame&, format_t format
 	return core::RawVideoFrame::create_empty(format, res);
 }
 template<>
-core::pRawVideoFrame get_out_frame<true>(core::pRawVideoFrame& frame, format_t, resolution_t)
+core::pRawVideoFrame get_out_frame<true>(core::pRawVideoFrame& frame, format_t format, resolution_t res)
 {
-	return frame;
+	if (frame->get_format() == format) return frame;
+	return get_out_frame<false>(frame, format, res);
 }
 }
 template<bool rewrite, class kernel>
@@ -419,22 +434,35 @@ core::pRawVideoFrame Overlay::combine(core::pRawVideoFrame frame_0, const core::
 	const plane_t::const_iterator overlay 	= PLANE_DATA(frame_1,0).begin();
 	const plane_t::iterator 	  dest 		= PLANE_DATA(outframe,0).begin();
 	ssize_t line = 0;
-	if (!rewrite && y_ > 0) {
-		fill_multiple_lines<kernel>(line,std::min(height,y_), src, dest, linesize_0, linesize_out, width);
+	if (y_ > 0) {
+		if (!rewrite) {
+			fill_multiple_lines<kernel>(line,std::min(height,y_), src, dest, linesize_0, linesize_out, width);
+		} else {
+			line +=std::min(height,y_);
+		}
 	}
 	for (; line < std::min(height,h+y_); ++line) {
 		plane_t::const_iterator src_pix 	= src+line*linesize_0;
 		plane_t::const_iterator ovr_pix 	= overlay+(line-y_)*linesize_1;
 		plane_t::iterator 		dest_pix	= dest+line*linesize_out;
 		ssize_t pixel = 0;
-		if (!rewrite && x > 0) {
-			fill_line<kernel>(pixel, std::min(width,x), src_pix, dest_pix);
+		if (x > 0) {
+			if (!rewrite) {
+				fill_line<kernel>(pixel, std::min(width,x), src_pix, dest_pix);
+			} else {
+				advance_line<kernel>(pixel, std::min(width,x), src_pix, dest_pix);
+			}
 		}
 		for (; pixel < std::min(width,w+x); pixel+=step) {
 			kernel::compute(src_pix, ovr_pix, dest_pix);
 		}
-		if (!rewrite && pixel < width-1) {
-			fill_line<kernel>(pixel, width, src_pix, dest_pix);
+		if (pixel < width-1) {
+			 if (!rewrite) {
+				 fill_line<kernel>(pixel, width, src_pix, dest_pix);
+			 } else {
+				 advance_line<kernel>(pixel, width, src_pix, dest_pix);
+			 }
+
 		}
 	}
 	if (!rewrite && (line < height - 1)) {
