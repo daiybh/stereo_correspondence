@@ -80,7 +80,7 @@ core::Parameters RawAVFile::configure()
 RawAVFile::RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core::Parameters &parameters)
 	:IOThread(_log,parent,0,1024,"RawAVSource"),
 	 BasicEventConsumer(log),
-	fmtctx_(nullptr,avformat_free_context),video_format_out_(0),
+	fmtctx_(nullptr,[](AVFormatContext* ctx){avformat_close_input(&ctx);}),video_format_out_(0),
 	decode_(true),fps_(0.0),max_video_streams_(1),max_audio_streams_(1),
 	loop_(true),reset_(false),allow_empty_(false),enable_experimental_(true)
 {
@@ -120,7 +120,11 @@ bool RawAVFile::open_file(const std::string& filename)
 	audio_streams_.clear();
 	frames_.clear();
 
+	if (fmtctx_) {
+		avformat_close_input(&fmtctx_.get_ptr_ref());
+	}
 	fmtctx_.reset();
+
 	avformat_open_input(&fmtctx_.get_ptr_ref(), filename.c_str(),0, 0);
 	if (!fmtctx_) {
 		log[log::error] << "Failed to allocate Format context";
@@ -420,8 +424,11 @@ void RawAVFile::run()
 			continue;
 		}
 
-		if (!keep_packet && av_read_frame(fmtctx_,&packet)<0) {
-			finishing = true;
+		if (!keep_packet) {
+			av_free_packet(&packet);
+			if (av_read_frame(fmtctx_,&packet)<0) {
+				finishing = true;
+			}
 		}
 
 
@@ -460,7 +467,7 @@ void RawAVFile::run()
 		}
 	}
 	av_free(av_frame);
-	av_free_packet(&packet);
+
 	av_free_packet(&empty_packet);
 }
 
