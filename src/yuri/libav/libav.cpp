@@ -102,10 +102,16 @@ std::atomic<bool> libav_initialized {false};
 
 }
 
+lock_t get_libav_lock()
+{
+	return lock_t (libav_initialization_mutex);
+}
+
 void init_libav()
 {
 	if (libav_initialized) return;
-	lock_t _(libav_initialization_mutex);
+//	lock_t _(libav_initialization_mutex);
+	auto _ = get_libav_lock();
 	av_register_all();
 	libav_initialized = true;
 }
