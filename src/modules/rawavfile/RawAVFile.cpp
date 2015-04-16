@@ -120,24 +120,27 @@ bool RawAVFile::open_file(const std::string& filename)
 	audio_streams_.clear();
 	frames_.clear();
 
-	if (fmtctx_) {
-		avformat_close_input(&fmtctx_.get_ptr_ref());
+	{
+		// ffmpeg needs locking of open/close functions...
+		auto lock = libav::get_libav_lock();
+		if (fmtctx_) {
+			avformat_close_input(&fmtctx_.get_ptr_ref());
+		}
+		fmtctx_.reset();
+
+		avformat_open_input(&fmtctx_.get_ptr_ref(), filename.c_str(),0, 0);
+		if (!fmtctx_) {
+			log[log::error] << "Failed to allocate Format context";
+			return false;
+		}
+
+
+		if (avformat_find_stream_info(fmtctx_,0)<0) {
+			log[log::fatal] << "Failed to retrieve stream info!";
+			return false;
+		}
+
 	}
-	fmtctx_.reset();
-
-	avformat_open_input(&fmtctx_.get_ptr_ref(), filename.c_str(),0, 0);
-	if (!fmtctx_) {
-		log[log::error] << "Failed to allocate Format context";
-		return false;
-	}
-
-
-	if (avformat_find_stream_info(fmtctx_,0)<0) {
-		log[log::fatal] << "Failed to retrieve stream info!";
-		return false;
-	}
-
-
 	for (size_t i = 0; i< fmtctx_->nb_streams; ++i) {
 		if (fmtctx_->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
 			log[log::debug] << "Found video stream with id " << i << ".";
