@@ -307,7 +307,10 @@ bool RawAVFile::process_undecoded_frame(index_t idx, const AVPacket& packet)
 	return true;
 }
 
-bool RawAVFile::decode_video_frame(index_t idx, const AVPacket& packet, AVFrame* av_frame, bool& keep_packet)
+/*
+Parameter packet should be const, but the woudn't work with the fake ffmpeg (libav). Oh well...
+*/
+bool RawAVFile::decode_video_frame(index_t idx, AVPacket& packet, AVFrame* av_frame, bool& keep_packet)
 {
 	int whole_frame = 0;
 
@@ -346,6 +349,11 @@ bool RawAVFile::decode_audio_frame(index_t idx, const AVPacket& packet, AVFrame*
 {
 #ifdef BROKEN_FFMPEG
 // We are probably using BROKEN port of ffmpeg (libav) or VERY old ffmpeg.
+	(void)idx;
+	(void)packet;
+	(void)av_frame;
+	(void)keep_packet;
+
 	return false;
 #else
 	keep_packet = false;
