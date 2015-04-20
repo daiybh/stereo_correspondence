@@ -87,7 +87,7 @@ protected:
 	template<typename T, typename T2, typename T3>
 	typename std::enable_if<std::is_floating_point<T>::value && std::is_floating_point<T2>::value
 			&& std::is_floating_point<T3>::value, bool>::type
-								emit_event(const std::string& event_name, T value, T min_value, T max_value)
+								emit_event(const std::string& event_name, T value, T2 min_value, T3 max_value)
 	{
 		return emit_event(event_name, make_shared<EventDouble>(value, min_value, max_value));
 	}
