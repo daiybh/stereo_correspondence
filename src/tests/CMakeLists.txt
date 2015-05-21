@@ -8,7 +8,8 @@ add_executable(yuri_test_suite test_base.cpp
 								test_irange.cpp
 								test_make_list.cpp
 								test_parameters.cpp
-								test_filesystem.cpp)
+								test_filesystem.cpp
+								test_string_generator.cpp)
 target_link_libraries (yuri_test_suite ${LIBNAME})
 
 add_executable(yuri_test_register test_register.cpp)
