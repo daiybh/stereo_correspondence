@@ -16,6 +16,7 @@ namespace core {
 namespace utils {
 
 std::tm get_current_local_time();
+std::tm get_startup_local_time();
 
 
 }
