@@ -43,6 +43,24 @@ std::vector<std::string> browse_files(const std::string& path, const std::string
 	}
 	return paths;
 }
+
+std::string get_directory(const std::string& filename)
+{
+	boost::filesystem::path f(filename);
+	return f.parent_path().string();
+}
+
+bool verify_path_exists(const std::string& path)
+{
+	boost::filesystem::path p(path);
+	return boost::filesystem::exists(p);
+}
+
+bool create_directory(const std::string& dirname)
+{
+	return boost::filesystem::create_directories(get_directory(dirname));
+}
+
 #elif defined YURI_POSIX
 std::vector<std::string> browse_files(const std::string& path, const std::string& prefix)
 {
@@ -62,12 +80,55 @@ std::vector<std::string> browse_files(const std::string& path, const std::string
 	}
 	return paths;
 }
+
+std::string get_directory(const std::string& filename)
+{
+	auto idx = filename.find_last_of('/');
+	if (idx == std::string::npos) return {};
+	return filename.substr(0, idx);
+}
+
+bool verify_path_exists(const std::string& path)
+{
+	return false;
+}
+
+bool create_directory(const std::string& dirname)
+{
+	return false;
+}
+
+
 #else
 std::vector<std::string> browse_files(const std::string&, const std::string&)
 {
 	return {};
 }
+std::string get_directory(const std::string& filename)
+{
+	auto idx = filename.find_last_of('/');
+	if (idx == std::string::npos) return {};
+	return filename.substr(0, idx);
+}
+
+bool verify_path_exists(const std::string& path)
+{
+	return false;
+}
+
+bool create_directory(const std::string& dirname)
+{
+	return false;
+}
+
 #endif
+
+bool ensure_path_directory(const std::string& filename)
+{
+	const auto dir = get_directory(filename);
+	return verify_path_exists(dir) || create_directory(dir);
+}
+
 }
 }
 }
