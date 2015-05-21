@@ -55,6 +55,19 @@ namespace utils {
  * 	%v - yuri version
  * 	%% - literal %
  *
+ * 	%qY - Start up year (localtime)
+ * 	%qM - Start up month (localtime)
+ * 	%qd - Start up day in month (localtime)
+ * 	%qD - Start up day of year (localtime)
+ * 	%qH - Start up hour 0-23 (localtime)
+ * 	%qh - Start up hour 0-11 (localtime)
+ * 	%qm - Start up minute (localtime)
+ * 	%qs - Start up second (localtime)
+ * 	%qT - Start up date (YYYY-MM-DD)
+ * 	%qt - Start up time (HH:MM:SS)
+ * 	%qx - Start up time (YYY-MM-DD HH:MM:SS)
+
+
  *  Specifiers marked with (*) can also use syntax %[[0]width]X,
  *  where X is the specifier, width is minimal width of the output and
  *  optional zero at the beginning adds padding with literal '0'.

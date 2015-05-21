@@ -48,7 +48,7 @@ bool is_extended_generator_supported()
 
 namespace {
 
-const boost::regex specifier_pattern ("%(0?\\d+[simMo]|[simMontfFTrHDSOv%]|0?\\d?l[YMdDhHmstTx])");
+const boost::regex specifier_pattern ("%(0?\\d+[simMo]|[simMontfFTrHDSOv%]|0?\\d?[lq][YMdDhHmstTx])");
 
 template<class S1, class S2>
 std::string to_s(const std::pair<S1, S2>& p)
@@ -59,7 +59,7 @@ std::string to_s(const std::pair<S1, S2>& p)
 template<class Value>
 std::string parse_and_replace(const std::string& spec, const Value& value)
 {
-	boost::regex pat ("%(0?)(\\d*)(l?)([[:alpha:]])");
+	boost::regex pat ("%(0?)(\\d*)([lq]?)([[:alpha:]])");
 	boost::smatch what;
 	std::stringstream ss;
 	if (boost::regex_match(spec, what, pat)) {
@@ -80,6 +80,8 @@ char check_complex_specifier(std::pair<T, T2> w)
 		auto c = *(end-2);
 		switch (c) {
 			case 'l':
+				return c;
+			case 'q':
 				return c;
 			default:
 				break;
@@ -149,6 +151,17 @@ std::string generate_localtime(const std::string& spec)
 	return generate_localtime(spec, t);
 }
 
+std::string generate_startuptime(std::string spec)
+{
+	auto t = get_startup_local_time();
+	// Change the specifier from 'q' to 'l' and let's reuse generate_localtime...
+	if (auto idx = spec.find('q')) {
+		spec[idx]='l';
+	}
+
+	return generate_localtime(spec, t);
+}
+
 
 }
 
@@ -213,6 +226,9 @@ std::string generate_string(const std::string& pattern, index_t sequence, const 
 			switch (c) {
 				case 'l':
 					ss << generate_localtime(to_s(what[0]));
+					break;
+				case 'q':
+					ss << generate_startuptime(to_s(what[0]));
 					break;
 				default:
 					break;
