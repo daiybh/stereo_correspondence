@@ -3,7 +3,11 @@ SET (MODULE flycap)
 
 # Set all source files module uses
 SET (SRC FlyCap.cpp
-		 FlyCap.h)
+		 FlyCap.h
+		 flycap_c_helpers.h
+		 flycap_defs.h
+		 flycap_enumerate.cpp
+		 register.cpp)
 
 
 include_directories(${FLYCAP_INCLUDE_DIR})
