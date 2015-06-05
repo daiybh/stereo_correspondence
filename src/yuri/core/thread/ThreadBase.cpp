@@ -180,7 +180,6 @@ void ThreadBase::join_all_threads() noexcept
 	TRACE_METHOD
 	log[debug] << "Joining all childs";
 	lock_t l(children_lock_);
-	yuri::size_t s = children_.size();
 	while (children_.size()) {
 		log[verbose_debug] << "There's " << children_.size() << "threads left";
 		auto child=children_.begin();
