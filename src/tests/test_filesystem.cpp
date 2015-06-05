@@ -19,6 +19,9 @@ TEST_CASE("filesystem", "[fs]" ) {
 		REQUIRE(filesystem::get_directory("/tmp/abc/ce.rere") == "/tmp/abc");
 		REQUIRE(filesystem::get_directory("../ce.rere") == "..");
 		REQUIRE(filesystem::get_directory("ce.rere") == "");
+		REQUIRE(filesystem::get_filename("/tmp/abc/ce.rere") == "ce.rere");
+		REQUIRE(filesystem::get_filename("/tmp/abc/ce.rere", false) == "ce");
+
 	}
 }
 
