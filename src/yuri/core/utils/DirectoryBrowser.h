@@ -28,6 +28,13 @@ std::vector<std::string> browse_files(const std::string& path, const std::string
 std::string get_directory(const std::string& filename);
 
 /*!
+ * Returns filename component from specified filename
+ * @param filename
+ * @param with_extension set to false to strip extension
+ * @return
+ */
+std::string get_filename(const std::string& filename, bool with_extension = true);
+/*!
  * Verifies that a specified path exists in the filesystem
  * @param path Filesystem path
  * @return true iff the path represents a valid object in the filesystem.

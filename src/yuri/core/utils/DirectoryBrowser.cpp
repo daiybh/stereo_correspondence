@@ -50,6 +50,13 @@ std::string get_directory(const std::string& filename)
 	return f.parent_path().string();
 }
 
+std::string get_filename(const std::string& filename, bool with_extension)
+{
+	boost::filesystem::path f(filename);
+	if (with_extension) return f.filename().string();
+	return f.stem().string();
+}
+
 bool verify_path_exists(const std::string& path)
 {
 	boost::filesystem::path p(path);
@@ -87,7 +94,15 @@ std::string get_directory(const std::string& filename)
 	if (idx == std::string::npos) return {};
 	return filename.substr(0, idx);
 }
-
+std::string get_filename(const std::string& filename, bool with_extension)
+{
+	auto idx = filename.find_last_of('/');
+	if (idx == std::string::npos) return filename;
+	if (with_extension) return filename.substr(idx+1);
+	auto fname = filename.substr(idx+1);
+	auto idx2 = fname.find_last_of('.');
+	return fname.substr(0, idx2);
+}
 bool verify_path_exists(const std::string& path)
 {
 	return false;
@@ -110,7 +125,15 @@ std::string get_directory(const std::string& filename)
 	if (idx == std::string::npos) return {};
 	return filename.substr(0, idx);
 }
-
+std::string get_filename(const std::string& filename, bool with_extension)
+{
+	auto idx = filename.find_last_of('/');
+	if (idx == std::string::npos) return filename;
+	if (with_extension) return filename.substr(idx+1);
+	auto fname = filename.substr(idx+1);
+	auto idx2 = fname.find_last_of('.');
+	return fname.substr(0, idx2);
+}
 bool verify_path_exists(const std::string& path)
 {
 	return false;
