@@ -33,27 +33,7 @@ const std::string module_prefix = "yuri2.8_module_";
 const std::string module_get_name = "yuri2_8_module_get_name";
 const std::string module_register = "yuri2_8_module_register";
 
-struct dynamic_loader {
-	dynamic_loader(const std::string& path);
-	~dynamic_loader();
-	dynamic_loader(const dynamic_loader&) = delete;
-	dynamic_loader(dynamic_loader&& rhs) noexcept
-		:handle(std::move(rhs.handle))
-	{
-		rhs.reset();
-	}
-	dynamic_loader& operator=(const dynamic_loader&) = delete;
-	dynamic_loader& operator=(dynamic_loader&& rhs) noexcept
-	{
-		handle=std::move(rhs.handle);
-		rhs.reset();
-		return *this;
-	}
-	void delete_handle();
-	void reset() { handle = nullptr;}
-	template<typename T>
-	T load_symbol(const std::string& symbol);
-private:
+struct dynamic_loader::dynamic_loader_pimpl_ {
 #if defined YURI_POSIX
 	void* handle;
 #elif defined YURI_WIN
@@ -61,31 +41,56 @@ private:
 #endif
 };
 
+
+
+
+dynamic_loader::dynamic_loader(dynamic_loader&& rhs) noexcept
+:pimpl_(std::move(rhs.pimpl_))
+{
+rhs.reset();
+}
+
+
+dynamic_loader& dynamic_loader::operator=(dynamic_loader&& rhs) noexcept
+{
+	pimpl_=std::move(rhs.pimpl_);
+	return *this;
+}
+
+void dynamic_loader::reset()
+{
+	pimpl_.reset();
+}
+
+
 #if defined YURI_POSIX
 dynamic_loader::dynamic_loader(const std::string& path)
+:pimpl_(make_unique<dynamic_loader::dynamic_loader_pimpl_>())
 {
-	handle = dlopen(path.c_str(),RTLD_LAZY);
-	if (!handle) throw std::runtime_error("Failed to open handle "+path);
+	pimpl_->handle = dlopen(path.c_str(),RTLD_LAZY);
+	if (!pimpl_->handle) throw std::runtime_error("Failed to open handle "+path);
 }
-dynamic_loader::~dynamic_loader()
+dynamic_loader::~dynamic_loader() noexcept
 {
 	delete_handle();
 }
 void dynamic_loader::delete_handle()
 {
-	if (handle) dlclose(handle);
+	if (pimpl_ && pimpl_->handle) {
+		dlclose(pimpl_->handle);
+	}
 	reset();
 }
-template<typename T>
-T dynamic_loader::load_symbol(const std::string& symbol)
+void* dynamic_loader::load_symbol_impl(const std::string& symbol)
 {
-	return reinterpret_cast<T>(reinterpret_cast<uintptr_t>(dlsym(handle,symbol.c_str())));
+	return dlsym(pimpl_->handle,symbol.c_str());
 }
 #elif defined YURI_WIN
 dynamic_loader::dynamic_loader(const std::string& path)
+:pimpl_(make_unique<dynamic_loader::dynamic_loader_pimpl_>())
 {
-	handle = LoadLibrary(path.c_str());
-	if (!handle) throw std::runtime_error("Failed to open handle");
+	pimpl_->handle = LoadLibrary(path.c_str());
+	if (!pimpl_->handle) throw std::runtime_error("Failed to open handle");
 }
 dynamic_loader::~dynamic_loader()
 {
@@ -93,13 +98,12 @@ dynamic_loader::~dynamic_loader()
 }
 void dynamic_loader::delete_handle()
 {
-	if (handle) FreeLibrary(handle);
+	if (pimpl_ && pimpl_->handle) FreeLibrary(pimpl_->handle);
 	reset();
 }
-template<typename T>
-T dynamic_loader::load_symbol(const std::string& symbol)
+void* dynamic_loader::load_symbol(const std::string& symbol)
 {
-	return reinterpret_cast<T>(reinterpret_cast<uintptr_t>(GetProcAddress(handle,symbol.c_str())));
+	return reinterpret_cast<void*>(GetProcAddress(handle,symbol.c_str()));
 }
 
 #endif
