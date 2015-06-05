@@ -43,6 +43,13 @@ EXPORT std::vector<std::string> find_modules_path(const std::string& path);
 EXPORT bool load_module(const std::string& path);
 EXPORT const std::vector<std::string>& get_builtin_paths();
 
+/*!
+ * This method LEAKS the handle, effectively preventing libyuri unloading it at the end.
+ * it's STRONGLY RECOMMENDED NOT TO USE this method, unless really needed.
+ * It has to be called from register_module() function during loading.
+ * Currently it's needed for frei0r module.
+ */
+EXPORT void leak_module_handle();
 }
 }
 }

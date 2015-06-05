@@ -138,6 +138,10 @@ std::vector<std::string> find_modules_path(const std::string& path)
 using get_name_t 		= const char * (*)(void);
 using register_module_t = int (*)(void);
 
+namespace {
+	bool leak_current_handle = false;
+}
+
 bool load_module(const std::string& path)
 {
 	static std::mutex loader_mutex;
@@ -152,8 +156,11 @@ bool load_module(const std::string& path)
 
 		get_name = loader.load_symbol<get_name_t>(module_get_name);
 		register_module = loader.load_symbol<register_module_t>(module_register);
-
+		leak_current_handle = false;
 		if (get_name && register_module && register_module() == 0) {
+			if (leak_current_handle) {
+				loader.reset();
+			}
 			loaded_files.insert(std::make_pair(path,std::move(loader)));
 			return true;
 		}
@@ -162,6 +169,10 @@ bool load_module(const std::string& path)
 	return false;
 }
 
+void leak_module_handle()
+{
+	leak_current_handle = true;
+}
 
 }
 }
