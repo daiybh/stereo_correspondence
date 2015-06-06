@@ -37,7 +37,9 @@ using IOThreadGenerator = utils::Singleton<BasicIOThreadGenerator<core::IOThread
 #ifdef YURI_MODULE_IN_TREE
 #define REGISTER_IOTHREAD(name, type) namespace { bool reg_ ## type = yuri::IOThreadGenerator::get_instance().register_generator(name,type::generate, type::configure); }
 #else
-#define REGISTER_IOTHREAD(name, type) /*bool iothread_reg_ ## type = */yuri::IOThreadGenerator::get_instance().register_generator(name,type::generate, type::configure);
+#define REGISTER_IOTHREAD_FUNC(name, generate, configure) /*bool iothread_reg_ ## type = */yuri::IOThreadGenerator::get_instance().register_generator(name, generate, configure);
+#define REGISTER_IOTHREAD(name, type) REGISTER_IOTHREAD_FUNC(name, type::generate, type::configure);
+
 #endif
 
 
