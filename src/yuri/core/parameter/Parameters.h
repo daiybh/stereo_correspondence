@@ -42,6 +42,8 @@ public:
 	{
 		set_parameter(Parameter(name, value));
 	}
+	EXPORT Parameter&			get_parameter(const std::string& param);
+	EXPORT const Parameter&		get_parameter(const std::string& param) const ;
 
 	EXPORT Parameter&			operator[](const std::string& name);
 	EXPORT const Parameter&		operator[](const std::string& name) const;

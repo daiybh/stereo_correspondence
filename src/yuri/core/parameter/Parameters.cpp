@@ -75,6 +75,19 @@ Parameter& Parameters::set_parameter(Parameter&& param)
 #endif
 	return it.first->second;
 }
+Parameter&	Parameters::get_parameter(const std::string& name)
+{
+	auto it = params_.find(name);
+	if (it==params_.end()) throw std::runtime_error("Not such a value");
+	return it->second;
+}
+const Parameter& Parameters::get_parameter(const std::string& name) const
+{
+	const auto it = params_.find(name);
+	if (it==params_.end()) throw std::runtime_error("Not such a value");
+	return it->second;
+}
+
 
 Parameter& Parameters::operator[](const std::string& name)
 {
