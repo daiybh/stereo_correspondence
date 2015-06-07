@@ -13,7 +13,8 @@
 
 #include "yuri/core/utils/DirectoryBrowser.h"
 #include "yuri/core/utils/irange.h"
-
+#include "yuri/core/utils/environment.h"
+#include <algorithm>
 namespace yuri {
 namespace frei0r {
 
@@ -78,8 +79,6 @@ std::function<decltype(T::configure())()> generate_configure(const std::string& 
 			module.get_param_info(&param, i);
 			if (!param.name) continue;
 			std::string desc = param.explanation?param.explanation:"";
-//			auto& par = ;
-//			par = "UNKNOWN";
 			f0r_param_t fp;
 			module.get_param_value(instance, &fp, i);
 			if (module.get_param_value) {
@@ -114,11 +113,53 @@ std::function<decltype(T::configure())()> generate_configure(const std::string& 
 		return p;
 	};
 }
+std::vector<std::string> add_vendor_subdirectories(std::vector<std::string> dirs)
+{
+	std::vector<std::string> dir2;
+	for(auto&d: dirs) {
+		auto&& sdirs = core::filesystem::browse_directories(d);
+		dir2.push_back(std::move(d));
+		dir2.insert(dir2.end(), sdirs.begin(), sdirs.end());
+	}
+	return dir2;
+}
+std::vector<std::string> get_plugin_directories()
+{
+	auto dirs = core::utils::get_environment_path("FREI0R_PATH");
+	if (dirs.empty()) {
+#ifdef YURI_POSIX
+		auto home = core::utils::get_environment_variable("HOME");
+		if (!home.empty()) {
+			dirs.push_back(home+"/.frei0r-1/lib/");
+		}
+		dirs.push_back("/usr/lib/frei0r-1/");
+		dirs.push_back("/usr/local/lib/frei0r-1/");
+#endif
+	}
+	return add_vendor_subdirectories(std::move(dirs));
+}
+
+std::vector<std::string> list_plugins()
+{
+	std::vector<std::string> files;
+	for (const auto& dir: get_plugin_directories()) {
+		auto&& f = core::filesystem::browse_files(dir, "", ".so");
+		files.reserve(files.size() + f.size());
+		files.insert(files.end(), f.begin(), f.end());
+	}
+
+	std::sort(files.begin(), files.end());
+	files.erase(std::unique(files.begin(), files.end()), files.end());
+
+	return files;
+}
+
+
 }
 
 
 MODULE_REGISTRATION_BEGIN("frei0r")
-		const auto files = core::filesystem::browse_files("/usr/lib/frei0r-1/");
+		const auto files = list_plugins();
 		for (const auto& f: files) {
 			try {
 				frei0r_module_t module(f);
@@ -143,6 +184,7 @@ MODULE_REGISTRATION_BEGIN("frei0r")
 		}
 		//REGISTER_IOTHREAD("frei0r",Frei0rWrapper)
 		//REGISTER_IOTHREAD("frei0r_source",Frei0rSource)
+
 		// This is ugly... but it is necesary now
 		core::module_loader::leak_module_handle();
 MODULE_REGISTRATION_END()
