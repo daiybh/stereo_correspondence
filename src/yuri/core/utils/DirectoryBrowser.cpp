@@ -39,7 +39,8 @@ bool has_prefix_suffix(const std::string& fname, const std::string& prefix, cons
 }
 
 #ifdef HAVE_BOOST_FILESYSTEM
-std::vector<std::string> browse_files(const std::string& path, const std::string& prefix, const std::string& suffix)
+namespace {
+std::vector<std::string> browse_files_impl(const std::string& path, const std::string& prefix, const std::string& suffix, bool dirsonly)
 {
 	std::vector<std::string> paths;
 	boost::filesystem::path p(path);
@@ -47,6 +48,7 @@ std::vector<std::string> browse_files(const std::string& path, const std::string
 		return paths;
 	for (boost::filesystem::directory_iterator dit(p);
 						dit !=boost::filesystem::directory_iterator(); ++dit) {
+		if (dirsonly && !boost::filesystem::is_directory(dit->path())) continue;
 		const std::string file = dit->path().string();
 		const std::string fname = dit->path().filename().string();
 		if (!has_prefix_suffix(fname, prefix, suffix)) {
@@ -55,6 +57,7 @@ std::vector<std::string> browse_files(const std::string& path, const std::string
 		paths.push_back(file);
 	}
 	return paths;
+}
 }
 
 std::string get_directory(const std::string& filename)
@@ -82,13 +85,17 @@ bool create_directory(const std::string& dirname)
 }
 
 #elif defined YURI_POSIX
-std::vector<std::string> browse_files(const std::string& path, const std::string& prefix, const std::string& suffix)
+namespace {
+std::vector<std::string> browse_files_impl(const std::string& path, const std::string& prefix, const std::string& suffix, bool dirsonly)
 {
 	std::vector<std::string> paths;
 	dirent *dp;
 	DIR *dfd = opendir(path.c_str());
 	if(dfd) {
 		while((dp = readdir(dfd)) ) {
+			if (dirsonly && (dp->d_type != DT_DIR)) {
+				continue;
+			}
 			std::string fname = dp->d_name;
 			if (!has_prefix_suffix(fname, prefix, suffix)) {
 				continue;
@@ -98,6 +105,7 @@ std::vector<std::string> browse_files(const std::string& path, const std::string
 		closedir(dfd);
 	}
 	return paths;
+}
 }
 
 std::string get_directory(const std::string& filename)
@@ -127,9 +135,11 @@ bool create_directory(const std::string& dirname)
 
 
 #else
-std::vector<std::string> browse_files(const std::string&, const std::string&, const std::string&)
+namespace {
+std::vector<std::string> browse_files_impl(const std::string& path, const std::string& prefix, const std::string& suffix, bool dirsonly)
 {
 	return {};
+}
 }
 std::string get_directory(const std::string& filename)
 {
@@ -157,6 +167,16 @@ bool create_directory(const std::string& dirname)
 }
 
 #endif
+
+std::vector<std::string> browse_files(const std::string& path, const std::string& prefix, const std::string& suffix)
+{
+	return browse_files_impl(path, prefix, suffix, false);
+}
+std::vector<std::string> browse_directories(const std::string& path, const std::string& prefix, const std::string& suffix)
+{
+	return browse_files_impl(path, prefix, suffix, true);
+}
+
 
 bool ensure_path_directory(const std::string& filename)
 {

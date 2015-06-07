@@ -20,6 +20,7 @@ namespace filesystem {
 std::vector<std::string> browse_files(const std::string& path, const std::string& prefix = std::string(), const std::string& suffix = std::string());
 
 
+std::vector<std::string> browse_directories(const std::string& path, const std::string& prefix = std::string(), const std::string& suffix = std::string());
 
 /*!
  * Returns directory component from specified filename
