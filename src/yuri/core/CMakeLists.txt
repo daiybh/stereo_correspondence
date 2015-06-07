@@ -37,6 +37,7 @@ SET(YURI_SRC ${YURI_SRC}
 	core/utils/string_generator.cpp core/utils/string_generator.h
 	core/utils/managed_resource.h
 	core/utils/wall_time.cpp core/utils/wall_time.h
+	core/utils/string.h
 	
 	core/thread/builder_utils.cpp
 	core/thread/builder_utils.h
