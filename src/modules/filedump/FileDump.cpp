@@ -14,6 +14,7 @@
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
 #include "yuri/core/frame/RawAudioFrame.h"
+#include "yuri/core/frame/EventFrame.h"
 #include "yuri/core/utils/string_generator.h"
 namespace yuri
 {
@@ -131,6 +132,15 @@ core::pFrame FileDump::do_simple_single_step(core::pFrame frame)
 		dump_file.write(reinterpret_cast<const char *>(f2->begin()),f2->size());
 	} else if (auto f3 = std::dynamic_pointer_cast<core::RawAudioFrame>(frame)) {
 		dump_file.write(reinterpret_cast<const char *>(f3->data()),f3->size());
+	} else if (auto f4 = std::dynamic_pointer_cast<core::EventFrame>(frame)) {
+		try {
+			const auto text = event::lex_cast_value<std::string>(f4->get_event()) +"\n";
+			dump_file.write(text.c_str(),text.size());
+		}
+		catch (std::exception& e) {
+			log[log::warning] << "Failed to store event " << f4->get_name();
+			written = false;
+		}
 	} else {
 		written=false;
 	}
