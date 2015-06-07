@@ -43,6 +43,7 @@ private:
 	bool use_regex_; //!< Filename contains format specifiers
 	bool single_file_; //!< Output is in a single file
 
+	std::string info_string_;
 };
 
 }

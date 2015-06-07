@@ -33,6 +33,7 @@ core::Parameters FileDump::configure()
 	p["sequence"]["Number of digits in sequence number. Set to 0 to disable sequence and output all frames to one file."]=0;
 	p["filename"]["Required parameter. Path of file to dump to"]=std::string();
 	p["frame_limit"]["Maximal number of frames to dump. 0 for unlimited"]=0;
+	p["info_string"]["Additional string to emit with each frame (as event 'info')"]="";
 	return p;
 }
 
@@ -133,6 +134,9 @@ core::pFrame FileDump::do_simple_single_step(core::pFrame frame)
 	} else {
 		written=false;
 	}
+	if (!info_string_.empty()) {
+		emit_event("info", core::utils::generate_string(info_string_, seq_number, frame));
+	}
 	if (!single_file_) {
 		dump_file.close();
 		if (written) {
@@ -158,7 +162,8 @@ bool FileDump::set_param(const core::Parameter &param)
 	if (assign_parameters(param)
 			(filename, "filename")
 			(seq_chars, "sequence")
-			(dump_limit, "frame_limit"))
+			(dump_limit, "frame_limit")
+			(info_string_, "info_string"))
 		return true;
 	return IOFilter::set_param(param);
 }
