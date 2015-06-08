@@ -24,6 +24,7 @@ using f0r_get_plugin_info_t = decltype(&::f0r_get_plugin_info);
 using f0r_construct_t = decltype(&::f0r_construct);
 using f0r_destruct_t = decltype(&::f0r_destruct);
 using f0r_update_t = decltype(&::f0r_update);
+using f0r_update2_t = decltype(&::f0r_update2);
 using f0r_get_param_info_t = decltype(&::f0r_get_param_info);
 using f0r_get_param_value_t = decltype(&::f0r_get_param_value);
 using f0r_set_param_value_t = decltype(&::f0r_set_param_value);
@@ -57,6 +58,7 @@ struct frei0r_module_t {
 		load_symbol(get_param_value, "f0r_get_param_value");
 		load_symbol(set_param_value, "f0r_set_param_value");
 		load_symbol(update, "f0r_update");
+		load_symbol(update2, "f0r_update2");
 	}
 	~frei0r_module_t() noexcept
 	{
@@ -82,6 +84,7 @@ struct frei0r_module_t {
 	f0r_get_param_value_t get_param_value;
 	f0r_set_param_value_t set_param_value;
 	f0r_update_t update;
+	f0r_update2_t update2;
 };
 
 }

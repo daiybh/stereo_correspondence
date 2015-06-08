@@ -9,6 +9,7 @@
 
 #include "Frei0rWrapper.h"
 #include "Frei0rSource.h"
+#include "Frei0rMixer.h"
 #include "yuri/core/Module.h"
 
 #include "yuri/core/utils/DirectoryBrowser.h"
@@ -173,6 +174,12 @@ MODULE_REGISTRATION_BEGIN("frei0r")
 						REGISTER_IOTHREAD_FUNC("frei0r_source_"+core::filesystem::get_filename(f, false),
 							Frei0rSource::generate,
 							generate_configure<Frei0rSource>(f, module))
+					} break;
+					case F0R_PLUGIN_TYPE_MIXER2:
+					case F0R_PLUGIN_TYPE_MIXER3:{
+						REGISTER_IOTHREAD_FUNC("frei0r_mixer_"+core::filesystem::get_filename(f, false),
+							Frei0rMixer::generate,
+							generate_configure<Frei0rMixer>(f, module))
 					} break;
 				}
 			}
