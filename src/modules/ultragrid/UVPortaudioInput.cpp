@@ -62,7 +62,7 @@ void UVPortaudioInput::run()
 			sleep(get_latency());
 			continue;
 		}
-		log[log::info] << "Pushing sample with " << frame->bps << " bytes per sample, "
+		log[log::verbose_debug] << "Pushing sample with " << frame->bps << " bytes per sample, "
 					<< frame->sample_rate << " samples per second and " << frame->ch_count
 					<< " channels";
 		core::pRawAudioFrame out_frame = core::RawAudioFrame::create_empty(core::raw_audio_format::signed_16bit,
