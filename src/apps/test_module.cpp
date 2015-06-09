@@ -9,7 +9,7 @@
  */
 
 #include <iostream>
-#include <boost/cstdint.hpp>
+#include <cstdint>
 #if defined __linux__ || defined(__FreeBSD__) || defined __CYGWIN__
 #include <dlfcn.h>
 #define test_posix

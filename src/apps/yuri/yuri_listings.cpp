@@ -108,10 +108,16 @@ void list_params(yuri::log::Log& l_, const yuri::core::Parameters& params, int /
 		const auto& param = p.second;
 		const std::string& pname = param.get_name();
 		if (pname[0] != '_') {
+			std::string value;
+			if (param.get_value()->get_type() == event::event_type_t::boolean_event) {
+				value = param.get<bool>()?"True":"False";
+			} else {
+				value = param.get<std::string>();
+			}
 			l_[log::info] << "\t\t"
 				<< std::setfill(' ') << std::left << std::setw(20)
 				<< (pname + ": ")
-				<< std::right << std::setw(10) << param.get<std::string>();
+				<< std::right << std::setw(10) << value;
 			const std::string& d = param.get_description();
 			if (!d.empty()) {
 				l_[log::info] << "\t\t\t" << d;

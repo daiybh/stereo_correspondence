@@ -15,29 +15,6 @@
 #include <fstream>
 #include <string>
 
-
-/*
- * If compiled with boost regex support, then following format specifiers
- * are supported inside of the filename:
- *
- * 	%n - module name
- * 	%t - timestamp from the incomming frame
- * 	%f - frame type (short)
- * 	%F - frame type (long)
- * 	%T - timestamp at the time of dump
- * 	%m - milliseconds since start
- * 	%M - microseconds since start
- * 	%H - local hostname
- * 	%D - local domain
- * 	%s - sequence number
- * 	%i - frame index
- * 	%S - system name (eg. Linux-3.19.0)
- * 	%O - OS (eg. Linux)
- * 	%v - yuri version
- * 	%% - literal %
- *
- */
-
 namespace yuri
 {
 namespace dump
@@ -66,6 +43,7 @@ private:
 	bool use_regex_; //!< Filename contains format specifiers
 	bool single_file_; //!< Output is in a single file
 
+	std::string info_string_;
 };
 
 }

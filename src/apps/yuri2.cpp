@@ -93,6 +93,8 @@ int main(int argc, char**argv)
 	std::vector<std::string> arguments;
 	bool show_info = false;
 #ifdef HAVE_BOOST_PROGRAM_OPTIONS
+	bool show_time = true;
+	bool show_date = false;
 	po::options_description options("General options");
 	options.add_options()
 		("help,h","print help")
@@ -107,7 +109,9 @@ int main(int argc, char**argv)
 		("convert,C",po::value<std::string>(), "Find conversion between format F1 and F2. Use syntax F1:F2.")
 		("app-info,a","Show info about XML file")
 		("log-file,o", po::value<std::string>(&logfile), "Log to a file")
-		("input,I", po::value<std::string>()->implicit_value("all"), "Enumerate devices");
+		("input,I", po::value<std::string>()->implicit_value("all"), "Enumerate devices")
+		("date,d", po::value<bool>(&show_date)->implicit_value(true),"Print date in a log")
+		("time,t", po::value<bool>(&show_time)->implicit_value(true), "Print time in a log");
 
 
 
@@ -127,12 +131,13 @@ int main(int argc, char**argv)
 		return 1;
 	}
 
+	auto date_time_flags = (show_date?log::show_date:0)|(show_time?log::show_time:0);
 	if (!logfile.empty()) {
 		logf.open(logfile, std::ios::out|std::ios::app);
 		logger = yuri::log::Log(logf);
-		logger.set_flags(log::info|log::show_level);
+		logger.set_flags(log::info|log::show_level|date_time_flags);
 	} else {
-		logger.set_flags(log::info|log::show_level|log::use_colors);
+		logger.set_flags(log::info|log::show_level|log::use_colors|date_time_flags);
 	}
 	logger.set_label("[YURI2] ");
 
@@ -196,7 +201,7 @@ int main(int argc, char**argv)
 				if (i<argc-1) {
 					list_what=argv[++i];
 				}
-				builder.reset(new core::XmlBuilder(l, core::pwThreadBase(), filename, arguments, true ));
+				builder.reset(new core::XmlBuilder(logger, core::pwThreadBase(), filename, arguments, true ));
 				log::Log l_(std::cout);
 				l_.set_flags(log::info);
 				l_.set_quiet(true);

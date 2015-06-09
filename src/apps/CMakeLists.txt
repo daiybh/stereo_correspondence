@@ -6,15 +6,17 @@ IF(NOT YURI_DISABLE_BOOST)
 	find_package( Boost 1.46 COMPONENTS program_options regex)
 	IF(Boost_PROGRAM_OPTIONS_FOUND)
 		add_definitions(-DHAVE_BOOST_PROGRAM_OPTIONS)
-		include_directories ( ${Boost_INCLUDE_DIRS})
-        link_directories (${Boost_LIBRARY_DIRS})
         SET(LIBS ${LIBS} ${Boost_LIBRARIES})
 		add_definitions(-DBOOST_PROGRAM_OPTIONS_DYN_LINK)
 	ENDIF()
+	
+	IF(Boost_FOUND)
+		include_directories ( ${Boost_INCLUDE_DIRS})
+		link_directories (${Boost_LIBRARY_DIRS})
+	ENDIF()
+
 ENDIF()
 
-include_directories ( ${Boost_INCLUDE_DIRS})
-link_directories (${Boost_LIBRARY_DIRS})
 
 add_executable(yuri2 	yuri/yuri_listings.cpp 
 						yuri/yuri_listings.h

@@ -1,15 +1,19 @@
-/*
- * RawAVFile.h
+/*!
+ * @file 		RawAVFile.h
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
+ * @date		09.02.2012
+ *  * @date		02.04.2015
+ * @copyright	Institute of Intermedia, CTU in Prague, 2012 - 2015
+ * 				Distributed under BSD Licence, details in file doc/LICENSE
  *
- *  Created on: Feb 9, 2012
- *      Author: neneko
  */
 
 #ifndef AVDEMUXER_H_
 #define AVDEMUXER_H_
 #include "yuri/libav/libav.h"
 #include "yuri/core/thread/IOFilter.h"
-
+#include "yuri/event/BasicEventConsumer.h"
+#include "yuri/core/utils/managed_resource.h"
 extern "C" {
 	#include <libavformat/avformat.h>
 }
@@ -19,37 +23,43 @@ extern "C" {
 namespace yuri {
 namespace rawavfile {
 
-class RawAVFile: public core::IOThread {
+
+
+class RawAVFile: public core::IOThread, public event::BasicEventConsumer {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
 	RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~RawAVFile() noexcept;
 	virtual bool 		set_param(const core::Parameter &param);
+
+	struct 				stream_detail_t;
 private:
 
-	virtual void 		run();
+	virtual void 		run() override;
+	virtual bool 		do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
+
+	bool				open_file(const std::string& filename);
+	bool				push_ready_frames();
+	bool				process_file_end();
+
+	bool				process_undecoded_frame(index_t idx, const AVPacket& packet);
+	bool				decode_video_frame(index_t idx, AVPacket& packet, AVFrame* av_frame, bool& keep_packet);
+	bool				decode_audio_frame(index_t idx, const AVPacket& packet, AVFrame* av_frame, bool& keep_packet);
+	core::utils::managed_resource<AVFormatContext>
+						fmtctx_;
 
 
-	AVFormatContext*	fmtctx;
-	std::vector<AVCodec*>
-						video_codecs_;
-	std::vector<AVCodec*>
-						audio_codecs_;
-	yuri::size_t 		block;
-	std::string 		filename;
-	std::vector<AVStream*>
+
+
+	std::string 		filename_;
+	std::string 		next_filename_;
+
+	std::vector<stream_detail_t>
 						video_streams_;
-	std::vector<AVStream*>
+	std::vector<stream_detail_t>
 						audio_streams_;
-	std::vector<format_t>
-						video_formats_;
-	std::vector<format_t>
-						video_formats_out_;
-	std::vector<format_t>
-						audio_formats_;
-	std::vector<format_t>
-						audio_formats_out_;
+
 	format_t 			format_out_;
 	format_t 			video_format_out_;
 	bool				decode_;
@@ -61,6 +71,10 @@ private:
 	size_t 				max_video_streams_;
 	size_t 				max_audio_streams_;
 
+	bool 				loop_;
+	bool				reset_;
+	bool				allow_empty_;
+	bool				enable_experimental_;
 };
 
 } /* namespace video */

@@ -70,6 +70,11 @@ struct combine_base {
 			*dest_pix++ = 255;
 		}
 	}
+	static void advance(plane_t::const_iterator& src_pix, plane_t::iterator& dest_pix) {
+		src_pix += s;
+		dest_pix += d;
+
+	}
 };
 
 template <format_t f1, format_t f2>
@@ -302,69 +307,71 @@ public combine_base<2, 4, 4, yuva4444, 2> {
 	ovr_pix++;
 }
 };
-template<bool rewrite, format_t f>
+template<class kernel>
+core::pRawVideoFrame dispatch_unique(Overlay& overlay, core::pRawVideoFrame frame_0, const core::pRawVideoFrame& frame_1)
+{
+	if (is_frame_unique(frame_0) && kernel::output_format() == frame_0->get_format()) {
+		auto f0 = std::dynamic_pointer_cast<core::RawVideoFrame>(get_frame_unique(frame_0));
+		frame_0.reset();
+		return overlay.combine<true, kernel>(std::move(f0), frame_1);
+	}
+	return overlay.combine<false, kernel>(std::move(frame_0), frame_1);
+}
+template<format_t f>
 core::pRawVideoFrame dispatch2(Overlay& overlay, core::pRawVideoFrame frame_0, const core::pRawVideoFrame& frame_1)
 {
 	format_t fmt = frame_1->get_format();
 	switch (fmt) {
 		case rgba32:
-			return overlay.combine<rewrite, combine_kernel<f, rgba32> >(std::move(frame_0), frame_1);
+			return dispatch_unique<combine_kernel<f, rgba32> >(overlay, std::move(frame_0), frame_1);
 		case abgr32:
-			return overlay.combine<rewrite, combine_kernel<f, abgr32> >(std::move(frame_0), frame_1);
+			return dispatch_unique<combine_kernel<f, abgr32> >(overlay, std::move(frame_0), frame_1);
 		case rgb24:
-			return overlay.combine<rewrite, combine_kernel<f, rgb24> >(std::move(frame_0), frame_1);
+			return dispatch_unique<combine_kernel<f, rgb24> >(overlay, std::move(frame_0), frame_1);
 		case bgr24:
-			return overlay.combine<rewrite, combine_kernel<f, bgr24> >(std::move(frame_0), frame_1);
+			return dispatch_unique<combine_kernel<f, bgr24> >(overlay, std::move(frame_0), frame_1);
 		default:
 			break;
 	}
 	return core::pRawVideoFrame();
 }
-template<bool rewrite, format_t f>
+template<format_t f>
 core::pRawVideoFrame dispatch2_yuv(Overlay& overlay, core::pRawVideoFrame frame_0, const core::pRawVideoFrame& frame_1)
 {
 	format_t fmt = frame_1->get_format();
 	switch (fmt) {
 		case yuyv422:
-			return overlay.combine<rewrite, combine_kernel<f, yuyv422> >(std::move(frame_0), frame_1);
+			return dispatch_unique<combine_kernel<f, yuyv422> >(overlay, std::move(frame_0), frame_1);
 		case yuv444:
-			return overlay.combine<rewrite, combine_kernel<f, yuv444> >(std::move(frame_0), frame_1);
+			return dispatch_unique<combine_kernel<f, yuv444> >(overlay, std::move(frame_0), frame_1);
 		case yuva4444:
-			return overlay.combine<rewrite, combine_kernel<f, yuva4444> >(std::move(frame_0), frame_1);
+			return dispatch_unique<combine_kernel<f, yuva4444> >(overlay, std::move(frame_0), frame_1);
 		default:
 			break;
 	}
 	return core::pRawVideoFrame();
 }
-template<bool rewrite>
+
 core::pRawVideoFrame dispatch(Overlay& overlay, core::pRawVideoFrame frame_0, const core::pRawVideoFrame& frame_1)
 {
 	format_t fmt = frame_0->get_format();
 	switch (fmt) {
 		case rgb24:
-			return dispatch2<rewrite, rgb24>(overlay, std::move(frame_0), frame_1);
+			return dispatch2<rgb24>(overlay, std::move(frame_0), frame_1);
 		case rgba32:
-			return dispatch2<rewrite, rgba32>(overlay, std::move(frame_0), frame_1);
+			return dispatch2<rgba32>(overlay, std::move(frame_0), frame_1);
 		case bgr24:
-			return dispatch2<rewrite, bgr24>(overlay, std::move(frame_0), frame_1);
+			return dispatch2<bgr24>(overlay, std::move(frame_0), frame_1);
 		case abgr32:
-			return dispatch2<rewrite, abgr32>(overlay, std::move(frame_0), frame_1);
+			return dispatch2<abgr32>(overlay, std::move(frame_0), frame_1);
 		case yuyv422:
-			return dispatch2_yuv<rewrite, yuyv422>(overlay, std::move(frame_0), frame_1);
+			return dispatch2_yuv<yuyv422>(overlay, std::move(frame_0), frame_1);
 		default:
 			return core::pRawVideoFrame();
 	}
 }
 
-core::pRawVideoFrame dispatch_unique(Overlay& overlay, core::pRawVideoFrame frame_0, const core::pRawVideoFrame& frame_1)
-{
-	if (is_frame_unique(frame_0)) {
-		auto f0 = std::dynamic_pointer_cast<core::RawVideoFrame>(get_frame_unique(frame_0));
-		frame_0.reset();
-		return dispatch<true>(overlay, std::move(f0), frame_1);
-	}
-	return dispatch<false>(overlay, std::move(frame_0), frame_1);
-}
+
 
 template<class kernel>
 inline void fill_line(ssize_t& pixel, const ssize_t& max_pixel, plane_t::const_iterator& src_pix, plane_t::iterator& dest_pix)
@@ -373,6 +380,14 @@ inline void fill_line(ssize_t& pixel, const ssize_t& max_pixel, plane_t::const_i
 		kernel::fill(src_pix, dest_pix);
 	}
 }
+template<class kernel>
+inline void advance_line(ssize_t& pixel, const ssize_t& max_pixel, plane_t::const_iterator& src_pix, plane_t::iterator& dest_pix)
+{
+	for (; pixel < max_pixel; ++pixel) {
+		kernel::advance(src_pix, dest_pix);
+	}
+}
+
 template<class kernel>
 inline void fill_multiple_lines(ssize_t& line, const ssize_t& max_line,
 		const plane_t::const_iterator& src, const plane_t::iterator& dest,
@@ -385,6 +400,7 @@ inline void fill_multiple_lines(ssize_t& line, const ssize_t& max_line,
 		fill_line<kernel>(pixel, width, src_pix, dest_pix);
 	}
 }
+
 template<bool rewrite>
 core::pRawVideoFrame get_out_frame(core::pRawVideoFrame& frame, format_t format, resolution_t res0);
 
@@ -394,9 +410,10 @@ core::pRawVideoFrame get_out_frame<false>(core::pRawVideoFrame&, format_t format
 	return core::RawVideoFrame::create_empty(format, res);
 }
 template<>
-core::pRawVideoFrame get_out_frame<true>(core::pRawVideoFrame& frame, format_t, resolution_t)
+core::pRawVideoFrame get_out_frame<true>(core::pRawVideoFrame& frame, format_t format, resolution_t res)
 {
-	return frame;
+	if (frame->get_format() == format) return frame;
+	return get_out_frame<false>(frame, format, res);
 }
 }
 template<bool rewrite, class kernel>
@@ -419,22 +436,35 @@ core::pRawVideoFrame Overlay::combine(core::pRawVideoFrame frame_0, const core::
 	const plane_t::const_iterator overlay 	= PLANE_DATA(frame_1,0).begin();
 	const plane_t::iterator 	  dest 		= PLANE_DATA(outframe,0).begin();
 	ssize_t line = 0;
-	if (!rewrite && y_ > 0) {
-		fill_multiple_lines<kernel>(line,std::min(height,y_), src, dest, linesize_0, linesize_out, width);
+	if (y_ > 0) {
+		if (!rewrite) {
+			fill_multiple_lines<kernel>(line,std::min(height,y_), src, dest, linesize_0, linesize_out, width);
+		} else {
+			line +=std::min(height,y_);
+		}
 	}
 	for (; line < std::min(height,h+y_); ++line) {
 		plane_t::const_iterator src_pix 	= src+line*linesize_0;
 		plane_t::const_iterator ovr_pix 	= overlay+(line-y_)*linesize_1;
 		plane_t::iterator 		dest_pix	= dest+line*linesize_out;
 		ssize_t pixel = 0;
-		if (!rewrite && x > 0) {
-			fill_line<kernel>(pixel, std::min(width,x), src_pix, dest_pix);
+		if (x > 0) {
+			if (!rewrite) {
+				fill_line<kernel>(pixel, std::min(width,x), src_pix, dest_pix);
+			} else {
+				advance_line<kernel>(pixel, std::min(width,x), src_pix, dest_pix);
+			}
 		}
 		for (; pixel < std::min(width,w+x); pixel+=step) {
 			kernel::compute(src_pix, ovr_pix, dest_pix);
 		}
-		if (!rewrite && pixel < width-1) {
-			fill_line<kernel>(pixel, width, src_pix, dest_pix);
+		if (pixel < width-1) {
+			 if (!rewrite) {
+				 fill_line<kernel>(pixel, width, src_pix, dest_pix);
+			 } else {
+				 advance_line<kernel>(pixel, width, src_pix, dest_pix);
+			 }
+
 		}
 	}
 	if (!rewrite && (line < height - 1)) {
@@ -449,7 +479,7 @@ std::vector<core::pFrame> Overlay::do_special_step(param_type frames)
 	core::pRawVideoFrame f1 = std::move(std::get<1>(frames));
 	std::get<0>(frames).reset();
 	if (!f0 || !f1) return {};
-	core::pRawVideoFrame outframe = dispatch_unique(*this, std::move(f0), f1);
+	core::pRawVideoFrame outframe = dispatch(*this, std::move(f0), f1);
 	if (outframe) return {outframe};
 	return {};
 }

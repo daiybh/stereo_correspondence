@@ -1,8 +1,11 @@
-/*
- * RawAVFile.cpp
+/*!
+ * @file 		RawAVFile.cpp
+ * @author 		Zdenek Travnicek <travnicek@iim.cz>
+ * @date		09.02.2012
+ *  * @date		02.04.2015
+ * @copyright	Institute of Intermedia, CTU in Prague, 2012 - 2015
+ * 				Distributed under BSD Licence, details in file doc/LICENSE
  *
- *  Created on: Feb 9, 2012
- *      Author: neneko
  */
 
 #include "RawAVFile.h"
@@ -15,6 +18,8 @@
 #include "yuri/core/frame/CompressedVideoFrame.h"
 #include "yuri/core/frame/compressed_frame_types.h"
 #include "yuri/core/frame/compressed_frame_params.h"
+#include "yuri/core/utils/irange.h"
+#include "yuri/core/utils/assign_events.h"
 #include <cassert>
 #include "libavcodec/version.h"
 namespace yuri {
@@ -40,7 +45,20 @@ namespace {
 		catch(std::exception&){}
 		return unknown_format;
 	}
+
 }
+
+struct RawAVFile::stream_detail_t {
+		stream_detail_t(AVStream* stream=nullptr, AVCodec* codec = nullptr, format_t fmt = 0, format_t fmt_out = 0)
+		:stream(stream),ctx(stream?stream->codec:nullptr),codec(codec),format(fmt),format_out(fmt_out) {}
+		AVStream* stream;
+		AVCodecContext *ctx;
+		AVCodec* codec;
+		format_t format;
+		format_t format_out;
+		resolution_t resolution;
+		duration_t delta;
+	};
 
 core::Parameters RawAVFile::configure()
 {
@@ -52,114 +70,42 @@ core::Parameters RawAVFile::configure()
 	p["fps"]["Override framerate. Specify 0 to use original, or negative value to maximal speed."]=0;
 	p["max_video"]["Maximal number of video streams to process"]=1;
 	p["max_audio"]["Maximal number of audio streams to process"]=0;
+	p["loop"]["Loop the video"]=true;
+	p["allow_empty"]["Allow empty input file"]=false;
+	p["enable_experimental"]["Enable experimental codecs"]=true;
 	return p;
 }
 
 // TODO: number of output streams should be -1 and custom connect_out should be implemented.
 RawAVFile::RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core::Parameters &parameters)
 	:IOThread(_log,parent,0,1024,"RawAVSource"),
-	fmtctx(nullptr),block(0),video_format_out_(0),
-	decode_(true),fps_(0.0),max_video_streams_(1),max_audio_streams_(1)
+	 BasicEventConsumer(log),
+	fmtctx_(nullptr,[](AVFormatContext* ctx){avformat_close_input(&ctx);}),video_format_out_(0),
+	decode_(true),fps_(0.0),max_video_streams_(1),max_audio_streams_(1),
+	loop_(true),reset_(false),allow_empty_(false),enable_experimental_(true)
 {
 	IOTHREAD_INIT(parameters)
 	set_latency (10_us);
 #ifdef BROKEN_FFMPEG
-// We probably using BROKEN port of ffmpeg (libav) or VERY old ffmpeg.
+// We probably using BROKEN fork of ffmpeg (libav) or VERY old ffmpeg.
 	if (max_audio_streams_ > 0) {
-		log[log::warning] << "Using unsupported version of FFMPEG, probably the FAKE libraries distributed by libav project. Audio supoort disabled";
+		log[log::warning] << "Using unsupported version of FFMPEG, probably the FAKE libraries distributed by libav project. Audio suport disabled";
 		max_audio_streams_ = 0;
 	}
 #endif
 	resize(0,max_video_streams_+max_audio_streams_);
-	av_register_all();
-	if (filename.empty()) throw exception::InitializationFailed("No filename specified!");
+	libav::init_libav();
 
-	avformat_open_input(&fmtctx, filename.c_str(),0, 0);
-	if (!fmtctx) {
-		throw exception::InitializationFailed("Failed to allocate Format context");
-	}
-	if (avformat_find_stream_info(fmtctx,0)<0) {
-		log[log::fatal] << "Failed to retrieve stream info!";
-		throw exception::InitializationFailed("Failed to retrieve stream info!");
-	}
-	for (size_t i = 0; i< fmtctx->nb_streams; ++i) {
-		if (fmtctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
-			log[log::debug] << "Found video stream with id " << i << ".";
-			//if (!video_stream) video_stream=fmtctx->streams[i];
-			if (video_streams_.size() < max_video_streams_ && fmtctx->streams[i]->codec) {
-				video_streams_.push_back(fmtctx->streams[i]);
-			}
-		} else if (fmtctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
-			log[log::debug] << "Found audio stream with id " << i << ".";
-			if (audio_streams_.size() < max_audio_streams_ && fmtctx->streams[i]->codec) {
-				audio_streams_.push_back(fmtctx->streams[i]);
-			}
-		}
-	}
-	if (video_streams_.empty() && audio_streams_.empty()) {
-		throw exception::InitializationFailed("No stream in input file!");
-	}
-//	if (!video_stream->codec) {
-//		throw exception::InitializationFailed("No codec allocated for input file");
-//	}
-	video_formats_out_.resize(video_streams_.size(),video_format_out_);
-	video_codecs_.resize(video_streams_.size(),0);
-	video_formats_.resize(video_streams_.size(),0);
-	audio_formats_out_.resize(audio_streams_.size(),0);
-	audio_codecs_.resize(audio_streams_.size(),0);
-	audio_formats_.resize(audio_streams_.size(),0);
-	frames_.resize(video_streams_.size() + audio_streams_.size());
-	if (!decode_) {
-		for (size_t i=0;i<video_streams_.size();++i) {
-			video_formats_[i] = libav::yuri_format_from_avcodec(video_streams_[i]->codec->codec_id);
-			if (video_formats_[i] == 0) {
-				throw exception::InitializationFailed("Unknown format");
-			}
-			log[log::info] << "Found video stream with format " << get_format_name_no_throw(video_formats_[i]) <<
-			" and resolution " << video_streams_[i]->codec->width << "x" << video_streams_[i]->codec->height;
-		}
+
+	if (filename_.empty()) {
+		if (!allow_empty_) throw exception::InitializationFailed("No filename specified!");
+		log[log::info] << "No filename specified, starting without an active video";
 	} else {
-		for (size_t i=0;i<video_streams_.size();++i) {
-			video_codecs_[i] = avcodec_find_decoder(video_streams_[i]->codec->codec_id);
-			if (!video_codecs_[i]) {
-				throw exception::InitializationFailed("Failed to find decoder");
-			}
-			if(video_codecs_[i]->capabilities & CODEC_CAP_TRUNCATED)
-				video_streams_[i]->codec->flags|=CODEC_FLAG_TRUNCATED;
-			if (video_formats_out_[i] != 0) {
-				video_streams_[i]->codec->pix_fmt = libav::avpixelformat_from_yuri(video_formats_out_[i]);
-			}
-
-			if (avcodec_open2(video_streams_[i]->codec,video_codecs_[i],0) < 0) {
-				throw exception::InitializationFailed("Failed to open codec!");
-			}
-			video_formats_[i] = libav::yuri_format_from_avcodec(video_streams_[i]->codec->codec_id);
-			video_formats_out_[i] = libav::yuri_pixelformat_from_av(video_streams_[i]->codec->pix_fmt);
-			log[log::info] << "Found video stream with format " << get_format_name_no_throw(video_formats_[i]) <<
-				" and resolution " << video_streams_[i]->codec->width << "x" << video_streams_[i]->codec->height <<
-				". Decoding to " << get_format_name_no_throw(video_formats_out_[i]);
-		}
-		for (size_t i=0;i<audio_streams_.size();++i) {
-			audio_codecs_[i] = avcodec_find_decoder(audio_streams_[i]->codec->codec_id);
-			if (!audio_codecs_[i]) {
-				throw exception::InitializationFailed("Failed to find decoder");
-			}
-//			if(audio_codecs_[i]->capabilities & CODEC_CAP_TRUNCATED)
-//				video_streams_[i]->codec->flags|=CODEC_FLAG_TRUNCATED;
-//			if (audio_formats_out_[i] != 0) {
-//				video_streams_[i]->codec->pix_fmt = libav::avpixelformat_from_yuri(video_formats_out_[i]);
-//			}
-
-			if (avcodec_open2(audio_streams_[i]->codec,audio_codecs_[i],0) < 0) {
-				throw exception::InitializationFailed("Failed to open codec!");
-			}
-			audio_formats_[i] = libav::yuri_format_from_avcodec(audio_streams_[i]->codec->codec_id);
-			audio_formats_out_[i] = libav::yuri_audio_from_av(audio_streams_[i]->codec->sample_fmt);
-			log[log::info] << "Found audio stream, format:" << audio_formats_[i] << " to " << audio_formats_out_[i];// << get_format_name_no_throw(audio_formats_[i]) <<
-//				<<". Decoding to " << get_format_name_no_throw(video_formats_out_[i]);
+		if (!open_file(filename_)) {
+			if (!allow_empty_) throw exception::InitializationFailed("Failed to open file");
+			log[log::warning] << "Failed to open file, but allow_empty was specified, so waiting for new filename";
 		}
 	}
-
 
 }
 
@@ -168,223 +114,404 @@ RawAVFile::~RawAVFile() noexcept
 
 }
 
-void RawAVFile::run()
+bool RawAVFile::open_file(const std::string& filename)
 {
-//	using namespace boost::posix_time;
-//	IO_THREAD_PRE_RUN
-	AVPacket packet;
-	av_init_packet(&packet);
-	bool keep_packet = false;
-	AVFrame *av_frame = avcodec_alloc_frame();
-	next_times_.resize(video_streams_.size(),timestamp_t{});
-	std::vector<duration_t> time_deltas(video_streams_.size());
+	video_streams_.clear();
+	audio_streams_.clear();
+	frames_.clear();
 
-	for (size_t i=0;i<video_streams_.size();++i) {
-		if (fps_>0) time_deltas[i] = 1_s/fps_;
-		else if (fps_ == 0.0) {
-			time_deltas[i] = 1_s*video_streams_[i]->avg_frame_rate.den/video_streams_[i]->avg_frame_rate.num;
-			log[log::info] << "Delta " << i << " " << time_deltas[i];
+	// ffmpeg needs locking of open/close functions...
+	auto lock = libav::get_libav_lock();
+	if (fmtctx_) {
+		avformat_close_input(&fmtctx_.get_ptr_ref());
+	}
+	fmtctx_.reset();
+
+	avformat_open_input(&fmtctx_.get_ptr_ref(), filename.c_str(),0, 0);
+	if (!fmtctx_) {
+		log[log::error] << "Failed to allocate Format context";
+		return false;
+	}
+
+
+	if (avformat_find_stream_info(fmtctx_,0)<0) {
+		log[log::fatal] << "Failed to retrieve stream info!";
+		return false;
+	}
+
+	for (size_t i = 0; i< fmtctx_->nb_streams; ++i) {
+		if (fmtctx_->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+			log[log::debug] << "Found video stream with id " << i << ".";
+			if (video_streams_.size() < max_video_streams_ && fmtctx_->streams[i]->codec) {
+				video_streams_.push_back({fmtctx_->streams[i], nullptr, 0, video_format_out_});
+				if (enable_experimental_) fmtctx_->streams[i]->codec->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
+			} else {
+				fmtctx_->streams[i]->discard = AVDISCARD_ALL;
+			}
+		} else if (fmtctx_->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+			log[log::debug] << "Found audio stream with id " << i << ".";
+			if (audio_streams_.size() < max_audio_streams_ && fmtctx_->streams[i]->codec) {
+				audio_streams_.push_back(fmtctx_->streams[i]);
+			} else {
+				fmtctx_->streams[i]->discard = AVDISCARD_ALL;
+			}
+		}  else {
+			fmtctx_->streams[i]->discard = AVDISCARD_ALL;
+		}
+	}
+	if (video_streams_.empty() && audio_streams_.empty()) {
+		log[log::error] << "No stream in input file!";
+		return false;
+	}
+
+	frames_.resize(video_streams_.size());
+	if (!decode_) {
+		for (size_t i=0;i<video_streams_.size();++i) {
+			video_streams_[i].format = libav::yuri_format_from_avcodec(video_streams_[i].ctx->codec_id);
+			if (video_streams_[i].format == 0) {
+				log[log::error] << "Unknown format for video stream " << i;
+				return false;
+			}
+			log[log::info] << "Found video stream with format " << get_format_name_no_throw(video_streams_[i].format) <<
+			" and resolution " << video_streams_[i].ctx->width << "x" << video_streams_[i].ctx->height;
+		}
+	} else {
+		for (size_t i=0;i<video_streams_.size();++i) {
+			video_streams_[i].codec = avcodec_find_decoder(video_streams_[i].ctx->codec_id);
+			if (!video_streams_[i].codec) {
+				log[log::error] << "Failed to find decoder for video stream " << i;
+				return false;
+			}
+			if(video_streams_[i].codec ->capabilities & CODEC_CAP_TRUNCATED)
+				video_streams_[i].ctx->flags|=CODEC_FLAG_TRUNCATED;
+			if (video_streams_[i].format_out != 0) {
+				video_streams_[i].ctx->pix_fmt = libav::avpixelformat_from_yuri(video_streams_[i].format_out);
+			}
+
+			if (avcodec_open2(video_streams_[i].ctx,video_streams_[i].codec,0) < 0) {
+				log[log::error] << "Failed to open codec for video stream " <<i;
+				return false;
+			}
+			video_streams_[i].format = libav::yuri_format_from_avcodec(video_streams_[i].ctx->codec_id);
+			video_streams_[i].format_out = libav::yuri_pixelformat_from_av(video_streams_[i].ctx->pix_fmt);
+			video_streams_[i].resolution = resolution_t{
+						static_cast<dimension_t>(video_streams_[i].ctx->width),
+						static_cast<dimension_t>(video_streams_[i].ctx->height)};
+
+			log[log::info] << "Found video stream with format " << get_format_name_no_throw(video_streams_[i].format) <<
+				" and resolution " << video_streams_[i].resolution <<
+				". Decoding to " << get_format_name_no_throw(video_streams_[i].format_out);
+		}
+		for (size_t i=0;i<audio_streams_.size();++i) {
+			audio_streams_[i].codec = avcodec_find_decoder(audio_streams_[i].ctx->codec_id);
+			if (!audio_streams_[i].codec) {
+				throw exception::InitializationFailed("Failed to find decoder");
+			}
+			if (avcodec_open2(audio_streams_[i].ctx,audio_streams_[i].codec,0) < 0) {
+				throw exception::InitializationFailed("Failed to open codec!");
+			}
+			audio_streams_[i].format = libav::yuri_format_from_avcodec(audio_streams_[i].ctx->codec_id);
+			audio_streams_[i].format_out = libav::yuri_audio_from_av(audio_streams_[i].ctx->sample_fmt);
+			log[log::info] << "Found audio stream, format:" << audio_streams_[i].format << " to " << audio_streams_[i].format_out;
 		}
 	}
 
 
-	while (still_running()) {
-		// TODO reimplement blocking!!
-		/*if (block) {
-			bool block_all = true;
-			for (size_t i=0;i<video_streams_.size();++i) {
-				if (out[i] && out[i]->get_size()<block) {
-					block_all = false;
-					break;
+	for (auto i: irange(video_streams_.size())) {
+		if (fps_>0) video_streams_[i].delta = 1_s/fps_;
+		else if (fps_ == 0.0) {
+			const auto& den = video_streams_[i].stream->avg_frame_rate.den;
+			const auto& num = video_streams_[i].stream->avg_frame_rate.num;
+			if (num) video_streams_[i].delta = 1_s*den/num;
+			else {
+				log[log::warning] << "No framerate specified for stream " << i << ", using default 25fps";
+				video_streams_[i].delta = 1_s/25;
+			}
+			log[log::info] << "Delta " << i << " " << video_streams_[i].delta;
+		}
+	}
+
+	next_times_.resize(video_streams_.size(),timestamp_t{});
+	return true;
+}
+
+
+bool RawAVFile::push_ready_frames()
+{
+	bool ready = false;
+	for (auto i: irange(video_streams_.size())) {
+		if (frames_[i]) {
+			if (fps_>=0) {
+				timestamp_t curr_time;
+				if (curr_time < next_times_[i]) {
+					continue;
+				} else {
+					next_times_[i] = next_times_[i]+video_streams_[i].delta;
 				}
 			}
-			if (block_all) {
-				sleep(latency);
+			push_frame(i,std::move(frames_[i]));
+
+			frames_[i].reset();
+			ready=true;
+//				continue;
+		} else {
+			ready = true;
+		}
+	}
+	if (video_streams_.empty()) {
+		ready=true;
+	}
+	return ready;
+}
+
+bool RawAVFile::process_file_end()
+{
+	if (loop_) {
+		if (next_filename_.empty() && fmtctx_) {
+			log[log::debug] << "Seeking to the beginning";
+			av_seek_frame(fmtctx_, 0, 0, AVSEEK_FLAG_BACKWARD);
+			for (auto& s: video_streams_) {
+				avcodec_flush_buffers(s.ctx);
+			}
+			for (auto& s: audio_streams_) {
+				avcodec_flush_buffers(s.ctx);
+			}
+		} else {
+			log[log::info] << "Opening: " << next_filename_;
+			filename_ = std::move(next_filename_);
+			next_filename_.clear();
+			return open_file(filename_);
+		}
+		return true;
+	}
+	log[log::error] << "Failed to read next packet";
+	request_end(core::yuri_exit_finished);
+	return false;
+}
+
+bool RawAVFile::process_undecoded_frame(index_t idx, const AVPacket& packet)
+{
+	core::pCompressedVideoFrame f = core::CompressedVideoFrame::create_empty(video_streams_[idx].format,
+			video_streams_[idx].resolution, packet.data, packet.size);
+	frames_[idx] = f;
+	log[log::debug] << "Pushing packet with size: " << f->size();
+	duration_t dur = 1_s * packet.duration*video_streams_[idx].stream->avg_frame_rate.den/video_streams_[idx].stream->avg_frame_rate.num;
+	if (!dur.value) dur = video_streams_[idx].delta;
+	f->set_duration(dur);
+
+	log[log::debug] << "Found packet!" /* (pts: " << pts << ", dts: " << dts <<*/ ", dur: " << dur;
+	log[log::debug] << "num/den:" << video_streams_[idx].stream->avg_frame_rate.num << "/" << video_streams_[idx].stream->avg_frame_rate.den;
+	log[log::debug] << "orig pts: " << packet.pts << ", dts: " << packet.dts << ", dur: " << packet.duration;
+	return true;
+}
+
+/*
+Parameter packet should be const, but the woudn't work with the fake ffmpeg (libav). Oh well...
+*/
+bool RawAVFile::decode_video_frame(index_t idx, AVPacket& packet, AVFrame* av_frame, bool& keep_packet)
+{
+	int whole_frame = 0;
+
+	keep_packet = false;
+	int decoded_size = avcodec_decode_video2(video_streams_[idx].ctx, av_frame, &whole_frame, &packet);
+	if (!whole_frame) {
+		log[log::verbose_debug] << "Didn't get whole frame";
+		return false;
+	}
+	if (decoded_size < 0) {
+		log[log::warning] << "Failed to decode frame";
+		return false;
+	}
+
+	if (packet.size && decoded_size != packet.size) {
+		keep_packet = true;
+		log[log::debug] << "Used only " << decoded_size << " bytes out of " << packet.size;
+	}
+
+	auto f = libav::yuri_frame_from_av(*av_frame);
+	if (!f) {
+		log[log::warning] << "Failed to convert avframe, probably unsupported pixelformat";
+		return false;
+	}
+	if (format_out_ != f->get_format()) {
+		log[log::warning] << "Unexpected frame format! Expected '" << get_format_name_no_throw(format_out_)
+		<< "', but got '" << get_format_name_no_throw(f->get_format()) << "'";
+		format_out_ = f->get_format();
+	}
+
+	frames_[idx] = f;
+	return true;
+}
+
+bool RawAVFile::decode_audio_frame(index_t idx, const AVPacket& packet, AVFrame* av_frame, bool& keep_packet)
+{
+#ifdef BROKEN_FFMPEG
+// We are probably using BROKEN port of ffmpeg (libav) or VERY old ffmpeg.
+	(void)idx;
+	(void)packet;
+	(void)av_frame;
+	(void)keep_packet;
+
+	return false;
+#else
+	keep_packet = false;
+	int whole_frame = 0;
+
+	int decoded_size = avcodec_decode_audio4(audio_streams_[idx].ctx, av_frame, &whole_frame,&packet);
+	if (!whole_frame) {
+		return false;
+	}
+	if (decoded_size < 0) {
+		log[log::warning] << "Failed to decode frame";
+		return false;
+	}
+
+	if (decoded_size != packet.size) {
+		keep_packet = true;
+		log[log::debug] << "Used only " << decoded_size << " bytes out of " << packet.size;
+	}
+	size_t data_size = av_frame->nb_samples * av_frame_get_channels(av_frame) * 2 ;
+	auto f = core::RawAudioFrame::create_empty(audio_streams_[idx].format_out, av_frame_get_channels(av_frame), av_frame->sample_rate, av_frame->data[0], data_size);
+	if (!f) {
+		log[log::warning] << "Failed to convert avframe, probably unsupported pixelformat";
+		return false;
+	}
+	push_frame(idx + max_video_streams_, std::move(f));
+	return true;
+#endif
+}
+
+namespace {
+int find_in_stream_group(int index, const std::vector<RawAVFile::stream_detail_t>& streams)
+{
+	for (auto i: irange(streams.size())) {
+		if (index == streams[i].stream->index) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+}
+void RawAVFile::run()
+{
+	AVPacket packet;
+	av_init_packet(&packet);
+	AVPacket empty_packet;
+	av_init_packet(&empty_packet);
+	empty_packet.data = nullptr;
+	empty_packet.size = 0;
+	bool keep_packet = false;
+	bool finishing = false;
+	AVFrame *av_frame = avcodec_alloc_frame();
+
+	next_times_.resize(video_streams_.size(),timestamp_t{});
+
+	while (still_running()) {
+		process_events();
+		if (!fmtctx_) {
+			if (next_filename_.empty()) {
+				wait_for_events(10_ms);
 				continue;
 			}
-		}*/
-		bool ready = false;
-		for (size_t i=0;i<video_streams_.size();++i) {
-			if (frames_[i]) {
-				if (fps_>=0) {
-					timestamp_t curr_time;//= std::chrono::steady_clock::now();
-					if (curr_time < next_times_[i]) {
-//						log[log::info] << "Not yet... " << i << ", remaining " <<  (next_times_[i] - curr_time);
-						continue;
-					} else {
-						next_times_[i] = next_times_[i]+time_deltas[i];
-						//ready = true;
-					}
-				}
-//				log[log::info] << "Pushing... " << i;
-				push_frame(i,frames_[i]);
-				// TODO: Fix this....
-//				if (audio_streams_.size()) {
-//					for (size_t i=0;i<audio_streams_.size();++i) {
-//						auto i2 = video_streams_.size()+i;
-//						push_frame(i2,frames_[i2]);
-//					}
-//				}
+		}
 
-
-				frames_[i].reset();
-				ready=true;
-//				continue;
-			} else {
-				ready = true;
+		if (reset_ || !fmtctx_) {
+			log[log::info] << "RESET";
+			if (!process_file_end()) {
+				if (!loop_) break;
+			}
+			reset_ = false;
+			if (!fmtctx_) {
+				next_times_.clear();
+				continue;
 			}
 		}
-		if (video_streams_.empty()) {
-			ready=true;
-		}
-		if (!ready) {
+
+		if (!push_ready_frames()) {
 			sleep(get_latency());
 			continue;
 		}
-		if (!keep_packet && av_read_frame(fmtctx,&packet)<0) {
-			log[log::error] << "Failed to read next packet";
-			request_end(core::yuri_exit_finished);
-			break;
-		}
-		size_t idx=max_video_streams_+1;
-		for (size_t i=0;i<video_streams_.size();++i) {
-			if (packet.stream_index == video_streams_[i]->index) {
-				idx = i;
-				break;
+
+		if (!keep_packet) {
+			av_free_packet(&packet);
+			if (av_read_frame(fmtctx_,&packet)<0) {
+				finishing = true;
 			}
 		}
-		if (idx<max_video_streams_) {
+
+
+		if (finishing) {
+			bool done = true;
+			for (auto i: irange(video_streams_.size())) {
+				if (!frames_[i]) {
+					decode_video_frame(i, empty_packet, av_frame, keep_packet);
+				}
+				if (frames_[i]) done = false;
+			}
+			if (done) {
+				finishing = false;
+				reset_ = true;
+			}
+			continue;
+		}
+
+		auto idx = find_in_stream_group(packet.stream_index, video_streams_);
+		if (idx>=0) {
 			if (!decode_) {
-				core::pCompressedVideoFrame f = core::CompressedVideoFrame::create_empty(video_formats_[idx],
-						resolution_t{static_cast<dimension_t>(video_streams_[idx]->codec->width), static_cast<dimension_t>(video_streams_[idx]->codec->height)},
-						packet.data,
-						packet.size	);
-	//			frames_[idx] = allocate_frame_from_memory(packet.data, packet.size);
-				frames_[idx] = f;
-				log[log::debug] << "Pushing packet with size: " << f->size();
-				duration_t dur = 1_s * packet.duration*video_streams_[idx]->avg_frame_rate.den/video_streams_[idx]->avg_frame_rate.num;
-				if (!dur.value) dur = 1_s * video_streams_[idx]->avg_frame_rate.den/video_streams_[idx]->avg_frame_rate.num;
-
-	//			size_t pts = 1e3*packet.pts*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
-	//			size_t dts = 1e3*packet.dts*video_streams_[idx]->r_frame_rate.den/video_streams_[idx]->r_frame_rate.num;
-
-
-	//			frames_[idx]->set_parameters(video_formats_[idx], video_streams_[idx]->codec->width, video_streams_[idx]->codec->height);
-	//			frames_[idx]->set_time(dur, pts, dts);
-				f->set_duration(dur);
-
-
-				log[log::debug] << "Found packet!"/* (pts: " << pts << ", dts: " << dts <<*/ ", dur: " << dur;
-				log[log::debug] << "num/den:" << video_streams_[idx]->avg_frame_rate.num << "/" << video_streams_[idx]->avg_frame_rate.den;
-				log[log::debug] << "orig pts: " << packet.pts << ", dts: " << packet.dts << ", dur: " << packet.duration;
+				process_undecoded_frame(idx, packet);
 			} else {
-				int whole_frame = 0;
-
-				keep_packet = false;
-				int decoded_size = avcodec_decode_video2(video_streams_[idx]->codec,av_frame, &whole_frame,&packet);
-				if (!whole_frame) {
-	//				log[log::warning] << "No frame this time...";
+				if (!decode_video_frame(idx, packet, av_frame, keep_packet))
 					continue;
-				}
-				if (decoded_size < 0) {
-					log[log::warning] << "Failed to decode frame";
-					continue;
-				}
-
-				if (decoded_size != packet.size) {
-					keep_packet = true;
-					log[log::debug] << "Used only " << decoded_size << " bytes out of " << packet.size;
-				}
-
-				auto f = libav::yuri_frame_from_av(*av_frame);
-				if (!f) {
-					log[log::warning] << "Failed to convert avframe, probably unsupported pixelformat";
-					continue;
-				}
-				if (format_out_ != f->get_format()) {
-					log[log::warning] << "Unexpected frame format! Expected '" << get_format_name_no_throw(format_out_)
-					<< "', but got '" << get_format_name_no_throw(f->get_format()) << "'";
-					format_out_ = f->get_format();
-				}
-
-				frames_[idx] = f;
 			}
 		} else {
-#ifdef BROKEN_FFMPEG
-// We probably using BROKEN port of ffmpeg (libav) or VERY old ffmpeg.
-			continue;
-#else
-			size_t idx=max_audio_streams_+1;
-			for (size_t i=0;i<audio_streams_.size();++i) {
-				if (packet.stream_index == audio_streams_[i]->index) {
-					idx = i;
-					break;
-				}
-			}
-			if (idx >max_audio_streams_) continue;
-			keep_packet = false;
-			int whole_frame = 0;
-//			idx+=video_streams_.size();
-			int decoded_size = avcodec_decode_audio4(audio_streams_[idx]->codec, av_frame, &whole_frame,&packet);
-			if (!whole_frame) {
-//				log[log::warning] << "No frame this time...";
-				continue;
-			}
-			if (decoded_size < 0) {
-				log[log::warning] << "Failed to decode frame";
+			idx = find_in_stream_group(packet.stream_index, audio_streams_);
+			if (idx<0) {
 				continue;
 			}
 
-			if (decoded_size != packet.size) {
-				keep_packet = true;
-				log[log::debug] << "Used only " << decoded_size << " bytes out of " << packet.size;
-			}
-
-//			log[log::info] << "Decoded audio";
-//			continue;
-//			auto f = libav::yuri_frame_from_av(*av_frame);
-			size_t data_size = av_frame->nb_samples * av_frame_get_channels(av_frame) * 2 ;
-			auto f = core::RawAudioFrame::create_empty(audio_formats_out_[idx], av_frame_get_channels(av_frame), av_frame->sample_rate, av_frame->data[0], data_size);
-			if (!f) {
-				log[log::warning] << "Failed to convert avframe, probably unsupported pixelformat";
+			if (!decode_audio_frame(idx, packet, av_frame, keep_packet)) {
 				continue;
 			}
-//			if (format_out_ != f->get_format()) {
-//				log[log::warning] << "Unexpected frame format! Expected '" << get_format_name_no_throw(format_out_)
-//				<< "', but got '" << get_format_name_no_throw(f->get_format()) << "'";
-//				format_out_ = f->get_format();
-//			}
-			push_frame(idx + max_video_streams_, f);
-			//frames_[idx + video_streams_.size()] = f;
-#endif
 		}
 	}
 	av_free(av_frame);
-	av_free_packet(&packet);
-//	IO_THREAD_POST_RUN
+
+	av_free_packet(&empty_packet);
 }
 
 bool RawAVFile::set_param(const core::Parameter &parameter)
 {
-	if (parameter.get_name() == "block") {
-		block=parameter.get<yuri::size_t>();
-	} else if (parameter.get_name() == "filename") {
-		filename=parameter.get<std::string>();
-	} else if (parameter.get_name() == "decode") {
-		decode_=parameter.get<bool>();
-	} else if (parameter.get_name() == "format") {
-		video_format_out_=core::raw_format::parse_format(parameter.get<std::string>());
-	} else if (parameter.get_name() == "fps") {
-		fps_ = parameter.get<double>();
-	} else if (parameter.get_name() == "max_video") {
-		max_video_streams_ = parameter.get<size_t>();
-	} else if (parameter.get_name() == "max_audio") {
-		max_audio_streams_ = parameter.get<double>();
-	} else {
-		return IOThread::set_param(parameter);
-	}
-	return true;
+	if (assign_parameters(parameter)
+			(filename_,			"filename")
+			(decode_, 			"decode")
+			.parsed<std::string>
+				(video_format_out_, "format", core::raw_format::parse_format)
+			(fps_, 				"fps")
+			(max_video_streams_,"max_video")
+			(max_audio_streams_,"max_audio")
+			(loop_, 			"loop")
+			(allow_empty_,		"allow_empty")
+			(enable_experimental_,"enable_experimental"))
+		return true;
+	return IOThread::set_param(parameter);
+}
 
+bool RawAVFile::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
+{
+	if (event->get_type() == event::event_type_t::bang_event) {
+		if (event_name == "reset") {
+			reset_ = true;
+			return true;
+		}
+	}
+	if (assign_events(event_name, event)
+		(next_filename_, "filename")
+		(reset_, "reset")) {
+		return true;
+	}
+
+	return false;
 }
 
 } /* namespace video */

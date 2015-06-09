@@ -42,17 +42,30 @@ protected:
 	typedef shared_ptr<T> ptr_type;
 	typedef Param param_type;
 	ptr_type key_not_found(const KeyType&) const {
-		throw(std::runtime_error("Key not found"));
+		throw(std::runtime_error("Key not registered"));
 	}
 	param_type cfg_key_not_found(const KeyType&) const {
-		throw(std::runtime_error("Key not found"));
+		throw(std::runtime_error("Configuration key not found."));
 	}
-//	bool generator_already_registered(const KeyType&)
-//	{
-//		return false;
-//	}
-
 };
+
+template<class T, class Param>
+class DefaultErrorPolicy<T, std::string, Param> {
+protected:
+	DefaultErrorPolicy() = default;
+	virtual ~DefaultErrorPolicy() noexcept {};
+	typedef shared_ptr<T> ptr_type;
+	typedef Param param_type;
+	ptr_type key_not_found(const std::string& key) const {
+		using std::to_string;
+		throw(std::runtime_error("Entity " + key + " not registered"));
+	}
+	param_type cfg_key_not_found(const std::string& key) const {
+		throw(std::runtime_error("Key " + key + " not found"));
+	}
+};
+
+
 template<class T, class KeyType, class Param>
 class EXPORT FatalErrorPolicy {
 	FatalErrorPolicy() = default;

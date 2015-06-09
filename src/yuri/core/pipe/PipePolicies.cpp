@@ -56,13 +56,22 @@ bool SizeLimitedPolicy<true>::impl_push_frame(const pFrame &frame)
 	return true;
 }
 
+namespace {
+yuri::size_t get_next_position(yuri::size_t start, yuri::size_t count, yuri::size_t max_count)
+{
+	return (start + count) % max_count;
+}
+
+}
 template<>
 bool CountLimitedPolicy<false>::impl_push_frame(const pFrame &frame)
 {
-	frames_.push_back(frame);
-	while (frames_.size()>max_count_) {
-		drop_frame(frames_.front());
-		frames_.pop_front();
+	assert(count_ <= max_count_);
+	if (count_ >= max_count_) {
+		frames_[first_index_++]=frame;
+	} else {
+		frames_[get_next_position(first_index_, count_, max_count_)]=frame;
+		++count_;
 	}
 	return true;
 }
@@ -70,8 +79,13 @@ bool CountLimitedPolicy<false>::impl_push_frame(const pFrame &frame)
 template<>
 bool CountLimitedPolicy<true>::impl_push_frame(const pFrame &frame)
 {
-	if (frames_.size()>=max_count_) return false;
-	frames_.push_back(frame);
+	assert(count_ <= max_count_);
+	if (count_ >= max_count_) {
+		return false;
+	} else {
+		frames_[get_next_position(first_index_, count_, max_count_)]=frame;
+		++count_;
+	}
 	return true;
 }
 

@@ -82,6 +82,7 @@ core::pFrame OpenCVConvert::do_special_single_step(core::pRawVideoFrame frame)
 	cv::Mat in_mat(height,width,in_type,PLANE_RAW_DATA(frame,0));
 	cv::Mat out_mat(height,width,out_type,PLANE_RAW_DATA(output,0));
 	cv::cvtColor(in_mat,out_mat,it->second);
+	output->copy_video_params(*frame);
 	return output;
 }
 core::pFrame OpenCVConvert::do_convert_frame(core::pFrame input_frame, format_t target_format)

@@ -41,7 +41,8 @@ enum debug_flags_t: long {
 	show_time		=	1L << 4,	//!< Enables output of actual time with the output
 	show_thread_id	=	1L << 5,	//!< Enables showing thread id
 	show_level		=	1L << 6,	//!< Enables showing debug level name
-	use_colors		=	1L << 7		//!< Enable usage of colors
+	use_colors		=	1L << 7,	//!< Enable usage of colors
+	show_date		=	1L << 8,	//!< Enables output of actual date with the output
 };
 
 typedef debug_flags_t  debug_flags;

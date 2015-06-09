@@ -64,7 +64,7 @@ HRESULT DeckLinkInput::VideoInputFormatChanged (BMDVideoInputFormatChangedEvents
 	log[log::info] << "VideoInputFormatChanged. " <<
 					"Format changed: " << (notificationEvents&bmdVideoInputDisplayModeChanged?"YES":"NO") << ", "
 					"dominance changed: " << (notificationEvents&bmdVideoInputFieldDominanceChanged?"YES":"NO") << ". "
-					"colorspace changed: " << (notificationEvents&bmdVideoInputColorspaceChanged?"YES":"NO") << "\n";
+					"colorspace changed: " << (notificationEvents&bmdVideoInputColorspaceChanged?"YES":"NO");
 	std::string dom="unknown";
 	const char * name;
 	bool new_format_is_psf = false;
@@ -78,18 +78,18 @@ HRESULT DeckLinkInput::VideoInputFormatChanged (BMDVideoInputFormatChangedEvents
 	}
 	newDisplayMode->GetName(&name);
 	log[log::info] << "New format: " << name << ", " << newDisplayMode->GetWidth() << "x" << newDisplayMode->GetHeight() <<
-				", dom: " << dom << "\n";
+				", dom: " << dom;
 	BMDDisplayMode new_mode = newDisplayMode->GetDisplayMode();
 //	if (force_psf && actual_format_is_psf && !new_format_is_psf) {
-//		if (new_format_is_progressive) log[info] << "Requested PsF, but got progressive. getting progressive\n";
+//		if (new_format_is_progressive) log[info] << "Requested PsF, but got progressive. getting progressive";
 //		else {
 //			if (interlace_to_progressive.find(new_mode) != interlace_to_progressive.end()) {
 //				new_mode = interlace_to_progressive[new_mode];
 //				if (new_mode == mode) {
-//					log[info] << "Requested Psf, but BMD returned corresponding interlace. Ignoring!\n";
+//					log[info] << "Requested Psf, but BMD returned corresponding interlace. Ignoring!";
 //					return S_OK;
 //				}
-//				log[info] << "Wanna PsF, so chenging new mode to progressive\n";
+//				log[info] << "Wanna PsF, so chenging new mode to progressive";
 //			}
 //		}
 //	}
@@ -104,21 +104,21 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 {
 	using std::swap;
 	int res = S_OK;
-	log[log::debug] << "VideoInputFrameArrived" << "\n";
+	log[log::debug] << "VideoInputFrameArrived";
 	if (videoFrame->GetFlags()&bmdFrameHasNoInputSource) {
-		log[log::warning] << "No input detected" << "\n";
+		log[log::warning] << "No input detected";
 		if (manual_detect_format && ++manual_detect_timeout>manual_detect_format) {
 			BMDDisplayMode orig_mode = mode;
 			while(true) {
 				mode = select_next_format();
 				if (mode==orig_mode) {
-					log[log::info] << "Can't set any other format!" << "\n";
+					log[log::info] << "Can't set any other format!";
 					break;
 				}
 				const char* cm = reinterpret_cast<char*>(&mode);
-				log[log::info] << "Trying new format: " << cm[3] << cm[2] << cm[1] << cm[0] << "\n";
+				log[log::info] << "Trying new format: " << cm[3] << cm[2] << cm[1] << cm[0];
 				if (restart_streams()) break;
-				log[log::info] << "Failed to set the format. trying other one" << "\n";
+				log[log::info] << "Failed to set the format. trying other one";
 			}
 			manual_detect_timeout=0;
 			current_format_name_ = get_mode_name(mode);
@@ -130,7 +130,7 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 		yuri::format_t output_format = convert_bm_to_yuri(pixel_format);
 
 		if (videoFrame->GetBytes(reinterpret_cast<void**>(&data))!=S_OK) {
-			log[log::error] << "Failed to get data from frame" << "\n";
+			log[log::error] << "Failed to get data from frame";
 			return S_OK;
 		} else {
 			yuri::size_t data_size = videoFrame->GetRowBytes() * height;
@@ -143,14 +143,14 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 			if (samples) {
 				uint8_t *audio_data;
 				if ((res=audioPacket->GetBytes(reinterpret_cast<void**>(&audio_data)))!=S_OK) {
-					log[log::error] << "Failed to get data for audio samples! (" << bmerr(res)<<")" << "\n";
+					log[log::error] << "Failed to get data for audio samples! (" << bmerr(res)<<")";
 				} else {
 					core::pRawAudioFrame audio_frame = core::RawAudioFrame::create_empty(core::raw_audio_format::signed_16bit, audio_channels, 48000, audio_data ,samples*audio_channels*2);
 					push_frame(audio_pipe, audio_frame);
 //					push_audio_frame(audio_pipe,audio_frame,YURI_AUDIO_PCM_S16_LE,audio_channels,samples,0,0,0);
 				}
 			} else {
-				log[log::warning] << "Got input frame, but no samples in it" << "\n";
+				log[log::warning] << "Got input frame, but no samples in it";
 			}
 		}
 
@@ -168,7 +168,7 @@ HRESULT DeckLinkInput::VideoInputFrameArrived (IDeckLinkVideoInputFrame* videoFr
 			uint8_t *data2;
 
 			if (videoFrame->GetBytes(reinterpret_cast<void**>(&data2))!=S_OK) {
-				log[log::error] << "Failed to get data for right eye" << "\n";
+				log[log::error] << "Failed to get data for right eye";
 				videoFrame->Release();
 //				ext->Release();
 				return S_OK;
@@ -201,7 +201,7 @@ bool DeckLinkInput::init()
 	device->QueryInterface(IID_IDeckLinkAttributes,reinterpret_cast<void**>(&attr));
 
 	if (device->QueryInterface(IID_IDeckLinkInput,reinterpret_cast<void**>(&input))!=S_OK) {
-		log[log::fatal] << "Failed to get input interface" << "\n";
+		log[log::fatal] << "Failed to get input interface";
 		device->Release();
 		device=0;
 		return false;
@@ -209,25 +209,25 @@ bool DeckLinkInput::init()
 	if (detect_format) {
 		bool detection_supported;
 		if(attr->GetFlag(BMDDeckLinkSupportsInputFormatDetection, &detection_supported) != S_OK) {
-				log[log::error] << "Failed to verify whetehr autodetection is supported" << "\n";
+				log[log::error] << "Failed to verify whetehr autodetection is supported";
 				detect_format = false;
 		} else {
 			if (!detection_supported) {
-				log[log::error] << "Format detection is not supported!" << "\n";
+				log[log::error] << "Format detection is not supported!";
 				detect_format = false;
 			} else {
-				log[log::info] << "Format autodetection is supported" << "\n";
+				log[log::info] << "Format autodetection is supported";
 			}
 		}
 	}
-	log[log::debug] << "Initialization OK" << "\n";
+	log[log::debug] << "Initialization OK";
 	return true;
 }
 
 void DeckLinkInput::run()
 {
 	if (!start_capture()) {
-		log[log::fatal] << "Failed to start capture. Bailing out" << "\n";
+		log[log::fatal] << "Failed to start capture. Bailing out";
 		request_end(core::yuri_exit_finished);
 		return;
 	}
@@ -244,31 +244,31 @@ bool DeckLinkInput::start_capture()
 	assert(input);
 	HRESULT res;
 	if (!verify_display_mode()) {
-		log[log::warning] << "Failed to verify input mode. Probably unsupported\n";
+		log[log::warning] << "Failed to verify input mode. Probably unsupported";
 		return false;
 	}
 	IDeckLinkConfiguration *cfg;
 	if (device->QueryInterface(IID_IDeckLinkConfiguration,reinterpret_cast<void**>(&cfg))!=S_OK) {
-		log[log::error]<< "Failed to get cfg handle" << "\n";
+		log[log::error]<< "Failed to get cfg handle";
 	} else {
 		if (cfg->SetInt(bmdDeckLinkConfigVideoInputConnection,connection)!=S_OK) {
-			log[log::error] << "Failed to set input to SDI" << "\n";
+			log[log::error] << "Failed to set input to SDI";
 		}
 		int64_t x;
 		cfg->GetInt(bmdDeckLinkConfigVideoInputConnection,&x);
-		log[log::debug] << "Supported connections: " << x << "\n";
+		log[log::debug] << "Supported connections: " << x;
 
 	}
 	res=S_FALSE;
 	if (detect_format) {
 		if ((res=input->EnableVideoInput(mode,pixel_format,bmdVideoInputEnableFormatDetection|(capture_stereo?bmdVideoInputDualStream3D:bmdVideoInputFlagDefault)))!=S_OK) {
-			log[log::warning] << "Failed to initialize input with format detection enabled. Trying without" << "\n";
+			log[log::warning] << "Failed to initialize input with format detection enabled. Trying without";
 			detect_format = false;
 		}
 	}
 	if (res!=S_OK) {
 		if ((res=input->EnableVideoInput(mode,pixel_format,capture_stereo?bmdVideoInputDualStream3D:bmdVideoInputFlagDefault))!=S_OK) {
-			log[log::error] << "Failed to enable input (" << bmerr(res)<<")" << "\n";
+			log[log::error] << "Failed to enable input (" << bmerr(res)<<")";
 			return false;
 		}
 	}
@@ -277,19 +277,19 @@ bool DeckLinkInput::start_capture()
 			log[log::error] << "Failed to enable audio (" << bmerr(res)<<"), verify you have correct number of channels specified";
 			return false;
 		}
-		log[log::info] << "Audio input enabled" << "\n";
+		log[log::info] << "Audio input enabled";
 	} else {
 		input->DisableAudioInput();
 	}
 	if ((res=input->SetCallback(static_cast<IDeckLinkInputCallback*>(this)))!=S_OK) {
-		log[log::error] << "Failed to set callback for input (" << res<<")" << "\n";
+		log[log::error] << "Failed to set callback for input (" << res<<")";
 		return false;
 	}
 	if ((res=input->StartStreams())!=S_OK) {
-		log[log::error] << "Failed to start streams (" << res<<")" << "\n";
+		log[log::error] << "Failed to start streams (" << res<<")";
 		return false;
 	}
-	log[log::info] << "Capture started\n";
+	log[log::info] << "Capture started";
 	return true;
 }
 bool DeckLinkInput::verify_display_mode()
@@ -303,23 +303,23 @@ bool DeckLinkInput::verify_display_mode()
 	if (input->DoesSupportVideoMode(mode,pixel_format,input_flags,&support,&dm)!=S_OK) return false;
 	if (support == bmdDisplayModeNotSupported) return false;
 	if (support == bmdDisplayModeSupportedWithConversion) {
-		log[log::warning] << "Display mode supported, but conversion is required" << "\n";
+		log[log::warning] << "Display mode supported, but conversion is required";
 	}
 	width = dm->GetWidth();
 	height = dm->GetHeight();
 	dm->GetFrameRate(&value,&scale);
-	log[log::info]<<"NTSC "<<(disable_ntsc?"disabled":"enabled")<<", value="<<value<<"\n";
+	log[log::info]<<"NTSC "<<(disable_ntsc?"disabled":"enabled")<<", value="<<value;
 	if (disable_ntsc && value == 1001) return false;
 	if (disable_pal && value == 1000) return false;
 	const char *modeName;
 	if (dm->GetName(&modeName) == S_OK) {
-		log[log::info] << "Selected mode " << modeName << ", frame duration "<<value<<"/"<<scale << "\n";
+		log[log::info] << "Selected mode " << modeName << ", frame duration "<<value<<"/"<<scale;
 	} else {
-		log[log::warning] << "Failed to get mode name!" << "\n";
+		log[log::warning] << "Failed to get mode name!";
 	}
 	if (dm->GetFieldDominance()!=bmdProgressiveFrame) {
 		if(disable_interlaced) return false;
-		log[log::info] << "Selected format is interlaced, with " << (dm->GetFieldDominance()==bmdLowerFieldFirst?"lower field first":dm->GetFieldDominance()==bmdUpperFieldFirst?"upper field first":"unknows fields") << "\n";
+		log[log::info] << "Selected format is interlaced, with " << (dm->GetFieldDominance()==bmdLowerFieldFirst?"lower field first":dm->GetFieldDominance()==bmdUpperFieldFirst?"upper field first":"unknows fields");
 	} else if (disable_progressive) return false;
 	return true;
 }

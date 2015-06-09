@@ -153,34 +153,43 @@ public:
 		return p;
 	}
 protected:
-	CountLimitedPolicy(const Parameters& parameters):max_count_(0)
+	CountLimitedPolicy(const Parameters& parameters):max_count_(0),
+	first_index_(0),count_(0)
 	{
 		max_count_=parameters["count"].get<size_t>();
+		if (max_count_ < 1) {
+			max_count_ = 1;
+		}
+		frames_.resize(max_count_);
 	}
 	virtual ~CountLimitedPolicy() noexcept {}
-	void set_count_limit(yuri::size_t max_count)
-	{
-		max_count_ = max_count;
-	}
+
 	EXPORT bool impl_push_frame(const pFrame &frame);
 	pFrame impl_pop_frame()
 	{
 		pFrame frame;
-		if (frames_.empty()) return frame;
-		frame = frames_.front();
-		frames_.pop_front();
+		if (count_ == 0) return frame;
+		frame = std::move(frames_[first_index_]);
+		// No explicit reset of frames_[first_index_] needed, it will assigned next before next use.
+		++first_index_;
+		--count_;
+		if (first_index_ >= max_count_) {
+			first_index_ = 0;
+		}
 		return frame;
 	}
 	size_t impl_get_size() const {
-		return frames_.size();
+		return count_;
 	}
 	bool impl_is_full() const noexcept {
-		return frames_.size() == max_count_;
+		return count_ == max_count_;
 	}
 private:
 	virtual void drop_frame(const pFrame& frame) = 0;
-	std::deque<pFrame> frames_;
+	std::vector<pFrame> frames_;
 	yuri::size_t max_count_;
+	yuri::size_t first_index_;
+	yuri::size_t count_;
 };
 
 

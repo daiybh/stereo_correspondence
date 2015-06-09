@@ -11,14 +11,11 @@
 #define FLYCAP_H_
 
 #include "yuri/core/thread/IOThread.h"
-#ifdef YURI_CYGWIN
-#define YURI_FLYCAP_C_ONLY
-#endif
-#ifndef YURI_FLYCAP_C_ONLY
-#include "FlyCapture2.h"
-#else
-#include "C/FlyCapture2_C.h"
-#endif
+#include "yuri/core/thread/InputThread.h"
+
+#include "flycap_c_helpers.h"
+
+#include <array>
 namespace yuri {
 namespace flycap {
 
@@ -27,6 +24,7 @@ class FlyCap: public core::IOThread
 public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
+	static std::vector<core::InputDeviceInfo> enumerate();
 	FlyCap(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~FlyCap() noexcept;
 private:
@@ -35,18 +33,21 @@ private:
 	virtual bool set_param(const core::Parameter& param) override;
 private:
 	resolution_t resolution_;
+	geometry_t geometry_;
 	format_t format_;
 	size_t fps_;
 
 	size_t index_;
 	size_t serial_;
 	bool keep_format_;
-#ifndef	YURI_FLYCAP_C_ONLY
-	FlyCapture2::Camera camera_;
-#else
-	fc2Context ctx_;
-#endif
-	duration_t shutdown_delay_;
+	bool embedded_framecounter_;
+	int custom_;
+	flycap_camera_t ctx_;
+
+	bool trigger_;
+	unsigned int trigger_mode_;
+	unsigned int trigger_source_;
+	std::array<uint8_t,4> gpio_directions_;
 };
 
 } /* namespace flycap */

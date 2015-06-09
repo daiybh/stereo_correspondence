@@ -46,12 +46,14 @@ private:
 	void move_window(coordinates_t coord);
 	void resize_window(resolution_t res);
 	bool show_decorations(bool decorations);
+	bool set_on_top(bool on_top);
 	bool process_x11_events();
 	bool resize_event(geometry_t geometry);
 	bool swap_buffers();
 	bool fetch_frames();
 	bool display_frames();
-
+	bool display_frames_impl(const std::vector<core::pFrame>& frames);
+	bool redraw_display();
 private:
 	gl::GL					gl_;
 	using display_deleter = std::function<void(Display*)>;
@@ -72,8 +74,11 @@ private:
 	bool					read_back_;
 	stereo_mode_t			stereo_mode_;
 	bool 					decorations_;
+	bool					on_top_;
 	std::vector<core::pFrame>
 							frames_;
+	std::vector<core::pFrame>
+							old_frames_;
 	core::pConvert			converter_;
 	std::vector<format_t>	supported_formats_;
 	bool 					swap_eyes_;
@@ -81,9 +86,11 @@ private:
 	float					delta_y_;
 	bool 					needs_move_;
 	bool					show_cursor_;
+	bool					needs_redraw_;
 };
 
 } /* namespace glx_window */
 } /* namespace yuri */
 #endif /* GLXWINDOW_H_ */
+
 

@@ -10,19 +10,12 @@
 
 #include "FileDump.h"
 #include <sstream>
-#include <iomanip>
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/frame/CompressedVideoFrame.h"
 #include "yuri/core/frame/RawAudioFrame.h"
-
-#ifdef HAVE_BOOST_REGEX
-#include "yuri/core/utils/hostname.h"
-#include "yuri/version.h"
-#include "yuri/core/utils/frame_info.h"
-#include "yuri/core/utils/global_time.h"
-#include <boost/regex.hpp>
-#endif
+#include "yuri/core/frame/EventFrame.h"
+#include "yuri/core/utils/string_generator.h"
 namespace yuri
 {
 namespace dump
@@ -41,23 +34,11 @@ core::Parameters FileDump::configure()
 	p["sequence"]["Number of digits in sequence number. Set to 0 to disable sequence and output all frames to one file."]=0;
 	p["filename"]["Required parameter. Path of file to dump to"]=std::string();
 	p["frame_limit"]["Maximal number of frames to dump. 0 for unlimited"]=0;
+	p["info_string"]["Additional string to emit with each frame (as event 'info')"]="";
 	return p;
 }
 
 namespace {
-
-template<class Stream, class Value>
-Stream& print_formated_value(Stream& os, const Value& value, int width = 0, bool zero = true)
-{
-	if (zero) {
-		os << std::setfill('0');
-	}
-	if (width > 0) {
-		os << std::setw(width);
-	}
-	os << value;
-	return os;
-}
 
 template<class T>
 std::string append_to_filename(const std::string& filename, const T& value, int width = 0)
@@ -69,82 +50,14 @@ std::string append_to_filename(const std::string& filename, const T& value, int 
 	} else {
 		ss << filename;
 	}
-	print_formated_value(ss, value, width);
+	core::utils::print_formated_value(ss, value, width);
 	if (dot_index != std::string::npos) {
 		ss << filename.substr(dot_index);
 	}
 	return ss.str();
 }
 
-#ifdef HAVE_BOOST_REGEX
 
-const boost::regex specifier_pattern ("%(0?\\d+[simM]|[ntfFTHDSOv%])");
-
-template<class S1, class S2>
-std::string to_s(const std::pair<S1, S2>& p)
-{
-	return std::string(p.first, p.second);
-}
-
-/**
- *
- * @param fname
- * @return pair of two boolean values. First specifies, if there are any specifiers at all,
- *  		second is true, when any of the specifiers changes with the frames.
- */
-std::pair<bool,bool> contains_specifiers(const std::string& fname)
-{
-	bool any_spec = false;
-	bool seq_spec = false;
-	auto beg = fname.cbegin();
-	auto end = fname.cend();
-
-	boost::smatch what;
-
-	while(boost::regex_search(beg, end, what, specifier_pattern, boost::match_default)) {
-		any_spec = true;
-
-		assert (std::distance(what[0].first, what[0].second) > 0);
-		auto specifier = *(what[0].second - 1);
-		switch (specifier) {
-			case 't':
-			case 'T':
-			case 's':
-			case 'i':
-			case 'f':
-			case 'F':
-			case 'm':
-			case 'M':
-				seq_spec = true;
-				break;
-			default:
-				break;
-		}
-
-		if (seq_spec) break;
-
-		beg = what[0].second;
-	}
-	return std::make_pair(any_spec, seq_spec);
-
-}
-
-template<class Value>
-std::string parse_and_replace(const std::string& spec, const Value& value)
-{
-	boost::regex pat ("%(0?)(\\d+)([[:alpha:]])");
-	boost::smatch what;
-	std::stringstream ss;
-	if (boost::regex_match(spec, what, pat)) {
-		const bool zero = what[1].first!=what[1].second;
-		const auto count = std::stoul(to_s(what[2]));
-		print_formated_value(ss, value, count, zero);
-	}
-	return ss.str();
-}
-
-
-#endif
 }
 
 
@@ -158,25 +71,25 @@ FileDump::FileDump(log::Log &log_,core::pwThreadBase parent, const core::Paramet
 	IOTHREAD_INIT(parameters);
 	if (filename.empty()) throw exception::InitializationFailed("No filename specified");
 
-#ifdef HAVE_BOOST_REGEX
-	auto s = contains_specifiers(filename);
-	use_regex_ = s.first;
-	single_file_ = !s.second;
-	if (single_file_ && seq_chars) {
-		std::string spec = "%0"+std::to_string(seq_chars)+"s";
-		filename = append_to_filename(filename, spec);
-		log[log::info] << "Expanded filename to " << filename;
-		use_regex_ = true;
-		single_file_ = false;
+	if (core::utils::is_extended_generator_supported()) {
+		auto s = core::utils::analyze_string_specifiers(filename);
+		use_regex_ = s.first;
+		single_file_ = !s.second;
+		if (single_file_ && seq_chars) {
+			std::string spec = "%0"+std::to_string(seq_chars)+"s";
+			filename = append_to_filename(filename, spec);
+			log[log::info] << "Expanded filename to " << filename;
+			use_regex_ = true;
+			single_file_ = false;
+		}
+		// The filename has to be generated beforehand, when single_file is enabled.
+		if (use_regex_ && single_file_) {
+			filename = generate_filename({});
+			use_regex_ = false;
+		}
+	} else {
+		single_file_ = seq_number <= 0;
 	}
-	// The filename has to be generated beforehand, when single_file is enabled.
-	if (use_regex_ && single_file_) {
-		filename = generate_filename({});
-		use_regex_ = false;
-	}
-#else
-	single_file_ = seq_number <= 0;
-#endif
 
 	if (single_file_)
 		dump_file.open(filename.c_str(), std::ios::binary | std::ios::out);
@@ -192,87 +105,19 @@ std::string FileDump::generate_filename(const core::pFrame& frame)
 	if (!use_regex_ && !single_file_) {
 		return append_to_filename(filename, seq_number++, seq_chars);
 	}
-#ifdef HAVE_BOOST_REGEX
 	else {
-		std::string new_name;
-		auto beg = filename.cbegin();
-		auto end = filename.cend();
-		boost::smatch what;
-		std::stringstream ss;
-		const timestamp_t current_timestamp;
-		while(boost::regex_search(beg, end, what, specifier_pattern, boost::match_default)) {
-			assert (std::distance(what[0].first, what[0].second) > 0);
-			if (beg != what[0].first) {
-				ss << std::string{beg, what[0].first};
-			}
-			auto specifier = *(what[0].second - 1);
-			switch (specifier) {
-				case 's':
-					ss << parse_and_replace(to_s(what[0]), seq_number);
-					break;
-				case 'i':
-					ss << parse_and_replace(to_s(what[0]), frame->get_index());
-					break;
-				case 'n':
-					ss << get_node_name();
-					break;
-				case 'T':
-					ss << current_timestamp;
-					break;
-				case 't':
-					if (frame) ss << frame->get_timestamp();
-					break;
-				case 'm':
-					if (frame) ss << parse_and_replace(to_s(what[0]),
-							(frame->get_timestamp() - core::utils::get_global_start_time()).value/1000);
-					break;
-				case 'M':
-					if (frame) ss << parse_and_replace(to_s(what[0]),
-							(frame->get_timestamp() - core::utils::get_global_start_time()).value);
-					break;
-				case 'H':
-					ss << core::utils::get_hostname();
-					break;
-				case 'D':
-					ss << core::utils::get_domain();
-					break;
-				case 'S':
-					ss << core::utils::get_sysver();
-					break;
-				case 'O':
-					ss << core::utils::get_sysname();
-					break;
-				case 'v':
-					ss << yuri_version;
-					break;
-				case 'f':
-					if (frame) ss << core::utils::get_frame_type_name(frame->get_format(), true);
-					break;
-				case 'F':
-					if (frame) ss << core::utils::get_frame_type_name(frame->get_format(), false);
-					break;
-				case '%':
-					ss << "%";
-					break;
-				default:
-					break;
-			}
-			beg = what[0].second;
-		}
-		if (beg != end) {
-			ss << std::string(beg, end);
-		}
-		return ss.str();
+		return core::utils::generate_string(filename, seq_number, frame);
 	}
-#endif
 	return filename;
 }
 
 core::pFrame FileDump::do_simple_single_step(core::pFrame frame)
 {
+	if (dumped_frames >= dump_limit && dump_limit) {
+		return {};
+	}
 	if (!single_file_) {
 		const auto seq_filename = generate_filename(frame);
-		++seq_number;
 		log[log::debug] << "New filename " << seq_filename;
 		dump_file.open(seq_filename.c_str(), std::ios::binary | std::ios::out);
 		emit_event("filename",seq_filename);
@@ -287,14 +132,27 @@ core::pFrame FileDump::do_simple_single_step(core::pFrame frame)
 		dump_file.write(reinterpret_cast<const char *>(f2->begin()),f2->size());
 	} else if (auto f3 = std::dynamic_pointer_cast<core::RawAudioFrame>(frame)) {
 		dump_file.write(reinterpret_cast<const char *>(f3->data()),f3->size());
+	} else if (auto f4 = std::dynamic_pointer_cast<core::EventFrame>(frame)) {
+		try {
+			const auto text = event::lex_cast_value<std::string>(f4->get_event()) +"\n";
+			dump_file.write(text.c_str(),text.size());
+		}
+		catch (std::exception& e) {
+			log[log::warning] << "Failed to store event " << f4->get_name();
+			written = false;
+		}
 	} else {
 		written=false;
+	}
+	if (!info_string_.empty()) {
+		emit_event("info", core::utils::generate_string(info_string_, seq_number, frame));
 	}
 	if (!single_file_) {
 		dump_file.close();
 		if (written) {
 			emit_event("sequence",seq_number);
 		}
+		++seq_number;
 	}
 	if (written) {
 		emit_event("frame");
@@ -314,7 +172,8 @@ bool FileDump::set_param(const core::Parameter &param)
 	if (assign_parameters(param)
 			(filename, "filename")
 			(seq_chars, "sequence")
-			(dump_limit, "frame_limit"))
+			(dump_limit, "frame_limit")
+			(info_string_, "info_string"))
 		return true;
 	return IOFilter::set_param(param);
 }

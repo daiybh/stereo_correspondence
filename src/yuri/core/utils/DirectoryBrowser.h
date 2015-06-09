@@ -17,7 +17,45 @@ namespace yuri {
 namespace core {
 namespace filesystem {
 
-std::vector<std::string> browse_files(const std::string& path, const std::string& prefix = std::string());
+std::vector<std::string> browse_files(const std::string& path, const std::string& prefix = std::string(), const std::string& suffix = std::string());
+
+
+std::vector<std::string> browse_directories(const std::string& path, const std::string& prefix = std::string(), const std::string& suffix = std::string());
+
+/*!
+ * Returns directory component from specified filename
+ * @param filename
+ * @return
+ */
+std::string get_directory(const std::string& filename);
+
+/*!
+ * Returns filename component from specified filename
+ * @param filename
+ * @param with_extension set to false to strip extension
+ * @return
+ */
+std::string get_filename(const std::string& filename, bool with_extension = true);
+/*!
+ * Verifies that a specified path exists in the filesystem
+ * @param path Filesystem path
+ * @return true iff the path represents a valid object in the filesystem.
+ */
+bool verify_path_exists(const std::string& path);
+
+/*!
+ * Creates a directory
+ * @param dirname
+ * @return true if the directory was created successfully.
+ */
+bool create_directory(const std::string& dirname);
+
+/*!
+ * Verifies the directory for specified filename exists, and creates it if it doesn't
+ * @param filename
+ * @return true if the directory exists sfter the method call.
+ */
+bool ensure_path_directory(const std::string& filename);
 
 }
 }

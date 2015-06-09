@@ -62,7 +62,9 @@ std::string get_domain()
 {
 #ifdef YURI_POSIX
 	std::array<char, 255> name;
-	getdomainname(&name[0], sizeof(name));
+	if (getdomainname(&name[0], sizeof(name)) != 0) {
+		return {};
+	}
 	return std::string(&name[0]);
 #else
 	// Unsupported platform

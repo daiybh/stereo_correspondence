@@ -270,6 +270,11 @@ ENDIF()
 
 add_subdirectory(wav)
 
+CHECK_INCLUDE_FILE_CXX(frei0r.h HAVE_FREI0R_H)
+IF (HAVE_FREI0R_H)
+	add_subdirectory(frei0r)
+ENDIF()
+
 ENDIF(YURI_BUILD_EXPERIMENTAL_MODULES)
 
 #################################################################

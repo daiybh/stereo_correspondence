@@ -14,6 +14,7 @@
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/utils/irange.h"
 #include "yuri/core/utils/assign_events.h"
+#include "yuri/core/utils/string_generator.h"
 namespace yuri {
 namespace freetype {
 
@@ -355,7 +356,8 @@ void RenderText::run()
 core::pFrame RenderText::do_special_single_step(core::pRawVideoFrame frame)
 {
 	auto f = get_frame_unique(frame);
-	draw_text(text_, f);
+	auto text = core::utils::generate_string(text_, 0, frame);
+	draw_text(text, f);
 	return f;
 }
 

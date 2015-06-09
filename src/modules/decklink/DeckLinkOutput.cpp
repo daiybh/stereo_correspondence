@@ -66,7 +66,7 @@ bool DeckLinkOutput::init()
 	//int64_t video_con;
 	//attr->GetInt(BMDDeckLinkVideoOutputConnections,&video_con);
 	if (device->QueryInterface(IID_IDeckLinkOutput,reinterpret_cast<void**>(&output))!=S_OK) {
-		log[log::fatal] << "Failed to get output interface\n";
+		log[log::fatal] << "Failed to get output interface";
 		device->Release();
 		device=0;
 		return false;
@@ -78,13 +78,13 @@ bool DeckLinkOutput::init()
 }
 void DeckLinkOutput::run()
 {
-	log[log::debug] << "Starting up\n";
+	log[log::debug] << "Starting up";
 	if (!verify_display_mode()) {
-		log[log::error] << "Failed to verify display mode\n";
+		log[log::error] << "Failed to verify display mode";
 		return;
 	}
 	if (!start_stream()) {
-		log[log::error] << "Failed to start stream\n";
+		log[log::error] << "Failed to start stream";
 		return;
 	}
 	IOThread::run();
@@ -119,7 +119,7 @@ bool DeckLinkOutput::verify_display_mode()
 	stereo_usable= false;
 	if (stereo_mode) {
 		if (output->DoesSupportVideoMode(mode,pixel_format,bmdVideoOutputDualStream3D,&support,&dm)!=S_OK) {
-			log[log::warning] << "Selected format does not work with 3D. Re-trying without 3D support\n";
+			log[log::warning] << "Selected format does not work with 3D. Re-trying without 3D support";
 			if (output->DoesSupportVideoMode(mode,pixel_format,bmdVideoOutputFlagDefault,&support,&dm)!=S_OK) return false;
 		} else {
 			stereo_usable = true;
@@ -128,23 +128,23 @@ bool DeckLinkOutput::verify_display_mode()
 	} else if (output->DoesSupportVideoMode(mode,pixel_format,bmdVideoOutputFlagDefault,&support,&dm)!=S_OK) return false;
 	if (support==bmdDisplayModeNotSupported) return false;
 	if (support == bmdDisplayModeSupportedWithConversion) {
-		log[log::warning] << "Display mode supported, but conversion is required\n";
+		log[log::warning] << "Display mode supported, but conversion is required";
 	}
 	width = dm->GetWidth();
 	height = dm->GetHeight();
 	dm->GetFrameRate(&value,&scale);
 	const char       *modeName;
 	if (dm->GetName(&modeName) == S_OK) {
-		log[log::info] << "Selected mode " << modeName << "\n";
+		log[log::info] << "Selected mode " << modeName;
 	} else {
-		log[log::warning] << "Failed to get mode name!\n";
+		log[log::warning] << "Failed to get mode name!";
 	}
 	unsigned linesize;
 	switch (pixel_format) {
 		case bmdFormat8BitYUV: linesize=width*2;break;
 		case bmdFormat8BitARGB: linesize=width*4;break;
 		case bmdFormat10BitYUV: linesize=16*(width/6+(width%6?1:0));break;
-		default: log[log::error] << "Unsupported pixel format\n";return false;
+		default: log[log::error] << "Unsupported pixel format";return false;
 	}
 	out_frames.clear();
 	//shared_ptr<IDeckLinkMutableVideoFrame> f;
@@ -172,7 +172,7 @@ void DeckLinkOutput::schedule(bool force)
 	yuri::lock_t l(schedule_mutex);
 	//if (!act_oframe) {
 	if (!out_frames.size()) {
-		log[log::error] << "No frame to schedule!!\n";
+		log[log::error] << "No frame to schedule!!";
 		return;
 
 	}
@@ -182,9 +182,9 @@ void DeckLinkOutput::schedule(bool force)
 	if (!act && !force) return;
 	//if ((res=output->ScheduleVideoFrame(act_oframe,value*frame_number,value,scale))!=S_OK) {
 	if ((res=output->ScheduleVideoFrame(do_get_active_buffer().get(),value*frame_number,value,scale))!=S_OK) {
-		log[log::error] << "Failed to schedule frame "<<frame_number << "! " << bmerr(res) << " (" << HRESULT_CODE(res) << ")\n";
+		log[log::error] << "Failed to schedule frame "<<frame_number << "! " << bmerr(res) << " (" << HRESULT_CODE(res) << ")";
 	}
-	log[log::debug] << "Scheduled frame " << frame_number << "\n";
+	log[log::debug] << "Scheduled frame " << frame_number;
 	frame_number++;
 }
 HRESULT STDMETHODCALLTYPE	DeckLinkOutput::ScheduledFrameCompleted (IDeckLinkVideoFrame* /*completedFrame*/, BMDOutputFrameCompletionResult /*result*/)
@@ -207,7 +207,7 @@ bool DeckLinkOutput::start_stream()
 	if (stereo_usable) flags|=bmdVideoOutputDualStream3D;
 
 	if ((res=output->EnableVideoOutput(mode,flags))!=S_OK) {
-		log[log::error] << "Failed to enable display mode! Error: "<< bmerr(res) << " ("<<HRESULT_CODE(res)<<")\n";
+		log[log::error] << "Failed to enable display mode! Error: "<< bmerr(res) << " ("<<HRESULT_CODE(res)<<")";
 		return false;
 	}
 	if (audio_enabled) {
@@ -229,7 +229,7 @@ bool DeckLinkOutput::stop_stream()
 		bool r;
 		output->IsScheduledPlaybackRunning(&r);
 		if (r) {
-			log[log::warning] << "Playback still running after being stopped\n";
+			log[log::warning] << "Playback still running after being stopped";
 		}
 	}
 	/*if ((res=output->EnableVideoOutput(mode,bmdVideoOutputFlagDefault))!=S_OK) {
@@ -281,7 +281,7 @@ bool DeckLinkOutput::step()
 	}
 	if (stereo_usable) {
 		if (frame->get_format() != frame2->get_format()) {
-			log[log::error] << "Frames for left and right eye has different pixel formats\n";
+			log[log::error] << "Frames for left and right eye has different pixel formats";
 			frame.reset();
 			frame2.reset();
 			return true;
@@ -298,7 +298,7 @@ bool DeckLinkOutput::step()
 			pixel_format = pfmt;
 			mode = m;
 			if (!verify_display_mode()) {
-				log[log::error] << "Failed to verify display mode for incoming frame\n";
+				log[log::error] << "Failed to verify display mode for incoming frame";
 				frame.reset();
 				frame2.reset();
 				return true;
@@ -310,7 +310,7 @@ bool DeckLinkOutput::step()
 	if (pfmt!=pixel_format) {
 		pixel_format=pfmt;
 		if (!verify_display_mode()) {
-			log[log::error] << "Failed to verify display mode\n";
+			log[log::error] << "Failed to verify display mode";
 			frame.reset();
 			frame2.reset();
 			return true;
@@ -379,7 +379,7 @@ bool DeckLinkOutput::step()
 			}
 
 		} else {
-			log[log::warning] << "No audio\n";
+			log[log::warning] << "No audio";
 		}
 	}
 	if (sync) {
@@ -457,7 +457,7 @@ bool DeckLinkOutput::fill_frame(core::pRawVideoFrame source, shared_ptr<DeckLink
 
 	copy_width=std::min(line_width,target_width);
 	copy_lines=std::min(source->get_height(),static_cast<size_t>(height));
-	log[log::debug] << "Copying " << copy_lines << " lines of " << copy_width << " bytes (of " << line_width << " total bytes)\n";
+	log[log::debug] << "Copying " << copy_lines << " lines of " << copy_width << " bytes (of " << line_width << " total bytes)";
 	if (line_width*copy_lines > PLANE_SIZE(source,0)) {
 		log[log::warning] << "not enough data to copy!!!";
 		return false;

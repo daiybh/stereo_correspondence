@@ -161,6 +161,11 @@ MODULE_REGISTRATION_BEGIN("yuri_convert")
 		REGISTER_CONVERTER(core::raw_format::y8, 		core::raw_format::rgb24, "yuri_convert", 10)
 		REGISTER_CONVERTER(core::raw_format::rgb24, 	core::raw_format::y8, "yuri_convert", 50)
 
+		REGISTER_CONVERTER(core::raw_format::rgb48, 	core::raw_format::rgb24, "yuri_convert", 30)
+		REGISTER_CONVERTER(core::raw_format::bgr48, 	core::raw_format::bgr24, "yuri_convert", 30)
+		REGISTER_CONVERTER(core::raw_format::rgb48, 	core::raw_format::bgr24, "yuri_convert", 30)
+		REGISTER_CONVERTER(core::raw_format::bgr48, 	core::raw_format::rgb24, "yuri_convert", 30)
+
 
 
 MODULE_REGISTRATION_END()
@@ -352,6 +357,11 @@ namespace {
 		ADD_CONVERSION(core::raw_format::y8, 			core::raw_format::rgb24)
 		ADD_CONVERSION(core::raw_format::rgb24,			core::raw_format::y8)
 
+		ADD_CONVERSION(core::raw_format::rgb48,			core::raw_format::rgb24)
+		ADD_CONVERSION(core::raw_format::bgr48,			core::raw_format::bgr24)
+		ADD_CONVERSION(core::raw_format::rgb48,			core::raw_format::bgr24)
+		ADD_CONVERSION(core::raw_format::bgr48,			core::raw_format::rgb24)
+
 
 	};
 
@@ -401,7 +411,7 @@ core::pFrame YuriConvertor::do_convert_frame(core::pFrame input_frame, format_t 
 	} else {
 
 		log[log::debug] << "Unknown format combination " << core::raw_format::get_format_name(frame->get_format()) << " -> "
-				<< core::raw_format::get_format_name(target_format) << "\n";
+				<< core::raw_format::get_format_name(target_format);
 		return outframe;
 	}
 
