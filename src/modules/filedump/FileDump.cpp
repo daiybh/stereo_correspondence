@@ -16,6 +16,7 @@
 #include "yuri/core/frame/RawAudioFrame.h"
 #include "yuri/core/frame/EventFrame.h"
 #include "yuri/core/utils/string_generator.h"
+#include "yuri/core/utils/DirectoryBrowser.h"
 namespace yuri
 {
 namespace dump
@@ -91,8 +92,10 @@ FileDump::FileDump(log::Log &log_,core::pwThreadBase parent, const core::Paramet
 		single_file_ = seq_number <= 0;
 	}
 
-	if (single_file_)
+	if (single_file_) {
+		core::filesystem::ensure_path_directory(filename);
 		dump_file.open(filename.c_str(), std::ios::binary | std::ios::out);
+	}
 }
 
 FileDump::~FileDump() noexcept
@@ -119,6 +122,7 @@ core::pFrame FileDump::do_simple_single_step(core::pFrame frame)
 	if (!single_file_) {
 		const auto seq_filename = generate_filename(frame);
 		log[log::debug] << "New filename " << seq_filename;
+		core::filesystem::ensure_path_directory(seq_filename);
 		dump_file.open(seq_filename.c_str(), std::ios::binary | std::ios::out);
 		emit_event("filename",seq_filename);
 	}
