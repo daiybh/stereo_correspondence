@@ -12,6 +12,7 @@
 #define MODULELOADER_H_
 #include <string>
 #include <vector>
+#include <type_traits>
 #include "yuri/core/utils/new_types.h"
 namespace yuri {
 namespace core {
@@ -28,7 +29,8 @@ struct dynamic_loader {
 	void reset();
 
 	template<typename T>
-	T load_symbol(const std::string& symbol) {
+	typename std::enable_if<std::is_pointer<T>::value,T>::type
+	load_symbol(const std::string& symbol) {
 		return reinterpret_cast<T>(reinterpret_cast<uintptr_t>(load_symbol_impl(symbol)));
 	}
 private:
