@@ -16,9 +16,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <dirent.h>
-#include <iostream>
 #endif
-
 
 namespace yuri {
 namespace core {
@@ -63,6 +61,7 @@ std::vector<std::string> browse_files_impl(const std::string& path, const std::s
 std::string get_directory(const std::string& filename)
 {
 	boost::filesystem::path f(filename);
+	if (boost::filesystem::is_directory(f)) return filename;
 	return f.parent_path().string();
 }
 
@@ -81,7 +80,7 @@ bool verify_path_exists(const std::string& path)
 
 bool create_directory(const std::string& dirname)
 {
-	return boost::filesystem::create_directories(get_directory(dirname));
+	return boost::filesystem::create_directories(dirname);
 }
 
 #elif defined YURI_POSIX
