@@ -32,6 +32,7 @@ Rotate::Rotate(log::Log &log_, core::pwThreadBase parent, const core::Parameters
 core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent, std::string("rotate")),angle_(90)
 {
 	IOTHREAD_INIT(parameters)
+	set_supported_formats({core::raw_format::rgb24, core::raw_format::bgr24, core::raw_format::yuv444});
 }
 
 Rotate::~Rotate() noexcept
@@ -99,8 +100,10 @@ core::pFrame Rotate::do_special_single_step(core::pRawVideoFrame frame)
 
 	if(!angle_) return frame;
 	else {
-		if (frame->get_format() != core::raw_format::rgb24) {
-			log[log::warning] << "Currently only 24bit RGB is supported.";
+		if ((frame->get_format() != core::raw_format::rgb24) &&
+				(frame->get_format() != core::raw_format::bgr24) &&
+				(frame->get_format() != core::raw_format::yuv444)) {
+			log[log::warning] << "Currently only 24bit RGB/BGR/YUV is supported.";
 		} else {
 //			core::pRawVideoFrame output = rotate(frame, angle_);
 //			if (output) push_frame(0, output);
