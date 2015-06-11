@@ -42,6 +42,26 @@ core::Parameters FlyCap::configure()
 	p["gpio2"]["Direction for GPIO2 (0 for input, 1 for output)"]=0;
 	p["gpio3"]["Direction for GPIO3 (0 for input, 1 for output)"]=0;
 
+	p["strobe0"]["Enable strobe for GPIO 0"]=false;
+	p["strobe0_polarity"]["Set polarity for GPIO 0 strobe (false/true)"]=false;
+	p["strobe0_delay"]["Set delay for GPIO 0 strobe"]=0.0f;
+	p["strobe0_duration"]["Set duration for GPIO 0 strobe"]=0.0f;
+
+	p["strobe1"]["Enable strobe for GPIO 1"]=false;
+	p["strobe1_polarity"]["Set polarity for GPIO 1 strobe (false/true)"]=false;
+	p["strobe1_delay"]["Set delay for GPIO 1 strobe"]=0.0f;
+	p["strobe1_duration"]["Set duration for GPIO 1 strobe"]=0.0f;
+
+	p["strobe2"]["Enable strobe for GPIO 2"]=false;
+	p["strobe2_polarity"]["Set polarity for GPIO 2 strobe (false/true)"]=false;
+	p["strobe2_delay"]["Set delay for GPIO 2 strobe"]=0.0f;
+	p["strobe2_duration"]["Set duration for GPIO 2 strobe"]=0.0f;
+
+	p["strobe3"]["Enable strobe for GPIO 3"]=false;
+	p["strobe3_polarity"]["Set polarity for GPIO 3 strobe (false/true)"]=false;
+	p["strobe3_delay"]["Set delay for GPIO 3 strobe"]=0.0f;
+	p["strobe3_duration"]["Set duration for GPIO 3 strobe"]=0.0f;
+
 	return p;
 }
 
@@ -64,7 +84,9 @@ inline void flycap_init_warn(fc2Error code, log::Log& log, const std::string& ms
 FlyCap::FlyCap(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOThread(log_,parent,1,1,std::string("flycap")),resolution_(resolution_t{1280,960}),
 format_(core::raw_format::y8),fps_(30),index_(0),serial_(0),keep_format_(false),
-embedded_framecounter_(false),custom_(-1)
+embedded_framecounter_(false),custom_(-1),strobes_({false, false, false, false}),
+polarities_({false, false, false, false}),delays_({0.0f, 0.0f, 0.0f, 0.0f}),
+durations_({0.0f, 0.0f, 0.0f, 0.0f})
 {
 	IOTHREAD_INIT(parameters)
 
@@ -140,11 +162,16 @@ embedded_framecounter_(false),custom_(-1)
 			flycap_init_warn(fc2SetGPIOPinDirection(ctx_, i, gpio_directions_[i]), log, "Failed to set GPIO direction for GPIO"+std::to_string(i));
 		}
 
-//			fc2StrobeControl strobe;
-//			fc2GetStrobe(ctx_, &strobe);
-//			strobe.onOff
-//			fc2SetStrobe(ctx_, &strobe);
-
+		for (auto i: irange(0,4)) {
+			fc2StrobeControl strobe;
+			strobe.source=i;
+			fc2GetStrobe(ctx_, &strobe);
+			strobe.onOff = strobes_[i]?1:0;
+			strobe.delay = delays_[i];
+			strobe.polarity = polarities_[i]?1:0;
+			strobe.duration = durations_[i];
+			flycap_init_warn(fc2SetStrobe(ctx_, &strobe), log, "Failed to set strobe for pin GPIO"+std::to_string(i));
+		}
 	} else {
 		log[log::info] << "Keeping current format";
 	}
@@ -226,6 +253,26 @@ bool FlyCap::set_param(const core::Parameter& param)
 							"gpio2")
 			(gpio_directions_[3],
 							"gpio3")
+			(strobes_[0],	"strobe0")
+			(polarities_[0],"strobe0_polarity")
+			(delays_[0],	"strobe0_delay")
+			(durations_[0],	"strobe0_duration")
+
+			(strobes_[1],	"strobe1")
+			(polarities_[1],"strobe1_polarity")
+			(delays_[1],	"strobe1_delay")
+			(durations_[1],	"strobe1_duration")
+
+			(strobes_[2],	"strobe2")
+			(polarities_[2],"strobe2_polarity")
+			(delays_[2],	"strobe2_delay")
+			(durations_[2],	"strobe2_duration")
+
+			(strobes_[3],	"strobe3")
+			(polarities_[3],"strobe3_polarity")
+			(delays_[3],	"strobe3_delay")
+			(durations_[3],	"strobe3_duration")
+
 			(custom_,		"custom")
 			.parsed<std::string>
 				(format_, 	"format", core::raw_format::parse_format))

@@ -48,6 +48,11 @@ private:
 	unsigned int trigger_mode_;
 	unsigned int trigger_source_;
 	std::array<uint8_t,4> gpio_directions_;
+	std::array<bool,4> strobes_;
+	std::array<bool,4> polarities_;
+	std::array<float,4> delays_;
+	std::array<float,4> durations_;
+
 };
 
 } /* namespace flycap */
