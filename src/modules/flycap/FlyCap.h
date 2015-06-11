@@ -44,6 +44,8 @@ private:
 	int custom_;
 	flycap_camera_t ctx_;
 
+	float shutter_time_;
+
 	bool trigger_;
 	unsigned int trigger_mode_;
 	unsigned int trigger_source_;

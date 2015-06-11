@@ -34,6 +34,9 @@ core::Parameters FlyCap::configure()
 	p["keep_format"]["Keep currently format (skips setting of format)"]=false;
 	p["embedded_framecounter"]["Use embedded frame counter"]=false;
 	p["custom"]["Use custom mode (set to -1 to use standar modes)"]=-1;
+
+	p["shutter"]["Shutter time (set to 0.0 for automatic value)"]=0.0f;
+
 	p["trigger"]["Enable trigger"]=false;
 	p["trigger_mode"]["Trigger mode"]=0;
 	p["trigger_source"]["Source for trigger"]=0;
@@ -84,7 +87,7 @@ inline void flycap_init_warn(fc2Error code, log::Log& log, const std::string& ms
 FlyCap::FlyCap(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOThread(log_,parent,1,1,std::string("flycap")),resolution_(resolution_t{1280,960}),
 format_(core::raw_format::y8),fps_(30),index_(0),serial_(0),keep_format_(false),
-embedded_framecounter_(false),custom_(-1),strobes_({false, false, false, false}),
+embedded_framecounter_(false),custom_(-1),shutter_time_(0.0f),strobes_({false, false, false, false}),
 polarities_({false, false, false, false}),delays_({0.0f, 0.0f, 0.0f, 0.0f}),
 durations_({0.0f, 0.0f, 0.0f, 0.0f})
 {
@@ -146,6 +149,16 @@ durations_({0.0f, 0.0f, 0.0f, 0.0f})
 				prop.autoManualMode = true;
 			}
 			flycap_init_warn(fc2SetProperty(ctx_, &prop), log, "Failed to set framerate");
+
+			prop.type = FC2_SHUTTER;
+			flycap_init_warn(fc2GetProperty(ctx_, &prop), log, "Failed to query shutter info");
+			if (shutter_time_ > 0.0f) {
+				prop.autoManualMode = false;
+				prop.absValue = shutter_time_;
+			} else {
+				prop.autoManualMode = true;
+			}
+			flycap_init_warn(fc2SetProperty(ctx_, &prop), log, "Failed to set shutter time");
 		}
 		fc2TriggerMode trig;
 		flycap_init_warn(fc2GetTriggerMode(ctx_, &trig), log, "Failed to query trigger mode");
@@ -272,7 +285,7 @@ bool FlyCap::set_param(const core::Parameter& param)
 			(polarities_[3],"strobe3_polarity")
 			(delays_[3],	"strobe3_delay")
 			(durations_[3],	"strobe3_duration")
-
+			(shutter_time_,	"shutter")
 			(custom_,		"custom")
 			.parsed<std::string>
 				(format_, 	"format", core::raw_format::parse_format))
