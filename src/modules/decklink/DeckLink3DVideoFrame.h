@@ -10,7 +10,7 @@
 
 #ifndef DECKLINK3DVIDEOFRAME_H_
 #define DECKLINK3DVIDEOFRAME_H_
-#include <DeckLinkAPI.h>
+#include "DeckLinkAPI_wrapper.h"
 #include "yuri/core/utils/new_types.h"
 //#include "yuri/core/BasicFrame.h"
 namespace yuri {

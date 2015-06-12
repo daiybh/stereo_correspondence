@@ -80,6 +80,11 @@ HRESULT DeckLinkInput::VideoInputFormatChanged (BMDVideoInputFormatChangedEvents
 	log[log::info] << "New format: " << name << ", " << newDisplayMode->GetWidth() << "x" << newDisplayMode->GetHeight() <<
 				", dom: " << dom;
 	BMDDisplayMode new_mode = newDisplayMode->GetDisplayMode();
+
+	// Disable warning about unused variables..
+	(void)new_format_is_progressive;
+	(void)new_format_is_interlace;
+
 //	if (force_psf && actual_format_is_psf && !new_format_is_psf) {
 //		if (new_format_is_progressive) log[info] << "Requested PsF, but got progressive. getting progressive";
 //		else {

@@ -147,6 +147,8 @@ bool DeckLinkOutput::verify_display_mode()
 		default: log[log::error] << "Unsupported pixel format";return false;
 	}
 	out_frames.clear();
+	// Disable warning about unused wariable
+	(void)linesize;
 	//shared_ptr<IDeckLinkMutableVideoFrame> f;
 	for (yuri::size_t i=0;i<buffer_num;++i) {
 		shared_ptr<DeckLink3DVideoFrame>  f(new DeckLink3DVideoFrame(width,height,pixel_format,bmdFrameFlagDefault));

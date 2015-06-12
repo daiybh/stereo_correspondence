@@ -10,7 +10,8 @@ SET (SRC DeckLinkAPIDispatch.cpp
          DeckLinkInput.cpp
 		 DeckLinkInput.h
 		 DeckLinkOutput.cpp
-		 DeckLinkOutput.h 
+		 DeckLinkOutput.h
+		 DeckLinkAPI_wrapper.h 
 		 register.cpp)
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/DeckLinkAPIDispatch.cpp"
@@ -18,7 +19,9 @@ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/DeckLinkAPIDispatch.cpp"
 	    	"${DECKLINK_INCLUDE_DIR}/DeckLinkAPIDispatch.cpp"
 	    	"${CMAKE_CURRENT_BINARY_DIR}/DeckLinkAPIDispatch.cpp"
 	    )
-	    
+IF (UNIX OR MINGW OR CYGWIN)
+    SET_SOURCE_FILES_PROPERTIES(DeckLinkAPIDispatch.cpp PROPERTIES COMPILE_FLAGS "-w")
+ENDIF()	    
 # You shouldn't need to edit anything below this line
 include_directories(${DECKLINK_INCLUDE_DIRS}) 
 add_library(${MODULE} MODULE ${SRC})

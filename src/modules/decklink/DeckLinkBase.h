@@ -11,8 +11,9 @@
 #ifndef DECKLINKBASE_H_
 #define DECKLINKBASE_H_
 #include "yuri/core/thread/IOThread.h"
-#include "DeckLinkAPI.h"
 #include "yuri/core/thread/InputThread.h"
+
+#include "DeckLinkAPI_wrapper.h"
 
 namespace yuri {
 
