@@ -131,7 +131,7 @@ int main(int argc, char**argv)
 		return 1;
 	}
 
-	auto date_time_flags = (show_date?log::show_date:0)|(show_time?log::show_time:0);
+	auto date_time_flags = (show_date?log::show_date:log::silent)|(show_time?log::show_time:log::silent);
 	if (!logfile.empty()) {
 		logf.open(logfile, std::ios::out|std::ios::app);
 		logger = yuri::log::Log(logf);
