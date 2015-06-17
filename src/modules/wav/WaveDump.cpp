@@ -10,6 +10,8 @@
 #include "WaveDump.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_audio_frame_types.h"
+#include "yuri/core/utils/DirectoryBrowser.h"
+#include "yuri/core/utils/string_generator.h"
 namespace yuri {
 namespace wav {
 
@@ -35,7 +37,9 @@ filename_("xxx.wav"),format_set_(false)
 {
 	IOTHREAD_INIT(parameters)
 
-	file_.open(filename_, std::ios::out| std::ios::binary);
+	auto filename = core::utils::generate_string(filename_);
+	core::filesystem::ensure_path_directory(filename);
+	file_.open(filename, std::ios::out| std::ios::binary);
 	if (!file_.is_open()) {
 		throw exception::InitializationFailed("Failed to open output file");
 	}
