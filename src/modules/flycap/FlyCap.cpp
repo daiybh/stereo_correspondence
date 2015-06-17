@@ -143,6 +143,7 @@ durations_({0.0f, 0.0f, 0.0f, 0.0f})
 			prop.type = FC2_FRAME_RATE;
 			flycap_init_warn(fc2GetProperty(ctx_, &prop), log, "Failed to query framerate info");
 			if (fps_ > 0) {
+				prop.absControl = true;
 				prop.autoManualMode = false;
 				prop.absValue = fps_;
 			} else {
@@ -153,6 +154,7 @@ durations_({0.0f, 0.0f, 0.0f, 0.0f})
 			prop.type = FC2_SHUTTER;
 			flycap_init_warn(fc2GetProperty(ctx_, &prop), log, "Failed to query shutter info");
 			if (shutter_time_ > 0.0f) {
+				prop.absControl = true;
 				prop.autoManualMode = false;
 				prop.absValue = shutter_time_;
 			} else {
