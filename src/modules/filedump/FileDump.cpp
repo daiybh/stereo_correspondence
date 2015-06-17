@@ -36,6 +36,7 @@ core::Parameters FileDump::configure()
 	p["filename"]["Required parameter. Path of file to dump to"]=std::string();
 	p["frame_limit"]["Maximal number of frames to dump. 0 for unlimited"]=0;
 	p["info_string"]["Additional string to emit with each frame (as event 'info')"]="";
+	p["append"]["Append to the end of file"]=false;
 	return p;
 }
 
