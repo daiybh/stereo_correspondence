@@ -68,7 +68,7 @@ FileDump::FileDump(log::Log &log_,core::pwThreadBase parent, const core::Paramet
 	IOFilter(log_,parent,"Dump"),
 	event::BasicEventProducer(log),
 	dump_file(),filename(),seq_chars(0),seq_number(0),dumped_frames(0),
-	dump_limit(0),use_regex_(false),single_file_(true)
+	dump_limit(0),use_regex_(false),single_file_(true),append_(false)
 {
 	IOTHREAD_INIT(parameters);
 	if (filename.empty()) throw exception::InitializationFailed("No filename specified");
@@ -95,7 +95,9 @@ FileDump::FileDump(log::Log &log_,core::pwThreadBase parent, const core::Paramet
 
 	if (single_file_) {
 		core::filesystem::ensure_path_directory(filename);
-		dump_file.open(filename.c_str(), std::ios::binary | std::ios::out);
+		auto flags = std::ios::binary | std::ios::out;
+		if (append_) flags|=std::ios::app;
+		dump_file.open(filename.c_str(), flags);
 	}
 }
 
@@ -124,7 +126,9 @@ core::pFrame FileDump::do_simple_single_step(core::pFrame frame)
 		const auto seq_filename = generate_filename(frame);
 		log[log::debug] << "New filename " << seq_filename;
 		core::filesystem::ensure_path_directory(seq_filename);
-		dump_file.open(seq_filename.c_str(), std::ios::binary | std::ios::out);
+		auto flags = std::ios::binary | std::ios::out;
+		if (append_) flags|=std::ios::app;
+		dump_file.open(seq_filename.c_str(), flags);
 		emit_event("filename",seq_filename);
 	}
 	bool written = true;
@@ -175,10 +179,11 @@ core::pFrame FileDump::do_simple_single_step(core::pFrame frame)
 bool FileDump::set_param(const core::Parameter &param)
 {
 	if (assign_parameters(param)
-			(filename, "filename")
-			(seq_chars, "sequence")
-			(dump_limit, "frame_limit")
-			(info_string_, "info_string"))
+			(filename, 		"filename")
+			(seq_chars, 	"sequence")
+			(dump_limit, 	"frame_limit")
+			(info_string_, 	"info_string")
+			(append_,		"append"))
 		return true;
 	return IOFilter::set_param(param);
 }
