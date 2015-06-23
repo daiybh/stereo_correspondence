@@ -107,6 +107,10 @@ const format_t yuv420p		= 0x502;	// YUV 4:2:0 (planar)
 const format_t yuv411p		= 0x503;	// YUV 4:1:1 (planar)
 
 
+// Custom formats (application specific formats)
+
+const format_t mvtp_v210	= 0x800;
+
 const format_t user_start	= 0x1000;
 
 }
