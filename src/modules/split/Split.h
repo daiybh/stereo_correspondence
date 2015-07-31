@@ -11,22 +11,23 @@
 #ifndef SPLIT_H_
 #define SPLIT_H_
 
-#include "yuri/core/IOThread.h"
-#include "yuri/core/BasicIOFilter.h"
+#include "yuri/core/thread/SpecializedMultiIOFilter.h"
+#include "yuri/core/frame/RawVideoFrame.h"
 namespace yuri {
 
 namespace split {
 
-class Split: public core::BasicMultiIOFilter
+class Split: public core::SpecializedMultiIOFilter<core::RawVideoFrame>
 {
+	using base_type = core::SpecializedMultiIOFilter<core::RawVideoFrame>;
 public:
-	Split(log::Log &_log, core::pwThreadBase parent,core::Parameters &params);
-	virtual ~Split();
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
+	Split(log::Log &_log, core::pwThreadBase parent, core::Parameters params);
+	virtual ~Split() noexcept;
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
 private:
-	virtual std::vector<core::pBasicFrame> do_single_step(const std::vector<core::pBasicFrame>& frames);
-	virtual bool 			set_param(const core::Parameter &parameter);
+	virtual std::vector<core::pFrame> do_special_step(std::tuple<core::pRawVideoFrame> frames) override;
+	virtual bool 			set_param(const core::Parameter &parameter) override;
 	size_t	x_;
 	size_t	y_;
 };
