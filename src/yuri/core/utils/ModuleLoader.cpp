@@ -68,7 +68,7 @@ dynamic_loader::dynamic_loader(const std::string& path)
 :pimpl_(make_unique<dynamic_loader::dynamic_loader_pimpl_>())
 {
 	pimpl_->handle = dlopen(path.c_str(),RTLD_LAZY);
-	if (!pimpl_->handle) throw std::runtime_error("Failed to open handle "+path);
+	if (!pimpl_->handle) throw std::runtime_error("Failed to open handle "+path + " ("+dlerror()+")");
 }
 dynamic_loader::~dynamic_loader() noexcept
 {
