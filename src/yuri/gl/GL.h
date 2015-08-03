@@ -36,7 +36,7 @@ struct texture_info_t {
 	GLdouble tx, ty, dx, dy;
 	bool flip_x, flip_y;
 	bool keep_aspect;
-	shared_ptr<GLProgram> shader;
+	std::shared_ptr<GLProgram> shader;
 
 	format_t format;
 	GLint texture_units[8];

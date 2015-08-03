@@ -177,7 +177,7 @@ GL::~GL() noexcept {
 void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, bool flip_y)
 {
 	using namespace yuri::core;
-	core::pRawVideoFrame frame = dynamic_pointer_cast<RawVideoFrame>(gframe);
+	core::pRawVideoFrame frame = std::dynamic_pointer_cast<RawVideoFrame>(gframe);
 	if (!frame) return;
 
 	const format_t frame_format = frame->get_format();
