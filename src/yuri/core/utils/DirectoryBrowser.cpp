@@ -96,6 +96,8 @@ std::vector<std::string> browse_files_impl(const std::string& path, const std::s
 				continue;
 			}
 			std::string fname = dp->d_name;
+			if (fname == "." || fname == "..")
+					continue;
 			if (!has_prefix_suffix(fname, prefix, suffix)) {
 				continue;
 			}
