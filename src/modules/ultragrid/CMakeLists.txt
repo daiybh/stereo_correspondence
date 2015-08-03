@@ -26,19 +26,19 @@ SET(SRC
 	UVVideoDecompress.h
 	
         #${UV_BASE}/capture_filter.c
-	${UV_BASE}/debug.c
-	${UV_BASE}/host.c
-	${UV_BASE}/lib_common.c
+	${UV_BASE}/debug.cpp
+	${UV_BASE}/host.cpp
+	${UV_BASE}/lib_common.cpp
 	${UV_BASE}/messaging.cpp
 	#${UV_BASE}/module.c
 	${UV_BASE}/ntp.c
 	${UV_BASE}/pdb.c
 	${UV_BASE}/tfrc.c
         #${UV_BASE}/tile.c
-	${UV_BASE}/transmit.c
+	${UV_BASE}/transmit.cpp
 	${UV_BASE}/tv.c
-	${UV_BASE}/video.c
-	${UV_BASE}/video_capture.c
+	${UV_BASE}/video.cpp
+	${UV_BASE}/video_capture.cpp
 	${UV_BASE}/video_codec.c
         ${UV_BASE}/video_compress.cpp
 	${UV_BASE}/video_decompress.c
@@ -49,23 +49,24 @@ SET(SRC
         #${UV_BASE}/audio/audio.c
 	${UV_BASE}/audio/audio_capture.c
 	${UV_BASE}/audio/audio_playback.c
-	${UV_BASE}/audio/codec.c
+	${UV_BASE}/audio/codec.cpp
         #${UV_BASE}/audio/echo.c
 	${UV_BASE}/audio/export.c
         #${UV_BASE}/audio/resampler.c
-	${UV_BASE}/audio/utils.c
+	${UV_BASE}/audio/utils.cpp
 	${UV_BASE}/audio/wav_reader.c
 	
 	${UV_BASE}/audio/capture/none.c
-	${UV_BASE}/audio/capture/sdi.c
+	${UV_BASE}/audio/capture/sdi.cpp
 	
 	${UV_BASE}/audio/codec/dummy_pcm.c
 	
 	${UV_BASE}/audio/playback/none.c
 	${UV_BASE}/audio/playback/sdi.c
+	${UV_BASE}/audio/playback/dummy.cpp
 	
 	
-	${UV_BASE}/capture_filter/blank.c
+	${UV_BASE}/capture_filter/blank.cpp
 	#${UV_BASE}/capture_filter/none.c
 	${UV_BASE}/capture_filter/every.c
 	#${UV_BASE}/capture_filter/logo.c
@@ -81,21 +82,21 @@ SET(SRC
 	
 	${UV_BASE}/module.c
 
-	${UV_BASE}/rtp/audio_decoders.c
+	${UV_BASE}/rtp/audio_decoders.cpp
 	${UV_BASE}/rtp/video_decoders.cpp
 	${UV_BASE}/rtp/yuri_decoders.cpp
 	${UV_BASE}/rtp/ldgm.cpp
-	${UV_BASE}/rtp/net_udp.c
-	${UV_BASE}/rtp/pbuf.c
+	${UV_BASE}/rtp/net_udp.cpp
+	${UV_BASE}/rtp/pbuf.cpp
 	
 	#${UV_BASE}/rtp/pc.cpp
         #${UV_BASE}/rtp/ll.cpp
 	${UV_BASE}/rtp/rtp.c
-        ${UV_BASE}/rtp/rtpenc_h264.c
+    ${UV_BASE}/rtp/rtpenc_h264.c
 	${UV_BASE}/rtp/rtp_callback.c
 	
-	${UV_BASE}/utils/config_file.c
-	${UV_BASE}/utils/list.c
+	${UV_BASE}/utils/config_file.cpp
+	${UV_BASE}/utils/list.cpp
 	#${UV_BASE}/utils/message_queue.cpp
 	${UV_BASE}/utils/misc.c
 	${UV_BASE}/utils/resource_manager.cpp
@@ -109,18 +110,27 @@ SET(SRC
 	${UV_BASE}/video_frame.c
 	
 	${UV_BASE}/video_capture/null.c
+	${UV_BASE}/video_capture/ug_input.cpp
 	
-	${UV_BASE}/video_compress/none.c
+	${UV_BASE}/video_compress/none.cpp
 	
 	${UV_BASE}/video_decompress/null.c
 	
 	${UV_BASE}/video_display/null.c
+	${UV_BASE}/video_display/pipe.cpp
+	${UV_BASE}/video_display/proxy.cpp
+
+	${UV_BASE}/video_rxtx.cpp
+	${UV_BASE}/video_rxtx/ihdtv.cpp
+	${UV_BASE}/video_rxtx/rtp.cpp
+	${UV_BASE}/video_rxtx/sage.cpp
+	${UV_BASE}/video_rxtx/ultragrid_rtp.cpp
 		
-	${UV_BASE}/../ldgm-coding/ldgm-session.cpp
-	${UV_BASE}/../ldgm-coding/ldgm-session-cpu.cpp
-	${UV_BASE}/../ldgm-coding/tanner.cpp
-	${UV_BASE}/../ldgm-coding/matrix-gen/ldpc-matrix.cpp
-	${UV_BASE}/../ldgm-coding/matrix-gen/matrix-generator.cpp
+	${UV_BASE}/../ldgm/src/ldgm-session.cpp
+	${UV_BASE}/../ldgm/src/ldgm-session-cpu.cpp
+	${UV_BASE}/../ldgm/src/tanner.cpp
+	${UV_BASE}/../ldgm/matrix-gen/ldpc-matrix.cpp
+	${UV_BASE}/../ldgm/matrix-gen/matrix-generator.cpp
 )
 SET(LIBS )
 if (X11_FOUND)
@@ -132,8 +142,8 @@ endif()
 
 IF(OPENSSL_FOUND)
     	SET(SRC ${SRC}
-    		${UV_BASE}/crypto/openssl_encrypt.c
-    		${UV_BASE}/crypto/openssl_decrypt.c
+    		${UV_BASE}/crypto/openssl_encrypt.cpp
+    		${UV_BASE}/crypto/openssl_decrypt.cpp
 		)
 	SET(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
 ENDIF()
@@ -170,9 +180,9 @@ SET (SRC ${SRC}
 
 # UVConvert
 
-SET (SRC ${SRC}
-         UVConvert.cpp
-		 UVConvert.h)
+#SET (SRC ${SRC}
+#         UVConvert.cpp
+#		 UVConvert.h)
 
 # UVGl
 IF(GLUT_FOUND AND GLEW_FOUND)
@@ -205,7 +215,7 @@ IF(libavcodec_FOUND)
     		 UVLibav.h
     		 UVLibavDecompress.cpp
     		 UVLibavDecompress.h
-    		 ${UV_BASE}/video_compress/libavcodec.c
+    		 ${UV_BASE}/video_compress/libavcodec.cpp
     		 ${UV_BASE}/video_decompress/libavcodec.c
     #		 ${UV_BASE}/gl_context.c
     #		 ${UV_BASE}/glx_common.c
@@ -269,7 +279,7 @@ ENDIF()
 SET (SRC ${SRC}
          UVTestcard.cpp
 		 UVTestcard.h
-		 ${UV_BASE}/video_capture/testcard.c
+		 ${UV_BASE}/video_capture/testcard.cpp
 		 ${UV_BASE}/video_capture/testcard_common.c)
 
 # UDP socket
@@ -289,19 +299,19 @@ IF (libv4l2_FOUND)
     add_definitions(-DYURI_UV_V4L2_SUPPORTED)
 ENDIF()
    
-IF(VIDEOMASTER_FOUND)
-    SET (SRC ${SRC}
-         UVDeltaCast.cpp
-		 UVDeltaCast.h
-		 UVDeltaCastDVI.cpp
-		 UVDeltaCastDVI.h
-		 ${UV_BASE}/video_capture/deltacast.cpp
-		 ${UV_BASE}/video_capture/deltacast_dvi.cpp
-		 ${UV_BASE}/video_display/deltacast.cpp)
-    SET(LIBS ${LIBS} ${VIDEOMASTER_LIBRARIES} ${VIDEOMASTER_AUDIO_LIBRARIES})
-    add_definitions(-DYURI_UV_DELTA_SUPPORTED)
-    include_directories(${VIDEOMASTER_INCLUDE_DIRS})
-ENDIF()		 
+#IF(VIDEOMASTER_FOUND)
+#    SET (SRC ${SRC}
+#         UVDeltaCast.cpp
+#		 UVDeltaCast.h
+#		 UVDeltaCastDVI.cpp
+#		 UVDeltaCastDVI.h
+#		 ${UV_BASE}/video_capture/deltacast.cpp
+#		 ${UV_BASE}/video_capture/deltacast_dvi.cpp
+#		 ${UV_BASE}/video_display/deltacast.cpp)
+#    SET(LIBS ${LIBS} ${VIDEOMASTER_LIBRARIES} ${VIDEOMASTER_AUDIO_LIBRARIES})
+#    add_definitions(-DYURI_UV_DELTA_SUPPORTED)
+#    include_directories(${VIDEOMASTER_INCLUDE_DIRS})
+#ENDIF()		 
 
 IF(DECKLINK_FOUND)
     add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/DeckLinkAPIDispatch.cpp"
@@ -313,6 +323,8 @@ IF(DECKLINK_FOUND)
         DeckLinkAPIDispatch.cpp
         UVDecklink.h
         UVDecklink.cpp
+        ${UV_BASE}/blackmagic_common.h
+        ${UV_BASE}/blackmagic_common.cpp
         ${UV_BASE}/video_capture/decklink.h
         ${UV_BASE}/video_capture/decklink.cpp
         )

@@ -135,6 +135,7 @@ bool UVVideoSink::init_sink(const std::string& format, int flags)
 	log[log::info] << "Initializing " << sink_params_.name;
 	// FIXME: Once ultragrid accepts const char* as format, we should gtet rid of the const_cast
 	if (sink_params_.init_func) return (device_ = sink_params_.init_func(
+                        nullptr,
 			const_cast<char*>(format.c_str()),
 			flags)) != nullptr;
 	log[log::warning] << "No initializer specified for " << sink_params_.name;

@@ -14,20 +14,20 @@
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/thread/ConverterThread.h"
-extern "C" {
 #include "video_compress.h"
 #include "uv_video.h"
 
-}
 struct module;
 struct video_compress_params;
 namespace yuri {
 namespace ultragrid {
 
 namespace detail {
+
 typedef std::function<struct module* (struct module*, const struct video_compress_params *)>	compress_init_t;
-typedef std::function<video_frame* (struct module *, video_frame *)> 	compress_t;
-typedef std::function<video_frame* (struct module *, video_frame*)> compress_tile_t;
+typedef std::function<std::shared_ptr<video_frame> (struct module *, std::shared_ptr<video_frame>)> 	compress_t;
+typedef std::function<std::shared_ptr<video_frame> (struct module *, std::shared_ptr<video_frame>)> compress_tile_t;
+
 
 struct uv_video_compress_params {
 	std::string 			name;
@@ -36,20 +36,12 @@ struct uv_video_compress_params {
 	compress_tile_t			compress_tile_func;
 };
 
-#define UV_COMPRESS_DETAIL(name) \
+#define UV_COMPRESS_DETAIL(compress_name) \
 yuri::ultragrid::detail::uv_video_compress_params { \
-	#name, \
-	name ## _compress_init, \
-	name ## _compress, \
-	{} \
-}
-
-#define UV_COMPRESS_DETAIL_TILE(name) \
-yuri::ultragrid::detail::uv_video_compress_params { \
-	#name, \
-	name ## _compress_init, \
-	{}, \
-	name ## _compress_tile, \
+	compress_name.name, \
+	compress_name.init_func, \
+	compress_name.compress_frame_func, \
+	compress_name.compress_tile_func \
 }
 
 }

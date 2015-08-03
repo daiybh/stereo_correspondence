@@ -257,20 +257,16 @@ audio_frame_t allocate_uv_frame(const core::pAudioFrame& in_frame)
 
 audio_frame_t allocate_uv_frame(const core::pRawAudioFrame& in_frame)
 {
-        audio_frame_t out(audio_frame2_init(), audio_frame2_free);
+        audio_frame_t out(new audio_frame2);
 
-        audio_frame2_allocate(out.get(), in_frame->get_channel_count(),
-                        in_frame->size() / in_frame->get_channel_count());
-
-        out->bps = in_frame->get_sample_size() / 8 / in_frame->get_channel_count();;
-        out->ch_count = in_frame->get_channel_count();
-        out->sample_rate = in_frame->get_sampling_frequency();
-        out->codec = AC_PCM;
+        out->init(in_frame->get_channel_count(), AC_PCM, in_frame->get_sample_size() / 8
+                        / in_frame->get_channel_count(), in_frame->get_sampling_frequency());
 
         for (unsigned int i = 0; i < in_frame->get_channel_count(); ++i) {
-                demux_channel(out->data[i], reinterpret_cast<char *>(in_frame->data()), out->bps,
+                std::unique_ptr<char []> tmp(new char [in_frame->size() / in_frame->get_channel_count()]);
+                demux_channel(tmp.get(), reinterpret_cast<char *>(in_frame->data()), out->get_bps(),
                                 in_frame->size(), in_frame->get_channel_count(), i);
-                out->data_len[i] = in_frame->size() / in_frame->get_channel_count();
+                out->append(i, tmp.get(), in_frame->size() / in_frame->get_channel_count());
         }
 
 	return out;

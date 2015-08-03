@@ -29,7 +29,7 @@ core::Parameters UVJpegCompress::configure()
 
 
 UVJpegCompress::UVJpegCompress(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-ultragrid::UVVideoCompress(log_,parent,"uv_jpeg_compress", UV_COMPRESS_DETAIL(jpeg))
+ultragrid::UVVideoCompress(log_,parent,"uv_jpeg_compress", UV_COMPRESS_DETAIL(jpeg_info))
 {
 	IOTHREAD_INIT(parameters)
 	if(!init_compressor("")) {

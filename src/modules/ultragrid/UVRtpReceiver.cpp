@@ -15,13 +15,13 @@
 extern "C" {
 #include "debug.h"
 #include "pdb.h"
-#include "rtp/pbuf.h"
 #include "rtp/rtp.h"
 #include "rtp/rtp_callback.h"
 #include "rtp/yuri_decoders.h"
 #include "tfrc.h"
 #include "tv.h"
 }
+#include "rtp/pbuf.h"
 #include "uv_video.h"
 
 namespace yuri {
@@ -51,7 +51,7 @@ core::IOThread(log_,parent,0,1,std::string("uv_rtp_receiver"))
 //		log[log::fatal] << "Failed to prepare tx session";
 //		throw exception::InitializationFailed("Failed to prepare tx session");
 //	}
-        m_participants = pdb_init();
+        m_participants = pdb_init(0);
 	if (!(rtp_session_ = rtp_init(destination_.c_str(),
 				rx_port_, tx_port_, ttl_,
 				5000*1048675.0, 0, rtp_recv_callback, (uint8_t *) m_participants, false, true))) {
@@ -73,6 +73,7 @@ UVRtpReceiver::~UVRtpReceiver() noexcept
 {
 }
 
+
 void UVRtpReceiver::run()
 {
         while (still_running()) {
@@ -83,6 +84,7 @@ void UVRtpReceiver::run()
 
                 /* Housekeeping and RTCP... */
                 gettimeofday(&curr_time, NULL);
+                auto current_time = std::chrono::high_resolution_clock::now();
                 ts = tv_diff(curr_time, m_start_time) * 90000;
                 rtp_update(rtp_session_, curr_time);
                 rtp_send_ctrl(rtp_session_, ts, 0, curr_time);
@@ -91,6 +93,7 @@ void UVRtpReceiver::run()
                 /* to match the video capture rate, so the transmitter works.  */
                 if (fr) {
                         gettimeofday(&curr_time, NULL);
+                        current_time = std::chrono::high_resolution_clock::now();
                         fr = 0;
                 }
 
@@ -115,17 +118,20 @@ void UVRtpReceiver::run()
                                                                curr_time));
                         }
 
+                        auto yuri_decoder_wrapper = [](struct coded_data *received_data, void *decoder_data, struct pbuf_stats * /* stats */)->int{return decode_yuri_frame(received_data, decoder_data);};
                         yuri_decoder_data decoder_data(log);
 
+                        current_time = std::chrono::high_resolution_clock::now();
                         /* Decode and render video... */
                         if (pbuf_decode
-                            (cp->playout_buffer, curr_time, decode_yuri_frame, (void *) &decoder_data)) {
+                            (cp->playout_buffer, current_time, yuri_decoder_wrapper, (void *) &decoder_data)) {
                                 gettimeofday(&curr_time, NULL);
+                                current_time = std::chrono::high_resolution_clock::now();
                                 fr = 1;
                                 push_frame(0, decoder_data.yuri_frame);
                         }
 
-                        pbuf_remove(cp->playout_buffer, curr_time);
+                        pbuf_remove(cp->playout_buffer, current_time);
                         cp = pdb_iter_next(&it);
                 }
                 pdb_iter_done(&it);

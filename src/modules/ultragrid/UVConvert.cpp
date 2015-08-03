@@ -36,11 +36,9 @@ size_t get_cost(format_t from_, format_t to_)
 {
 	codec_t from = ultragrid::yuri_to_uv(from_);
 	codec_t to = ultragrid::yuri_to_uv(to_);
-	auto cif = codec_info[from];
-	auto cit = codec_info[to];
-	if (cif.rgb && cit.rgb) return 9; // For RGB conversions
-	if (cif.rgb || cit.rgb) return 19; // RGB and some other
-	if (cif.bpp == cit.bpp) return 9; // YUYV -> UYVY and similar
+	if (codec_is_a_rgb(from) && codec_is_a_rgb(to)) return 9; // For RGB conversions
+	if (codec_is_a_rgb(from) || codec_is_a_rgb(to)) return 19; // RGB and some other
+	if (get_bpp(from) == get_bpp(to)) return 9; // YUYV -> UYVY and similar
 	return 14; //
 }
 

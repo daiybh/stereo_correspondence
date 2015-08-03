@@ -29,7 +29,7 @@ core::Parameters UVUyvy::configure()
 
 
 UVUyvy::UVUyvy(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-ultragrid::UVVideoCompress(log_,parent,"uv_uyvy", UV_COMPRESS_DETAIL(uyvy))
+ultragrid::UVVideoCompress(log_,parent,"uv_uyvy", UV_COMPRESS_DETAIL(uyvy_info))
 {
 	IOTHREAD_INIT(parameters)
 	if(!init_compressor("")) {

@@ -78,10 +78,10 @@ MODULE_REGISTRATION_BEGIN("ultragrid")
 #endif
 		REGISTER_IOTHREAD("uv_audio_testcard",uv_audio_testcard::UVAudioTestcard)
 
-		REGISTER_IOTHREAD("uv_convert",uv_convert::UVConvert)
-		for (const auto&x: uv_convert::get_map()) {
-			REGISTER_CONVERTER(x.first.first, x.first.second, "uv_convert", uv_convert::get_cost(x.first.first, x.first.second))
-		}
+//		REGISTER_IOTHREAD("uv_convert",uv_convert::UVConvert)
+//		for (const auto&x: uv_convert::get_map()) {
+//			REGISTER_CONVERTER(x.first.first, x.first.second, "uv_convert", uv_convert::get_cost(x.first.first, x.first.second))
+//		}
 
 #ifdef YURI_UV_GLUT_SUPPORTED
 		REGISTER_IOTHREAD("uv_gl",uv_gl::UVGl)
