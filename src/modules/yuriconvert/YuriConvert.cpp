@@ -192,8 +192,8 @@ namespace {
 	const size_t Wb_2020 	=  593;
 
 
-	typedef function<core::pRawVideoFrame(const core::pRawVideoFrame&, const YuriConvertor&)> converter_t;
-	typedef std::pair<yuri::format_t, yuri::format_t> format_pair_t;
+	using converter_t = std::function<core::pRawVideoFrame(const core::pRawVideoFrame&, const YuriConvertor&)>;
+	using format_pair_t = std::pair<yuri::format_t, yuri::format_t>;
 
 //	inline unsigned int convY(unsigned int Y) { return (Y*219+4128) >> 6; }
 //	inline unsigned int convC(unsigned int C) {	return (C*7+129) >> 1; }
@@ -394,7 +394,7 @@ YuriConvertor::~YuriConvertor() noexcept{
 core::pFrame YuriConvertor::do_convert_frame(core::pFrame input_frame, format_t target_format)
 {
 	core::pRawVideoFrame outframe;
-	core::pRawVideoFrame frame= dynamic_pointer_cast<core::RawVideoFrame>(input_frame);
+	core::pRawVideoFrame frame= std::dynamic_pointer_cast<core::RawVideoFrame>(input_frame);
 	if (!frame) return outframe;
 
 	format_t in_fmt = frame->get_format();
