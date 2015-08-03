@@ -61,7 +61,7 @@ std::vector<core::pFrame> Combine::do_single_step(std::vector<core::pFrame> fram
 
 	std::vector<core::pRawVideoFrame> frames;
 	for (auto& x: framesx) {
-		auto f = dynamic_pointer_cast<core::RawVideoFrame>(x);
+		auto f = std::dynamic_pointer_cast<core::RawVideoFrame>(x);
 		if (!f) {
 			log[log::warning] << "Received non-raw frame.";
 			return {};
