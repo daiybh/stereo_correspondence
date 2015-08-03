@@ -615,7 +615,7 @@ core::pFrame ConvertPlanes::do_special_single_step(core::pRawVideoFrame frame)
 
 core::pFrame ConvertPlanes::do_convert_frame(core::pFrame input_frame, format_t target_format)
 {
-	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(input_frame);
+	core::pRawVideoFrame frame = std::dynamic_pointer_cast<core::RawVideoFrame>(input_frame);
 	if (!frame) {
 		log[log::warning] << "Got bad frame type!!";
 		return {};
