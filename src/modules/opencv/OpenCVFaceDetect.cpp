@@ -59,12 +59,11 @@ core::pFrame OpenCVFaceDetect::do_special_single_step(core::pRawVideoFrame frame
 		std::vector<event::pBasicEvent> face_events;
 		for (auto x: faces) {
 			log[log::info] << x.width << "x" << x.height << "+" << x.x << "+" << x.y;
-//			std::vector<shared_ptr<event::EventInt> > vec {x.x + x.width/2, x.y + x.height/2, x.width/2};
 			std::vector<event::pBasicEvent> vec
-							{make_shared<event::EventInt>(x.x + x.width/2),
-							make_shared<event::EventInt>(x.y + x.height/2),
-							make_shared<event::EventInt>(x.width/2)};
-			face_events.push_back(make_shared<event::EventVector>(vec));
+							{std::make_shared<event::EventInt>(x.x + x.width/2),
+							std::make_shared<event::EventInt>(x.y + x.height/2),
+							std::make_shared<event::EventInt>(x.width/2)};
+			face_events.push_back(std::make_shared<event::EventVector>(vec));
 		}
 		emit_event(x_event, faces[0].x+faces[0].width/2, 0, res.width);
 		emit_event(y_event, faces[0].y+faces[0].height/2, 0, res.height);
@@ -72,7 +71,7 @@ core::pFrame OpenCVFaceDetect::do_special_single_step(core::pRawVideoFrame frame
 		emit_event(height_event, faces[0].height/2);
 		emit_event(width_event , faces[0].width/2);
 
-		auto e = make_shared<event::EventVector>(face_events);
+		auto e = std::make_shared<event::EventVector>(face_events);
 		emit_event("faces", e);
 	}
 
