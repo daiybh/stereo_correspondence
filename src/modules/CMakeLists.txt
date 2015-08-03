@@ -256,7 +256,7 @@ ENDIF()
 
 find_path(FLYCAP_INCLUDE_DIR FlyCapture2.h
 			PATH_SUFFIXES flycapture)
-find_library(FLYCAP_LIBRARY flycapture)
+find_library(FLYCAP_LIBRARY flycapture-c)
 
 IF(FLYCAP_INCLUDE_DIR AND FLYCAP_LIBRARY)
 	add_subdirectory(flycap)
