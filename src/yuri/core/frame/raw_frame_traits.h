@@ -176,6 +176,30 @@ struct frame_traits<abgr32>: public frame_traits_8bit_four_comp , public frame_t
 };
 
 template<>
+struct frame_traits<rgb48>: public frame_traits_16bit_three_comp , public frame_traits_no_subsampling {
+};
+
+template<>
+struct frame_traits<bgr48>: public frame_traits_16bit_three_comp , public frame_traits_no_subsampling {
+};
+
+template<>
+struct frame_traits<rgba64>: public frame_traits_16bit_four_comp , public frame_traits_no_subsampling {
+};
+
+template<>
+struct frame_traits<bgra64>: public frame_traits_16bit_four_comp , public frame_traits_no_subsampling {
+};
+
+template<>
+struct frame_traits<argb64>: public frame_traits_16bit_four_comp , public frame_traits_no_subsampling {
+};
+
+template<>
+struct frame_traits<abgr64>: public frame_traits_16bit_four_comp , public frame_traits_no_subsampling {
+};
+
+template<>
 struct frame_traits<yuv444>: public frame_traits_8bit_three_comp , public frame_traits_no_subsampling {
 };
 
