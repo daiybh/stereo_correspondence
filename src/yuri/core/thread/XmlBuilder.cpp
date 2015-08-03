@@ -288,7 +288,7 @@ void XmlBuilder::builder_pimpl_t::process_links()
 void XmlBuilder::builder_pimpl_t::process_routing()
 {
 	TiXmlElement * node = nullptr;
-	if((node = dynamic_cast<TiXmlElement*>(root->IterateChildren(event_tag, node)))) {
+	while((node = dynamic_cast<TiXmlElement*>(root->IterateChildren(event_tag, node)))) {
 		const char* text = node->GetText();
 		//if (text) routing_info.push_back(text);
 		if (text) routing.append(text);
