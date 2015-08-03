@@ -94,7 +94,7 @@ bool MidiDevice::process_event(const snd_seq_event_t& midievent)
 			<< static_cast<int>(midievent.data.control.channel)
 			<< ", param: " << midievent.data.control.param
 			<< ", value: " << midievent.data.control.value;
-			emit_event(name,make_shared<event::EventInt>(midievent.data.control.value,0,127));
+			emit_event(name, std::make_shared<event::EventInt>(midievent.data.control.value,0,127));
 			break;
 		case SND_SEQ_EVENT_NOTEON:
 			name = std::string("note_")
@@ -104,7 +104,7 @@ bool MidiDevice::process_event(const snd_seq_event_t& midievent)
 //			<< static_cast<int>(midievent.data.note.channel)
 //			<< ", param: " << midievent.data.note.note
 			<< ", velocity: " << static_cast<int>(midievent.data.note.velocity);
-			emit_event(name,make_shared<event::EventBool>(true));
+			emit_event(name, std::make_shared<event::EventBool>(true));
 			break;
 		case SND_SEQ_EVENT_NOTEOFF:
 			name = std::string("note_")
@@ -112,7 +112,7 @@ bool MidiDevice::process_event(const snd_seq_event_t& midievent)
 								+ "_" + lexical_cast<std::string>(static_cast<int>(midievent.data.note.note));
 			log[log::debug] << "Note OFF"
 				<< ", velocity: " << static_cast<int>(midievent.data.note.velocity);
-			emit_event(name,make_shared<event::EventBool>(false));
+			emit_event(name, std::make_shared<event::EventBool>(false));
 			break;
 	}
 	return true;
