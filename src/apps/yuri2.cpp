@@ -34,7 +34,7 @@ namespace po = boost::program_options;
 #endif
 
 // Defined as global variables, so these can be used in signal handler.
-yuri::shared_ptr<yuri::core::XmlBuilder> builder;
+std::shared_ptr<yuri::core::XmlBuilder> builder;
 yuri::log::Log logger(std::clog);
 
 
