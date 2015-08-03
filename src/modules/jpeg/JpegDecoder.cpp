@@ -55,7 +55,7 @@ core::pFrame JpegDecoder::do_convert_frame(core::pFrame input_frame, format_t ta
 {
 	// TODO SET FORMAT
 	output_format_ = target_format;
-	core::pCompressedVideoFrame frame = dynamic_pointer_cast<core::CompressedVideoFrame>(input_frame);
+	core::pCompressedVideoFrame frame = std::dynamic_pointer_cast<core::CompressedVideoFrame>(input_frame);
 	if (!frame) return {};
 	return do_special_single_step(frame);
 }
@@ -69,7 +69,7 @@ core::pFrame JpegDecoder::do_special_single_step(core::pCompressedVideoFrame fra
 		return {};
 	}
 
-	unique_ptr<jpeg_decompress_struct, function<void(jpeg_decompress_struct*)>> cinfox
+	std::unique_ptr<jpeg_decompress_struct, std::function<void(jpeg_decompress_struct*)>> cinfox
 			(new jpeg_decompress_struct,[](jpeg_decompress_struct* cinfo){
 		jpeg_destroy_decompress(cinfo);
 		delete cinfo;

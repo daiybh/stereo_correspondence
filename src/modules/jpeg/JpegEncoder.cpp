@@ -53,7 +53,7 @@ JpegEncoder::~JpegEncoder() noexcept
 core::pFrame JpegEncoder::do_special_single_step(core::pRawVideoFrame frame)
 {
 	process_events();
-	unique_ptr<jpeg_compress_struct, function<void(jpeg_compress_struct*)>> cinfox(
+	std::unique_ptr<jpeg_compress_struct, std::function<void(jpeg_compress_struct*)>> cinfox(
 			new jpeg_compress_struct, [](jpeg_compress_struct* ptr)
 			{
 				jpeg_destroy_compress(ptr);
@@ -121,7 +121,7 @@ core::pFrame JpegEncoder::do_special_single_step(core::pRawVideoFrame frame)
 core::pFrame JpegEncoder::do_convert_frame(core::pFrame input_frame, format_t target_format)
 {
 	if (target_format != core::compressed_frame::jpeg) return {};
-	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(input_frame);
+	core::pRawVideoFrame frame = std::dynamic_pointer_cast<core::RawVideoFrame>(input_frame);
 	if (!frame) return {};
 	return do_special_single_step(frame);
 }
