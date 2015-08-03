@@ -102,7 +102,7 @@ core::pFrame PngEncoder::do_special_single_step(core::pRawVideoFrame frame)
 	}
 
 	png_infop info_ptr = nullptr;
-	unique_ptr<png_struct, function<void(png_structp)>> png_ptrx (png_create_write_struct(PNG_LIBPNG_VER_STRING, &log, report_error, report_warning),
+	std::unique_ptr<png_struct, std::function<void(png_structp)>> png_ptrx (png_create_write_struct(PNG_LIBPNG_VER_STRING, &log, report_error, report_warning),
 			[&info_ptr](png_structp p){
 				if (p) png_destroy_write_struct(&p, &info_ptr);
 			});
@@ -156,7 +156,7 @@ core::pFrame PngEncoder::do_special_single_step(core::pRawVideoFrame frame)
 core::pFrame PngEncoder::do_convert_frame(core::pFrame input_frame, format_t target_format)
 {
 	if(target_format != core::compressed_frame::png) return {};
-	core::pRawVideoFrame frame = dynamic_pointer_cast<core::RawVideoFrame>(input_frame);
+	core::pRawVideoFrame frame = std::dynamic_pointer_cast<core::RawVideoFrame>(input_frame);
 	if (!frame) return {};
 	return do_special_single_step(frame);
 }

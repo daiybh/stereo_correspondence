@@ -79,7 +79,7 @@ PngDecoder::~PngDecoder() noexcept
 core::pFrame PngDecoder::do_convert_frame(core::pFrame input_frame, format_t target_format)
 {
 	requested_format_ = target_format;
-	core::pCompressedVideoFrame frame = dynamic_pointer_cast<core::CompressedVideoFrame>(input_frame);
+	core::pCompressedVideoFrame frame = std::dynamic_pointer_cast<core::CompressedVideoFrame>(input_frame);
 	if (frame) return do_special_single_step(frame);
 	return {};
 }
@@ -92,7 +92,7 @@ core::pFrame PngDecoder::do_special_single_step(core::pCompressedVideoFrame fram
 		return {};
 	}
 	png_infop info_ptr = nullptr;
-	unique_ptr<png_struct, function<void(png_structp)>> png_ptrx(png_create_read_struct(PNG_LIBPNG_VER_STRING, &log, report_error, report_warning),
+	std::unique_ptr<png_struct, std::function<void(png_structp)>> png_ptrx(png_create_read_struct(PNG_LIBPNG_VER_STRING, &log, report_error, report_warning),
 			[&info_ptr](png_structp ptr){
 				if (ptr) png_destroy_read_struct(&ptr, &info_ptr, nullptr);
 			});
