@@ -74,7 +74,7 @@ core::pFrame ImageMagickSource::do_convert_frame(core::pFrame input_frame, forma
 	auto it = yuri_to_magick_format.find(target_format);
 	if (it == yuri_to_magick_format.end()) return {};
 	format_ = target_format;
-	core::pCompressedVideoFrame frame = dynamic_pointer_cast<core::CompressedVideoFrame>(input_frame);
+	core::pCompressedVideoFrame frame = std::dynamic_pointer_cast<core::CompressedVideoFrame>(input_frame);
 	if (frame) return do_special_single_step(frame);
 	return {};
 }
