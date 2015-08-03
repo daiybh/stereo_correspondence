@@ -47,8 +47,8 @@ Diff::~Diff() noexcept
 bool Diff::step()
 {
 	//if (!in[0] || !in[1]) return true;
-	if (!frame1) frame1 = dynamic_pointer_cast<core::RawVideoFrame>(pop_frame(0));
-	if (!frame2) frame2 = dynamic_pointer_cast<core::RawVideoFrame>(pop_frame(1));
+	if (!frame1) frame1 = std::dynamic_pointer_cast<core::RawVideoFrame>(pop_frame(0));
+	if (!frame2) frame2 = std::dynamic_pointer_cast<core::RawVideoFrame>(pop_frame(1));
 	if (!frame1 || !frame2) return true;
 	if (frame1->get_format() != frame2->get_format()) {
 		log[warning] << "Frame types have to match!\n";
