@@ -183,11 +183,11 @@ namespace {
 			return dev.set_user_control(id, std::move(state), event::get_value<event::EventBool>(event));
 		}
 		if (event->get_type() == event::event_type_t::integer_event) {
-			auto value = get_event_value(state, *dynamic_pointer_cast<event::EventInt>(event));
+			auto value = get_event_value(state, *std::dynamic_pointer_cast<event::EventInt>(event));
 			return dev.set_user_control(id, std::move(state), value);
 		}
 		if (event->get_type() == event::event_type_t::double_event) {
-			auto value = get_event_value(state, *dynamic_pointer_cast<event::EventDouble>(event));
+			auto value = get_event_value(state, *std::dynamic_pointer_cast<event::EventDouble>(event));
 			return dev.set_user_control(id, std::move(state), value);
 		}
 		return false;
@@ -324,11 +324,11 @@ namespace {
 			return dev.set_camera_control(id, std::move(state), event::get_value<event::EventBool>(event));
 		}
 		if (event->get_type() == event::event_type_t::integer_event) {
-			auto value = get_event_value(state, *dynamic_pointer_cast<event::EventInt>(event));
+			auto value = get_event_value(state, *std::dynamic_pointer_cast<event::EventInt>(event));
 			return dev.set_camera_control(id, std::move(state), value);
 		}
 		if (event->get_type() == event::event_type_t::double_event) {
-			auto value = get_event_value(state, *dynamic_pointer_cast<event::EventDouble>(event));
+			auto value = get_event_value(state, *std::dynamic_pointer_cast<event::EventDouble>(event));
 			return dev.set_camera_control(id, std::move(state), value);
 		}
 		return false;

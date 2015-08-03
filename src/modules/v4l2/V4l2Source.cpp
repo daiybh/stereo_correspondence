@@ -319,7 +319,7 @@ bool V4l2Source::prepare_frame(uint8_t *data, yuri::size_t size)
 	try {
 		const raw_format_t& fi = core::raw_format::get_format_info(format_);
 
-		core::pRawVideoFrame rframe = dynamic_pointer_cast<core::RawVideoFrame>(output_frame_);
+		core::pRawVideoFrame rframe = std::dynamic_pointer_cast<core::RawVideoFrame>(output_frame_);
 		if (!rframe) {
 			rframe = core::RawVideoFrame::create_empty(format_, resolution_, true);
 			buffer_free_ = PLANE_SIZE(rframe, 0);
