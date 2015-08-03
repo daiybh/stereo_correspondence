@@ -87,9 +87,12 @@ inline void flycap_init_warn(fc2Error code, log::Log& log, const std::string& ms
 FlyCap::FlyCap(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOThread(log_,parent,1,1,std::string("flycap")),resolution_(resolution_t{1280,960}),
 format_(core::raw_format::y8),fps_(30),index_(0),serial_(0),keep_format_(false),
-embedded_framecounter_(false),custom_(-1),shutter_time_(0.0f),strobes_({false, false, false, false}),
+embedded_framecounter_(false),custom_(-1),shutter_time_(0.0f)
+#if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 7))
+,strobes_({false, false, false, false}),
 polarities_({false, false, false, false}),delays_({0.0f, 0.0f, 0.0f, 0.0f}),
 durations_({0.0f, 0.0f, 0.0f, 0.0f})
+#endif
 {
 	IOTHREAD_INIT(parameters)
 

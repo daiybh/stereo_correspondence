@@ -10,26 +10,22 @@
 #ifndef SRC_MODULES_FLYCAP_FLYCAP_C_HELEPRS_H_
 #define SRC_MODULES_FLYCAP_FLYCAP_C_HELEPRS_H_
 
-#ifdef YURI_LINUX
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wignored-qualifiers"
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#pragma GCC diagnostic ignored "-Wpedantic"
+#if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ > 4 || __GNUC_MINOR__ > 7))
+#define CAN_DISABLE_PEDANTIC
 #endif
+
+#ifdef CAN_DISABLE_PEDANTIC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #endif
 
 #include "C/FlyCapture2_C.h"
 
-#ifdef YURI_LINUX
-#ifdef __clang__
-#pragma clang diagnostic pop
-#else
+#ifdef CAN_DISABLE_PEDANTIC
 #pragma GCC diagnostic pop
+#undef CAN_DISABLE_PEDANTIC
 #endif
-#endif
+
 
 #include "yuri/core/thread/ThreadBase.h"
 //#include "yuri/core/utils/time_types.h"
