@@ -112,7 +112,7 @@ core::pFrame UVConvert::do_special_single_step(core::pRawVideoFrame frame)
 }
 core::pFrame UVConvert::do_convert_frame(core::pFrame input_frame, format_t target_format)
 {
-	return convert_raw_frame(dynamic_pointer_cast<core::RawVideoFrame>(input_frame), target_format);
+	return convert_raw_frame(std::dynamic_pointer_cast<core::RawVideoFrame>(input_frame), target_format);
 }
 
 

@@ -41,7 +41,7 @@ private:
 	virtual bool do_ready_to_send() override;
 	virtual bool do_wait_for_data(duration_t duration) override;
 
-	unique_ptr<socket_udp,function<void(socket_udp*)>> socket_;
+	std::unique_ptr<socket_udp, std::function<void(socket_udp*)>> socket_;
 };
 
 } /* namespace uv_udp */

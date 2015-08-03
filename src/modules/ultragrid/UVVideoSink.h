@@ -28,13 +28,13 @@ namespace yuri {
 namespace ultragrid {
 namespace detail {
 
-typedef function<void* (char *, unsigned int)> 	display_init_t;
-typedef function<void (void *)> 				display_run_t;
-typedef function<void (void *)>					display_done_t;
-typedef function<video_frame* (void *)>			display_getf_t;
-typedef function<int (void *, video_frame *, int)>	display_putf_t;
-typedef function<int (void *, video_desc)> 		display_reconfigure_t;
-typedef function<int (void *, int, void *, size_t *)> display_get_property_t;
+typedef std::function<void* (char *, unsigned int)> 	display_init_t;
+typedef std::function<void (void *)> 				display_run_t;
+typedef std::function<void (void *)>					display_done_t;
+typedef std::function<video_frame* (void *)>			display_getf_t;
+typedef std::function<int (void *, video_frame *, int)>	display_putf_t;
+typedef std::function<int (void *, video_desc)> 		display_reconfigure_t;
+typedef std::function<int (void *, int, void *, size_t *)> display_get_property_t;
 
 struct uv_display_params {
 	std::string					name;

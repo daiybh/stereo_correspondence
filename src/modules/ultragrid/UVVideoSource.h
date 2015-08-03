@@ -19,10 +19,10 @@ namespace yuri {
 namespace ultragrid {
 
 namespace detail {
-typedef function<vidcap_type*()>						vidcap_probe_t;
-typedef function<void*(struct vidcap_params *)>	vidcap_init_t;
-typedef function<void(void *)>							vidcap_done_t;
-typedef function<video_frame*(void *, audio_frame **)>	vidcap_grab_t;
+typedef std::function<vidcap_type*()>						vidcap_probe_t;
+typedef std::function<void*(struct vidcap_params *)>	vidcap_init_t;
+typedef std::function<void(void *)>							vidcap_done_t;
+typedef std::function<video_frame*(void *, audio_frame **)>	vidcap_grab_t;
 
 struct capture_params {
 	std::string		name;

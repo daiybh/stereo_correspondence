@@ -24,7 +24,7 @@ namespace {
 class UVSinkHelper: public core::ThreadBase
 {
 public:
-	UVSinkHelper(const log::Log& log_, core::pwThreadBase parent, function<void()> run_func):
+	UVSinkHelper(const log::Log& log_, core::pwThreadBase parent, std::function<void()> run_func):
 		ThreadBase(log_,parent,"SDLHelper"),run_func(run_func)
 {}
 	~UVSinkHelper() noexcept {}
@@ -41,7 +41,7 @@ private:
 	}
 	log[log::info] << "Sink helper quit";
 }
-	function<void()> run_func;
+	std::function<void()> run_func;
 };
 }
 
@@ -94,7 +94,7 @@ void UVVideoSink::run()
 	}
 
 	if (sink_params_.run_func) {
-		core::pThreadBase helper = make_shared<UVSinkHelper>(log,get_this_ptr(),[this](){sink_params_.run_func(device_);});
+		core::pThreadBase helper = std::make_shared<UVSinkHelper>(log,get_this_ptr(),[this](){sink_params_.run_func(device_);});
 		spawn_thread(helper);
 	}
 	IOThread::run();
@@ -119,7 +119,7 @@ core::pFrame UVVideoSink::do_special_single_step(core::pVideoFrame frame)
 	}
 
 
-	unique_ptr<video_frame, function<void(video_frame*)>> uv_frame (
+	std::unique_ptr<video_frame, std::function<void(video_frame*)>> uv_frame (
 			sink_params_.getf_func(device_),
 			[this](video_frame* uvf)mutable{sink_params_.putf_func(this->device_, uvf, false);});
 

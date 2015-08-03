@@ -25,9 +25,9 @@ namespace yuri {
 namespace ultragrid {
 
 namespace detail {
-typedef function<struct module* (struct module*, const struct video_compress_params *)>	compress_init_t;
-typedef function<video_frame* (struct module *, video_frame *)> 	compress_t;
-typedef function<video_frame* (struct module *, video_frame*)> compress_tile_t;
+typedef std::function<struct module* (struct module*, const struct video_compress_params *)>	compress_init_t;
+typedef std::function<video_frame* (struct module *, video_frame *)> 	compress_t;
+typedef std::function<video_frame* (struct module *, video_frame*)> compress_tile_t;
 
 struct uv_video_compress_params {
 	std::string 			name;

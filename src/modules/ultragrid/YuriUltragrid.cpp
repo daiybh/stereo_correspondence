@@ -214,10 +214,10 @@ core::pFrame create_yuri_from_uv_desc(const video_desc* uv_desc, size_t data_len
 }
 bool copy_to_uv_frame(const core::pFrame& frame_in, video_frame* frame_out)
 {
-	if (core::pRawVideoFrame raw_frame = dynamic_pointer_cast<core::RawVideoFrame>(frame_in)) {
+	if (core::pRawVideoFrame raw_frame = std::dynamic_pointer_cast<core::RawVideoFrame>(frame_in)) {
 		return copy_to_uv_frame(raw_frame, frame_out);
 	}
-	if (core::pCompressedVideoFrame comp_frame = dynamic_pointer_cast<core::CompressedVideoFrame>(frame_in)) {
+	if (core::pCompressedVideoFrame comp_frame = std::dynamic_pointer_cast<core::CompressedVideoFrame>(frame_in)) {
 		return copy_to_uv_frame(comp_frame, frame_out);
 	}
 	return false;
@@ -248,7 +248,7 @@ bool copy_to_uv_frame(const core::pCompressedVideoFrame& frame_in, video_frame* 
 
 audio_frame_t allocate_uv_frame(const core::pAudioFrame& in_frame)
 {
-	if (auto raw_frame = dynamic_pointer_cast<core::RawAudioFrame>(in_frame)) {
+	if (auto raw_frame = std::dynamic_pointer_cast<core::RawAudioFrame>(in_frame)) {
 		return allocate_uv_frame(raw_frame);
 	}
 	return nullptr;
@@ -338,10 +338,10 @@ video_frame_t allocate_uv_frame(const core::pCompressedVideoFrame& in_frame)
 
 video_frame_t allocate_uv_frame(const core::pVideoFrame& in_frame)
 {
-	if (core::pRawVideoFrame raw_frame = dynamic_pointer_cast<core::RawVideoFrame>(in_frame)) {
+	if (core::pRawVideoFrame raw_frame = std::dynamic_pointer_cast<core::RawVideoFrame>(in_frame)) {
 		return allocate_uv_frame(raw_frame);
 	}
-	if (core::pCompressedVideoFrame comp_frame = dynamic_pointer_cast<core::CompressedVideoFrame>(in_frame)) {
+	if (core::pCompressedVideoFrame comp_frame = std::dynamic_pointer_cast<core::CompressedVideoFrame>(in_frame)) {
 		return allocate_uv_frame(comp_frame);
 	}
 	return nullptr;

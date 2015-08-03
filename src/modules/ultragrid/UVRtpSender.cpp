@@ -64,9 +64,9 @@ UVRtpSender::~UVRtpSender() noexcept
 
 core::pFrame UVRtpSender::do_simple_single_step(core::pFrame frame)
 {
-        if (auto videoFrame = dynamic_pointer_cast<core::VideoFrame>(frame)) {
+        if (auto videoFrame = std::dynamic_pointer_cast<core::VideoFrame>(frame)) {
                 return do_special_simple_single_step(std::move(videoFrame));
-        } else if (auto audioFrame = dynamic_pointer_cast<core::AudioFrame>(frame)) {
+        } else if (auto audioFrame = std::dynamic_pointer_cast<core::AudioFrame>(frame)) {
                 return do_special_simple_single_step(std::move(audioFrame));
         } else return {};
 }
