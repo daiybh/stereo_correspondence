@@ -135,7 +135,7 @@ namespace {
 		trim_string(first,last);
 		name = find_id(first, last, true);
 		if (name.empty()) return p_token();
-		auto spec = make_shared<spec_token>(node,name);
+		auto spec = std::make_shared<spec_token>(node,name);
 		trim_string(first,last);
 		if (first != last && *first == '|') {
 			++first;
@@ -149,22 +149,22 @@ namespace {
 		trim_string(first,last);
 		Iterator f1;
 		if ((f1 = find_substr(first, last, std::string("true")))!=first) {
-			first=f1;return make_shared<bool_const_token>(true);
+			first=f1;return std::make_shared<bool_const_token>(true);
 		}
 		if ((f1 = find_substr(first, last, std::string("True")))!=first) {
-			first=f1;return make_shared<bool_const_token>(true);
+			first=f1;return std::make_shared<bool_const_token>(true);
 		}
 		if ((f1 = find_substr(first, last, std::string("TRUE")))!=first) {
-			first=f1;return make_shared<bool_const_token>(true);
+			first=f1;return std::make_shared<bool_const_token>(true);
 		}
 		if ((f1 = find_substr(first, last, std::string("false")))!=first) {
-			first=f1;return make_shared<bool_const_token>(false);
+			first=f1;return std::make_shared<bool_const_token>(false);
 		}
 		if ((f1 = find_substr(first, last, std::string("False")))!=first) {
-			first=f1;return make_shared<bool_const_token>(false);
+			first=f1;return std::make_shared<bool_const_token>(false);
 		}
 		if ((f1 = find_substr(first, last, std::string("FALSE")))!=first) {
-			first=f1;return make_shared<bool_const_token>(false);
+			first=f1;return std::make_shared<bool_const_token>(false);
 		}
 		return p_token();
 	}
@@ -188,7 +188,7 @@ namespace {
 			}
 		}
 		if (first == last || *first!='.') {
-			if (digits) return make_shared<int_const_token>(number*(negative?-1:1));
+			if (digits) return std::make_shared<int_const_token>(number*(negative?-1:1));
 			return p_token();
 		}
 		++first;
@@ -204,7 +204,7 @@ namespace {
 				break;
 			}
 		}
-		if (digits) return make_shared<double_const_token>(dval*(negative?-1:1));
+		if (digits) return std::make_shared<double_const_token>(dval*(negative?-1:1));
 		return p_token();
 	}
 	template<class Iterator>
@@ -221,7 +221,7 @@ namespace {
 		}
 		if (*first != '"') return p_token();
 		++first;
-		return make_shared<string_const_token>(val);
+		return std::make_shared<string_const_token>(val);
 	}
 	template<class Iterator>
 	p_token parse_dict(Iterator& first, const Iterator& last)
@@ -229,7 +229,7 @@ namespace {
 		trim_string(first,last);
 		if (first == last || *first != '{') return p_token();
 		++first;
-		auto dict = make_shared<dict_const_token>();
+		auto dict = std::make_shared<dict_const_token>();
 		while(first!=last) {
 			trim_string(first,last);
 			auto id = find_id(first,last);
@@ -254,13 +254,13 @@ namespace {
 		trim_string(first,last);
 		Iterator f1;
 		if ((f1 = find_substr(first, last, std::string("null")))!=first) {
-			first=f1;return make_shared<null_const_token>();
+			first=f1;return std::make_shared<null_const_token>();
 		}
 		if ((f1 = find_substr(first, last, std::string("NULL")))!=first) {
-			first=f1;return make_shared<null_const_token>();
+			first=f1;return std::make_shared<null_const_token>();
 		}
 		if ((f1 = find_substr(first, last, std::string("Null")))!=first) {
-			first=f1;return make_shared<null_const_token>();
+			first=f1;return std::make_shared<null_const_token>();
 		}
 		return p_token();
 	}
@@ -270,13 +270,13 @@ namespace {
 		trim_string(first,last);
 		Iterator f1;
 		if ((f1 = find_substr(first, last, std::string("bang")))!=first) {
-			first=f1;return make_shared<bang_const_token>();
+			first=f1;return std::make_shared<bang_const_token>();
 		}
 		if ((f1 = find_substr(first, last, std::string("BANG")))!=first) {
-			first=f1;return make_shared<bang_const_token>();
+			first=f1;return std::make_shared<bang_const_token>();
 		}
 		if ((f1 = find_substr(first, last, std::string("Bang")))!=first) {
-			first=f1;return make_shared<bang_const_token>();
+			first=f1;return std::make_shared<bang_const_token>();
 		}
 		return p_token();
 	}
@@ -286,7 +286,7 @@ namespace {
 		trim_string(first,last);
 		if (first == last || *first != '[') return p_token();
 		++first;
-		auto vec = make_shared<vector_const_token>();
+		auto vec = std::make_shared<vector_const_token>();
 		while(first!=last) {
 			trim_string(first,last);
 			auto p = parse_arg(first,last);
@@ -372,7 +372,7 @@ namespace {
 		trim_string(first,last);
 		if (first == last || *first != '(') return p_token();
 		++first;
-		auto func = make_shared<func_token>(fname);
+		auto func = std::make_shared<func_token>(fname);
 		trim_string(first,last);
 		while(first != last) {
 			auto p = parse_arg(first,last);
@@ -416,7 +416,7 @@ namespace {
 			trim_string(first,last);
 			if (first == last || *first != '(') return p_token();
 			++first;
-			auto route = make_shared<route_token>();
+			auto route = std::make_shared<route_token>();
 			route->expr = parse_expr(first, last);
 			if (!route->expr) return p_token();
 			trim_string(first,last);
@@ -445,7 +445,7 @@ namespace {
 }
 bool is_simple_route(const p_token& ast)
 {
-	auto route = dynamic_pointer_cast<route_token>(ast);
+	auto route = std::dynamic_pointer_cast<route_token>(ast);
 	if (!route) return false;
 	assert (route->expr);
 	if (route->expr->type == token_type_t::spec) return true;
@@ -519,7 +519,7 @@ namespace {
 		vec_value():value_provider() {}
 		std::vector<std::unique_ptr<value_provider>> inputs;
 		pBasicEvent get_value(const EventRouter& router) const {
-			auto vec = make_shared<EventVector>();
+			auto vec = std::make_shared<EventVector>();
 			for (const auto& in: inputs) {
 				assert(in);
 				vec->push_back(in->get_value(router));
@@ -531,7 +531,7 @@ namespace {
 		dict_value():value_provider() {}
 		std::map<std::string, std::unique_ptr<value_provider>> inputs;
 		pBasicEvent get_value(const EventRouter& router) const {
-			auto dict = make_shared<EventDict>();
+			auto dict = std::make_shared<EventDict>();
 			auto& dmap = dict->get_value();
 			for (const auto& in: inputs) {
 				dmap[in.first] = (in.second)->get_value(router);
@@ -566,9 +566,9 @@ namespace {
 	template<class token_type, class event_type>
 	std::unique_ptr<const_value> process_const (const parser::p_token& token)
 	{
-		const auto& const_token = dynamic_pointer_cast<token_type>(token);
+		const auto& const_token = std::dynamic_pointer_cast<token_type>(token);
 		assert(const_token);
-		return std::unique_ptr<const_value>(new const_value(make_shared<event_type>(const_token->val)));
+		return std::unique_ptr<const_value>(new const_value(std::make_shared<event_type>(const_token->val)));
 	}
 }
 	class EventRouter: public BasicEventConsumer, public BasicEventProducer
@@ -632,7 +632,7 @@ namespace {
 				// TODO: Implement other constants
 				case parser::token_type_t::spec: {
 //					std::cout << "Processing spec\n";
-					const auto& token = dynamic_pointer_cast<parser::spec_token>(ast);
+					const auto& token = std::dynamic_pointer_cast<parser::spec_token>(ast);
 					input_map[{token->node, token->name}]=token->node+":"+token->name;
 					std::unique_ptr<event_value> spec (new event_value(token->node, token->name));
 					if (token->init) {
@@ -642,7 +642,7 @@ namespace {
 				}
 				case parser::token_type_t::func_name: {
 //					std::cout << "Processing func\n";
-					const auto& token = dynamic_pointer_cast<parser::func_token>(ast);
+					const auto& token = std::dynamic_pointer_cast<parser::func_token>(ast);
 					std::unique_ptr<func_call> func {new func_call(token->fname, token->mode)};
 					for (const auto& arg: token->args) {
 						func->inputs.push_back(std::move(process_tree(arg)));
@@ -651,7 +651,7 @@ namespace {
 				}
 				case parser::token_type_t::vector_const: {
 //					std::cout << "New vector const\n";
-					const auto& token = dynamic_pointer_cast<parser::vector_const_token>(ast);
+					const auto& token = std::dynamic_pointer_cast<parser::vector_const_token>(ast);
 					std::unique_ptr<vec_value> vec {new vec_value()};
 					for (const auto& arg: token->members) {
 						vec->inputs.push_back(std::move(process_tree(arg)));
@@ -659,7 +659,7 @@ namespace {
 					return std::move(vec);
 				}
 				case parser::token_type_t::dict_const: {
-					const auto& token = dynamic_pointer_cast<parser::dict_const_token>(ast);
+					const auto& token = std::dynamic_pointer_cast<parser::dict_const_token>(ast);
 					std::unique_ptr<dict_value> dict {new dict_value()};
 					for (const auto& arg: token->members) {
 						dict->inputs[arg.first] = std::move(process_tree(arg.second));
@@ -743,13 +743,13 @@ bool BasicEventParser::parse_routes(const std::string& text)
 	if (routes.empty()) return false;
 	for (const auto& r: routes) {
 		if (is_simple_route(r)) {
-			auto route = dynamic_pointer_cast<parser::route_token>(r);
+			auto route = std::dynamic_pointer_cast<parser::route_token>(r);
 			if (!route) break; // This should never happen!
-			auto spec = dynamic_pointer_cast<parser::spec_token>(route->expr);
+			auto spec = std::dynamic_pointer_cast<parser::spec_token>(route->expr);
 			if (!spec) break; // This should never happen!
 			if (pBasicEventProducer producer = find_producer(spec->node)) {
 				for (const auto& output: route->output) {
-					auto ospec = dynamic_pointer_cast<parser::spec_token>(output);
+					auto ospec = std::dynamic_pointer_cast<parser::spec_token>(output);
 					if (!ospec) continue;
 					pBasicEventConsumer consumer = find_consumer(ospec->node);
 					if (!consumer) continue;
@@ -762,13 +762,13 @@ bool BasicEventParser::parse_routes(const std::string& text)
 		} else {
 			try {
 //				std::cout << "Trying to create router\n";
-				auto route = dynamic_pointer_cast<parser::route_token>(r);
+				auto route = std::dynamic_pointer_cast<parser::route_token>(r);
 				if (route->expr->type!=parser::token_type_t::func_name) continue;
 				if (route->output.empty()) continue;
-				auto func = dynamic_pointer_cast<parser::func_token>(route->expr);
+				auto func = std::dynamic_pointer_cast<parser::func_token>(route->expr);
 				if (!func) continue;
 //				std::cout << "Got func: " << func->fname << "\n";
-				auto f = make_shared<EventRouter>(dynamic_pointer_cast<parser::func_token>(func),log_pa_);
+				auto f = std::make_shared<EventRouter>(std::dynamic_pointer_cast<parser::func_token>(func),log_pa_);
 //				std::cout << "Number of params: " << f->input_map.size() << "\n";
 				for (const auto& input: f->input_map) {
 
@@ -781,7 +781,7 @@ bool BasicEventParser::parse_routes(const std::string& text)
 				for (const auto& out: route->output) {
 					if (out->type != parser::token_type_t::spec) continue;
 //					std::cout << "Got spec\n";
-					auto spec = dynamic_pointer_cast<parser::spec_token>(out);
+					auto spec = std::dynamic_pointer_cast<parser::spec_token>(out);
 					pBasicEventConsumer consumer = find_consumer(spec->node);
 					if (!consumer) continue;
 //					std::cout << "Got consumer\n";

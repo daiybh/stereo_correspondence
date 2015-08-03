@@ -33,9 +33,11 @@ enum class event_type_t {
 								dictionary_event,
 };
 struct bang_t {};
+
 class BasicEvent;
-typedef shared_ptr<BasicEvent> pBasicEvent;
-class BasicEvent: 	public enable_shared_from_this<BasicEvent> {
+using pBasicEvent = std::shared_ptr<BasicEvent>;
+
+class BasicEvent: 	public std::enable_shared_from_this<BasicEvent> {
 public:
 	EXPORT 						BasicEvent() = delete;
 	EXPORT						BasicEvent(event_type_t type):type_(type),

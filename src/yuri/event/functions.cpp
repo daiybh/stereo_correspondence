@@ -26,7 +26,7 @@ pBasicEvent to_range_impl(const pBasicEvent& event, const pBasicEvent& rmin, con
 {
 	typedef typename Dest::stored_type type;
 	typedef typename Orig::stored_type otype;
-	auto ev_ptr = dynamic_pointer_cast<Dest>(event);
+	auto ev_ptr = std::dynamic_pointer_cast<Dest>(event);
 	if (!ev_ptr) throw bad_event_cast("Type mismatch in to_range_impl()");
 	bool do_crop_only = false;
 	if (!ev_ptr->range_specified()) do_crop_only = true;//throw bad_event_cast("Input has no range specified!()");
@@ -42,16 +42,16 @@ pBasicEvent to_range_impl(const pBasicEvent& event, const pBasicEvent& rmin, con
 		type orig_value = ev_ptr->get_value() - ev_ptr->get_min_value();
 		type orig_range = ev_ptr->get_max_value() - ev_ptr->get_min_value();
 		otype new_value = static_cast<otype>(orig_value*new_range/orig_range)+rrmin;
-		return make_shared<Orig>(new_value, rrmin, rrmax);
+		return std::make_shared<Orig>(new_value, rrmin, rrmax);
 	} else  {
-		return make_shared<Orig>(std::min(std::max(static_cast<otype>(ev_ptr->get_value()),rrmin),rrmax), rrmin, rrmax);
+		return std::make_shared<Orig>(std::min(std::max(static_cast<otype>(ev_ptr->get_value()),rrmin),rrmax), rrmin, rrmax);
 	}
 }
 
 
 template<class T>
 pBasicEvent eq_impl2(const pBasicEvent& event0, const pBasicEvent& event1, const pBasicEvent& event2) {
-	return make_shared<EventBool>(std::abs(get_value<T>(event0) - get_value<T>(event1)) <= get_value<T>(event2));
+	return std::make_shared<EventBool>(std::abs(get_value<T>(event0) - get_value<T>(event1)) <= get_value<T>(event2));
 }
 
 template<class T>
@@ -80,7 +80,7 @@ template<class T, class F = typename event_traits<T>::stored_type(*)(typename ev
 pBasicEvent simple_unary_function_wrapper(const std::string& name, const std::vector<pBasicEvent>& events, F f)
 {
 	if (events.size() != 1) throw bad_event_cast(name + "() requires one parameter");
-	return make_shared<T>(f(get_value<T>(events[0])));
+	return std::make_shared<T>(f(get_value<T>(events[0])));
 }
 }
 
@@ -169,12 +169,12 @@ pBasicEvent select(const std::vector<pBasicEvent>& events)
 	if (events.size()!=2) throw bad_event_cast("select() needs 2 parameters");
 	if ((events[0]->get_type() == event_type_t::integer_event) && (events[1]->get_type() == event_type_t::vector_event)) {
 		int64_t index = get_value<EventInt>(events[0]);
-		auto vec = dynamic_pointer_cast<EventVector>(events[1]);
+		auto vec = std::dynamic_pointer_cast<EventVector>(events[1]);
 		if (index < 0 || index >= static_cast<int64_t>(vec->size())) throw bad_event_cast("Index out of range in select()");
 		return vec->at(index);
 	} else if ((events[0]->get_type() == event_type_t::boolean_event) && (events[1]->get_type() == event_type_t::vector_event)) {
 		size_t index = get_value<EventBool>(events[0])?0:1;
-		auto vec = dynamic_pointer_cast<EventVector>(events[1]);
+		auto vec = std::dynamic_pointer_cast<EventVector>(events[1]);
 		if (index >= vec->size()) throw bad_event_cast("Index out of range in select()");
 		return vec->at(index);
 	} else if ((events[0]->get_type() == event_type_t::string_event) && (events[1]->get_type() == event_type_t::dictionary_event)) {
@@ -196,7 +196,7 @@ pBasicEvent muls(const std::vector<pBasicEvent>& events)
 	int64_t count = get_value<EventInt>(events[1]);
 	std::string str;
 	while (count-- > 0) str += org;
-	return make_shared<EventString>(str);
+	return std::make_shared<EventString>(str);
 }
 
 pBasicEvent add(const std::vector<pBasicEvent>& events)

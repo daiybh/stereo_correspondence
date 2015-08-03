@@ -18,8 +18,7 @@ namespace event {
 typedef std::pair<pwBasicEventConsumer, const std::string>
 								event_target_t;
 class BasicEventProducer;
-typedef shared_ptr<BasicEventProducer>
-								pBasicEventProducer;
+using pBasicEventProducer = std::shared_ptr<BasicEventProducer>;
 
 typedef std::pair<std::string, event_type_t>
 								event_info_t;
@@ -37,26 +36,26 @@ protected:
 
 	// Overload for emitting a bang event
 	bool 						emit_event(const std::string& event_name) {
-		return emit_event(event_name, make_shared<EventBang>());
+		return emit_event(event_name, std::make_shared<EventBang>());
 	}
 	// Overload for emitting a boolean event
 	bool 						emit_event(const std::string& event_name, bool value) {
-		return emit_event(event_name, make_shared<EventBool>(value));
+		return emit_event(event_name, std::make_shared<EventBool>(value));
 	}
 	// Overload for emitting a string event
 	bool						emit_event(const std::string& event_name, const std::string& value)
 	{
-		return emit_event(event_name, make_shared<EventString>(value));
+		return emit_event(event_name, std::make_shared<EventString>(value));
 	}
 	// Overload for emitting a time event
 	bool						emit_event(const std::string& event_name, timestamp_t value)
 	{
-		return emit_event(event_name, make_shared<EventTime>(value));
+		return emit_event(event_name, std::make_shared<EventTime>(value));
 	}
 	// Overload for emitting a duration event
 	bool						emit_event(const std::string& event_name, duration_t value)
 	{
-		return emit_event(event_name, make_shared<EventDuration>(value));
+		return emit_event(event_name, std::make_shared<EventDuration>(value));
 	}
 
 	// Overload for emitting an integer event
@@ -64,14 +63,14 @@ protected:
 	typename std::enable_if<std::is_integral<T>::value, bool>::type
 								emit_event(const std::string& event_name, T value)
 	{
-		return emit_event(event_name, make_shared<EventInt>(value));
+		return emit_event(event_name, std::make_shared<EventInt>(value));
 	}
 	// Overload for emitting a double event
 	template<typename T>
 	typename std::enable_if<std::is_floating_point<T>::value, bool>::type
 								emit_event(const std::string& event_name, T value)
 	{
-		return emit_event(event_name, make_shared<EventDouble>(value));
+		return emit_event(event_name, std::make_shared<EventDouble>(value));
 	}
 
 
@@ -81,7 +80,7 @@ protected:
 			&& std::is_integral<T3>::value, bool>::type
 								emit_event(const std::string& event_name, T value, T2 min_value, T3 max_value)
 	{
-		return emit_event(event_name, make_shared<EventInt>(value, min_value, max_value));
+		return emit_event(event_name, std::make_shared<EventInt>(value, min_value, max_value));
 	}
 	// Overload for emitting a double event
 	template<typename T, typename T2, typename T3>
@@ -89,7 +88,7 @@ protected:
 			&& std::is_floating_point<T3>::value, bool>::type
 								emit_event(const std::string& event_name, T value, T2 min_value, T3 max_value)
 	{
-		return emit_event(event_name, make_shared<EventDouble>(value, min_value, max_value));
+		return emit_event(event_name, std::make_shared<EventDouble>(value, min_value, max_value));
 	}
 
 
@@ -101,7 +100,7 @@ private:
 	EXPORT virtual bool			verify_register_event(const::std::string& event_name);
 	std::unordered_multimap<std::string, event_target_t>
 								consumers_;
-	mutex						consumers_mutex_;
+	yuri::mutex					consumers_mutex_;
 	log::Log&					log_p_;
 
 };

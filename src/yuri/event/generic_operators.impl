@@ -25,7 +25,7 @@ pBasicEvent generic_binary_oper_impl(const std::string& name, const::std::vector
 	const event_type_t event_type = event_traits<Event0>::event_type();
 	if (events[0]->get_type() == event_type) {
 		Oper<type> oper;
-		return make_shared<Return>(oper(get_value<Event0>(events[0]),get_value<Event0>(events[1])));
+		return std::make_shared<Return>(oper(get_value<Event0>(events[0]),get_value<Event0>(events[1])));
 	}
 	return generic_binary_oper_impl<Oper, Return, Args...>(name, events);
 }
@@ -55,7 +55,7 @@ pBasicEvent generic_binary_oper2_impl(const std::string& name, const::std::vecto
 	const event_type_t event_type = event_traits<Event0>::event_type();
 	if (events[0]->get_type() == event_type) {
 		Oper<type> oper;
-		return make_shared<Event0>(oper(get_value<Event0>(events[0]),get_value<Event0>(events[1])));
+		return std::make_shared<Event0>(oper(get_value<Event0>(events[0]),get_value<Event0>(events[1])));
 	}
 	return generic_binary_oper2_impl<Oper, Args...>(name, events);
 }
@@ -85,7 +85,7 @@ pBasicEvent generic_unary_oper_impl(const std::string& name, const::std::vector<
 	const event_type_t event_type = event_traits<Event0>::event_type();
 	if (events[0]->get_type() == event_type) {
 		Oper<type> oper;
-		return make_shared<Return>(oper(get_value<Event0>(events[0])));
+		return std::make_shared<Return>(oper(get_value<Event0>(events[0])));
 	}
 	return generic_unary_oper_impl<Oper, Return, Args...>(name, events);
 }
@@ -113,7 +113,7 @@ pBasicEvent generic_unary_oper2_impl(const std::string& name, const::std::vector
 	const event_type_t event_type = event_traits<Event0>::event_type();
 	if (events[0]->get_type() == event_type) {
 		Oper<type> oper;
-		return make_shared<Event0>(oper(get_value<Event0>(events[0])));
+		return std::make_shared<Event0>(oper(get_value<Event0>(events[0])));
 	}
 	return generic_unary_oper2_impl<Oper, Args...>(name, events);
 }

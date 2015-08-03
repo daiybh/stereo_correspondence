@@ -31,20 +31,20 @@ typedef std::pair<event_type_t, event_type_t> event_pair;
 template<class EventType>
 typename event_traits<EventType>::stored_type
 					get_value(const pBasicEvent& event) {
-							const auto& event_ = dynamic_pointer_cast<EventType>(event);
+							const auto& event_ = std::dynamic_pointer_cast<EventType>(event);
 							if (!event_) throw bad_event_cast("Type mismatch");
 							return event_->get_value();
 					}
 
 template<class Src, class Dest>
 pBasicEvent 		s_cast(const pBasicEvent& src) {
-						const std::shared_ptr<Src>& ev = dynamic_pointer_cast<Src> (src);
+						const std::shared_ptr<Src>& ev = std::dynamic_pointer_cast<Src> (src);
 						if (!ev) throw bad_event_cast("Static cast failed"); // This should actually never happen
 						return std::make_shared<Dest>(static_cast<typename Dest::stored_type>(ev->get_value()));
 					}
 template<class Src, class Dest>
 pBasicEvent 		lex_cast(const pBasicEvent& src) {
-						const std::shared_ptr<Src>& ev = dynamic_pointer_cast<Src> (src);
+						const std::shared_ptr<Src>& ev = std::dynamic_pointer_cast<Src> (src);
 						if (!ev) throw bad_event_cast("Static cast failed"); // This should actually never happen
 						return std::make_shared<Dest>(lexical_cast<typename Dest::stored_type>(ev->get_value()));
 					}

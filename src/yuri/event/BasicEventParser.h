@@ -35,7 +35,7 @@ enum class func_mode_t {
 	evaluate_all,
 	evaluate_first
 };
-typedef shared_ptr<struct token>	p_token;
+using p_token = std::shared_ptr<struct token>;
 struct token {
 	token_type_t 				type;
 								token(token_type_t tok):type(tok) {}
@@ -129,7 +129,7 @@ protected:
 
 	EXPORT bool 				run_routers();
 private:
-	std::vector<shared_ptr<EventRouter>>
+	std::vector<std::shared_ptr<EventRouter>>
 								routers_;
 	log::Log&					log_pa_;
 

@@ -20,10 +20,9 @@ namespace event {
 typedef std::pair<std::string, const pBasicEvent>
 								event_record_t;
 class BasicEventConsumer;
-typedef shared_ptr<BasicEventConsumer>
-								pBasicEventConsumer;
-typedef weak_ptr<BasicEventConsumer>
-								pwBasicEventConsumer;
+
+using pBasicEventConsumer  = std::shared_ptr<BasicEventConsumer>;	
+using pwBasicEventConsumer = std::weak_ptr<BasicEventConsumer>;
 
 class BasicEventConsumer {
 public:
