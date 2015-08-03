@@ -27,7 +27,7 @@ private:
 	virtual bool set_param(const core::Parameter &param);
 	std::string display;
 	double fps_;
-	shared_ptr<Display> dpy;
+	std::shared_ptr<Display> dpy;
 	Window win;
 	coordinates_t position_;
 	resolution_t resolution_;

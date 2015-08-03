@@ -173,7 +173,7 @@ bool ScreenGrab::step()
 		const int w = (resolution_.width>0)?std::min<int>(attr.width-position_.x,resolution_.width):attr.width-position_.x;
 		const int h = (resolution_.height>0)?std::min<int>(attr.height-position_.y,resolution_.height):attr.height-position_.y;
 
-		shared_ptr<XImage> img (XGetImage(dpy.get(),win,position_.x,position_.y,w,h,AllPlanes,ZPixmap),ImageDeleter());
+		std::shared_ptr<XImage> img (XGetImage(dpy.get(),win,position_.x,position_.y,w,h,AllPlanes,ZPixmap),ImageDeleter());
 		if (!img) {
 			log[log::warning] << "Failed to get image from the window";
 			return true;
