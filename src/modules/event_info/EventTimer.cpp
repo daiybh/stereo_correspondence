@@ -71,7 +71,7 @@ bool EventTimer::set_param(const core::Parameter& param)
 }
 
 
-bool EventTimer::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
+bool EventTimer::do_process_event(const std::string& event_name, const event::pBasicEvent& /* event */)
 {
 	if (event_name == "reset") {
 		timer_.reset();

@@ -116,9 +116,9 @@ void EventDevice::run()
 					if (std::abs(info.last_value-ev.value)<=info.info.fuzz) continue;
 
 					if (info.info.maximum != info.info.minimum) {
-						event = make_shared<EventInt>(ev.value, info.info.minimum, info.info.maximum);
+						event = std::make_shared<EventInt>(ev.value, info.info.minimum, info.info.maximum);
 					} else {
-						event = make_shared<EventInt>(ev.value);
+						event = std::make_shared<EventInt>(ev.value);
 					}
 					log[log::debug] << "Emiting value " << ev.value << " for " << info.name << " (last value: " << info.last_value<<")";
 					info.last_value = ev.value;
