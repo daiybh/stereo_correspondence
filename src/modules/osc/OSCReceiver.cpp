@@ -74,7 +74,7 @@ void OSCReceiver::run()
 				if (events.size() == 1) {
 					emit_event(std::get<0>(events_pair), events[0]);
 				} else {
-					emit_event(std::get<0>(events_pair), make_shared<event::EventVector>(std::move(events)));
+					emit_event(std::get<0>(events_pair), std::make_shared<event::EventVector>(std::move(events)));
 				}
 			}
 		}
