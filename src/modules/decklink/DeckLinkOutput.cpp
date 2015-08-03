@@ -151,9 +151,9 @@ bool DeckLinkOutput::verify_display_mode()
 	(void)linesize;
 	//shared_ptr<IDeckLinkMutableVideoFrame> f;
 	for (yuri::size_t i=0;i<buffer_num;++i) {
-		shared_ptr<DeckLink3DVideoFrame>  f(new DeckLink3DVideoFrame(width,height,pixel_format,bmdFrameFlagDefault));
+		std::shared_ptr<DeckLink3DVideoFrame>  f(new DeckLink3DVideoFrame(width,height,pixel_format,bmdFrameFlagDefault));
 		if (stereo_mode) {
-			shared_ptr<DeckLink3DVideoFrame> f2(new DeckLink3DVideoFrame(width,height,pixel_format,bmdFrameFlagDefault));
+			std::shared_ptr<DeckLink3DVideoFrame> f2(new DeckLink3DVideoFrame(width,height,pixel_format,bmdFrameFlagDefault));
 			//f->set_packing_format(bmdVideo3DPackingFramePacking);
 			f->set_packing_format(bmdVideo3DPackingLeftOnly);
 			//f->set_packing_format(bmdVideo3DPackingTopAndBottom);
@@ -263,10 +263,10 @@ bool DeckLinkOutput::step()
 		break;
 	}
 	if (!new_frame) return true;*/
-	if (!frame) frame = dynamic_pointer_cast<core::RawVideoFrame>(pop_frame(0));
+	if (!frame) frame = std::dynamic_pointer_cast<core::RawVideoFrame>(pop_frame(0));
 	if (stereo_usable) {
 //		if (!in[1]) return true;
-		if (!frame2) frame2 = dynamic_pointer_cast<core::RawVideoFrame>(pop_frame(1));
+		if (!frame2) frame2 = std::dynamic_pointer_cast<core::RawVideoFrame>(pop_frame(1));
 	}
 	if (!frame || (stereo_usable && !frame2)) return true;
 	BMDPixelFormat pfmt = 0;
@@ -323,12 +323,12 @@ bool DeckLinkOutput::step()
 		stop_stream();
 		start_stream();
 	}
-	shared_ptr<DeckLink3DVideoFrame> pf = get_next_buffer();
+	std::shared_ptr<DeckLink3DVideoFrame> pf = get_next_buffer();
 	fill_frame(frame,pf);
 	if (stereo_usable) fill_frame(frame2,pf->get_right());
 	if (audio_enabled /*&& in[2]*/) {
 		using namespace core::raw_audio_format;
-		if (!aframe) aframe=dynamic_pointer_cast<core::RawAudioFrame>(pop_frame(2));
+		if (!aframe) aframe=std::dynamic_pointer_cast<core::RawAudioFrame>(pop_frame(2));
 		if (aframe) {
 			uint32_t writen;
 			uvector<int16_t> samples(aframe->get_sample_count()*audio_channels);
@@ -395,23 +395,23 @@ bool DeckLinkOutput::step()
 	aframe.reset();
 	return true;
 }
-shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::get_active_buffer()
+std::shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::get_active_buffer()
 {
 	yuri::lock_t l(schedule_mutex);
 	return do_get_active_buffer();
 }
-shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::do_get_active_buffer()
+std::shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::do_get_active_buffer()
 {
 
 	assert (out_frames.size());
 	return out_frames[0];
 }
-shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::get_next_buffer()
+std::shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::get_next_buffer()
 {
 	yuri::lock_t l(schedule_mutex);
 	return do_get_next_buffer();
 }
-shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::do_get_next_buffer()
+std::shared_ptr<DeckLink3DVideoFrame> DeckLinkOutput::do_get_next_buffer()
 {
 	assert (out_frames.size()>1);
 	return out_frames[1];
@@ -423,11 +423,11 @@ void DeckLinkOutput::rotate_buffers()
 }
 void DeckLinkOutput::do_rotate_buffers()
 {
-	shared_ptr<DeckLink3DVideoFrame> pf = out_frames[0];
+	std::shared_ptr<DeckLink3DVideoFrame> pf = out_frames[0];
 	out_frames.pop_front();
 	out_frames.push_back(pf);
 }
-bool DeckLinkOutput::fill_frame(core::pRawVideoFrame source, shared_ptr<DeckLink3DVideoFrame> output)
+bool DeckLinkOutput::fill_frame(core::pRawVideoFrame source, std::shared_ptr<DeckLink3DVideoFrame> output)
 {
 	assert(source);
 	unsigned line_width = 0, copy_width, target_width,copy_lines;

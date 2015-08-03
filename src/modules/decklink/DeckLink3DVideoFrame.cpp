@@ -101,7 +101,7 @@ HRESULT DeckLink3DVideoFrame::GetFrameForRightEye (/* out */ IDeckLinkVideoFrame
 	*rightEyeFrame = right.get();
 	return S_OK;
 }
-void DeckLink3DVideoFrame::add_right(shared_ptr<DeckLink3DVideoFrame> r)
+void DeckLink3DVideoFrame::add_right(std::shared_ptr<DeckLink3DVideoFrame> r)
 {
 	right = r;
 }
@@ -109,7 +109,7 @@ void DeckLink3DVideoFrame::set_packing_format(BMDVideo3DPackingFormat fmt)
 {
 	packing = fmt;
 }
-shared_ptr<DeckLink3DVideoFrame> DeckLink3DVideoFrame::get_right()
+std::shared_ptr<DeckLink3DVideoFrame> DeckLink3DVideoFrame::get_right()
 {
 	return right;
 }

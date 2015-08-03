@@ -36,9 +36,9 @@ public:
     virtual BMDVideo3DPackingFormat Get3DPackingFormat (void);
     virtual HRESULT GetFrameForRightEye (/* out */ IDeckLinkVideoFrame* *rightEyeFrame);
 
-    void add_right(shared_ptr<DeckLink3DVideoFrame> r);
+    void add_right(std::shared_ptr<DeckLink3DVideoFrame> r);
     void set_packing_format(BMDVideo3DPackingFormat fmt);
-    shared_ptr<DeckLink3DVideoFrame> get_right();
+    std::shared_ptr<DeckLink3DVideoFrame> get_right();
 protected:
     size_t width, height;
     size_t linesize_;
@@ -46,7 +46,7 @@ protected:
     uint8_t *buffer;
 
     BMDFrameFlags flags;
-    shared_ptr<DeckLink3DVideoFrame> right;
+    std::shared_ptr<DeckLink3DVideoFrame> right;
     BMDVideo3DPackingFormat packing;
 };
 
