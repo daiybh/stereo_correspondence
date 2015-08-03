@@ -166,7 +166,7 @@ MjpegToJpeg::~MjpegToJpeg() noexcept
 core::pFrame MjpegToJpeg::do_convert_frame(core::pFrame input_frame, format_t target_format)
 {
 	if (target_format != core::compressed_frame::jpeg) return {};
-	core::pCompressedVideoFrame f = dynamic_pointer_cast<core::CompressedVideoFrame>(input_frame);
+	core::pCompressedVideoFrame f = std::dynamic_pointer_cast<core::CompressedVideoFrame>(input_frame);
 	if (!f) return {};
 	return do_special_single_step(f);
 }

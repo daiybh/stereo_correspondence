@@ -85,13 +85,13 @@ void print_frame(log::Log& log, core::pEventFrame frame)
 }
 
 void print_frame(log::Log& log, core::pFrame frame) {
-	if (auto f = dynamic_pointer_cast<core::RawVideoFrame>(frame)) {
+	if (auto f = std::dynamic_pointer_cast<core::RawVideoFrame>(frame)) {
 		print_frame(log, f);
-	} else if (auto f2 = dynamic_pointer_cast<core::CompressedVideoFrame>(frame)) {
+	} else if (auto f2 = std::dynamic_pointer_cast<core::CompressedVideoFrame>(frame)) {
 		print_frame(log, f2);
-	} else if (auto f3 = dynamic_pointer_cast<core::RawAudioFrame>(frame)) {
+	} else if (auto f3 = std::dynamic_pointer_cast<core::RawAudioFrame>(frame)) {
 		print_frame(log, f3);
-	} else if (auto f4 = dynamic_pointer_cast<core::EventFrame>(frame)) {
+	} else if (auto f4 = std::dynamic_pointer_cast<core::EventFrame>(frame)) {
 		print_frame(log, f4);
 	} else {
 		log[log::info] << "Unknown format (" << frame->get_format() << ")";
@@ -119,23 +119,23 @@ bool same_format(const core::pFrame& a, const core::pFrame& b)
 {
 	if (a->get_format() != b->get_format()) return false;
 	{
-		auto fa = dynamic_pointer_cast<core::RawVideoFrame>(a);
-		auto fb = dynamic_pointer_cast<core::RawVideoFrame>(b);
+		auto fa = std::dynamic_pointer_cast<core::RawVideoFrame>(a);
+		auto fb = std::dynamic_pointer_cast<core::RawVideoFrame>(b);
 		if (fa && fb) return same_format(fa, fb);
 	}
 	{
-		auto fa = dynamic_pointer_cast<core::CompressedVideoFrame>(a);
-		auto fb = dynamic_pointer_cast<core::CompressedVideoFrame>(b);
+		auto fa = std::dynamic_pointer_cast<core::CompressedVideoFrame>(a);
+		auto fb = std::dynamic_pointer_cast<core::CompressedVideoFrame>(b);
 		if (fa && fb) return same_format(fa, fb);
 	}
 	{
-		auto fa = dynamic_pointer_cast<core::RawAudioFrame>(a);
-		auto fb = dynamic_pointer_cast<core::RawAudioFrame>(b);
+		auto fa = std::dynamic_pointer_cast<core::RawAudioFrame>(a);
+		auto fb = std::dynamic_pointer_cast<core::RawAudioFrame>(b);
 		if (fa && fb) return same_format(fa, fb);
 	}
 	{
-		auto fa = dynamic_pointer_cast<core::EventFrame>(a);
-		auto fb = dynamic_pointer_cast<core::EventFrame>(b);
+		auto fa = std::dynamic_pointer_cast<core::EventFrame>(a);
+		auto fb = std::dynamic_pointer_cast<core::EventFrame>(b);
 		if (fa && fb) return false;
 	}
 	return true;
