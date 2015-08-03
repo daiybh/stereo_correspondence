@@ -39,7 +39,7 @@ class DefaultErrorPolicy {
 protected:
 	DefaultErrorPolicy() = default;
 	virtual ~DefaultErrorPolicy() noexcept {};
-	typedef shared_ptr<T> ptr_type;
+	typedef std::shared_ptr<T> ptr_type;
 	typedef Param param_type;
 	ptr_type key_not_found(const KeyType&) const {
 		throw(std::runtime_error("Key not registered"));
@@ -54,7 +54,7 @@ class DefaultErrorPolicy<T, std::string, Param> {
 protected:
 	DefaultErrorPolicy() = default;
 	virtual ~DefaultErrorPolicy() noexcept {};
-	typedef shared_ptr<T> ptr_type;
+	typedef std::shared_ptr<T> ptr_type;
 	typedef Param param_type;
 	ptr_type key_not_found(const std::string& key) const {
 		using std::to_string;
@@ -70,7 +70,7 @@ template<class T, class KeyType, class Param>
 class EXPORT FatalErrorPolicy {
 	FatalErrorPolicy() = default;
 	virtual ~FatalErrorPolicy() noexcept {};
-	typedef shared_ptr<T> ptr_type;
+	typedef std::shared_ptr<T> ptr_type;
 	typedef Param param_type;
 	ptr_type key_not_found(const KeyType&) const {
 		throw(std::runtime_error("Key not found"));
@@ -86,13 +86,13 @@ template<
 	class KeyType,
 	class ParamType,
 	template<class, class, class> class ErrorPolicy = generator::DefaultErrorPolicy,
-	class GeneratorType = function<shared_ptr<T> (const ParamType& params)>,
-	class ConfiguratorType = function<ParamType()>
+	class GeneratorType = std::function<std::shared_ptr<T> (const ParamType& params)>,
+	class ConfiguratorType = std::function<ParamType()>
 	>
 class BasicGenerator: public ErrorPolicy<T, KeyType, ParamType>
 {
 public:
-	typedef shared_ptr<T> ptr_type;
+	typedef std::shared_ptr<T> ptr_type;
 	typedef KeyType key_type;
 	typedef ParamType param_type;
 	typedef GeneratorType generator_type;

@@ -232,7 +232,7 @@ event::pBasicEvent XmlBuilder::builder_pimpl_t::parse_expression(const std::stri
 //		p.set_value(event);
 	} else {
 //		log[log::info] << "No event, assuming a string" ;
-		return make_shared<event::EventString>(expression);
+		return std::make_shared<event::EventString>(expression);
 	}
 }
 Parameters XmlBuilder::builder_pimpl_t::parse_parameters(const TiXmlElement* element)

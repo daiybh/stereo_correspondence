@@ -22,8 +22,8 @@ template<
 class BasicStreamSocketGenerator: public core::BasicGenerator<T, KeyType,
 		std::string,
 		core::generator::DefaultErrorPolicy,
-		function<shared_ptr<T> (yuri::log::Log &)>,
-		function<void(void)>>
+		std::function<std::shared_ptr<T> (yuri::log::Log &)>,
+		std::function<void(void)>>
 {
 public:
 	BasicStreamSocketGenerator(){}

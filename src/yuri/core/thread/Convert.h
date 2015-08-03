@@ -16,7 +16,7 @@
 namespace yuri {
 namespace core {
 class Convert;
-typedef shared_ptr<Convert> pConvert;
+typedef std::shared_ptr<Convert> pConvert;
 class Convert: public core::IOFilter, public core::ConverterThread
 {
 public:
@@ -36,7 +36,7 @@ private:
 	bool allow_passthrough_;
 
 	struct convert_pimpl_;
-	unique_ptr<convert_pimpl_> pimpl_;
+	std::unique_ptr<convert_pimpl_> pimpl_;
 };
 
 } /* namespace convert */

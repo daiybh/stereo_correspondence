@@ -20,9 +20,6 @@ namespace yuri {
 namespace core {
 
 
-
-
-
 class Parameter {
 public:
 	EXPORT 						Parameter(const std::string& name, event::pBasicEvent value= event::pBasicEvent(), const std::string& description=std::string()):
@@ -75,7 +72,7 @@ T Parameter::get_indexed(index_t index) const {
 	using namespace yuri::event;
 	const event_type_t type = value_->get_type();
 	if (type != event_type_t::vector_event) throw std::invalid_argument("Can't index non-vector values");
-	const shared_ptr<EventVector> vec_value = dynamic_pointer_cast<EventVector>(value_);
+	const auto vec_value = std::dynamic_pointer_cast<EventVector>(value_);
 	return event::lex_cast_value<T>(vec_value->at(index));
 }
 
@@ -84,7 +81,7 @@ T Parameter::get_indexed(const std::string& index) const {
 	using namespace yuri::event;
 	const event_type_t type = value_->get_type();
 	if (type != event_type_t::dictionary_event) throw std::invalid_argument("Can't string index non-dictionary values");
-	const shared_ptr<EventDict> dict_value = dynamic_pointer_cast<EventDict>(value_);
+	const auto dict_value = std::dynamic_pointer_cast<EventDict>(value_);
 	// TODO: OK, this is ugly, but EventDict still doesn't pass the map interface...
 	const auto& tmp_val = dict_value->get_value();
 	auto it = tmp_val.find(index);

@@ -16,7 +16,7 @@ namespace yuri {
 namespace core {
 
 class AudioFrame;
-typedef shared_ptr<AudioFrame> pAudioFrame;
+typedef std::shared_ptr<AudioFrame> pAudioFrame;
 
 class AudioFrame: public Frame
 {

@@ -82,9 +82,9 @@ public:
 		log[log::info] << "app::run() spawning thread";
 		spawn_thread(io);
 		log[log::info] << "app::run() spawned thread";
-		core::pFrame f = yuri::make_shared<core::RawVideoFrame>(0, resolution_t{640,480});
+		core::pFrame f = std::make_shared<core::RawVideoFrame>(0, resolution_t{640,480});
 		sleep(2_s);
-		pajp->push_frame(f);
+		pajp->push_frame(std::move(f));
 		while (still_running()) {
 			sleep(100_ms);
 		}
@@ -126,7 +126,7 @@ int main(int argc, char** argv)
 	f.reset();
 	l[log::info] << "Pre-allocated frames of size " << check_size << "B: " << core::FixedMemoryAllocator::preallocated_blocks(check_size);
 	l.set_flags(log::verbose_debug);
-	core::pThreadBase a = make_shared<app>(l);
+	core::pThreadBase a = std::make_shared<app>(l);
 	l[log::info] << "Instances of a: " << a.use_count();
 	(*a)();
 

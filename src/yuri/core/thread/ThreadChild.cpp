@@ -17,7 +17,7 @@ namespace core
 	 
 ThreadChild::ThreadChild():finished(true),spawned(false) {}
 
-ThreadChild::ThreadChild(yuri::thread&& thread,
+ThreadChild::ThreadChild(std::thread&& thread,
 		pThreadBase child,bool spawned)
 	:thread_ptr(std::move(thread)),thread(child),finished(false),spawned(spawned)
 {

@@ -126,7 +126,7 @@ pIOThread GenericBuilder::get_node(const std::string& name)
 	}
 	if (!p) {
 		if (/*name == this->name ||*/ name == "@") {
-			p = dynamic_pointer_cast<IOThread>(get_this_ptr());
+			p = std::dynamic_pointer_cast<IOThread>(get_this_ptr());
 		}
 		if (p) log[log::debug] << "Resolved " << name << " as this";
 	}
@@ -137,7 +137,7 @@ event::pBasicEventProducer GenericBuilder::find_producer(const std::string& name
 {
 	event::pBasicEventProducer p;
 	if (pIOThread node = get_node(name)) {
-		p = dynamic_pointer_cast<event::BasicEventProducer>(node);
+		p = std::dynamic_pointer_cast<event::BasicEventProducer>(node);
 	}
 	return p;
 }
@@ -145,7 +145,7 @@ event::pBasicEventConsumer GenericBuilder::find_consumer(const std::string& name
 {
 	event::pBasicEventConsumer p;
 	if (pIOThread node = get_node(name)) {
-		p = dynamic_pointer_cast<event::BasicEventConsumer>(node);
+		p = std::dynamic_pointer_cast<event::BasicEventConsumer>(node);
 	}
 	return p;
 }

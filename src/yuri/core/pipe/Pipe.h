@@ -17,7 +17,7 @@
 #include "yuri/log/Log.h"
 namespace yuri {
 namespace core {
-using pPipe = shared_ptr<class Pipe>;
+using pPipe = std::shared_ptr<class Pipe>;
 
 class Pipe
 {

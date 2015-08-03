@@ -15,7 +15,7 @@
 namespace yuri {
 namespace core {
 class ConverterThread;
-typedef shared_ptr<ConverterThread> pConverterThread;
+typedef std::shared_ptr<ConverterThread> pConverterThread;
 
 class ConverterThread {
 public:

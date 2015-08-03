@@ -17,7 +17,7 @@
 namespace yuri {
 namespace core {
 class CompressedVideoFrame;
-typedef shared_ptr<CompressedVideoFrame> pCompressedVideoFrame;
+typedef std::shared_ptr<CompressedVideoFrame> pCompressedVideoFrame;
 
 //#ifdef YURI_WIN
 //template class EXPORT uvector<uint8_t>;
@@ -46,7 +46,7 @@ public:
 	template<class... Args>
 	static pCompressedVideoFrame create_empty(Args... args)
 	{
-		return make_shared<CompressedVideoFrame>(std::forward<Args>(args)...);
+		return std::make_shared<CompressedVideoFrame>(std::forward<Args>(args)...);
 	}
 
 	EXPORT vector_type&	get_data() { return data_; }

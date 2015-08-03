@@ -18,36 +18,38 @@ namespace yuri {
 namespace core
 {
  	 class ThreadChild;
- 	 typedef yuri::shared_ptr<ThreadChild> pThreadChild;
+ 	 using pThreadChild 	= std::shared_ptr<ThreadChild> ;
+
  	 class ThreadBase;
- 	 typedef yuri::weak_ptr<class ThreadBase> pwThreadBase;
- 	 typedef yuri::shared_ptr<class ThreadBase> pThreadBase;
- 	 typedef yuri::shared_ptr<class ThreadBase const> pcThreadBase;
+ 	 using pwThreadBase 	= std::weak_ptr<class ThreadBase>;
+ 	 using pThreadBase 		= std::shared_ptr<class ThreadBase>;
+ 	 using pcThreadBase		= std::shared_ptr<class ThreadBase const>;
 
  	 class Frame;
- 	 typedef yuri::shared_ptr<class Frame> pFrame;
- 	 typedef yuri::shared_ptr<const class Frame> pcFrame;
+ 	 using pFrame 			= std::shared_ptr<class Frame>;
+ 	 using pcFrame			= std::shared_ptr<const class Frame>;
 
  	 class Parameters;
- 	 typedef yuri::shared_ptr<class Parameters> pParameters;
+ 	 using pParameters		= std::shared_ptr<class Parameters>;
 
  	 class Parameter;
-	 typedef yuri::shared_ptr<class Parameter> pParameter;
+	 using pParameter 		= std::shared_ptr<class Parameter>;
 
  	 class Pipe;
- 	 typedef yuri::shared_ptr<class Pipe> pPipe;
+ 	 using pPipe			= std::shared_ptr<class Pipe>;
 
  	 class IOThread;
- 	 typedef yuri::shared_ptr<class IOThread> pIOThread;
+ 	 using pIOThread		= std::shared_ptr<class IOThread>;
 
  	 class RawVideoFrame;
-	 typedef yuri::shared_ptr<class RawVideoFrame> pRawVideoFrame;
+	 using pRawVideoFrame	= std::shared_ptr<class RawVideoFrame>;
 
 	 class CompressedVideoFrame;
-	 typedef yuri::shared_ptr<class CompressedVideoFrame> pCompressedVideoFrame;
+	 using pCompressedVideoFrame
+			 	 	 	 	= std::shared_ptr<class CompressedVideoFrame>;
 
 	 class Convert;
-	 typedef yuri::shared_ptr<class Convert> pConvert;
+	 using pConvert 		= std::shared_ptr<class Convert>;
 }
 
 

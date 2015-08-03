@@ -40,7 +40,7 @@ private:
 	EXPORT virtual void run() override;
 	EXPORT virtual bool step() override;
 	struct builder_pimpl_t;
-	unique_ptr<builder_pimpl_t>	pimpl_;
+	std::unique_ptr<builder_pimpl_t>	pimpl_;
 	std::string	filename_;
 	duration_t max_run_time_;
 	timestamp_t start_time_;

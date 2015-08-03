@@ -19,14 +19,14 @@ class SpecializedIOFilter: public IOFilter
 {
 public:
 	using frame_type = FrameType;
-	using p_frame_type = shared_ptr<frame_type>;
+	using p_frame_type = std::shared_ptr<frame_type>;
 	SpecializedIOFilter(const log::Log &log_, pwThreadBase parent, const std::string& id = "SpecialFilter"):
 		IOFilter(log_, parent, id){}
 	virtual 				~SpecializedIOFilter() noexcept {}
 private:
 	virtual pFrame			do_simple_single_step(pFrame frame) override
 	{
-		auto sframe = dynamic_pointer_cast<frame_type>(std::move(frame));
+		auto sframe = std::dynamic_pointer_cast<frame_type>(std::move(frame));
 		frame.reset();
 		if (!sframe) return {};
 		return do_special_single_step(std::move(sframe));

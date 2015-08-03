@@ -17,7 +17,7 @@
 namespace yuri {
 namespace core {
 class RawVideoFrame;
-typedef shared_ptr<RawVideoFrame> pRawVideoFrame;
+typedef std::shared_ptr<RawVideoFrame> pRawVideoFrame;
 #define PLANE_DATA(pframe, idx) (*pframe)[idx]
 #define PLANE_RAW_DATA(pframe, idx) (*pframe)[idx].data()
 #define PLANE_SIZE(pframe, idx) (*pframe)[idx].size()
@@ -119,7 +119,7 @@ pRawVideoFrame RawVideoFrame::create_empty(format_t format, resolution_t resolut
 			std::tie(line_size, frame_size, res) = get_plane_params(info, 0, resolution);
 //			assert(size>= frame_size);
 			// Creating with 0 planes and them emplacing planes into it.
-			pRawVideoFrame frame = make_shared<RawVideoFrame>(format, resolution, 0);
+			pRawVideoFrame frame = std::make_shared<RawVideoFrame>(format, resolution, 0);
 			frame->set_interlacing(interlace);
 			frame->set_field_order(field_order);
 

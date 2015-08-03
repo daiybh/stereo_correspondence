@@ -76,7 +76,7 @@ struct Convert::convert_pimpl_ {
 		Parameters par = gen.configure(name);
 		pIOThread iot = gen.generate(name, log, pwThreadBase{}, par);
 //		log[log::info] << "converter " << name << " " << (iot?"OK":"failed");
-		pConverterThread pct = dynamic_pointer_cast<ConverterThread>(iot);
+		pConverterThread pct = std::dynamic_pointer_cast<ConverterThread>(iot);
 //		log[log::info] << "pct" << name << " " << (pct?"OK":"failed");
 		if (pct) {
 			if (pct->converter_is_stateless()) {

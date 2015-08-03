@@ -24,7 +24,7 @@ pRawVideoFrame RawVideoFrame::create_empty(format_t format, resolution_t resolut
 		const auto& info = raw_format::get_format_info(format);
 //		size_t planes = info.planes.size();
 		// Creating with 0 planes and them emplacing planes into it.
-		frame = make_shared<RawVideoFrame>(format, resolution, 0);
+		frame = std::make_shared<RawVideoFrame>(format, resolution, 0);
 		for (const auto& p: info.planes) {
 			const auto fp = get_plane_params(p, resolution);
 			const size_t line_size = std::get<0>(fp);//p.alignment_requirement?line_size_unaligned+line_size_unaligned%p.alignment_requirement:line_size_unaligned;
@@ -83,7 +83,7 @@ void RawVideoFrame::push_back(Plane&& plane)
 }
 
 pFrame RawVideoFrame::do_get_copy() const {
-	pRawVideoFrame frame = make_shared<RawVideoFrame>(get_format(), get_resolution());
+	pRawVideoFrame frame = std::make_shared<RawVideoFrame>(get_format(), get_resolution());
 	RawVideoFrame& rvframe = *frame;
 	copy_parameters(rvframe);
 	std::copy(begin(),end(),rvframe.begin());

@@ -17,8 +17,8 @@
 namespace yuri {
 namespace core {
 
-using pPipeNotifiable = shared_ptr<class PipeNotifiable>;
-using pwPipeNotifiable = weak_ptr<class PipeNotifiable>;
+using pPipeNotifiable = std::shared_ptr<class PipeNotifiable>;
+using pwPipeNotifiable = std::weak_ptr<class PipeNotifiable>;
 class PipeNotifiable {
 public:
 	EXPORT 						PipeNotifiable():pending_notification_{false}{}
@@ -26,8 +26,8 @@ public:
 	EXPORT void 				notify();
 	EXPORT void					wait_for(duration_t dur);
 private:
-	mutex						var_mutex_;
-	condition_variable			variable_;
+	yuri::mutex					var_mutex_;
+	std::condition_variable		variable_;
 	bool						pending_notification_;
 
 };

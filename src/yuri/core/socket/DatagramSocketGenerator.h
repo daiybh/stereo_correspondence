@@ -22,8 +22,8 @@ template<
 class BasicDatagramSocketGenerator: public core::BasicGenerator<T, KeyType,
 		std::string,
 		core::generator::DefaultErrorPolicy,
-		function<shared_ptr<T> (yuri::log::Log &, const std::string&)>,
-		function<void(void)>>
+		std::function<std::shared_ptr<T> (yuri::log::Log &, const std::string&)>,
+		std::function<void(void)>>
 {
 public:
 	BasicDatagramSocketGenerator(){}

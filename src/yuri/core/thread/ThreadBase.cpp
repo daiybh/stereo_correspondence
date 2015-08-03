@@ -201,17 +201,16 @@ bool ThreadBase::do_add_child(pThreadBase thread, bool spawn)
 {
 	TRACE_METHOD
 	assert(thread.get());
-	yuri::thread t;
 	if (spawn) {
 		try {
-			t = yuri::thread(ThreadSpawn(thread));
+			children_[thread] = std::move(ThreadChild(std::thread(ThreadSpawn(thread)), thread, spawn));
 		}
 		catch (std::runtime_error&) {
 			log[log::info] << "Failed to spawn thread!!";
 			return false;
 		}
 	}
-	children_[thread] = std::move(ThreadChild(std::move(t), thread, spawn));
+
 	return true;
 }
 

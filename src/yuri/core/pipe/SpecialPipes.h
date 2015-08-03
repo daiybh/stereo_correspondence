@@ -24,7 +24,7 @@ public:
 					:Pipe(name, log_),Policy<blocking>(params) {}
 								~SpecialPipe() noexcept {}
 	static pPipe 				generate(const std::string& name, const log::Log& log_, const Parameters& params) {
-		return make_shared<SpecialPipe<Policy, blocking>>(name, log_, params);
+		return std::make_shared<SpecialPipe<Policy, blocking>>(name, log_, params);
 	}
 private:
 	virtual bool 				do_push_frame(const pFrame &frame) override

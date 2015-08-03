@@ -23,7 +23,7 @@ namespace yuri {
 namespace core {
 namespace socket {
 class StreamSocket;
-typedef shared_ptr<StreamSocket> pStreamSocket;
+typedef std::shared_ptr<StreamSocket> pStreamSocket;
 class StreamSocket
 {
 public:

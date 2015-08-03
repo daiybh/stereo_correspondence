@@ -25,7 +25,7 @@ namespace core
 
 Parameters IOThread::configure()
 {
-	Parameters p = ThreadBase::configure();//;// = make_shared<Parameters>();
+	auto p = ThreadBase::configure();
 	p["fps_stats"]["Print out_ current FPS every n frames. Set to 0 to disable."]=0;
 	return p;
 }
@@ -109,7 +109,7 @@ void IOThread::do_connect_in(position_t index, pPipe pipe)
 	if (in_[index]) {
 		log[log::debug] << "Disconnecting already connected pipe from in port " << index;
 	}
-	auto notify_ptr = dynamic_pointer_cast<PipeNotifiable>(get_this_ptr());
+	auto notify_ptr = std::dynamic_pointer_cast<PipeNotifiable>(get_this_ptr());
 	in_[index]=PipeConnector(pipe,notify_ptr, {});
 	active_pipes_ = std::accumulate(in_.begin(), in_.end(), size_t{}, [](const size_t& ap, const PipeConnector&p) {return ap + (p ? 1 : 0); });
 }
@@ -125,7 +125,7 @@ void IOThread::do_connect_out(position_t index, pPipe pipe)
 	TRACE_METHOD
 	if (index < 0 || index >= do_get_no_out_ports()) throw std::out_of_range("Output pipe out of Range");
 	if (out_[index]) log[log::debug] << "Disconnecting already connected pipe from out port " << index;
-	auto notify_ptr = dynamic_pointer_cast<PipeNotifiable>(get_this_ptr());
+	auto notify_ptr = std::dynamic_pointer_cast<PipeNotifiable>(get_this_ptr());
 	// Output pipe should send source notifications!
 	out_[index]=PipeConnector(pipe,{}, notify_ptr);
 }
@@ -141,7 +141,7 @@ bool IOThread::push_frame(position_t index, pFrame frame)
 		next_indices_[index] = cur_idx+1;
 	}
 	if (index >= 0 && index < get_no_out_ports() && out_[index]) {
-		while (!out_[index]->push_frame(frame)) {
+		while (!out_[index]->push_frame(std::move(frame))) {
 			wait_for(latency_);
 			if (!still_running()) return false;
 		}

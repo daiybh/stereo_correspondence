@@ -16,7 +16,7 @@ namespace yuri {
 namespace core {
 
 class VideoFrame;
-typedef shared_ptr<VideoFrame> pVideoFrame;
+typedef std::shared_ptr<VideoFrame> pVideoFrame;
 
 class VideoFrame: public Frame
 {

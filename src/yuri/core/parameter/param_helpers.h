@@ -19,9 +19,9 @@ template<typename T, class X = void> struct suitable_event_type;
 template<typename T, typename Event> struct suitable_event_helper{
 	using arg_type = T;
 	using value_type = Event;
-	using shared_type = shared_ptr<value_type>;
+	using shared_type = std::shared_ptr<value_type>;
 	static shared_type create_new(const arg_type& arg/*, bool use_cast = cast*/) {
-		/*if (use_cast)*/ return make_shared<value_type>(lexical_cast<typename event::event_traits<value_type>::stored_type>(arg));
+		/*if (use_cast)*/ return std::make_shared<value_type>(lexical_cast<typename event::event_traits<value_type>::stored_type>(arg));
 //		return make_shared<value_type>(arg);
 	}
 

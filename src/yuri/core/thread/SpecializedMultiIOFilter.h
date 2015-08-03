@@ -24,10 +24,10 @@ std::tuple<> verify_types(Iter)
 }
 
 template<class FrameType, class... Others, typename Iter>
-std::tuple<shared_ptr<FrameType>, shared_ptr<Others>...>
+std::tuple<std::shared_ptr<FrameType>, std::shared_ptr<Others>...>
 verify_types(Iter frame_iter)
 {
-	shared_ptr<FrameType> frame = dynamic_pointer_cast<FrameType>(std::move(*frame_iter));
+	auto frame = std::dynamic_pointer_cast<FrameType>(std::move(*frame_iter));
 	if (!frame) throw std::runtime_error("Wrong type");
 	return std::tuple_cat(std::make_tuple(frame), verify_types<Others...>(frame_iter+1));
 }
@@ -38,7 +38,7 @@ template<class... InFrameTypes>
 class SpecializedMultiIOFilter: public MultiIOFilter {
 public:
 	static const size_t input_frames_count = sizeof...(InFrameTypes);
-	using param_type = std::tuple<shared_ptr<InFrameTypes>... >;
+	using param_type = std::tuple<std::shared_ptr<InFrameTypes>... >;
 
 	SpecializedMultiIOFilter(const log::Log &log_, pwThreadBase parent, position_t out_p,
 			const std::string& id = "Spec. Multi Filter")
