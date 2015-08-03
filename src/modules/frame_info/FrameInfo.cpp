@@ -50,8 +50,9 @@ std::string get_interlace_info(const core::pVideoFrame& frame)
 				default:
 					return "interlaced, unknown field order";
 			}
-		}
+		} break;
 	}
+	return "Unknown interlacing info";
 }
 
 void print_video_frame(log::Log& log, std::string fname, const core::pVideoFrame& frame)
