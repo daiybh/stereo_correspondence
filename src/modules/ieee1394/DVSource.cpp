@@ -18,7 +18,7 @@ namespace ieee1394 {
 
 core::pIOThread DVSource::generate(log::Log &_log,core::pwThreadBase parent, const core::Parameters& parameters)
 {
-	shared_ptr<DVSource> dv(new DVSource(_log,parent,
+	std::shared_ptr<DVSource> dv(new DVSource(_log,parent,
 			parameters["node"].get<unsigned>(),
 			parameters["port"].get<int>(),
 			parameters["guid"].get<int64_t>()));
