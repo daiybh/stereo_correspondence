@@ -155,7 +155,7 @@ core::pFrame Mosaic::do_special_single_step(core::pRawVideoFrame frame)
 
 //	resolution_t rb_corner = center_ + resolution_t{radius_, radius_};
 
-	core::pRawVideoFrame frame_out = dynamic_pointer_cast<core::RawVideoFrame>(get_frame_unique(frame));//core::RawVideoFrame::create_empty(frame->get_format(), image_size);
+	core::pRawVideoFrame frame_out = std::dynamic_pointer_cast<core::RawVideoFrame>(get_frame_unique(frame));//core::RawVideoFrame::create_empty(frame->get_format(), image_size);
 //	size_t tiles = 2*radius_ / tile_size_;
 
 	const uint8_t * data_in = PLANE_RAW_DATA(frame,0);
@@ -193,17 +193,17 @@ bool Mosaic::do_process_event(const std::string& event_name, const event::pBasic
 			(mosaics_[0].center, "center"))
 		return true;
 	if (event_name == "mosaic" && event->get_type() == event::event_type_t::vector_event) {
-		if (auto mosaic_event = dynamic_pointer_cast<event::EventVector>(event)) {
+		if (auto mosaic_event = std::dynamic_pointer_cast<event::EventVector>(event)) {
 			mosaics_={parse_mosaic_info(*mosaic_event)};
 			return true;
 		}
 	} else if (event_name == "mosaics" && event->get_type() == event::event_type_t::vector_event) {
-		if (auto mosaic_events = dynamic_pointer_cast<event::EventVector>(event)) {
+		if (auto mosaic_events = std::dynamic_pointer_cast<event::EventVector>(event)) {
 			mosaics_.clear();
 			log[log::debug] << "Received " << mosaic_events->size() << " mosaics.";
 			for (const auto& ev: *mosaic_events) {
 				if (ev->get_type() == event::event_type_t::vector_event) {
-					if (auto mos_vec = dynamic_pointer_cast<event::EventVector>(ev)) {
+					if (auto mos_vec = std::dynamic_pointer_cast<event::EventVector>(ev)) {
 						mosaics_.push_back(parse_mosaic_info(*mos_vec));
 					}
 				}
