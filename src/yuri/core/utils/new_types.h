@@ -32,17 +32,9 @@ typedef int64_t			ssize_t;
 #else
 typedef ::ssize_t 		ssize_t;
 #endif
-using	std::shared_ptr;
-using	std::make_shared;
-using 	std::enable_shared_from_this;
-using	std::weak_ptr;
-using	std::unique_ptr;
-using	std::dynamic_pointer_cast;
-using 	std::mutex;
-typedef std::unique_lock<std::mutex> lock_t;
-using	std::thread;
-using 	std::function;
-using 	std::condition_variable;
+
+using 	mutex = 	std::mutex;
+using 	lock_t = 	std::unique_lock<std::mutex>;
 
 typedef size_t			dimension_t;
 typedef ssize_t			position_t;
