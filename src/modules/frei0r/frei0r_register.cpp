@@ -69,8 +69,7 @@ std::function<decltype(T::configure())()> generate_configure(const std::string& 
 	if (module.info.explanation) {
 		description+=std::string(" - ")+module.info.explanation;
 	}
-	using param_type = decltype(T::configure());
-	core::Parameters p = T::configure();
+	auto p = T::configure();
 	p.set_description(description);
 	p["_frei0r_path"]=name;
 	auto instance = module.construct(8,8);
