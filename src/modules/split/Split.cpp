@@ -12,56 +12,56 @@
 #include "Split.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/utils.h"
+#include "yuri/core/frame/raw_frame_params.h"
 namespace yuri {
 
 namespace split {
 
+MODULE_REGISTRATION_BEGIN("split")
+		REGISTER_IOTHREAD("split",Split)
+MODULE_REGISTRATION_END()
 
-REGISTER("split",Split)
+IOTHREAD_GENERATOR(Split)
 
-IO_THREAD_GENERATOR(Split)
-
-core::pParameters Split::configure()
+core::Parameters Split::configure()
 {
-	core::pParameters p (new core::Parameters());
-	(*p)["x"]["number of splits in X axis"]=2;
-	(*p)["y"]["number of splits in Y axis"]=1;
-	p->set_max_pipes(1,2);
-	p->add_input_format(YURI_FMT_RGB);
-	p->add_output_format(YURI_FMT_RGB);
+	auto p = base_type::configure();
+	p["x"]["number of splits in X axis"]=2;
+	p["y"]["number of splits in Y axis"]=1;
 	return p;
 }
 
 
-Split::Split(log::Log &_log, core::pwThreadBase parent,core::Parameters &parameters):
-			BasicMultiIOFilter(_log,parent,1,2,"split"),x_(2),y_(1)
+Split::Split(log::Log &_log, core::pwThreadBase parent,core::Parameters parameters):
+			base_type(_log,parent,2,"split"),x_(2),y_(1)
 {
-	IO_THREAD_INIT("Split");
+	IOTHREAD_INIT(parameters);
 	resize(1,x_+y_);
 }
 
-Split::~Split() {
+Split::~Split() noexcept {
 }
 
-std::vector<core::pBasicFrame> Split::do_single_step(const std::vector<core::pBasicFrame>& frames)
+std::vector<core::pFrame> Split::do_special_step(std::tuple<core::pRawVideoFrame> frames)
 {
-	assert(frames.size()==1);
-	const core::pBasicFrame frame 	= frames[0];
+	const auto& frame 	= std::get<0>(frames);
 	const yuri::size_t height		= frame->get_height();
 	const yuri::size_t width 		= frame->get_width();
 	const format_t format 			= frame->get_format();
-	const FormatInfo_t info 		= core::BasicPipe::get_format_info(frame->get_format());
+	const auto& fi					= core::raw_format::get_format_info(format);
 
-	if (info->bpp % 8) {
-		log[log::warning] << "Input frames has to have bit depth divisible by 8";
-		return {};
-	}
-	if (info->planes != 1) {
+	if (fi.planes.size() != 1) {
 		log[log::warning] << "Input frames has to have only single image plane";
 		return {};
 	}
-	yuri::size_t Bpp = info->bpp >> 3;
-	std::vector<core::pBasicFrame> output;
+
+	const auto bpp = core::raw_format::get_fmt_bpp(format, 0);
+	if (bpp % 8) {
+		log[log::warning] << "Input frames has to have bit depth divisible by 8";
+		return {};
+	}
+	yuri::size_t Bpp = bpp >> 3;
+	std::vector<core::pFrame> output;
 	const size_t line_size_in		= width * Bpp;
 
 	size_t y_pos = 0;
@@ -75,14 +75,14 @@ std::vector<core::pBasicFrame> Split::do_single_step(const std::vector<core::pBa
 			auto data_col_begin 	= data_row_begin + x_pos * Bpp; ///< Iterator to the beginning of the input data for this output frame
 			const size_t line_size	= split_w * Bpp;
 			x_pos += split_w;
-			core::pBasicFrame out = allocate_empty_frame(format, split_w, split_h);
+			auto out = core::RawVideoFrame::create_empty(format, {split_w, split_h});
 			auto output_data = PLANE_DATA(out,0).begin();
 			for (size_t line = 0; line < split_h; ++line) {
 				std::copy(data_col_begin, data_col_begin + split_w*Bpp, output_data);
 				output_data += line_size;
 				data_col_begin += line_size_in;
 			}
-			output.push_back(out);
+			output.push_back(std::move(out));
 		}
 		y_pos += split_h;
 	}
@@ -91,12 +91,11 @@ std::vector<core::pBasicFrame> Split::do_single_step(const std::vector<core::pBa
 
 bool Split::set_param(const core::Parameter &parameter)
 {
-	if (iequals(parameter.name,"x")) {
-		x_ = parameter.get<size_t>();
-	} else if (iequals(parameter.name,"y")) {
-		y_ = parameter.get<size_t>();
-	} else return core::BasicMultiIOFilter::set_param(parameter);
-	return true;
+	if (assign_parameters(parameter)
+			(x_, "x")
+			(y_, "y"))
+			return true;
+	return base_type::set_param(parameter);
 }
 }
 
