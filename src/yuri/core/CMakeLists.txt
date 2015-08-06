@@ -39,6 +39,7 @@ SET(YURI_SRC ${YURI_SRC}
 	core/utils/wall_time.cpp core/utils/wall_time.h
 	core/utils/environment.cpp core/utils/environment.h
 	core/utils/string.h
+	core/utils/color.cpp core/utils/color.h
 	
 	core/thread/builder_utils.cpp
 	core/thread/builder_utils.h
