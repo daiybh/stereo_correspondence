@@ -87,6 +87,11 @@ IF(SDL_FOUND)
 	add_subdirectory(sdl_window)
 ENDIF()
 
+pkg_check_modules(SDL2 sdl2)
+IF(SDL2_FOUND)
+	add_subdirectory(sdl2_window)
+ENDIF()
+
 find_package(ALSA)
 IF(ALSA_FOUND)
 	add_subdirectory(midi_device)
