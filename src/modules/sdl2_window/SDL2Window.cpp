@@ -40,6 +40,7 @@ core::Parameters SDL2Window::configure()
 	p["fullscreen"]["Open the window at full screen"]=false;
 	p["keep_aspect"]["Keep image aspect ration"]=true;
 	p["screen"]["Screen number. Setting to -1 will force autodetection"]=-1;
+	p["background_color"]["Color for background when the image is letterboxed"]=core::color_t::create_rgb(0,0,0);
 	return p;
 }
 
@@ -289,6 +290,12 @@ void SDL2Window::run()
 			continue;
 
 		update_texture(texture_, frame);
+		SDL_SetRenderDrawColor(renderer_.get(),
+						background_color_.r(),
+						background_color_.g(),
+						background_color_.b(),
+						background_color_.a());
+
 		SDL_RenderClear(renderer_.get());
 		SDL_Rect rect = {0, 0, 0, 0};
 
@@ -329,7 +336,8 @@ bool SDL2Window::set_param(const core::Parameter& param)
 			(window_title_,			"title")
 			(window_fullscreen_,	"fullscreen")
 			(window_keep_aspect_,	"keep_aspect")
-			(screen_number_,		"screen"))
+			(screen_number_,		"screen")
+			(background_color_,		"background_color"))
 		return true;
 
 	return core::IOThread::set_param(param);

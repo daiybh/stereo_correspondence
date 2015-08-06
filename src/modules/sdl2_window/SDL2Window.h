@@ -12,6 +12,7 @@
 
 #include "yuri/core/thread/IOThread.h"
 #include "yuri/core/thread/Convert.h"
+#include "yuri/core/utils/color.h"
 #include <SDL.h>
 namespace yuri {
 namespace sdl2_window {
@@ -41,6 +42,7 @@ private:
 	bool					window_fullscreen_;
 	bool					window_keep_aspect_;
 
+	core::color_t			background_color_;
 	int						screen_number_;
 
 	std::unique_ptr<SDL_Window, std::function<void(SDL_Window*)>>
