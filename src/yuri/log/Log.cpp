@@ -78,16 +78,16 @@ void print_time(Stream& os)
 
 
 template<class Stream>
-void print_level(Stream& os, debug_flags flags)
+void print_level(Stream& os, debug_flags flags, const long output_flags)
 {
-	auto f = static_cast<debug_flags>(flags&flag_mask);
-	auto it = level_names.find(f);
+	const auto f = static_cast<debug_flags>(flags&flag_mask);
+	const auto it = level_names.find(f);
 	if (it == level_names.end()) {
 		return;
 	}
 	const auto& name = it->second;
 
-	if (flags&use_colors) {
+	if (output_flags&use_colors) {
 		auto it_col = level_colors.find(f);
 		auto it_col2 = level_colors.find(info);
 		if (it_col!=level_colors.end() && it_col2 != level_colors.end()) {
@@ -172,7 +172,7 @@ LogProxy<char> Log::operator[](debug_flags f) const
 	LogProxy<char> lp(*out, dummy);
 	if (!quiet_ && !dummy) {
 		if (output_flags_&show_level) {
-			print_level(lp, f);
+			print_level(lp, f, output_flags_);
 		}
 		lp <<  uid << ": ";
 		if (output_flags_&show_date && output_flags_&show_time) {
