@@ -11,6 +11,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/raw_frame_types.h"
+#include "yuri/core/utils/assign_events.h"
 namespace yuri {
 namespace color_key {
 
@@ -24,12 +25,7 @@ core::Parameters ColorKey::configure()
 {
 	core::Parameters p = base_type::configure();
 	p.set_description("ColorKey");
-	p["r"]["R value of the key color"]=0;
-	p["g"]["G value of the key color"]=0;
-	p["b"]["B value of the key color"]=0;
-	p["y"]["Y value of the key color"]=0;
-	p["u"]["U value of the key color"]=0;
-	p["v"]["V value of the key color"]=0;
+	p["color"]["Key color"]=core::color_t::create_rgb(140, 200, 75);
 	p["y_cutoff"]["Unimportance of Y value. Set to 1 to keep full y range and to 256 to completely ignore Y value"]=5;
 	p["delta"]["Threshold for determining same colors"]=90;
 	p["delta2"]["Threshold for determining similar colors"]=30;
@@ -41,7 +37,7 @@ core::Parameters ColorKey::configure()
 ColorKey::ColorKey(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("color_key")),
 event::BasicEventConsumer(log),
-r_(140),g_(200),b_(75),y_(0),u_(128),v_(128),y_cutoff_(5),delta_(100),delta2_(30),
+color_(core::color_t::create_rgb(140, 200, 75)),y_cutoff_(5),delta_(100),delta2_(30),
 diff_type_(linear)
 {
 	IOTHREAD_INIT(parameters)
@@ -303,10 +299,10 @@ core::pRawVideoFrame ColorKey::find_key(const core::pRawVideoFrame& frame)
 		core::RawVideoFrame::value_type::iterator 		dest_pix	= dest+line*linesize_out;
 		for (size_t pixel = 0; pixel < width; ++pixel) {
 			if (kernel::rgb_vals) { // this condition should get optimized out by compiler...
-				const ssize_t total = kernel::difference(src_pix, r_, g_, b_, static_cast<int>(y_cutoff_));
+				const ssize_t total = kernel::difference(src_pix, color_.r(), color_.g(), color_.b(), static_cast<int>(y_cutoff_));
 				kernel::eval(src_pix, dest_pix, total, delta_, delta2_);
 			} else {
-				const ssize_t total = kernel::difference(src_pix, y_, u_, v_, static_cast<int>(y_cutoff_));
+				const ssize_t total = kernel::difference(src_pix, color_.y(), color_.u(), color_.v(), static_cast<int>(y_cutoff_));
 				kernel::eval(src_pix, dest_pix, total, delta_, delta2_);
 			}
 
@@ -363,56 +359,37 @@ core::pFrame ColorKey::do_special_single_step(core::pRawVideoFrame frame)
 }
 bool ColorKey::set_param(const core::Parameter& param)
 {
-	if (iequals(param.get_name(),"r")) {
-		r_ = param.get<uint8_t>();
-	} else if (iequals(param.get_name(),"g")) {
-		g_ = param.get<uint8_t>();
-	} else if (iequals(param.get_name(),"b")) {
-		b_ = param.get<uint8_t>();
-	} else if (iequals(param.get_name(),"y")) {
-		y_ = param.get<uint8_t>();
-	} else if (iequals(param.get_name(),"u")) {
-		u_ = param.get<uint8_t>();
-	} else if (iequals(param.get_name(),"v")) {
-		v_ = param.get<uint8_t>();
-	} else if (iequals(param.get_name(),"delta")) {
-		delta_ = param.get<ssize_t>();
-	} else if (iequals(param.get_name(),"delta2")) {
-		delta2_ = param.get<ssize_t>();
-	} else if (iequals(param.get_name(),"y_cutoff")) {
-		y_cutoff_ = param.get<size_t>();
+	if (assign_parameters(param)
+			(color_, "color")
+			(delta_, "delta")
+			(delta2_, "delta2")
+			.parsed<std::string>(
+				diff_type_, "diff", [](const std::string& s){
+					auto it = diff_type_strings.find(s);
+					if (it == diff_type_strings.end()) return linear;
+					return it->second;
+				})
+			(y_cutoff_, "y_cutoff")
+					) {
 		if (y_cutoff_ < 1) y_cutoff_ = 1;
-	} else if (iequals(param.get_name(),"diff")) {
-		const std::string dt = param.get<std::string>();
-		if (diff_type_strings.count(dt)) {
-			diff_type_ = diff_type_strings[dt];
-		} else diff_type_ = linear;
-	} else return base_type::set_param(param);
-	return true;
+		return true;
+	}
+	return base_type::set_param(param);
+
 }
 
 bool ColorKey::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
-	if (event_name == "yuv") {
-		auto val = event::get_value<event::EventVector>(event);
-		if (val.size() < 3) return false;
-		y_ = event::lex_cast_value<uint8_t>(val[0]);
-		u_ = event::lex_cast_value<uint8_t>(val[1]);
-		v_ = event::lex_cast_value<uint8_t>(val[2]);
-	} else if (event_name == "rgb") {
-		auto val = event::get_value<event::EventVector>(event);
-		if (val.size() < 3) return false;
-		r_ = event::lex_cast_value<uint8_t>(val[0]);
-		g_ = event::lex_cast_value<uint8_t>(val[1]);
-		b_ = event::lex_cast_value<uint8_t>(val[2]);
-	} else if (event_name == "delta") {
-		delta_ = event::lex_cast_value<ssize_t>(event);
-	} else if (event_name == "delta2") {
-		delta2_ = event::lex_cast_value<ssize_t>(event);
-	} else if (event_name == "y_cutoff") {
-		y_cutoff_ = event::lex_cast_value<size_t>(event);
+	if (assign_events(event_name, event)
+			(color_, "color")
+			(delta_, "delta")
+			(delta2_, "delta2")
+			(y_cutoff_, "y_cutoff")
+					) {
+		if (y_cutoff_ < 1) y_cutoff_ = 1;
+		return true;
 	}
-	return true;
+	return false;
 }
 } /* namespace color_key */
 } /* namespace yuri */
