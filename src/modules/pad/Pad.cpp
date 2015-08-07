@@ -31,6 +31,7 @@ core::Parameters Pad::configure()
 	p["resolution"]["Resolution of the destination image"]=resolution_t{800,600};
 	p["halign"]["Horizontal alignment of the image inside the canvas. (center, left, right)"]=std::string("center");
 	p["valign"]["Vertical alignment of the image inside the canvas. (center, top, bottom)"]=std::string("center");
+	p["color"]["background color"]=core::color_t::create_rgb(0,0,0);
 	return p;
 }
 
@@ -55,7 +56,7 @@ std::vector<format_t> query_supported_formats()
 Pad::Pad(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::SpecializedIOFilter<core::RawVideoFrame>(log_,parent,std::string("pad")),
 resolution_(resolution_t{800, 600}), halign_(horizontal_alignment_t::center),
-valign_(vertical_alignment_t::center)
+valign_(vertical_alignment_t::center),color_(core::color_t::create_rgb(0,0,0))
 {
 	IOTHREAD_INIT(parameters)
 	set_supported_formats(query_supported_formats());
@@ -115,26 +116,47 @@ void fill_pattern(Iter start, const Iter& end, const std::array<value_type, N>& 
  * @param format	format of the pixels
  */
 template<class Iter>
-void fill_black(Iter start, const Iter& end, format_t format)
+void fill_color(Iter start, const Iter& end, format_t format, const core::color_t& color)
 {
 	using namespace core;
 	using T = typename std::remove_reference<decltype(*start)>::type;
 	switch (format) {
 		case raw_format::yuv444:
-			fill_pattern<3>(start, end, std::array<T,3>{{0,128,128}});
+			fill_pattern<3>(start, end, color.get_yuv());
 			break;
 		case raw_format::yuyv422:
+			fill_pattern<4>(start, end, std::array<T, 4>{{color.y(), color.u(), color.y(), color.v()}});
+			break;
 		case raw_format::yvyu422:
-			fill_pattern<2>(start, end, std::array<T, 2>{{0,128}});
+			fill_pattern<4>(start, end, std::array<T, 4>{{color.y(), color.v(), color.y(), color.u()}});
 			break;
 		case raw_format::uyvy422:
+			fill_pattern<4>(start, end, std::array<T, 4>{{color.u(), color.y(), color.v(), color.y()}});
+			break;
 		case raw_format::vyuy422:
-			fill_pattern<2>(start, end, std::array<T, 2>{{128, 0}});
+			fill_pattern<4>(start, end, std::array<T, 4>{{color.v(), color.y(), color.u(), color.y()}});
 			break;
 		case raw_format::rgb24:
+			fill_pattern<3>(start, end, color.get_rgb());
+			break;
 		case raw_format::rgba32:
+			fill_pattern<4>(start, end, color.get_rgba());
+			break;
 		case raw_format::bgr24:
+			fill_pattern<3>(start, end, std::array<T, 3>{{color.b(), color.g(), color.r()}});
+			break;
 		case raw_format::abgr32:
+			fill_pattern<4>(start, end, std::array<T, 4>{{color.a(), color.b(), color.g(), color.r()}});
+			break;
+		case raw_format::bgra32:
+			fill_pattern<4>(start, end, std::array<T, 4>{{color.b(), color.g(), color.r(), color.a()}});
+			break;
+		case raw_format::argb32:
+			fill_pattern<4>(start, end, std::array<T, 4>{{color.a(), color.r(), color.g(), color.b()}});
+			break;
+		case raw_format::y8:
+			std::fill(start,end,color.y());
+			break;
 		default:std::fill(start,end,0);break;
 
 	}
@@ -210,7 +232,7 @@ core::pFrame Pad::do_special_single_step(core::pRawVideoFrame frame)
 
 	// One line of pre-prepared black samples to speed up the filling up process later.
 	uvector<uint8_t> samples_black(line_size_out);
-	fill_black(samples_black.begin(), samples_black.end(), format);
+	fill_color(samples_black.begin(), samples_black.end(), format, color_);
 
 
 	// Fill in empty lines at the top
@@ -273,7 +295,8 @@ bool Pad::set_param(const core::Parameter& param)
 			.parsed<std::string>
 				(halign_, "halign", parse_halign)
 			.parsed<std::string>
-				(valign_, "valign", parse_valign))
+				(valign_, "valign", parse_valign)
+			(color_, "color"))
 		return true;
 	return core::IOThread::set_param(param);
 }
