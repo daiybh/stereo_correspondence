@@ -3,7 +3,8 @@ SET (MODULE color_picker)
 
 # Set all source files module uses
 SET (SRC ColorPicker.cpp
-		 ColorPicker.h)
+		 ColorPicker.h
+		 color_kernels.impl)
 
 
  

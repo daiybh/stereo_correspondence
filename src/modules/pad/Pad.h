@@ -12,6 +12,7 @@
 
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/utils/color.h"
 
 namespace yuri {
 namespace pad {
@@ -43,6 +44,7 @@ private:
 //	size_t 						height_;
 	horizontal_alignment_t		halign_;
 	vertical_alignment_t		valign_;
+	core::color_t				color_;
 };
 
 } /* namespace pad */

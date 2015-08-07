@@ -11,7 +11,7 @@
 #include "yuri/core/Module.h"
 #include "yuri/core/utils/assign_events.h"
 #include "yuri/core/frame/raw_frame_types.h"
-
+#include "yuri/core/utils/color.h"
 #include <numeric>
 #include <array>
 namespace yuri {
@@ -58,8 +58,8 @@ geometry_(geometry_t{10,10,0,0}),show_color_(true)
 							u16,
 							v8,
 							v16,
-							depth8,
-							depth16,
+//							depth8,
+//							depth16,
 
 	});
 }
@@ -73,7 +73,6 @@ template<typename T, size_t size>
 std::array<T, size> average_simple(const core::pRawVideoFrame& frame, const geometry_t& rect, size_t line_size)
 {
 	const size_t pixels = rect.width * rect.height;
-//	const resolution_t resolution = frame->get_resolution();
 	using pixel_type = std::array<T, size>;
 	using acc_type = std::array<size_t, size>;
 	pixel_type pixel_out;
@@ -111,41 +110,38 @@ core::pRawVideoFrame draw_color(const core::pRawVideoFrame& frame, const geometr
 	return out_frame;
 }
 
-template<typename T, size_t size>
-event::pBasicEvent prepare_event(const std::array<T, size>& pixel)
-{
-	std::vector<event::pBasicEvent> vec(size);
-	std::transform(pixel.begin(), pixel.end(), vec.begin(),[](const T& val){return std::make_shared<event::EventInt>(val);});
-	return std::make_shared<event::EventVector>(std::move(vec));
-}
+template<format_t>
+struct get_color {};
 
-template<typename T, size_t size, class F>
-core::pRawVideoFrame process_colors(const core::pRawVideoFrame& frame, const geometry_t& rect, bool draw, F func)
+#include "color_kernels.impl"
+
+
+template<typename T, size_t size, format_t fmt>
+std::tuple<core::pRawVideoFrame, core::color_t> process_colors(const core::pRawVideoFrame& frame, const geometry_t& rect, bool draw)
 {
 	const auto line_size = frame->get_resolution().width;
 	const auto avg = average_simple<T, size>(frame, rect, line_size);
-	func(prepare_event(avg));
+	core::pRawVideoFrame frame_out;
 	if (draw) {
-		return draw_color(frame, rect, line_size, avg);
-	}
-	return frame;
+		frame_out = draw_color(frame, rect, line_size, avg);
+	} else frame_out = frame;
+	return std::make_tuple(std::move(frame_out), get_color<fmt>::eval(avg));
 }
 
 
-template<typename T, size_t ypos, class F>
-core::pRawVideoFrame process_colors_yuv(const core::pRawVideoFrame& frame, geometry_t rect, bool draw, F func)
+template<typename T, format_t fmt>
+std::tuple<core::pRawVideoFrame, core::color_t> process_colors_yuv(const core::pRawVideoFrame& frame, geometry_t rect, bool draw)
 {
 	const auto line_size = frame->get_resolution().width /2;
 	rect.width/=2; rect.x/=2;
 	auto avg = average_simple<T, 4>(frame, rect, line_size);
-	const T y = avg[ypos]/2+avg[ypos+2]/2;
-	avg[ypos]=y;avg[ypos+2]=y;
-	const size_t uvpos = (ypos+1)%2;
-	func(prepare_event<T,3>({{y,avg[uvpos],avg[uvpos+2]}}));
+	core::pRawVideoFrame frame_out;
 	if (draw) {
-		return draw_color<T, 4>(frame, rect, line_size, avg);
+		frame_out = draw_color<T, 4>(frame, rect, line_size, avg);
+	} else {
+		frame_out = frame;
 	}
-	return frame;
+	return std::make_tuple(std::move(frame_out), get_color<fmt>::eval(avg));
 }
 
 
@@ -159,91 +155,119 @@ core::pFrame ColorPicker::do_special_single_step(core::pRawVideoFrame frame)
 	const resolution_t resolution = frame->get_resolution();
 	core::pRawVideoFrame out_frame = frame;
 	const auto rect = intersection(resolution, geometry_);
+	core::color_t color;
+
 
 	switch (format) {
 		case rgb24:
+			std::tie(out_frame, color) = process_colors<uint8_t, 3, rgb24>(frame, rect, show_color_);
+			break;
 		case bgr24:
-			out_frame = process_colors<uint8_t, 3>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("rgb",e);});
+			std::tie(out_frame, color) = process_colors<uint8_t, 3, bgr24>(frame, rect, show_color_);
 			break;
 		case rgb48:
+			std::tie(out_frame, color) = process_colors<uint16_t, 3, rgb48>(frame, rect, show_color_);
+			break;
 		case bgr48:
-			out_frame = process_colors<uint16_t, 3>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("rgb",e);});
+			std::tie(out_frame, color) = process_colors<uint16_t, 3, bgr48>(frame, rect, show_color_);
 			break;
 
 		case rgba32:
+			std::tie(out_frame, color) = process_colors<uint8_t, 4, rgba32>(frame, rect, show_color_);
+			break;
 		case bgra32:
+			std::tie(out_frame, color) = process_colors<uint8_t, 4, bgra32>(frame, rect, show_color_);
+			break;
 		case argb32:
+			std::tie(out_frame, color) = process_colors<uint8_t, 4, argb32>(frame, rect, show_color_);
+			break;
 		case abgr32:
-			out_frame = process_colors<uint8_t, 4>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("rgba",e);this->emit_event("rgb",e);});
+			std::tie(out_frame, color) = process_colors<uint8_t, 4, abgr32>(frame, rect, show_color_);
 			break;
 
 		case rgba64:
+			std::tie(out_frame, color) = process_colors<uint16_t, 4, rgba64>(frame, rect, show_color_);
+			break;
 		case bgra64:
+			std::tie(out_frame, color) = process_colors<uint16_t, 4, bgra64>(frame, rect, show_color_);
+			break;
 		case argb64:
+			std::tie(out_frame, color) = process_colors<uint16_t, 4, argb64>(frame, rect, show_color_);
+			break;
 		case abgr64:
-			out_frame = process_colors<uint16_t, 4>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("rgba",e);this->emit_event("rgb",e);});
+			std::tie(out_frame, color) = process_colors<uint16_t, 4, abgr64>(frame, rect, show_color_);
 			break;
 
 		case yuyv422:
+			std::tie(out_frame, color) = process_colors_yuv<uint8_t, yuyv422>(frame, rect, show_color_);
+			break;
 		case yvyu422:
-			out_frame = process_colors_yuv<uint8_t,0>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("yuv",e);});
+			std::tie(out_frame, color) = process_colors_yuv<uint8_t, yvyu422>(frame, rect, show_color_);
 			break;
 		case uyvy422:
+			std::tie(out_frame, color) = process_colors_yuv<uint8_t, uyvy422>(frame, rect, show_color_);
+			break;
 		case vyuy422:
-			out_frame = process_colors_yuv<uint8_t,1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("yuv",e);});
+			std::tie(out_frame, color) = process_colors_yuv<uint8_t, vyuy422>(frame, rect, show_color_);
 			break;
 		case yuv444:
-			out_frame = process_colors<uint8_t, 3>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("yuv",e);});
+			std::tie(out_frame, color) = process_colors<uint8_t, 3, yuv444>(frame, rect, show_color_);
 			break;
 		case ayuv4444:
+			std::tie(out_frame, color) = process_colors<uint8_t, 4, ayuv4444>(frame, rect, show_color_);
+			break;
 		case yuva4444:
-			out_frame = process_colors<uint8_t, 4>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("yuva",e);this->emit_event("yuv",e);});
+			std::tie(out_frame, color) = process_colors<uint8_t, 4, yuva4444>(frame, rect, show_color_);
 			break;
 		// Single component
 		case r8:
-			out_frame = process_colors<uint8_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("red",e);this->emit_event("r",e);});
+			std::tie(out_frame, color) = process_colors<uint8_t, 1, r8>(frame, rect, show_color_);
 			break;
 		case r16:
-			out_frame = process_colors<uint16_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("red",e);this->emit_event("r",e);});
+			std::tie(out_frame, color) = process_colors<uint16_t, 1, r16>(frame, rect, show_color_);
 			break;
 		case g8:
-			out_frame = process_colors<uint8_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("green",e);this->emit_event("g",e);});
+			std::tie(out_frame, color) = process_colors<uint8_t, 1, g8>(frame, rect, show_color_);
 			break;
 		case g16:
-			out_frame = process_colors<uint16_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("green",e);this->emit_event("g",e);});
+			std::tie(out_frame, color) = process_colors<uint16_t, 1, g16>(frame, rect, show_color_);
 			break;
 		case b8:
-			out_frame = process_colors<uint8_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("blue",e);this->emit_event("b",e);});
+			std::tie(out_frame, color) = process_colors<uint8_t, 1, b8>(frame, rect, show_color_);
 			break;
 		case b16:
-			out_frame = process_colors<uint16_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("blue",e);this->emit_event("b",e);});
+			std::tie(out_frame, color) = process_colors<uint16_t, 1, b16>(frame, rect, show_color_);
 			break;
 		case y8:
-			out_frame = process_colors<uint8_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("y",e);});
+			std::tie(out_frame, color) = process_colors<uint8_t, 1, y8>(frame, rect, show_color_);
 			break;
 		case y16:
-			out_frame = process_colors<uint16_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("y",e);});
+			std::tie(out_frame, color) = process_colors<uint16_t, 1, y16>(frame, rect, show_color_);
 			break;
 		case u8:
-			out_frame = process_colors<uint8_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("u",e);});
+			std::tie(out_frame, color) = process_colors<uint8_t, 1, u8>(frame, rect, show_color_);
 			break;
 		case u16:
-			out_frame = process_colors<uint16_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("u",e);});
+			std::tie(out_frame, color) = process_colors<uint16_t, 1, u16>(frame, rect, show_color_);
 			break;
 		case v8:
-			out_frame = process_colors<uint8_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("v",e);});
+			std::tie(out_frame, color) = process_colors<uint8_t, 1, v8>(frame, rect, show_color_);
 			break;
 		case v16:
-			out_frame = process_colors<uint16_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("v",e);});
+			std::tie(out_frame, color) = process_colors<uint16_t, 1, v16>(frame, rect, show_color_);
 			break;
-		case depth8:
-			out_frame = process_colors<uint8_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("depth",e);this->emit_event("d",e);});
-			break;
-		case depth16:
-			out_frame = process_colors<uint16_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("depth",e);this->emit_event("d",e);});
-			break;
+//		case depth8:
+//			std::tie(out_frame, color) = process_colors<uint8_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("depth",e);this->emit_event("d",e);});
+//			break;
+//		case depth16:
+//			std::tie(out_frame, color) = process_colors<uint16_t, 1>(frame, rect, show_color_, [&](const event::pBasicEvent& e)mutable{this->emit_event("depth",e);this->emit_event("d",e);});
+//			break;
+		default:
+			return out_frame;
 
 	}
+	log[log::verbose_debug] << "Found color: " << color;
+	emit_event("color", lexical_cast<std::string>(color));
 	return out_frame;
 }
 bool ColorPicker::set_param(const core::Parameter& param)
