@@ -13,6 +13,7 @@
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/event/BasicEventConsumer.h"
+#include "yuri/core/utils/color.h"
 #include <ft2build.h>
 //#include <freetype/freetype.h>
 #include FT_FREETYPE_H
@@ -52,6 +53,7 @@ private:
 	bool edge_blend_;
 	bool modified_;
 	bool utf8_;
+	core::color_t color_;
 };
 
 } /* namespace freetype */

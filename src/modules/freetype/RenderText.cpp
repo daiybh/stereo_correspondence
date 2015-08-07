@@ -40,6 +40,7 @@ core::Parameters RenderText::configure()
 	p["fps"]["Framerate for generated images. Set to 0 to generate only on text change"]=0.0;
 	p["blend"]["Blend edged - nicer output, but slower"]=true;
 	p["utf8"]["Handle text as utf8"]=true;
+	p["color"]["Text color"]=core::color_t::create_rgb(0xFF,0xFF,0xFF);
 	return p;
 }
 
@@ -49,7 +50,7 @@ base_type(log_,parent,std::string("freetype")),
 BasicEventConsumer(log),
 resolution_({800,600}),
 position_({0,0}),char_spacing_{0},generate_{false},edge_blend_{true},
-modified_{true},utf8_{true}
+modified_{true},utf8_{true},color_(core::color_t::create_rgb(0xFF,0xFF,0xFF))
 {
 	set_latency(50_ms);
 	IOTHREAD_INIT(parameters)
@@ -65,7 +66,7 @@ modified_{true},utf8_{true}
 		log[log::warning] << "Kerning requested but not supported by current font...";
 	}
 	using namespace core::raw_format;
-	set_supported_formats({y8, rgb24, bgr24, rgba32, bgra32, argb32, abgr32, yuyv422, yvyu422, uyvy422, yvyu422});
+	set_supported_formats({y8, rgb24, bgr24, rgba32, bgra32, argb32, abgr32, yuv444, yuyv422, yvyu422, uyvy422, vyuy422});
 }
 
 RenderText::~RenderText() noexcept
@@ -80,38 +81,29 @@ struct compute_value;
 
 template<>
 struct compute_value<true> {
-	template<typename T, typename T2>
-	static auto eval(T p, T2 out) -> typename std::remove_reference<decltype(*out)>::type
-	{
-		const auto max_out = std::numeric_limits<
-				typename std::remove_reference<decltype(*out)>::type>::max();
-		return eval(p, out, max_out);
-	}
 	template<typename T, typename T2, typename T3>
-	static auto eval(T p, T2 out, T3 max_out) -> typename std::remove_reference<decltype(*out)>::type
+	static auto eval(T p, T2 out, T3 color) -> typename std::remove_reference<decltype(*out)>::type
 	{
-		const auto max = std::numeric_limits<T>::max();
-		int64_t val = (static_cast<int64_t>(*out) * (max-p)) +
-					  (static_cast<int64_t>(max_out) * p);
-		return val / max;
+		using out_type = typename std::remove_reference<decltype(*out)>::type;
+
+		const auto max_p = std::numeric_limits<T>::max();
+
+		const auto val = (static_cast<int64_t>(*out) * (max_p-p)) +
+						 (static_cast<int64_t>(color *  p));
+		return static_cast<out_type>(val / max_p);
 	}
 };
 
 template<>
 struct compute_value<false> {
-	template<typename T, typename T2>
-	static auto eval(T p, T2 out) -> typename std::remove_reference<decltype(*out)>::type
-	{
-		(void)out;
-		return p;
-	}
 	template<typename T, typename T2, typename T3>
-	static auto eval(T p, T2 out, T3) -> typename std::remove_reference<decltype(*out)>::type
+	static auto eval(T p, T2 out, T3 color) -> typename std::remove_reference<decltype(*out)>::type
 	{
 		(void)out;
-		return p;
+		return (static_cast<int64_t>(p) * color) / std::numeric_limits<T>::max();
 	}
 };
+
 
 template<format_t fmt, bool blend>
 struct draw_kernel;
@@ -119,11 +111,11 @@ struct draw_kernel;
 template<bool blend>
 struct draw_kernel<y8, blend> {
 	template<typename T, typename T2>
-	static void draw(T in, const T in_end, T2 out)
+	static void draw(T in, const T in_end, T2 out, const std::array<uint8_t, 4>& color, bool)
 	{
 		while(in != in_end) {
 			const auto p = *in;
-			if (p) *out = compute_value<blend>::eval(p, out);
+			if (p) *out = compute_value<blend>::eval(p, out, color[0]);
 			++in;
 			++out;
 		}
@@ -133,14 +125,14 @@ struct draw_kernel<y8, blend> {
 template<bool blend>
 struct draw_kernel<rgb24, blend> {
 	template<typename T, typename T2>
-	static void draw(T in, const T in_end, T2 out)
+	static void draw(T in, const T in_end, T2 out, const std::array<uint8_t, 4>& color, bool)
 	{
 		while(in != in_end) {
 			const auto p = *in;
 			if (p) {
-				*(out+0) = compute_value<blend>::eval(p, out+0);
-				*(out+1) = compute_value<blend>::eval(p, out+1);
-				*(out+2) = compute_value<blend>::eval(p, out+2);
+				*(out+0) = compute_value<blend>::eval(p, out+0, color[0]);
+				*(out+1) = compute_value<blend>::eval(p, out+1, color[1]);
+				*(out+2) = compute_value<blend>::eval(p, out+2, color[2]);
 			}
 			++in;
 			out+=3;
@@ -149,21 +141,45 @@ struct draw_kernel<rgb24, blend> {
 };
 
 template<bool blend>
-struct draw_kernel<bgr24, blend>: public draw_kernel<rgb24, blend> {};
+struct draw_kernel<bgr24, blend> {
+	template<typename T, typename T2>
+	static void draw(T in, const T in_end, T2 out, const std::array<uint8_t, 4>& color, bool)
+	{
+		draw_kernel<rgb24, blend>::draw(in, in_end, out, {{color[2], color[1], color[0], color[3]}}, true);
+	}
+};
+
+template<bool blend>
+struct draw_kernel<yuv444, blend> {
+	template<typename T, typename T2>
+		static void draw(T in, const T in_end, T2 out, const std::array<uint8_t, 4>& color, bool)
+		{
+			while(in != in_end) {
+				const auto p = *in;
+				if (p) {
+					*(out+0) = compute_value<blend>::eval(p, out+0, color[0]);
+					*(out+1) = compute_value<blend>::eval(p, out+1, color[1]);
+					*(out+2) = compute_value<blend>::eval(p, out+2, color[2]);
+				}
+				++in;
+				out+=3;
+			}
+		}
+};
 
 template<bool blend>
 struct draw_kernel<rgba32, blend> {
 	template<typename T, typename T2>
-	static void draw(T in, const T in_end, T2 out)
+	static void draw(T in, const T in_end, T2 out, const std::array<uint8_t, 4>& color, bool)
 	{
 		const auto out_max = std::numeric_limits<
 				typename std::remove_reference<decltype(*out)>::type>::max();
 		while(in != in_end) {
 			const auto p = *in;
 			if (p) {
-				*(out+0) = compute_value<blend>::eval(p, out+0);
-				*(out+1) = compute_value<blend>::eval(p, out+1);
-				*(out+2) = compute_value<blend>::eval(p, out+2);
+				*(out+0) = compute_value<blend>::eval(p, out+0, color[0]);
+				*(out+1) = compute_value<blend>::eval(p, out+1, color[1]);
+				*(out+2) = compute_value<blend>::eval(p, out+2, color[2]);
 				*(out+3) = out_max;
 			}
 			++in;
@@ -173,12 +189,18 @@ struct draw_kernel<rgba32, blend> {
 };
 
 template<bool blend>
-struct draw_kernel<bgra32, blend>: public draw_kernel<rgba32, blend> {};
+struct draw_kernel<bgra32, blend> {
+	template<typename T, typename T2>
+	static void draw(T in, const T in_end, T2 out, const std::array<uint8_t, 4>& color, bool)
+	{
+		draw_kernel<rgba32, blend>::draw(in, in_end, out, {{color[2], color[1], color[0], color[3]}}, true);
+	}
+};
 
 template<bool blend>
 struct draw_kernel<argb32, blend> {
 	template<typename T, typename T2>
-	static void draw(T in, const T in_end, T2 out)
+	static void draw(T in, const T in_end, T2 out, const std::array<uint8_t, 4>& color, bool)
 	{
 		const auto out_max = std::numeric_limits<
 				typename std::remove_reference<decltype(*out)>::type>::max();
@@ -186,9 +208,9 @@ struct draw_kernel<argb32, blend> {
 			const auto p = *in;
 			if (p) {
 				*(out+0) = out_max;
-				*(out+1) = compute_value<blend>::eval(p, out+1);
-				*(out+2) = compute_value<blend>::eval(p, out+2);
-				*(out+3) = compute_value<blend>::eval(p, out+3);
+				*(out+1) = compute_value<blend>::eval(p, out+1, color[0]);
+				*(out+2) = compute_value<blend>::eval(p, out+2, color[1]);
+				*(out+3) = compute_value<blend>::eval(p, out+3, color[2]);
 			}
 			++in;
 			out+=4;
@@ -197,11 +219,17 @@ struct draw_kernel<argb32, blend> {
 };
 
 template<bool blend>
-struct draw_kernel<abgr32, blend>: public draw_kernel<argb32, blend> {};
+struct draw_kernel<abgr32, blend> {
+	template<typename T, typename T2>
+	static void draw(T in, const T in_end, T2 out, const std::array<uint8_t, 4>& color, bool)
+	{
+		draw_kernel<argb32, blend>::draw(in, in_end, out, {{color[2], color[1], color[0], color[3]}}, true);
+	}
+};
 
 template<format_t fmt, bool blend>
 void draw_glyph_impl(core::pRawVideoFrame frame, const FT_Bitmap& bmp,
-		coordinates_t position, geometry_t draw_rect)
+		coordinates_t position, geometry_t draw_rect, const std::array<uint8_t, 4>& color)
 {
 	auto data = PLANE_RAW_DATA(frame, 0);
 	const auto linesize = PLANE_DATA(frame, 0).get_line_size();
@@ -212,58 +240,103 @@ void draw_glyph_impl(core::pRawVideoFrame frame, const FT_Bitmap& bmp,
 		const auto bmp_col_offset = draw_rect.x - position.x;
 		const uint8_t* data_in = &bmp.buffer[bmp.pitch * bmp_line_offset + bmp_col_offset];
 		const auto data_in_end = data_in + draw_rect.width;
-		draw_kernel<fmt, blend>::draw(data_in, data_in_end, data_out);
+		draw_kernel<fmt, blend>::draw(data_in, data_in_end, data_out, color, position.x % 2 == 1);
 	}
 }
 
 template<bool blend>
 struct draw_kernel<yuyv422, blend> {
 	template<typename T, typename T2>
-	static void draw(T in, const T in_end, T2 out)
+	static void draw(T in, const T in_end, T2 out, const std::array<uint8_t, 4>& color, bool swap)
 	{
-		while(in != in_end) {
-			const auto p = *in;
-			++in;
-			if (p) *out = compute_value<blend>::eval(p, out);
-			++out;
-			if (p) *out = compute_value<blend>::eval(p, out, 128);
-			++out;
+		if (swap) draw(in, in_end, out, {{color[0], color[2], color[1], color[3]}}, false);
+		else {
+			while(in < (in_end - 1)) {
+				const auto p = *in;
+				++in;
+				const auto p2 = *in;
+				++in;
+				if (p) *out = compute_value<blend>::eval(p, out, color[0]);
+				++out;
+				if (p) *out = compute_value<blend>::eval(p, out, color[1]);
+				++out;
+				if (p2) *out = compute_value<blend>::eval(p2, out, color[0]);
+				++out;
+				if (p2) *out = compute_value<blend>::eval(p2, out, color[2]);
+				++out;
+			} if (in < in_end) {
+				const auto p = *in;
+				++in;
+				if (p) *out = compute_value<blend>::eval(p, out, color[0]);
+				++out;
+				if (p) *out = compute_value<blend>::eval(p, out, color[1]);
+				++out;
+			}
 		}
 	}
 };
 
 template<bool blend>
-struct draw_kernel<yvyu422, blend>: public draw_kernel<yuyv422, blend> {};
+struct draw_kernel<yvyu422, blend> {
+	template<typename T, typename T2>
+		static void draw(T in, const T in_end, T2 out, const std::array<uint8_t, 4>& color, bool swap) {
+			draw_kernel<yuyv422, blend>::draw(in, in_end, out, color, !swap);
+	}
+};
 
 template<bool blend>
 struct draw_kernel<uyvy422, blend> {
 	template<typename T, typename T2>
-	static void draw(T in, const T in_end, T2 out)
+	static void draw(T in, const T in_end, T2 out, const std::array<uint8_t, 4>& color, bool swap)
 	{
-		while(in != in_end) {
-			const auto p = *in;
-			++in;
-			if (p) *out = compute_value<blend>::eval(p, out, 128);
-			++out;
-			if (p) *out = compute_value<blend>::eval(p, out);
-			++out;
+		if (swap) draw(in, in_end, out, {{color[0], color[2], color[1], color[3]}}, false);
+		else {
+			while(in < in_end - 1) {
+
+				const auto p = *in;
+				++in;
+				if (p) *out = compute_value<blend>::eval(p, out, color[1]);
+				++out;
+				if (p) *out = compute_value<blend>::eval(p, out, color[0]);
+				++out;
+
+				const auto p2 = *in;
+				++in;
+				if (p2) *out = compute_value<blend>::eval(p2, out, color[2]);
+				++out;
+				if (p2) *out = compute_value<blend>::eval(p2, out, color[0]);
+				++out;
+			}
+			if (in < in_end) {
+				const auto p = *in;
+				++in;
+				if (p) *out = compute_value<blend>::eval(p, out, color[1]);
+				++out;
+				if (p) *out = compute_value<blend>::eval(p, out, color[0]);
+				++out;
+			}
 		}
 	}
 };
 
 template<bool blend>
-struct draw_kernel<vyuy422, blend>: public draw_kernel<uyvy422, blend> {};
+struct draw_kernel<vyuy422, blend> {
+	template<typename T, typename T2>
+			static void draw(T in, const T in_end, T2 out, const std::array<uint8_t, 4>& color, bool swap) {
+				draw_kernel<uyvy422, blend>::draw(in, in_end, out, color, !swap);
+	}
+};
 
 template<format_t fmt>
 void draw_glyph_impl(core::pRawVideoFrame frame, const FT_Bitmap& bmp,
-		coordinates_t position, geometry_t draw_rect, bool blend)
+		coordinates_t position, geometry_t draw_rect, bool blend, const std::array<uint8_t, 4>& color)
 {
-	if (blend) draw_glyph_impl<fmt, true>(frame, bmp, position, draw_rect);
-	else draw_glyph_impl<fmt, false>(frame, bmp, position, draw_rect);
+	if (blend) draw_glyph_impl<fmt, true>(frame, bmp, position, draw_rect, color);
+	else draw_glyph_impl<fmt, false>(frame, bmp, position, draw_rect, color);
 }
 
 bool draw_glyph(FT_GlyphSlot glyph, core::pRawVideoFrame frame,
-		coordinates_t position, bool blend)
+		coordinates_t position, bool blend, const core::color_t& color)
 {
 	const auto& bitmap = glyph->bitmap;
 	const auto bmp_geometry = geometry_t{static_cast<dimension_t>(bitmap.width),
@@ -279,37 +352,40 @@ bool draw_glyph(FT_GlyphSlot glyph, core::pRawVideoFrame frame,
 	if (!draw_rect) return false;
 	switch (frame->get_format()) {
 		case y8:
-			draw_glyph_impl<y8>(frame, bitmap, position, draw_rect, blend);
+			draw_glyph_impl<y8>(frame, bitmap, position, draw_rect, blend, color.get_yuva());
 			break;
 		case rgb24:
-			draw_glyph_impl<rgb24>(frame, bitmap, position, draw_rect, blend);
+			draw_glyph_impl<rgb24>(frame, bitmap, position, draw_rect, blend, color.get_rgba());
 			break;
 		case bgr24:
-			draw_glyph_impl<bgr24>(frame, bitmap, position, draw_rect, blend);
+			draw_glyph_impl<bgr24>(frame, bitmap, position, draw_rect, blend, color.get_rgba());
 			break;
 		case rgba32:
-			draw_glyph_impl<rgba32>(frame, bitmap, position, draw_rect, blend);
+			draw_glyph_impl<rgba32>(frame, bitmap, position, draw_rect, blend, color.get_rgba());
 			break;
 		case bgra32:
-			draw_glyph_impl<bgra32>(frame, bitmap, position, draw_rect, blend);
+			draw_glyph_impl<bgra32>(frame, bitmap, position, draw_rect, blend, color.get_rgba());
 			break;
 		case argb32:
-			draw_glyph_impl<argb32>(frame, bitmap, position, draw_rect, blend);
+			draw_glyph_impl<argb32>(frame, bitmap, position, draw_rect, blend, color.get_rgba());
 			break;
 		case abgr32:
-			draw_glyph_impl<abgr32>(frame, bitmap, position, draw_rect, blend);
+			draw_glyph_impl<abgr32>(frame, bitmap, position, draw_rect, blend, color.get_rgba());
+			break;
+		case yuv444:
+			draw_glyph_impl<yuv444>(frame, bitmap, position, draw_rect, blend, color.get_yuva());
 			break;
 		case yuyv422:
-			draw_glyph_impl<yuyv422>(frame, bitmap, position, draw_rect, blend);
+			draw_glyph_impl<yuyv422>(frame, bitmap, position, draw_rect, blend, color.get_yuva());
 			break;
 		case yvyu422:
-			draw_glyph_impl<yvyu422>(frame, bitmap, position, draw_rect, blend);
+			draw_glyph_impl<yvyu422>(frame, bitmap, position, draw_rect, blend, color.get_yuva());
 			break;
 		case uyvy422:
-			draw_glyph_impl<uyvy422>(frame, bitmap, position, draw_rect, blend);
+			draw_glyph_impl<uyvy422>(frame, bitmap, position, draw_rect, blend, color.get_yuva());
 			break;
 		case vyuy422:
-			draw_glyph_impl<vyuy422>(frame, bitmap, position, draw_rect, blend);
+			draw_glyph_impl<vyuy422>(frame, bitmap, position, draw_rect, blend, color.get_yuva());
 			break;
 		default:
 			return false;
@@ -419,7 +495,7 @@ void RenderText::draw_text(const std::string& text, core::pRawVideoFrame& frame)
 
 		}
 		auto coord = coordinates_t{static_cast<position_t>(horiz_pos) + glyph->bitmap_left, - glyph->bitmap_top} + position_;
-		draw_glyph(glyph, frame, coord, edge_blend_ && !generate_);
+		draw_glyph(glyph, frame, coord, edge_blend_ && !generate_, color_);
 		const double advance = ((glyph->linearHoriAdvance&0xFFFF0000)>>16) + static_cast<double>(glyph->linearHoriAdvance&0xFFFF)/0xFFFF;
 		horiz_pos+=advance;
 	}
@@ -438,7 +514,8 @@ bool RenderText::set_param(const core::Parameter& param)
 			(kerning_,		"kerning")
 			(edge_blend_,	"blend")
 			(fps_,			"fps")
-			(utf8_,			"utf8"))
+			(utf8_,			"utf8")
+			(color_,		"color"))
 		return true;
 	return base_type::set_param(param);
 }
@@ -446,7 +523,8 @@ bool RenderText::set_param(const core::Parameter& param)
 bool RenderText::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
 	if (assign_events(event_name, event)
-			(text_, "text", "message"))
+			(text_, "text", "message")
+			(color_, "color"))
 	{
 		modified_ = true;
 		return true;
