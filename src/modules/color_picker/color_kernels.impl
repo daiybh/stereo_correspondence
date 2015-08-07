@@ -1,0 +1,282 @@
+using namespace core::raw_format;
+
+/* ************************************************************************** *
+ *                 RGB                                                        *
+ * ************************************************************************** */
+
+
+template<>
+struct get_color<rgb24> {
+static core::color_t eval(const std::array<uint8_t, 3>& c)
+{
+	return core::color_t::create_rgb(c[0], c[1], c[2]);
+}
+};
+
+template<>
+struct get_color<bgr24> {
+static core::color_t eval(const std::array<uint8_t, 3>& c)
+{
+	return core::color_t::create_rgb(c[2], c[1], c[0]);
+}
+};
+
+template<>
+struct get_color<rgb48> {
+static core::color_t eval(const std::array<uint16_t, 3>& c)
+{
+	return core::color_t::create_rgb16(c[0], c[1], c[2]);
+}
+};
+
+template<>
+struct get_color<bgr48> {
+static core::color_t eval(const std::array<uint16_t, 3>& c)
+{
+	return core::color_t::create_rgb16(c[2], c[1], c[0]);
+}
+};
+
+template<>
+struct get_color<rgba32> {
+static core::color_t eval(const std::array<uint8_t, 4>& c)
+{
+	return core::color_t::create_rgba(c[0], c[1], c[2], c[3]);
+}
+};
+
+template<>
+struct get_color<bgra32> {
+static core::color_t eval(const std::array<uint8_t, 4>& c)
+{
+	return core::color_t::create_rgba(c[2], c[1], c[0], c[3]);
+}
+};
+
+template<>
+struct get_color<argb32> {
+static core::color_t eval(const std::array<uint8_t, 4>& c)
+{
+	return core::color_t::create_rgba(c[1], c[2], c[3], c[0]);
+}
+};
+
+template<>
+struct get_color<abgr32> {
+static core::color_t eval(const std::array<uint8_t, 4>& c)
+{
+	return core::color_t::create_rgba(c[3], c[2], c[1], c[0]);
+}
+};
+
+template<>
+struct get_color<rgba64> {
+static core::color_t eval(const std::array<uint16_t, 4>& c)
+{
+	return core::color_t::create_rgba16(c[0], c[1], c[2], c[3]);
+}
+};
+
+template<>
+struct get_color<bgra64> {
+static core::color_t eval(const std::array<uint16_t, 4>& c)
+{
+	return core::color_t::create_rgba16(c[2], c[1], c[0], c[3]);
+}
+};
+
+template<>
+struct get_color<argb64> {
+static core::color_t eval(const std::array<uint16_t, 4>& c)
+{
+	return core::color_t::create_rgba16(c[1], c[2], c[3], c[0]);
+}
+};
+
+template<>
+struct get_color<abgr64> {
+static core::color_t eval(const std::array<uint16_t, 4>& c)
+{
+	return core::color_t::create_rgba16(c[3], c[2], c[1], c[0]);
+}
+};
+
+/* ************************************************************************** *
+ *          YUV                                                               *
+ * ************************************************************************** */
+
+template<>
+struct get_color<yuv444> {
+static core::color_t eval(const std::array<uint8_t, 3>& c)
+{
+	return core::color_t::create_yuv(c[0], c[1], c[2]);
+}
+};
+
+template<>
+struct get_color<ayuv4444> {
+static core::color_t eval(const std::array<uint8_t, 4>& c)
+{
+	return core::color_t::create_yuva(c[1], c[2], c[3], c[0]);
+}
+};
+
+template<>
+struct get_color<yuva4444> {
+static core::color_t eval(const std::array<uint8_t, 4>& c)
+{
+	return core::color_t::create_yuva(c[0], c[1], c[2], c[3]);
+}
+};
+
+template<>
+struct get_color<yuyv422> {
+static core::color_t eval(const std::array<uint8_t, 4>& c)
+{
+	const auto y0 = c[0];
+	const auto y1 = c[2];
+	const auto y = (y0>>1)+(y1>>1)+(y0&y1&1);
+	return core::color_t::create_yuv(y, c[1], c[3]);
+}
+};
+
+template<>
+struct get_color<yvyu422> {
+static core::color_t eval(const std::array<uint8_t, 4>& c)
+{
+	const auto y0 = c[0];
+	const auto y1 = c[2];
+	const auto y = (y0>>1)+(y1>>1)+(y0&y1&1);
+	return core::color_t::create_yuv(y, c[3], c[1]);
+}
+};
+
+template<>
+struct get_color<uyvy422> {
+static core::color_t eval(const std::array<uint8_t, 4>& c)
+{
+	const auto y0 = c[1];
+	const auto y1 = c[3];
+	const auto y = (y0>>1)+(y1>>1)+(y0&y1&1);
+	return core::color_t::create_yuv(y, c[0], c[2]);
+}
+};
+
+template<>
+struct get_color<vyuy422> {
+static core::color_t eval(const std::array<uint8_t, 4>& c)
+{
+	const auto y0 = c[1];
+	const auto y1 = c[3];
+	const auto y = (y0>>1)+(y1>>1)+(y0&y1&1);
+	return core::color_t::create_yuv(y, c[2], c[0]);
+}
+};
+
+/* ************************************************************************** *
+ *     Single components                                                      *
+ * ************************************************************************** */
+
+
+
+
+
+template<>
+struct get_color<r8> {
+static core::color_t eval(const std::array<uint8_t, 1>& c)
+{
+	return core::color_t::create_rgb(c[0], 0, 0);
+}
+};
+
+template<>
+struct get_color<r16> {
+static core::color_t eval(const std::array<uint16_t, 1>& c)
+{
+	return core::color_t::create_rgb16(c[0], 0, 0);
+}
+};
+
+template<>
+struct get_color<g8> {
+static core::color_t eval(const std::array<uint8_t, 1>& c)
+{
+	return core::color_t::create_rgb(0, c[0], 0);
+}
+};
+
+template<>
+struct get_color<g16> {
+static core::color_t eval(const std::array<uint16_t, 1>& c)
+{
+	return core::color_t::create_rgb16(0, c[0], 0);
+}
+};
+
+template<>
+struct get_color<b8> {
+static core::color_t eval(const std::array<uint8_t, 1>& c)
+{
+	return core::color_t::create_rgb(0, 0, c[0]);
+}
+};
+
+template<>
+struct get_color<b16> {
+static core::color_t eval(const std::array<uint16_t, 1>& c)
+{
+	return core::color_t::create_rgb16(0, 0, c[0]);
+}
+};
+
+template<>
+struct get_color<y8> {
+static core::color_t eval(const std::array<uint8_t, 1>& c)
+{
+	return core::color_t::create_yuv(c[0], 0, 0);
+}
+};
+
+template<>
+struct get_color<y16> {
+static core::color_t eval(const std::array<uint16_t, 1>& c)
+{
+	return core::color_t::create_yuv16(c[0], 0, 0);
+}
+};
+
+template<>
+struct get_color<u8> {
+static core::color_t eval(const std::array<uint8_t, 1>& c)
+{
+	return core::color_t::create_yuv(0, c[0], 0);
+}
+};
+
+template<>
+struct get_color<u16> {
+static core::color_t eval(const std::array<uint16_t, 1>& c)
+{
+	return core::color_t::create_yuv16(0, c[0], 0);
+}
+};
+
+template<>
+struct get_color<v8> {
+static core::color_t eval(const std::array<uint8_t, 1>& c)
+{
+	return core::color_t::create_yuv(0, 0, c[0]);
+}
+};
+
+template<>
+struct get_color<v16> {
+static core::color_t eval(const std::array<uint16_t, 1>& c)
+{
+	return core::color_t::create_yuv16(0, 0, c[0]);
+}
+};
+
+
+
+
