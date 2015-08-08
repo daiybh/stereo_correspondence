@@ -73,7 +73,7 @@ const std::unordered_map<format_t, Uint32> yuri_to_sdl_formats = {
 		{bgr15, SDL_PIXELFORMAT_BGR555},
 		{rgb16, SDL_PIXELFORMAT_RGB565},
 		{bgr16, SDL_PIXELFORMAT_BGR565},
-
+		{rgb8,  SDL_PIXELFORMAT_RGB332},
 };
 
 Uint32 get_sdl_format(format_t fmt)
