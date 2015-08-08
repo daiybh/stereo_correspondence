@@ -55,7 +55,7 @@ namespace core {
 
 
 using ConverterRegister =
-		utils::Singleton<generator::MultiRegister<
+		yuri::utils::Singleton<generator::MultiRegister<
 		converter_key,
 			value_type>>;
 
