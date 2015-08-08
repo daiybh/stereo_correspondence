@@ -12,24 +12,36 @@
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/thread/ConverterRegister.h"
+#include "yuri/core/utils/irange.h"
 namespace yuri {
 namespace convert_planar {
 
 namespace {
 
 template<format_t in, format_t out, size_t planes>
-core::pRawVideoFrame split_planes(core::pRawVideoFrame frame) {
+core::pRawVideoFrame split_planes(const core::pRawVideoFrame& frame, const std::array<size_t, planes>& offsets)
+{
 	const resolution_t res = frame->get_resolution();
 	core::pRawVideoFrame frame_out = core::RawVideoFrame::create_empty(out, res);
 	typedef decltype(PLANE_DATA(frame_out,0).begin()) iter_t;
-	std::vector<iter_t> iters(planes);
-	iter_t iter_in = PLANE_DATA(frame, 0).begin();
-//	iter_t iter_out = PLANE_DATA(frame_out, 0).begin();
-	for (size_t i = 0; i < planes; ++i) {
-		//iters[i]=iter_out+i;
-		iters[i]=PLANE_DATA(frame_out, i).begin();
+	std::array<iter_t, planes> iters_start;
+	std::array<iter_t, planes> iters;
+	std::array<size_t, planes> lsizes;
+
+	const size_t linesize = PLANE_DATA(frame, 0).get_line_size();
+	iter_t iter_in_start = PLANE_DATA(frame, 0).begin();
+
+	for (auto i: irange(planes)) {
+		iters_start[offsets[i]]=PLANE_DATA(frame_out, i).begin();
+		lsizes[offsets[i]] = PLANE_DATA(frame_out, i).get_line_size();
 	}
-	for (size_t line = 0; line < res.height; ++ line) {
+
+
+	for (auto line: irange(res.height)) {
+		auto iter_in = iter_in_start  + line * linesize;
+		for (auto i: irange(planes)) {
+			iters[i]=iters_start[i] + line * lsizes[i];
+		}
 		for (size_t col = 0; col < res.width; ++col) {
 			for (size_t i = 0; i < planes; ++i) {
 				*iters[i]++=*iter_in++;
@@ -39,6 +51,35 @@ core::pRawVideoFrame split_planes(core::pRawVideoFrame frame) {
 	return frame_out;
 }
 
+template<format_t in, format_t out, size_t planes>
+core::pRawVideoFrame merge_planes(const core::pRawVideoFrame& frame, const std::array<size_t, planes>& offsets)
+{
+	const resolution_t res = frame->get_resolution();
+	core::pRawVideoFrame frame_out = core::RawVideoFrame::create_empty(out, res);
+	typedef decltype(PLANE_DATA(frame_out,0).begin()) iter_t;
+	std::array<iter_t, planes> iters_start;
+	std::array<iter_t, planes> iters;
+	std::array<size_t, planes> lsizes;
+	const size_t linesize = PLANE_DATA(frame_out, 0).get_line_size();
+	auto iter_out_start = PLANE_DATA(frame_out, 0).begin();
+	for (auto i: irange(planes)) {
+		iters_start[i]=PLANE_DATA(frame, offsets[i]).begin();
+		lsizes[i] = PLANE_DATA(frame, offsets[i]).get_line_size();
+	}
+	for (auto line: irange(res.height)) {
+		auto iter_out = iter_out_start  + line * linesize;
+		for (auto i: irange(planes)) {
+			iters[i]=iters_start[i] + line * lsizes[i];
+		}
+		for (auto col: irange(res.width)) {
+			(void)col;
+			for (auto i: irange(planes)) {
+				*iter_out++ = *iters[i]++;
+			}
+		}
+	}
+	return frame_out;
+}
 template<format_t in>
 void store_yuv422(uint8_t*& it, uint8_t*& y, uint8_t*& u, uint8_t*& v);
 
@@ -514,10 +555,44 @@ core::pFrame dispatch(core::pRawVideoFrame frame, format_t target) {
 	format_t source = frame->get_format();
 	using namespace yuri::core::raw_format;
 	core::pRawVideoFrame frame_out;
-//	printf("BOO0\n");
-	if (source == rgb24 && target == rgb24p) frame_out = split_planes<rgb24, rgb24p, 3>(frame);
-	if (source == rgba32 && target == rgba32p) frame_out =  split_planes<rgba32, rgba32p, 4>(frame);
-	if (source == yuv444 && target == yuv444p) frame_out =  split_planes<yuv444, yuv444p, 3>(frame);
+
+	// RGB Conversion
+	if (source == rgb24 && target == rgb24p) frame_out = split_planes<rgb24, rgb24p, 3>(frame, {{0, 1, 2}});
+	if (source == rgb24 && target == bgr24p) frame_out = split_planes<rgb24, bgr24p, 3>(frame, {{2, 1, 0}});
+	if (source == bgr24 && target == rgb24p) frame_out = split_planes<bgr24, rgb24p, 3>(frame, {{2, 1, 0}});
+	if (source == bgr24 && target == bgr24p) frame_out = split_planes<bgr24, bgr24p, 3>(frame, {{0, 1, 2}});
+
+	if (source == rgb24p && target == rgb24) frame_out = merge_planes<rgb24p, rgb24, 3>(frame, {{0, 1, 2}});
+	if (source == rgb24p && target == bgr24) frame_out = merge_planes<rgb24p, bgr24, 3>(frame, {{2, 1, 0}});
+	if (source == bgr24p && target == rgb24) frame_out = merge_planes<bgr24p, rgb24, 3>(frame, {{2, 1, 0}});
+	if (source == bgr24p && target == bgr24) frame_out = merge_planes<bgr24p, bgr24, 3>(frame, {{0, 1, 2}});
+
+	// RGBA Conversion
+	if (source == rgba32 && target == rgba32p) frame_out =  split_planes<rgba32, rgba32p, 4>(frame, {{0, 1, 2, 3}});
+	if (source == argb32 && target == rgba32p) frame_out =  split_planes<argb32, rgba32p, 4>(frame, {{1, 2, 3, 0}});
+	if (source == bgra32 && target == rgba32p) frame_out =  split_planes<bgra32, rgba32p, 4>(frame, {{2, 1, 0, 3}});
+	if (source == abgr32 && target == rgba32p) frame_out =  split_planes<abgr32, rgba32p, 4>(frame, {{3, 2, 1, 0}});
+
+	if (source == rgba32 && target == abgr32p) frame_out =  split_planes<rgba32, abgr32p, 4>(frame, {{3, 2, 1, 0}});
+	if (source == argb32 && target == abgr32p) frame_out =  split_planes<argb32, abgr32p, 4>(frame, {{0, 3, 2, 1}});
+	if (source == bgra32 && target == abgr32p) frame_out =  split_planes<bgra32, abgr32p, 4>(frame, {{3, 0, 1, 2}});
+	if (source == abgr32 && target == abgr32p) frame_out =  split_planes<abgr32, abgr32p, 4>(frame, {{0, 1, 2, 3}});
+
+	if (source == rgba32p && target == rgba32) frame_out =  merge_planes<rgba32p, rgba32, 4>(frame, {{0, 1, 2, 3}});
+	if (source == rgba32p && target == abgr32) frame_out =  merge_planes<rgba32p, abgr32, 4>(frame, {{3, 2, 1, 0}});
+	if (source == rgba32p && target == argb32) frame_out =  merge_planes<rgba32p, argb32, 4>(frame, {{3, 0, 1, 2}});
+	if (source == rgba32p && target == bgra32) frame_out =  merge_planes<rgba32p, bgra32, 4>(frame, {{2, 1, 0, 3}});
+
+	if (source == abgr32p && target == rgba32) frame_out =  merge_planes<abgr32p, rgba32, 4>(frame, {{3, 2, 1, 0}});
+	if (source == abgr32p && target == abgr32) frame_out =  merge_planes<abgr32p, abgr32, 4>(frame, {{0, 1, 2, 3}});
+	if (source == abgr32p && target == argb32) frame_out =  merge_planes<abgr32p, argb32, 4>(frame, {{0, 3, 2, 1}});
+	if (source == abgr32p && target == bgra32) frame_out =  merge_planes<abgr32p, bgra32, 4>(frame, {{1, 2, 3, 0}});
+
+	// YUV 444
+	if (source == yuv444p && target == yuv444) frame_out =  merge_planes<yuv444p, yuv444, 3>(frame, {{0, 1, 2}});
+	if (source == yuv444 && target == yuv444p) frame_out =  split_planes<yuv444, yuv444p, 3>(frame, {{0, 1, 2}});
+
+	// YUV 422/420/411
 	if (source == yuyv422 && target == yuv422p) frame_out =  split_planes_422p<yuyv422, yuv422p>(frame);
 	if (source == uyvy422 && target == yuv422p) frame_out =  split_planes_422p<uyvy422, yuv422p>(frame);
 	if (source == yvyu422 && target == yuv422p) frame_out =  split_planes_422p<yvyu422, yuv422p>(frame);
@@ -544,6 +619,7 @@ core::pFrame dispatch(core::pRawVideoFrame frame, format_t target) {
 	if (source == yuv422p && target == yvyu422) frame_out =  merge_planes_422p_yuyv<yuv422p, yvyu422>(frame);
 	if (source == yuv422p && target == uyvy422) frame_out =  merge_planes_422p_yuyv<yuv422p, uyvy422>(frame);
 	if (source == yuv422p && target == vyuy422) frame_out =  merge_planes_422p_yuyv<yuv422p, vyuy422>(frame);
+
 	if (frame_out) {
 		frame_out->copy_video_params(*frame);
 	}
@@ -557,10 +633,46 @@ IOTHREAD_GENERATOR(ConvertPlanes)
 
 MODULE_REGISTRATION_BEGIN("convert_planar")
 		REGISTER_IOTHREAD("convert_planar",ConvertPlanes)
-//		REGISTER_CONVERTER(yuri::core::raw_format::rgb24, yuri::core::raw_format::rgb24p, "convert_planar", 5)
-//		REGISTER_CONVERTER(yuri::core::raw_format::rgba32, yuri::core::raw_format::rgba32p, "convert_planar", 5)
+		// RGB
+		REGISTER_CONVERTER(yuri::core::raw_format::rgb24, yuri::core::raw_format::rgb24p, "convert_planar", 5)
+		REGISTER_CONVERTER(yuri::core::raw_format::rgb24, yuri::core::raw_format::bgr24p, "convert_planar", 5)
+		REGISTER_CONVERTER(yuri::core::raw_format::bgr24, yuri::core::raw_format::rgb24p, "convert_planar", 5)
+		REGISTER_CONVERTER(yuri::core::raw_format::bgr24, yuri::core::raw_format::bgr24p, "convert_planar", 5)
+
+		REGISTER_CONVERTER(yuri::core::raw_format::rgb24p, yuri::core::raw_format::rgb24, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::rgb24p, yuri::core::raw_format::bgr24, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::bgr24p, yuri::core::raw_format::rgb24, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::bgr24p, yuri::core::raw_format::bgr24, "convert_planar", 10)
+
+		// RGBA
+		REGISTER_CONVERTER(yuri::core::raw_format::rgba32, yuri::core::raw_format::rgba32p, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::argb32, yuri::core::raw_format::rgba32p, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::bgra32, yuri::core::raw_format::rgba32p, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::abgr32, yuri::core::raw_format::rgba32p, "convert_planar", 10)
+
+		REGISTER_CONVERTER(yuri::core::raw_format::rgba32, yuri::core::raw_format::abgr32p, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::argb32, yuri::core::raw_format::abgr32p, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::bgra32, yuri::core::raw_format::abgr32p, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::abgr32, yuri::core::raw_format::abgr32p, "convert_planar", 10)
+
+		REGISTER_CONVERTER(yuri::core::raw_format::rgba32p, yuri::core::raw_format::rgba32, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::rgba32p, yuri::core::raw_format::abgr32, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::abgr32p, yuri::core::raw_format::rgba32, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::abgr32p, yuri::core::raw_format::abgr32, "convert_planar", 10)
+
+		REGISTER_CONVERTER(yuri::core::raw_format::rgba32p, yuri::core::raw_format::argb32, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::rgba32p, yuri::core::raw_format::bgra32, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::abgr32p, yuri::core::raw_format::argb32, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::abgr32p, yuri::core::raw_format::bgra32, "convert_planar", 10)
+
+		// YUV444
+
 		REGISTER_CONVERTER(yuri::core::raw_format::yuv444, yuri::core::raw_format::yuv444p, "convert_planar", 10)
+		REGISTER_CONVERTER(yuri::core::raw_format::yuv444p, yuri::core::raw_format::yuv444, "convert_planar", 10)
+
+
 //		REGISTER_CONVERTER(yuri::core::raw_format::yuv420p, yuri::core::raw_format::yuv444, "convert_planar", 5)
+
 		REGISTER_CONVERTER(yuri::core::raw_format::yuyv422, yuri::core::raw_format::yuv422p, "convert_planar", 10)
 		REGISTER_CONVERTER(yuri::core::raw_format::uyvy422, yuri::core::raw_format::yuv422p, "convert_planar", 10)
 		REGISTER_CONVERTER(yuri::core::raw_format::yvyu422, yuri::core::raw_format::yuv422p, "convert_planar", 10)
