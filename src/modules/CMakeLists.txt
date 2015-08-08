@@ -16,6 +16,7 @@ add_subdirectory(audio_gen)
 add_subdirectory(audio_visualization)
 add_subdirectory(bayer)
 add_subdirectory(black_white_generator)
+add_subdirectory(blank)
 add_subdirectory(colors)
 add_subdirectory(color_key)
 add_subdirectory(color_picker)
@@ -294,7 +295,6 @@ IF(FALSE)
 #################################################################
 # Add modules that are compile unconditionally
 #################################################################
-add_subdirectory(blank)
 
 add_subdirectory(dummy)
 

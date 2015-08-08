@@ -11,32 +11,29 @@
 #ifndef BLANKGENERATOR_H_
 #define BLANKGENERATOR_H_
 
-#include "yuri/core/IOThread.h"
-//#include <boost/date_time/posix_time/posix_time.hpp>
-
+#include "yuri/core/thread/IOThread.h"
+#include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/utils/color.h"
 namespace yuri {
 
 namespace blank {
-//using namespace boost::posix_time;
 
 class BlankGenerator: public core::IOThread {
 public:
-	IO_THREAD_GENERATOR_DECLARATION
-	static core::pParameters configure();
-	BlankGenerator(log::Log &log_,core::pwThreadBase parent,core::Parameters& parameters) IO_THREAD_CONSTRUCTOR;
-	virtual ~BlankGenerator();
-	void run();
-	bool set_param(const core::Parameter &p);
-	core::pBasicFrame  generate_frame();
-protected:
-	core::pBasicFrame  generate_frame_yuv422();
-	core::pBasicFrame  generate_frame_rgb();
-	std::map<yuri::format_t,core::pBasicFrame  > blank_frames;
-	time_value next_time;
-	float fps;
-	yuri::ushort_t width;
-	yuri::ushort_t height;
-	yuri::format_t format;
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+	BlankGenerator(log::Log &log_, core::pwThreadBase parent, const core::Parameters& parameters);
+	virtual ~BlankGenerator() noexcept = default;
+private:
+	void run() override;
+	bool set_param(const core::Parameter &p) override;
+	core::pRawVideoFrame generate_frame(format_t format, resolution_t resolution, core::color_t color);
+	timestamp_t next_time_;
+	float fps_;
+	resolution_t resolution_;
+	yuri::format_t format_;
+	core::color_t color_;
+	core::pRawVideoFrame frame_cache_;
 };
 
 }
