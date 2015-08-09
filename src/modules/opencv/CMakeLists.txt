@@ -8,6 +8,8 @@ SET (SRC OpenCVConvert.cpp
 		 OpenCVFaceDetect.h
 		 OpenCVSource.cpp
 		 OpenCVSource.h
+		 OpenCVRotate.cpp
+		 OpenCVRotate.h
 		 register.cpp)
 
 
