@@ -75,6 +75,7 @@ std::map<event::event_type_t, std::string> event_names=
 		{event::event_type_t::time_event, 		"time"},
 		{event::event_type_t::vector_event, 	"vector"},
 		{event::event_type_t::dictionary_event,	"dictionary"},
+		{event::event_type_t::duration_event,	"duration"},
 		{event::event_type_t::undetermined_event,"undetermined"},
 
 };
