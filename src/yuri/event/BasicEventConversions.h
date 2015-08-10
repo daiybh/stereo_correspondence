@@ -61,6 +61,16 @@ pBasicEvent 					call(const std::string& fname, pBasicEvent event0, Args... args
 
 
 
+class FuncInitHelper {
+public:
+	FuncInitHelper(std::initializer_list<event_function_record_t> records) {
+		for (auto&& f: records) {
+			EventFunctionsFactory::get_instance().add_function(std::move(f));
+		}
+	 }
+ };
+
+
 
 
 }

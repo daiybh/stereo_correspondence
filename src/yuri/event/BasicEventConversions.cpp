@@ -25,18 +25,6 @@ void EventFunctions::add_functions(const std::vector<event_function_record_t>& r
 	for (const auto& f: records) add_function(f);
 }
 
-namespace {
-class FuncInitHelper {
-public:
-	FuncInitHelper(std::initializer_list<event_function_record_t> records) {
-		for (const auto& f: records) {
-			EventFunctionsFactory::get_instance().add_function(f);
-		}
-	 }
- };
-
-}
-
 /**
  *
  * @param fname
