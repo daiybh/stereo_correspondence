@@ -45,6 +45,7 @@ core::node_record_t parse_argument(log::Log& log, const std::string& arg, int i)
 	}
 	node.class_name = std::string(what[1].first, what[1].second);
 	if (std::distance(what[2].first, what[2].second) > 2) {
+		std::map<std::string,event::pBasicEvent> var_cache;
 //		boost::regex param_line("([^=]+)=([^,]+)(,)?");
 
 		// supported param values:
@@ -63,11 +64,12 @@ core::node_record_t parse_argument(log::Log& log, const std::string& arg, int i)
 			const auto param_name  =  std::string(res[1].first,res[1].second);
 			const auto param_value = std::string(std::string(res[2].first,res[2].second));
 			++it;
-			if (auto parsed_event = event::BasicEventParser::parse_expr(log, param_value, std::map<std::string,event::pBasicEvent>{})) {
+			if (auto parsed_event = event::BasicEventParser::parse_expr(log, param_value, var_cache)) {
 				node.parameters[param_name]= parsed_event;
 			} else {
 				node.parameters[param_name] = param_value;
 			}
+			var_cache[param_name]=node.parameters[param_name].get_value();
 		}
 	}
 	node.name = gen_name("node", node.class_name, i);
