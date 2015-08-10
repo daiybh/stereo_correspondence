@@ -55,6 +55,12 @@ public:
 	static color_t create_yuv16(uint16_t y, uint16_t u, uint16_t v);
 	static color_t create_yuva16(uint16_t y, uint16_t u, uint16_t v, uint16_t a);
 
+	template<typename T, size_t dim>
+	static color_t create_rgb(const std::array<T, dim>&);
+
+	template<typename T, size_t dim>
+	static color_t create_yuv(const std::array<T, dim>&);
+
 
 	color_t& set_rgb(uint8_t r, uint8_t g, uint8_t b);
 	color_t& set_rgb16(uint16_t r, uint16_t g, uint16_t b);
@@ -190,6 +196,54 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const color_t& col);
 std::istream& operator>>(std::istream& os, color_t& col);
+
+
+template<>
+inline color_t color_t::create_yuv<uint8_t, 3>(const std::array<uint8_t, 3>& col)
+{
+	return color_t::create_yuv(col[0], col[1], col[2]);
+}
+
+template<>
+inline color_t color_t::create_yuv<uint8_t, 4>(const std::array<uint8_t, 4>& col)
+{
+	return color_t::create_yuva(col[0], col[1], col[2], col[3]);
+}
+
+template<>
+inline color_t color_t::create_yuv<uint16_t, 3>(const std::array<uint16_t, 3>& col)
+{
+	return color_t::create_yuv16(col[0], col[1], col[2]);
+}
+
+template<>
+inline color_t color_t::create_yuv<uint16_t, 4>(const std::array<uint16_t, 4>& col)
+{
+	return color_t::create_yuva16(col[0], col[1], col[2], col[3]);
+}
+
+
+template<>
+inline color_t color_t::create_rgb<uint8_t,3>(const std::array<uint8_t, 3>& col)
+{
+	return color_t::create_rgb(col[0], col[1], col[2]);
+}
+template<>
+inline color_t color_t::create_rgb<uint8_t,4>(const std::array<uint8_t, 4>& col)
+{
+	return color_t::create_rgba(col[0], col[1], col[2], col[3]);
+}
+template<>
+inline color_t color_t::create_rgb<uint16_t,3>(const std::array<uint16_t, 3>& col)
+{
+	return color_t::create_rgb16(col[0], col[1], col[2]);
+}
+template<>
+inline color_t color_t::create_rgb<uint16_t,4>(const std::array<uint16_t, 4>& col)
+{
+	return color_t::create_rgba16(col[0], col[1], col[2], col[3]);
+}
+
 
 }
 }
