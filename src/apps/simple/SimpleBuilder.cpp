@@ -45,7 +45,17 @@ core::node_record_t parse_argument(log::Log& log, const std::string& arg, int i)
 	}
 	node.class_name = std::string(what[1].first, what[1].second);
 	if (std::distance(what[2].first, what[2].second) > 2) {
-		boost::regex param_line("([^=]+)=([^,]+)(,)?");
+//		boost::regex param_line("([^=]+)=([^,]+)(,)?");
+
+		// supported param values:
+		//				"abcahdkashdlka ,)(0 "
+		//				abc
+		//				abc(asd)()(ddd, 3, s)
+
+		boost::regex param_line("([^=]+)=" // Parameter name
+				"([^\",]"  "(([^,(]*(\\([^)]*\\))*)*)|" // Unqouted values (with optional brackets)
+				"(\"[^\"]*\"))(,)?"); // Quoted values
+
 		boost::sregex_iterator it(what[2].first+1, what[2].second-1, param_line, boost::match_default);
 		boost::sregex_iterator it_end;
 		while (it != it_end) {
