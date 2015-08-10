@@ -50,12 +50,26 @@ color_(core::color_t::create_rgb(0,0,0))
 namespace {
 
 
+// Using multiple specializations to prevent compiler warnings(gcc-4.9)
 
 template<typename T, int s>
-T shift(T val) {
-	if (s > 0) return val<<s;
+typename std::enable_if<(s > 0), T>::type
+shift(T val) {
+	return val<<s;
+}
+
+template<typename T, int s>
+typename std::enable_if<(s < 0), T>::type
+shift(T val) {
 	return val>>(-s);
 }
+
+template<typename T, int s>
+typename std::enable_if<s == 0, T>::type
+shift(T val) {
+	return val;
+}
+
 
 template<typename T, int s, typename T2>
 typename std::enable_if<!std::is_same<T, T2>::value, T>::type
