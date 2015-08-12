@@ -9,6 +9,8 @@ SET (SRC register.cpp
 		 EventTimer.h
 		 EventToFrame.cpp
 		 EventToFrame.h
+		 EventValuePair.cpp
+		 EventValuePair.h
 		 PassEvent.cpp
 		 PassEvent.h
 		 )
