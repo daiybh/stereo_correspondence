@@ -91,6 +91,7 @@ inline void set_flycap_prop(flycap_camera_t& ctx, log::Log& log, const std::stri
 	if (autovalue) {
 		prop.absControl = true;
 		prop.autoManualMode = false;
+		prop.onOff = true;
 		prop.absValue = value;
 	} else {
 		prop.autoManualMode = true;
