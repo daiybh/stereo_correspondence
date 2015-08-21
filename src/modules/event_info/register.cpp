@@ -11,6 +11,7 @@
 #include "PassEvent.h"
 #include "EventTimer.h"
 #include "EventToFrame.h"
+#include "EventValuePair.h"
 #if YURI_LINUX
 #include "EventDevice.h"
 #endif
@@ -19,6 +20,7 @@ namespace yuri {
 MODULE_REGISTRATION_BEGIN("event_misc")
 		REGISTER_IOTHREAD("event_info", event_info::EventInfo)
 		REGISTER_IOTHREAD("pass_event", pass_events::PassEvent)
+		REGISTER_IOTHREAD("event_value_pair", event_value_pair::EventValuePair)
 		REGISTER_IOTHREAD("event_timer", event_timer::EventTimer)
 		REGISTER_IOTHREAD("event_to_frame", event_to_frame::EventToFrame)
 #if YURI_LINUX
