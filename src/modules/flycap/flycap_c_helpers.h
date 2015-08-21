@@ -57,6 +57,10 @@ struct flycap_camera_t {
 		core::ThreadBase::sleep(100_ms);
 	}
 
+	flycap(const flycap_camera_t&) = delete;
+	flycap(flycap_camera_t&&) = delete;
+	flycap_camera_t& operator=(const flycap_camera_t&) = delete;
+	flycap_camera_t& operator=(flycap_camera_t&&) = delete;
 	operator ctx_ref_t() {
 		return ctx;
 	}
