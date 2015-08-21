@@ -82,6 +82,22 @@ inline void flycap_init_warn(fc2Error code, log::Log& log, const std::string& ms
 		log[log::warning] << msg;
 	}
 }
+
+inline void set_flycap_prop(flycap_camera_t& ctx, log::Log& log, const std::string& name, fc2PropertyType ptype, bool autovalue, float value = 0.0f)
+{
+	fc2Property prop;
+	prop.type = ptype;
+	flycap_init_warn(fc2GetProperty(ctx, &prop), log, "Failed to query "+name+" info");
+	if (autovalue) {
+		prop.absControl = true;
+		prop.autoManualMode = false;
+		prop.absValue = value;
+	} else {
+		prop.autoManualMode = true;
+	}
+	flycap_init_warn(fc2SetProperty(ctx, &prop), log, "Failed to set " + name);
+
+}
 }
 
 FlyCap::FlyCap(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
@@ -142,28 +158,10 @@ durations_({0.0f, 0.0f, 0.0f, 0.0f})
 			flycap_init_fatal(fc2SetFormat7Configuration(ctx_, &f7cfg, 100),
 					"Failed to set custom mode");
 
-			fc2Property prop;
-			prop.type = FC2_FRAME_RATE;
-			flycap_init_warn(fc2GetProperty(ctx_, &prop), log, "Failed to query framerate info");
-			if (fps_ > 0) {
-				prop.absControl = true;
-				prop.autoManualMode = false;
-				prop.absValue = fps_;
-			} else {
-				prop.autoManualMode = true;
-			}
-			flycap_init_warn(fc2SetProperty(ctx_, &prop), log, "Failed to set framerate");
+			set_flycap_prop(ctx_, log, "framerate", FC2_FRAME_RATE, fps_ > 0.0f, fps_);
+			set_flycap_prop(ctx_, log, "shutter", FC2_SHUTTER, shutter_time_ > 0.0f, shutter_time_);
 
-			prop.type = FC2_SHUTTER;
-			flycap_init_warn(fc2GetProperty(ctx_, &prop), log, "Failed to query shutter info");
-			if (shutter_time_ > 0.0f) {
-				prop.absControl = true;
-				prop.autoManualMode = false;
-				prop.absValue = shutter_time_;
-			} else {
-				prop.autoManualMode = true;
-			}
-			flycap_init_warn(fc2SetProperty(ctx_, &prop), log, "Failed to set shutter time");
+
 		}
 		fc2TriggerMode trig;
 		flycap_init_warn(fc2GetTriggerMode(ctx_, &trig), log, "Failed to query trigger mode");
