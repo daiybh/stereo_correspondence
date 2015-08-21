@@ -53,6 +53,14 @@ const std::vector<format_t> supported_formats = {
 	core::raw_format::abgr32,
 	core::raw_format::bgra32
 };
+#include "sdl_keys.impl"
+
+std::string get_keyname(SDLKey key) {
+	auto it = sdl_keys.find(key);
+	if (it == sdl_keys.end()) return {};
+	return it->second;
+}
+
 }
 
 
@@ -288,6 +296,11 @@ void SDLWindow::process_sdl_events()
 					if (event.key.keysym.sym == SDLK_ESCAPE) request_end(core::yuri_exit_interrupted);
 					if (event.key.keysym.sym == SDLK_f) { fullscreen_=!fullscreen_; sdl_resize(resolution_);}
 				}
+				{
+					const auto key = get_keyname(event.key.keysym.sym);
+					emit_event("key", key);
+					emit_event(key);
+				}
 				break;
 			case SDL_MOUSEMOTION:{
 				// there should be a way to disable this...
@@ -412,3 +425,4 @@ bool SDLWindow:: do_process_event(const std::string& event_name, const event::pB
 }
 } /* namespace sdl_window */
 } /* namespace yuri */
+
