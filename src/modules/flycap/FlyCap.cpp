@@ -179,6 +179,12 @@ durations_({0.0f, 0.0f, 0.0f, 0.0f})
 			trig.onOff=true;
 			trig.mode=trigger_mode_;
 			trig.source=trigger_source_;
+			flycap_init_warn(fc2SetTriggerMode(ctx_, &trig), log, "Failed to set trigger mode");
+			sleep(10_ms);
+			trig.onOff=false;
+			flycap_init_warn(fc2SetTriggerMode(ctx_, &trig), log, "Failed to set trigger mode");
+			trig.onOff=true;
+			sleep(10_ms);
 		} else {
 			trig.onOff=false;
 		}
