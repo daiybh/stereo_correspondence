@@ -45,6 +45,10 @@ private:
 	flycap_camera_t ctx_;
 
 	float shutter_time_;
+	float gain_;
+	float brightness_;
+	float gamma_;
+	float exposure_;
 
 	bool trigger_;
 	unsigned int trigger_mode_;
