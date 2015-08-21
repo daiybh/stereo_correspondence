@@ -347,9 +347,9 @@ IF(YURI_PLATFORM_CYGWIN)
 	SET(SRC ${SRC}
 		${UV_BASE}/utils/vf_split.cpp
 		#${UV_BASE}/vo_postprocess.c
-		${UV_BASE}/utils/message_queue.cpp
-		${UV_BASE}/capture_filter.c
-		${UV_BASE}/capture_filter/blank.c
+		#${UV_BASE}/utils/message_queue.cpp
+		#${UV_BASE}/capture_filter.c
+		${UV_BASE}/capture_filter/blank.cpp
 		${UV_BASE}/capture_filter/every.c
 		${UV_BASE}/capture_filter/logo.cpp
 		${UV_BASE}/capture_filter/none.c
@@ -358,8 +358,8 @@ IF(YURI_PLATFORM_CYGWIN)
 		${UV_BASE}/capture_filter/scale.c
 		
 		${UV_BASE}/crypto/crc_32.c
-		${UV_BASE}/audio/audio.c
-		${UV_BASE}/audio/resampler.c
+		#${UV_BASE}/audio/audio.c
+		#${UV_BASE}/audio/resampler.c
 		${UV_BASE}/rtp/fec.cpp
 		${UV_BASE}/vo_postprocess.c
 		${UV_BASE}/vo_postprocess/3d-interlaced.c

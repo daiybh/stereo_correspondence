@@ -14,6 +14,7 @@
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/utils/irange.h"
+#include "yuri/core/utils/assign_events.h"
 #include <iostream>
 namespace yuri {
 namespace flycap {
@@ -103,10 +104,26 @@ inline void set_flycap_prop(flycap_camera_t& ctx, log::Log& log, const std::stri
 	flycap_init_warn(fc2SetProperty(ctx, &prop), log, "Failed to set " + name);
 
 }
+inline void set_flycap_trigger(flycap_camera_t& ctx, log::Log& log, bool trigger, unsigned mode, unsigned source)
+{
+	fc2TriggerMode trig;
+	flycap_init_warn(fc2GetTriggerMode(ctx, &trig), log, "Failed to query trigger mode");
+	if (trigger) {
+		trig.onOff=true;
+		trig.mode=mode;
+		trig.source=source;
+	} else {
+		trig.onOff=false;
+	}
+	flycap_init_warn(fc2SetTriggerMode(ctx, &trig), log, "Failed to set trigger mode");
+}
+
 }
 
 FlyCap::FlyCap(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("flycap")),resolution_(resolution_t{1280,960}),
+core::IOThread(log_,parent,1,1,std::string("flycap")),
+event::BasicEventConsumer(log),
+resolution_(resolution_t{1280,960}),
 format_(core::raw_format::y8),fps_(30),index_(0),serial_(0),keep_format_(false),
 embedded_framecounter_(false),custom_(-1),shutter_time_(0.0f),gain_(-1.0f),brightness_(-1.0f),gamma_(-1.0f),
 exposure_(-100.0f), 
@@ -173,23 +190,14 @@ durations_({0.0f, 0.0f, 0.0f, 0.0f})
 
 
 		}
-		fc2TriggerMode trig;
-		flycap_init_warn(fc2GetTriggerMode(ctx_, &trig), log, "Failed to query trigger mode");
+		set_flycap_trigger(ctx_, log, trigger_, trigger_mode_, trigger_source_);
 		if (trigger_) {
-			trig.onOff=true;
-			trig.mode=trigger_mode_;
-			trig.source=trigger_source_;
-			flycap_init_warn(fc2SetTriggerMode(ctx_, &trig), log, "Failed to set trigger mode");
+			// Flip it to make sure it works (it supposedly doesn't , sometimes).
 			sleep(10_ms);
-			trig.onOff=false;
-			flycap_init_warn(fc2SetTriggerMode(ctx_, &trig), log, "Failed to set trigger mode");
-			trig.onOff=true;
+			set_flycap_trigger(ctx_, log, false, trigger_mode_, trigger_source_);
 			sleep(10_ms);
-		} else {
-			trig.onOff=false;
+			set_flycap_trigger(ctx_, log, true, trigger_mode_, trigger_source_);
 		}
-		flycap_init_warn(fc2SetTriggerMode(ctx_, &trig), log, "Failed to set trigger mode");
-
 		for (auto i: irange(0,4)) {
 			flycap_init_warn(fc2SetGPIOPinDirection(ctx_, i, gpio_directions_[i]), log, "Failed to set GPIO direction for GPIO"+std::to_string(i));
 		}
@@ -238,6 +246,7 @@ void FlyCap::run()
 	fc2Image image;
 	flycap_init_fatal(fc2CreateImage(&image), "Failed to create buffer for captured image");
 	while(still_running()) {
+		process_events();
 		fc2RetrieveBuffer(ctx_, &image);
 		auto res = resolution_t{ image.cols, image.rows };
 		auto fmt = get_yuri_format(image.format );
@@ -258,7 +267,7 @@ void FlyCap::run()
 								 (image.pData[3]&0xFF) <<  0;
 			frame->set_index(fc);
 		}
-		push_frame(0, std::move(frame));
+		if (!pause_) push_frame(0, std::move(frame));
 	}
 }
 
@@ -315,6 +324,31 @@ bool FlyCap::set_param(const core::Parameter& param)
 		return true;
 
 	return core::IOThread::set_param(param);
+}
+
+bool FlyCap::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
+{
+	if (assign_events(event_name, event)
+			.bang("pause", [this](){pause_ = true;})
+			.bang("start", [this](){pause_ = false;})
+			.bang("toggle", [this](){pause_ = !pause_;})) {
+
+	} else if (assign_events(event_name, event)
+			.bang("trigger_start", [this](){trigger_ = true;})
+			.bang("trigger_stop", [this](){trigger_ = false;})
+			.bang("trigger_toggle", [this](){trigger_ = !trigger_;}))
+	{
+		set_flycap_trigger(ctx_, log, trigger_, trigger_mode_, trigger_source_);
+	} else if (assign_events(event_name, event)
+			.bang("trigger_restart", [](){})
+			.bang("trigger_reset", [](){})) {
+		set_flycap_trigger(ctx_, log, !trigger_, trigger_mode_, trigger_source_);
+		sleep(10_ms);
+		set_flycap_trigger(ctx_, log, trigger_, trigger_mode_, trigger_source_);
+	} else {
+		return false;
+	}
+	return true;
 }
 
 } /* namespace flycap */

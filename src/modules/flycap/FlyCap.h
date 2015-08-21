@@ -12,14 +12,14 @@
 
 #include "yuri/core/thread/IOThread.h"
 #include "yuri/core/thread/InputThread.h"
-
+#include "yuri/event/BasicEventConsumer.h"
 #include "flycap_c_helpers.h"
 
 #include <array>
 namespace yuri {
 namespace flycap {
 
-class FlyCap: public core::IOThread
+class FlyCap: public core::IOThread, public event::BasicEventConsumer
 {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
@@ -31,6 +31,7 @@ private:
 	
 	virtual void run() override;
 	virtual bool set_param(const core::Parameter& param) override;
+	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 private:
 	resolution_t resolution_;
 	geometry_t geometry_;
@@ -59,6 +60,7 @@ private:
 	std::array<float,4> delays_;
 	std::array<float,4> durations_;
 
+	bool pause_;
 };
 
 } /* namespace flycap */
