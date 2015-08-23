@@ -36,11 +36,11 @@ core::Parameters FlyCap::configure()
 	p["embedded_framecounter"]["Use embedded frame counter"]=false;
 	p["custom"]["Use custom mode (set to -1 to use standar modes)"]=-1;
 
-	p["shutter"]["Shutter time (set to 0.0 for automatic value)"]=0.0f;
-	p["gain"]["Gain values [dB] (set to negative value for automatic value)"]=-1.0f;
-	p["brightness"]["Brightness value (set to negative value for automatic value)"]=-1.0f;
-	p["gamma"]["Gamma value (set to negative value for automatic value)"]=-1.0f;
-	p["exposure"]["Exposure value [EV] (set to -100 or less for automatic value)"]=-100.0f;
+	p["shutter"]["Shutter time (set to 0.0 for automatic value Set to -200 or less to switch off auto, but keep the value)"]=0.0f;
+	p["gain"]["Gain values [dB] (set to negative value for automatic value Set to -200 or less to switch off auto, but keep the value)"]=-1.0f;
+	p["brightness"]["Brightness value (set to negative value for automatic value. Set to -200 or less to switch off auto, but keep the value)"]=-1.0f;
+	p["gamma"]["Gamma value (set to negative value for automatic value. Set to -200 or less to switch off auto, but keep the value)"]=-1.0f;
+	p["exposure"]["Exposure value [EV] (set to -100 or less for automatic value. Set to -200 or less to switch off auto, but keep the value)"]=-100.0f;
 
 	p["trigger"]["Enable trigger"]=false;
 	p["trigger_mode"]["Trigger mode"]=0;
@@ -88,7 +88,7 @@ inline void flycap_init_warn(fc2Error code, log::Log& log, const std::string& ms
 	}
 }
 
-inline void set_flycap_prop(flycap_camera_t& ctx, log::Log& log, const std::string& name, fc2PropertyType ptype, bool autovalue, float value = 0.0f)
+inline void set_flycap_prop(flycap_camera_t& ctx, log::Log& log, const std::string& name, fc2PropertyType ptype, bool autovalue, float value = 0.0f, bool set_value = true)
 {
 	fc2Property prop;
 	prop.type = ptype;
@@ -97,7 +97,9 @@ inline void set_flycap_prop(flycap_camera_t& ctx, log::Log& log, const std::stri
 		prop.absControl = true;
 		prop.autoManualMode = false;
 		prop.onOff = true;
+		if (set_value) {
 		prop.absValue = value;
+		}
 	} else {
 		prop.autoManualMode = true;
 	}
@@ -182,11 +184,11 @@ durations_({0.0f, 0.0f, 0.0f, 0.0f})
 					"Failed to set custom mode");
 
 			set_flycap_prop(ctx_, log, "framerate", FC2_FRAME_RATE, fps_ > 0.0f, fps_);
-			set_flycap_prop(ctx_, log, "shutter", FC2_SHUTTER, shutter_time_ > 0.0f, shutter_time_);
-			set_flycap_prop(ctx_, log, "gain", FC2_GAIN, gain_ >= 0.0f, gain_);
-			set_flycap_prop(ctx_, log, "gain", FC2_BRIGHTNESS, brightness_ >= 0.0f, brightness_);
-			set_flycap_prop(ctx_, log, "gain", FC2_GAMMA, gamma_ >= 0.0f, gamma_);
-			set_flycap_prop(ctx_, log, "gain", FC2_AUTO_EXPOSURE, exposure_ > -100.0f, exposure_);
+			set_flycap_prop(ctx_, log, "shutter", FC2_SHUTTER, shutter_time_ > 0.0f || shutter_time_ < -200.0f , shutter_time_, shutter_time_  > -200.0f);
+			set_flycap_prop(ctx_, log, "gain", FC2_GAIN, gain_ >= 0.0f || gain_  <= -200.0f, gain_, gain_  > -200.0f);
+			set_flycap_prop(ctx_, log, "brightness", FC2_BRIGHTNESS, brightness_ >= 0.0f || brightness_  <= -200.0f, brightness_, brightness_  > -200.0f);
+			set_flycap_prop(ctx_, log, "gamme", FC2_GAMMA, gamma_ >= 0.0f || gamma_  <= -200.0f, gamma_, gamma_ > -200.0f);
+			set_flycap_prop(ctx_, log, "exposure", FC2_AUTO_EXPOSURE, exposure_ > -100.0f || exposure_  <= -200.0f, exposure_, exposure_ > -200.0f);
 
 
 		}
