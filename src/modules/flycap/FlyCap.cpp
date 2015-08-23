@@ -333,7 +333,20 @@ bool FlyCap::do_process_event(const std::string& event_name, const event::pBasic
 	if (assign_events(event_name, event)
 			.bang("pause", [this](){pause_ = true;})
 			.bang("start", [this](){pause_ = false;})
-			.bang("toggle", [this](){pause_ = !pause_;})) {
+			.bang("toggle", [this](){pause_ = !pause_;})
+
+			.bang("shutter_no_auto", [this](){set_flycap_prop(ctx_, log, "shutter", FC2_SHUTTER, true, shutter_time_, false);})
+			.bang("gain_no_auto", [this](){set_flycap_prop(ctx_, log, "gain", FC2_GAIN, true, gain_, false);})
+			.bang("brightness_no_auto", [this](){set_flycap_prop(ctx_, log, "brightness", FC2_BRIGHTNESS, true, brightness_, false);})
+			.bang("gamma_no_auto", [this](){set_flycap_prop(ctx_, log, "gamma", FC2_GAMMA, true, gamma_, false);})
+			.bang("exposure_no_auto", [this](){set_flycap_prop(ctx_, log, "exposure", FC2_AUTO_EXPOSURE, true, exposure_, false);})
+
+			.bang("shutter_auto", [this](){set_flycap_prop(ctx_, log, "shutter", FC2_SHUTTER, false, shutter_time_, false);})
+			.bang("gain_auto", [this](){set_flycap_prop(ctx_, log, "gain", FC2_GAIN, false, gain_, false);})
+			.bang("brightness_auto", [this](){set_flycap_prop(ctx_, log, "brightness", FC2_BRIGHTNESS, false, brightness_, false);})
+			.bang("gamma_auto", [this](){set_flycap_prop(ctx_, log, "gamma", FC2_GAMMA, false, gamma_, false);})
+			.bang("exposure_auto", [this](){set_flycap_prop(ctx_, log, "exposure", FC2_AUTO_EXPOSURE, false, exposure_, false);})
+	) {
 
 	} else if (assign_events(event_name, event)
 			.bang("trigger_start", [this](){trigger_ = true;})
