@@ -13,11 +13,12 @@
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawAudioFrame.h"
 #include "WaveHeader.h"
+#include "yuri/event/BasicEventProducer.h"
 
 namespace yuri {
 namespace wav {
 
-class WaveDump: public core::SpecializedIOFilter<core::RawAudioFrame>
+class WaveDump: public core::SpecializedIOFilter<core::RawAudioFrame>, public event::BasicEventProducer
 {
 	using base_type = core::SpecializedIOFilter<core::RawAudioFrame>;
 public:
@@ -34,6 +35,8 @@ private:
 	wav_header_t header_;
 
 	bool format_set_;
+	size_t seq_number_;
+	std::string info_string_;
 
 };
 

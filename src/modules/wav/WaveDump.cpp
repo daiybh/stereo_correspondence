@@ -32,8 +32,8 @@ core::Parameters WaveDump::configure()
 
 
 WaveDump::WaveDump(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-base_type(log_,parent,std::string("wav")),
-filename_("xxx.wav"),format_set_(false)
+base_type(log_,parent,std::string("wav")),event::BasicEventProducer(log),
+filename_("xxx.wav"),format_set_(false),seq_number_(0)
 {
 	IOTHREAD_INIT(parameters)
 
@@ -71,6 +71,10 @@ core::pFrame WaveDump::do_special_single_step(core::pRawAudioFrame frame)
 	file_.write(reinterpret_cast<char*>(&header_),sizeof(header_));
 	file_.seekp(0,std::ios::end);
 	file_.write(reinterpret_cast<char*>(frame->data()),new_size);
+	if (!info_string_.empty()) {
+		emit_event("info", core::utils::generate_string(info_string_, seq_number_, frame));
+	}
+	seq_number_++;
 
 
 	return {};
@@ -79,7 +83,8 @@ core::pFrame WaveDump::do_special_single_step(core::pRawAudioFrame frame)
 bool WaveDump::set_param(const core::Parameter& param)
 {
 	if (assign_parameters(param)
-			(filename_, "filename")) {
+			(filename_, "filename")
+			(info_string_, 	"info_string")) {
 		return true;
 	}
 	return base_type::set_param(param);
