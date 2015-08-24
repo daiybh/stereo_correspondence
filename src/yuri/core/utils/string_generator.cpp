@@ -239,7 +239,9 @@ std::string generate_string(const std::string& pattern, index_t sequence, const 
 					ss << parse_and_replace(to_s(what[0]), sequence);
 					break;
 				case 'i':
-					if (frame) ss << parse_and_replace(to_s(what[0]), frame->get_index());
+					if (frame) {
+						ss << parse_and_replace(to_s(what[0]), frame->get_index());
+					}
 					break;
 	//			case 'n':
 	//				ss << get_node_name();
