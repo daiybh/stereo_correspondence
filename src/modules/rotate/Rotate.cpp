@@ -87,6 +87,7 @@ core::pRawVideoFrame rotate(const core::pRawVideoFrame& frame, size_t angle) {
 			}
 		}
 	}
+	output->copy_video_params(*frame);
 	return output;
 }
 }
