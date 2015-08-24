@@ -50,6 +50,7 @@ private:
 	float brightness_;
 	float gamma_;
 	float exposure_;
+	float sharpness_;
 
 	bool trigger_;
 	unsigned int trigger_mode_;

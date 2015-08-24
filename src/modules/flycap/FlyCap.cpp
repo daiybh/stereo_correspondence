@@ -41,7 +41,7 @@ core::Parameters FlyCap::configure()
 	p["brightness"]["Brightness value (set to negative value for automatic value. Set to -200 or less to switch off auto, but keep the value)"]=-1.0f;
 	p["gamma"]["Gamma value (set to negative value for automatic value. Set to -200 or less to switch off auto, but keep the value)"]=-1.0f;
 	p["exposure"]["Exposure value [EV] (set to -100 or less for automatic value. Set to -200 or less to switch off auto, but keep the value)"]=-100.0f;
-
+	p["sharpness"]["Sharpness (set to -1 or less for automatic value. Set to -200 or less to switch off auto, but keep the value)"]=-1.0f;
 	p["trigger"]["Enable trigger"]=false;
 	p["trigger_mode"]["Trigger mode"]=0;
 	p["trigger_source"]["Source for trigger"]=0;
@@ -128,11 +128,11 @@ event::BasicEventConsumer(log),
 resolution_(resolution_t{1280,960}),
 format_(core::raw_format::y8),fps_(30),index_(0),serial_(0),keep_format_(false),
 embedded_framecounter_(false),custom_(-1),shutter_time_(0.0f),gain_(-1.0f),brightness_(-1.0f),gamma_(-1.0f),
-exposure_(-100.0f), 
+exposure_(-100.0f), sharpness_(-1),
 #if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 7))
 strobes_({false, false, false, false}),
 polarities_({false, false, false, false}),delays_({0.0f, 0.0f, 0.0f, 0.0f}),
-durations_({0.0f, 0.0f, 0.0f, 0.0f})
+durations_({0.0f, 0.0f, 0.0f, 0.0f}),pause_(false)
 #endif
 {
 	IOTHREAD_INIT(parameters)
@@ -189,6 +189,7 @@ durations_({0.0f, 0.0f, 0.0f, 0.0f})
 			set_flycap_prop(ctx_, log, "brightness", FC2_BRIGHTNESS, brightness_ >= 0.0f || brightness_  <= -200.0f, brightness_, brightness_  > -200.0f);
 			set_flycap_prop(ctx_, log, "gamme", FC2_GAMMA, gamma_ >= 0.0f || gamma_  <= -200.0f, gamma_, gamma_ > -200.0f);
 			set_flycap_prop(ctx_, log, "exposure", FC2_AUTO_EXPOSURE, exposure_ > -100.0f || exposure_  <= -200.0f, exposure_, exposure_ > -200.0f);
+			set_flycap_prop(ctx_, log, "sharpness", FC2_SHARPNESS, sharpness_ > -1.0f || sharpness_  <= -200.0f, sharpness_, sharpness_ > -200.0f);
 
 
 		}
@@ -320,6 +321,7 @@ bool FlyCap::set_param(const core::Parameter& param)
 			(brightness_,	"brightness")
 			(gamma_,		"gamma")
 			(exposure_,		"exposure")
+			(sharpness_,	"sharpness")
 			(custom_,		"custom")
 			.parsed<std::string>
 				(format_, 	"format", core::raw_format::parse_format))
