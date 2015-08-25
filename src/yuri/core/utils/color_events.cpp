@@ -176,7 +176,7 @@ FuncInitHelper fhelper_ {
 		 {"color_a", std::vector<event_type_t>({event_type_t::string_event}),event_type_t::integer_event, get_color_a},
 		 {"color_y", std::vector<event_type_t>({event_type_t::string_event}),event_type_t::integer_event, get_color_y},
 		 {"color_u", std::vector<event_type_t>({event_type_t::string_event}),event_type_t::integer_event, get_color_u},
-		 {"color_b", std::vector<event_type_t>({event_type_t::string_event}),event_type_t::integer_event, get_color_v},
+		 {"color_v", std::vector<event_type_t>({event_type_t::string_event}),event_type_t::integer_event, get_color_v},
 };
 
 
