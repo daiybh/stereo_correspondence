@@ -72,7 +72,7 @@ bool OSCSender::set_param(const core::Parameter& param)
 bool OSCSender::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
 	std::string message=encode_osc(event_name, event, true);
-	log[log::info] << "message size " << message.size();
+//	log[log::info] << "message size " << message.size();
 	if (!message.empty()) {
 		socket_->send_datagram(message);
 	}
