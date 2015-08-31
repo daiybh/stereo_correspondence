@@ -29,9 +29,9 @@ public:
 private:
 	
 	virtual core::pFrame do_simple_single_step(core::pFrame frame) override;
-	virtual core::pFrame do_special_simple_single_step(core::pVideoFrame frame);
-	virtual core::pFrame do_special_simple_single_step(core::pAudioFrame frame);
-	virtual bool set_param(const core::Parameter& param);
+	core::pFrame do_special_simple_single_step(core::pVideoFrame frame);
+	core::pFrame do_special_simple_single_step(core::pAudioFrame frame);
+	virtual bool set_param(const core::Parameter& param) override;
 	rtp* rtp_session_;
 	tx* tx_session_;
 	std::string destination_;
