@@ -28,7 +28,7 @@ public:
 	virtual ~ShoutOutput() noexcept;
 private:
 	virtual core::pFrame do_special_single_step(core::pCompressedVideoFrame frame) override;
-	virtual bool set_param(const core::Parameter& param);
+	virtual bool set_param(const core::Parameter& param) override;
 
 
 	shout_handle_t shout_;
