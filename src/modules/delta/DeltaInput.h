@@ -30,7 +30,8 @@ private:
 	virtual void run() override;
 	virtual bool set_param(const core::Parameter& param) override;
 	void throw_call(ULONG res, std::string msg);
-	format_t format;
+// Currently unused
+	//	format_t format;
 
 	HANDLE delta_handle_;
 };

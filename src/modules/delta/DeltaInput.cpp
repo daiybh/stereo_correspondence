@@ -37,7 +37,7 @@ core::Parameters DeltaInput::configure()
 
 
 DeltaInput::DeltaInput(log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
-core::IOThread(log_,parent,1,1,std::string("deltainput")),format(core::raw_format::rgb24),delta_handle_(0)
+core::IOThread(log_,parent,1,1,std::string("deltainput"))/*,format(core::raw_format::rgb24)*/,delta_handle_(0)
 {
 	IOTHREAD_INIT(parameters)
 	set_latency(1_ms);
