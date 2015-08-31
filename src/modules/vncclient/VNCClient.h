@@ -42,7 +42,7 @@ private:
 	virtual void run() override;
 	bool connect();
 	bool handshake();
-	bool set_param(const core::Parameter &p);
+	bool set_param(const core::Parameter &p) override;
 	bool process_data();
 	bool request_rect(geometry_t geometry, bool incremental);
 	bool enable_continuous();
