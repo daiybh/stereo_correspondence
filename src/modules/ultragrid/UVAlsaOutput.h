@@ -28,7 +28,7 @@ public:
 private:
 	
 	virtual core::pFrame do_special_single_step(core::pRawAudioFrame frame) override;
-	virtual bool set_param(const core::Parameter& param);
+	virtual bool set_param(const core::Parameter& param) override;
 	bool format_changed(const core::pRawAudioFrame& frame);
 	bool reconfigure(const core::pRawAudioFrame& frame);
 	void* device_;
