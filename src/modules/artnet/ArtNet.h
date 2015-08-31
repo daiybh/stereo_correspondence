@@ -26,8 +26,8 @@ public:
 	virtual ~ArtNet() noexcept;
 private:
 	
-	virtual void run();
-	virtual bool set_param(const core::Parameter& param);
+	virtual void run() override;
+	virtual bool set_param(const core::Parameter& param) override;
 	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 	std::string socket_impl_;
 	core::socket::pDatagramSocket socket_;
