@@ -25,7 +25,7 @@ public:
 	virtual ~Combine() noexcept;
 private:
 	virtual std::vector<core::pFrame> do_single_step(std::vector<core::pFrame> frames) override;
-	virtual bool set_param(const core::Parameter& param);
+	virtual bool set_param(const core::Parameter& param) override;
 	size_t x_,y_;
 
 };
