@@ -22,7 +22,7 @@ public:
 	virtual ~Dup() noexcept;
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
-	virtual bool set_param(const core::Parameter &parameter);
+	virtual bool set_param(const core::Parameter &parameter) override;
 
 private:
 	virtual std::vector<core::pFrame> do_single_step(std::vector<core::pFrame> frames) override;
