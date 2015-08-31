@@ -26,7 +26,7 @@ public:
 	virtual ~Crop() noexcept;
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
-	virtual bool set_param(const core::Parameter &parameter);
+	virtual bool set_param(const core::Parameter &parameter) override;
 protected:
 	virtual core::pFrame do_special_single_step(core::pRawVideoFrame frame) override;
 	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
