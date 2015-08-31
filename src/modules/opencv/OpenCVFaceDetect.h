@@ -26,7 +26,7 @@ public:
 	virtual ~OpenCVFaceDetect() noexcept;
 private:
 	virtual core::pFrame do_special_single_step(core::pRawVideoFrame frame) override;
-	virtual bool set_param(const core::Parameter& param);
+	virtual bool set_param(const core::Parameter& param) override;
 
 	std::string haar_cascade_file_;
 	cv::CascadeClassifier haar_cascade_;

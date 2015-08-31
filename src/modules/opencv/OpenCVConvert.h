@@ -33,7 +33,7 @@ public:
 private:
 	virtual core::pFrame do_convert_frame(core::pFrame input_frame, format_t target_format) override;
 	virtual core::pFrame do_special_single_step(core::pRawVideoFrame frame) override;
-	virtual bool set_param(const core::Parameter& param);
+	virtual bool set_param(const core::Parameter& param) override;
 	format_t format_;
 };
 
