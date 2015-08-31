@@ -24,7 +24,7 @@ public:
 	size_t current_output_;
 private:
 	virtual std::vector<core::pFrame> do_single_step(std::vector<core::pFrame> frames) override;
-	virtual bool set_param(const core::Parameter &param);
+	virtual bool set_param(const core::Parameter &param) override;
 };
 
 } /* namespace pass */
