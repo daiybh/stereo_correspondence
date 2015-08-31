@@ -21,7 +21,7 @@ public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
 private:
-	virtual bool set_param(const core::Parameter &param);
+	virtual bool set_param(const core::Parameter &param) override;
 	virtual core::pFrame			do_special_single_step(core::pRawVideoFrame frame) override;
 	size_t 		angle_;
 };
