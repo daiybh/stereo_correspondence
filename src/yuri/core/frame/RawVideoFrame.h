@@ -70,6 +70,9 @@ public:
 	template<class... Args>
 	void						emplace_back(Args&&... args) { planes_.emplace_back(std::forward<Args>(args)...); }
 
+
+	static std::tuple<size_t, size_t, resolution_t> get_plane_params(const raw_format::raw_format_t& info, size_t plane, resolution_t resolution);
+	static std::tuple<size_t, size_t, resolution_t>	get_plane_params(const raw_format::plane_info_t& info, resolution_t resolution);
 private:
 	/*!
 	 * Implementation of copy, should be implemented in node classes only.
@@ -82,8 +85,7 @@ private:
 	 */
 	virtual size_t	do_get_size() const noexcept;
 
-	static std::tuple<size_t, size_t, resolution_t> get_plane_params(const raw_format::raw_format_t& info, size_t plane, resolution_t resolution);
-	static std::tuple<size_t, size_t, resolution_t>	get_plane_params(const raw_format::plane_info_t& info, resolution_t resolution);
+
 protected:
 	/*!
 	 * Copies parameters from the frame to other frame.
