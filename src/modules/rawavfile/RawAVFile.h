@@ -31,7 +31,7 @@ public:
 	static core::Parameters configure();
 	RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~RawAVFile() noexcept;
-	virtual bool 		set_param(const core::Parameter &param);
+	virtual bool 		set_param(const core::Parameter &param) override;
 
 	struct 				stream_detail_t;
 private:
