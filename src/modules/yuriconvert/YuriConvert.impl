@@ -1041,6 +1041,7 @@ void convert_line<core::raw_format::vyuy422, core::raw_format::yvu411>
 
 
 // Full range
+/* 
 template<>
 void convert_line<core::raw_format::yuv422_v210, core::raw_format::yuyv422>
 (core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
@@ -1077,6 +1078,7 @@ void convert_line<core::raw_format::yuv422_v210, core::raw_format::yuyv422>
 //		src_pixels++;
 	}
 }
+*/
 
 //template<>
 //void convert_line<YURI_FMT_V210, core::raw_format::uyvy422>
