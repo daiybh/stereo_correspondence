@@ -11,6 +11,8 @@
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "video_frame.h"
 #include "YuriUltragrid.h"
+#include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/frame/raw_frame_params.h"
 
 namespace yuri {
 namespace ultragrid {
@@ -54,7 +56,10 @@ core::pFrame UVVideoDecompress::do_special_single_step(core::pCompressedVideoFra
 		// Ugly hack, but it seems the formats are wrong otherwise...
 		if (codec_out == YUYV) codec_out=UYVY;
 		video_desc vd = {static_cast<unsigned>(res.width), static_cast<unsigned>(res.height), codec, 25, PROGRESSIVE, 1};
-		uv_decompress_params_.decompress_reconfigure(decoder_, vd, 0, 8, 16, 24, codec_out);
+		const auto& fi =  core::raw_format::get_format_info(output_format_);
+		auto params = core::RawVideoFrame::get_plane_params(fi, 0, res);
+		auto pitch = std::get<0>(params);
+		uv_decompress_params_.decompress_reconfigure(decoder_, vd, 0, 8, 16, pitch, codec_out);
 		last_resolution_ = res;
 		last_format_ = format;
 		sequence_ = 0;
