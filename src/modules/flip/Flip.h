@@ -23,7 +23,7 @@ class Flip: public core::SpecializedIOFilter<core::RawVideoFrame>, public event:
 public:
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
-	virtual bool set_param(const core::Parameter &parameter);
+	virtual bool set_param(const core::Parameter &parameter) override;
 	Flip(log::Log &_log, core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~Flip() noexcept;
 private:
