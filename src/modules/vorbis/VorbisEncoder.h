@@ -32,7 +32,7 @@ public:
 	virtual ~VorbisEncoder() noexcept;
 private:
 	virtual core::pFrame do_special_single_step(core::pRawAudioFrame frame) override;
-	virtual bool set_param(const core::Parameter& param);
+	virtual bool set_param(const core::Parameter& param) override;
 	bool initialize(const core::pRawAudioFrame& frame);
 	bool process_packet(ogg_packet& packet);
 	vorbis_info info_;
