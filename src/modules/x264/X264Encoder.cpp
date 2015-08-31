@@ -122,14 +122,27 @@ core::pFrame X264Encoder::do_special_single_step(core::pRawVideoFrame frame)
 			return {};
 		}
 		for (int i=0;i<nheader;++i) {
-			process_nal(nals[i]);
+			auto f = generate_frame(nals[i]);
+//			push_frame(0, f);
+			headers_.push_back(std::move(f));
+			//process_nal(nals[i]);
 		}
+		log[log::info] << "Stored " << headers_.size() << " header NALs";
 	} else {
 		if (res.width != static_cast<dimension_t>(params_.i_width) ||
 				res.height != static_cast<dimension_t>(params_.i_height)) {
 			log[log::warning] << "Frame size changed, ignoring frame";
 			return {};
 		}
+
+	}
+//	for (const auto&h: headers_) {
+//		push_frame(0, h);
+//	}
+	frame_data_.clear();
+	for (const auto&h: headers_) {
+		auto f = std::dynamic_pointer_cast<core::CompressedVideoFrame> (h);
+		frame_data_.insert(frame_data_.end(), f->begin(), f->end());
 	}
 	picture_in_.img.i_csp = it->second;
 	picture_in_.i_pts = frame_number_++;
@@ -144,22 +157,31 @@ core::pFrame X264Encoder::do_special_single_step(core::pRawVideoFrame frame)
 	int nal_count = 0;
 	if (x264_encoder_encode(encoder_, &nals, &nal_count, &picture_in_, &picture_out_)) {
 		for (int i=0;i<nal_count;++i) {
-			process_nal(nals[i]);
+//			process_nal(nals[i]);
+			const auto& nal = nals[i];
+			frame_data_.insert(frame_data_.end(), nal.p_payload, nal.p_payload + nal.i_payload);
+
 		}
 	}
 	for (int i = 0;i < picture_in_.img.i_plane; ++i) {
 		picture_in_.img.plane[i]=orig_planes[i];
 	}
+	return {core::CompressedVideoFrame::create_empty(core::compressed_frame::h264,
+					resolution_t{static_cast<dimension_t>(params_.i_width), static_cast<dimension_t>(params_.i_height)},
+					&frame_data_[0], frame_data_.size())};
+//	return {};
+}
 
-	return {};
+core::pFrame X264Encoder::generate_frame(x264_nal_t& nal)
+{
+	return core::CompressedVideoFrame::create_empty(core::compressed_frame::h264,
+				resolution_t{static_cast<dimension_t>(params_.i_width), static_cast<dimension_t>(params_.i_height)},
+				nal.p_payload, nal.i_payload);
 }
 
 void X264Encoder::process_nal(x264_nal_t& nal)
 {
-	auto frame = core::CompressedVideoFrame::create_empty(core::compressed_frame::h264,
-			resolution_t{static_cast<dimension_t>(params_.i_width), static_cast<dimension_t>(params_.i_height)},
-			nal.p_payload, nal.i_payload);
-	push_frame(0, frame);
+	push_frame(0, generate_frame(nal));
 }
 
 bool X264Encoder::set_param(const core::Parameter& param)
