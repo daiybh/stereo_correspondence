@@ -22,9 +22,9 @@ public:
 	ScreenGrab(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
 private:
 
-	virtual void run();
-	virtual bool step();
-	virtual bool set_param(const core::Parameter &param);
+	virtual void run() override;
+	virtual bool step() override;
+	virtual bool set_param(const core::Parameter &param) override;
 	std::string display;
 	double fps_;
 	std::shared_ptr<Display> dpy;
