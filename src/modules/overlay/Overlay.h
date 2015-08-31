@@ -31,8 +31,8 @@ private:
 	//virtual bool step();
 //	virtual std::vector<core::pFrame> do_single_step(const std::vector<core::pFrame>&);
 	virtual std::vector<core::pFrame> do_special_step(param_type) override;
-	virtual bool set_param(const core::Parameter& param);
-	bool do_process_event(const std::string& event_name, const event::pBasicEvent& event);
+	virtual bool set_param(const core::Parameter& param) override;
+	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 //	core::pBasicFrame frame_0;
 //	core::pBasicFrame frame_1;
 	ssize_t x_;
