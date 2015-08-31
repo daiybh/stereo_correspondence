@@ -22,8 +22,8 @@ public:
 	static core::Parameters configure();
 private:
 	//virtual std::vector<pFrame> do_single_step(const std::vector<core::pFrame>& frames) override;
-	virtual bool step() ;
-	virtual bool set_param(const core::Parameter &param);
+	virtual bool step() override;
+	virtual bool set_param(const core::Parameter &param) override;
 	size_t inputs_;
 	size_t current_input_;
 };
