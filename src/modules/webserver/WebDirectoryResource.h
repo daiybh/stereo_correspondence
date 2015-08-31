@@ -27,8 +27,8 @@ public:
 	virtual ~WebDirectoryResource() noexcept;
 private:
 
-	virtual void run();
-	virtual bool set_param(const core::Parameter& param);
+	virtual void run() override;
+	virtual bool set_param(const core::Parameter& param) override;
 	virtual webserver::response_t do_process_request(const webserver::request_t& request) override;
 	std::string server_name_;
 	std::string path_;

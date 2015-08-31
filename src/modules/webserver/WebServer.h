@@ -57,8 +57,8 @@ public:
 	bool register_resource (const std::string& routing_spec, pWebResource);
 private:
 	
-	virtual void run();
-	virtual bool set_param(const core::Parameter& param);
+	virtual void run() override;
+	virtual bool set_param(const core::Parameter& param) override;
 
 	request_t read_request(core::socket::pStreamSocket socket);
 	bool reply_to_client(core::socket::pStreamSocket& socket, response_t response);
