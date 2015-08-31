@@ -25,7 +25,7 @@ public:
 	virtual ~Diff() noexcept;
 private:
 
-	virtual bool step();
+	virtual bool step() override;
 	core::pRawVideoFrame frame1;
 	core::pRawVideoFrame frame2;
 };
