@@ -37,12 +37,12 @@ public:
 
 	V4l2Source(log::Log &log_,core::pwThreadBase parent, const core::Parameters &parameters);
 	virtual ~V4l2Source() noexcept;
-	virtual void run();
+	virtual void run() override;
 	IOTHREAD_GENERATOR_DECLARATION
 	static core::Parameters configure();
 	static std::vector<core::InputDeviceInfo> enumerate();
 private:
-	virtual bool set_param(const core::Parameter &param);
+	virtual bool set_param(const core::Parameter &param) override;
 
 	std::unique_ptr<v4l2_device> open_device();
 	bool prepare_frame(uint8_t *data, yuri::size_t size);
