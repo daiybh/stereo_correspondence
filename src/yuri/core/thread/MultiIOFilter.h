@@ -35,7 +35,7 @@ public:
 
 	EXPORT std::vector<pFrame> 	
 							single_step(std::vector<pFrame> frames);
-	EXPORT virtual bool 	step();
+	EXPORT virtual bool 	step() override;
 
 	EXPORT virtual bool 	set_param(const Parameter &parameter) override;
 protected:
