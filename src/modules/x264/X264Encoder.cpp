@@ -44,6 +44,11 @@ core::Parameters X264Encoder::configure()
 	p["profile"]["X264 profile. Available values: ("+profiles+")"]="baseline";
 	p["preset"]["X264 preset. Available values: ("+presets+")"]="ultrafast";
 	p["tune"]["X264 tune. Available values: ("+tunes+")"]="zerolatency";
+	p["bitrate"]["Average bitrate [KB/s]"]=-1;
+	p["max_bitrate"]["Maximum bitrate [KB/s]"]=-1;
+	p["cabac"]["Use cabac coder"]=false;
+	p["threads"]["Number of threads to use (0 for default)"]=0;
+	p["fps"]["Override framerate in incomming frames. (set to 0 to use value specified in frames)"]=fraction_t{25,1};
 	return p;
 }
 
@@ -69,6 +74,10 @@ void yuri_log(void* priv, int level,  const char *psz, va_list params)
 	char msg[1024];
 	int len = std::vsnprintf(msg, 1024, psz, params);
 	msg[len]=0;
+	// remove trailing newlines, log::Log adds it.
+	if (len > 0 && msg[len-1]=='\n') {
+		msg[len-1] = 0;
+	}
 	log::debug_flags l = log::info;
 	auto it = x264_log_levels.find(level);
 	if (it!=x264_log_levels.end()) l = it->second;
@@ -79,7 +88,9 @@ void yuri_log(void* priv, int level,  const char *psz, va_list params)
 
 X264Encoder::X264Encoder(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 base_type(log_,parent,std::string("x264")),encoder_(nullptr),
-frame_number_(0),preset_("ultrafast"),tune_("zerolatency"),profile_("baseline")
+frame_number_(0),preset_("ultrafast"),tune_("zerolatency"),profile_("baseline"),bitrate_(-1),
+max_bitrate_(-1),cabac_(true),threads_(0),
+encoded_frames_(0)
 {
 	IOTHREAD_INIT(parameters)
 	set_supported_formats(supported_formats);
@@ -103,31 +114,43 @@ core::pFrame X264Encoder::do_special_single_step(core::pRawVideoFrame frame)
 
 		params_.i_width = res.width;
 		params_.i_height = res.height;
-		params_.i_fps_num=25;
-		params_.i_fps_den = 1;
+		// TODO: set proper fps
+		const auto dur = frame->get_duration();
+		fraction_t fps;
+		if (fps_.get_value() > 0) {
+			fps = fps_;
+		} else if (dur > 0.1_us) {
+			fps = fraction_t{dur/1_ms, 1000};
+		} else {
+			fps = fraction_t{25,1};
+		}
+		log[log::info] << "Using framerate: " << fps;
+		params_.i_fps_num = fps.num;
+		params_.i_fps_den = fps.denom;
 		params_.i_csp = it->second;
-
+		params_.b_repeat_headers = 1;
 		params_.pf_log = &yuri_log;
 		params_.p_log_private = &log;
+
+		params_.i_threads = threads_;
+		params_.b_cabac = cabac_?1:0;
+		if (bitrate_ >= 0) {
+			params_.rc.i_rc_method = X264_RC_ABR;
+			params_.rc.i_bitrate = bitrate_ * 8;
+
+			if (max_bitrate_ >= 0) {
+				params_.rc.i_vbv_max_bitrate = max_bitrate_ * 8;
+			} else {
+				params_.rc.i_vbv_max_bitrate = bitrate_ * 8 * 1.2;
+			}
+			params_.rc.i_vbv_buffer_size = params_.rc.i_vbv_max_bitrate;
+		}
 
 		x264_param_apply_profile(&params_, profile_.c_str());
 
 		x264_picture_alloc(&picture_in_, it->second, res.width, res.height);
 
 		encoder_ = x264_encoder_open(&params_);
-		int nheader = 0;
-		x264_nal_t *nals;
-		if (x264_encoder_headers(encoder_, &nals, &nheader) < 0) {
-			log[log::error] << "Failed to encode headers!";
-			return {};
-		}
-		for (int i=0;i<nheader;++i) {
-			auto f = generate_frame(nals[i]);
-//			push_frame(0, f);
-			headers_.push_back(std::move(f));
-			//process_nal(nals[i]);
-		}
-		log[log::info] << "Stored " << headers_.size() << " header NALs";
 	} else {
 		if (res.width != static_cast<dimension_t>(params_.i_width) ||
 				res.height != static_cast<dimension_t>(params_.i_height)) {
@@ -136,14 +159,7 @@ core::pFrame X264Encoder::do_special_single_step(core::pRawVideoFrame frame)
 		}
 
 	}
-//	for (const auto&h: headers_) {
-//		push_frame(0, h);
-//	}
 	frame_data_.clear();
-	for (const auto&h: headers_) {
-		auto f = std::dynamic_pointer_cast<core::CompressedVideoFrame> (h);
-		frame_data_.insert(frame_data_.end(), f->begin(), f->end());
-	}
 	picture_in_.img.i_csp = it->second;
 	picture_in_.i_pts = frame_number_++;
 	picture_in_.img.i_plane = frame->get_planes_count();
@@ -155,45 +171,46 @@ core::pFrame X264Encoder::do_special_single_step(core::pRawVideoFrame frame)
 	}
 	x264_nal_t* nals;
 	int nal_count = 0;
+	Timer t0;
 	if (x264_encoder_encode(encoder_, &nals, &nal_count, &picture_in_, &picture_out_)) {
 		for (int i=0;i<nal_count;++i) {
-//			process_nal(nals[i]);
-			const auto& nal = nals[i];
-			frame_data_.insert(frame_data_.end(), nal.p_payload, nal.p_payload + nal.i_payload);
-
+			process_nal(nals[i]);
 		}
 	}
 	for (int i = 0;i < picture_in_.img.i_plane; ++i) {
 		picture_in_.img.plane[i]=orig_planes[i];
 	}
+	++encoded_frames_;
+	encoding_time_+=t0.get_duration();
+	if (encoded_frames_ >= 100) {
+		log[log::debug] << "Encoding " << encoded_frames_ << " took: " << encoding_time_ << ", that's " << encoding_time_/encoded_frames_ << " per frame";
+		encoded_frames_ = 0;
+		encoding_time_=0_ms;
+	}
 	return {core::CompressedVideoFrame::create_empty(core::compressed_frame::h264,
 					resolution_t{static_cast<dimension_t>(params_.i_width), static_cast<dimension_t>(params_.i_height)},
 					&frame_data_[0], frame_data_.size())};
-//	return {};
 }
 
-core::pFrame X264Encoder::generate_frame(x264_nal_t& nal)
-{
-	return core::CompressedVideoFrame::create_empty(core::compressed_frame::h264,
-				resolution_t{static_cast<dimension_t>(params_.i_width), static_cast<dimension_t>(params_.i_height)},
-				nal.p_payload, nal.i_payload);
-}
 
 void X264Encoder::process_nal(x264_nal_t& nal)
 {
-	push_frame(0, generate_frame(nal));
+	frame_data_.insert(frame_data_.end(), nal.p_payload, nal.p_payload + nal.i_payload);
 }
 
 bool X264Encoder::set_param(const core::Parameter& param)
 {
-	if (param.get_name() == "preset") {
-		preset_ = param.get<std::string>();
-	} else if (param.get_name() == "tune") {
-		tune_ = param.get<std::string>();
-	} else if (param.get_name() == "profile") {
-		profile_ = param.get<std::string>();
-	} else return base_type::set_param(param);
-	return true;
+	if(assign_parameters(param)
+			(preset_, "preset")
+			(tune_, "tune")
+			(profile_, "profile")
+			(bitrate_, "bitrate")
+			(max_bitrate_, "max_bitrate")
+			(cabac_, "cabac")
+			(threads_, "threads")
+			(fps_, "fps"))
+		return true;
+	return base_type::set_param(param);
 }
 
 } /* namespace x264 */

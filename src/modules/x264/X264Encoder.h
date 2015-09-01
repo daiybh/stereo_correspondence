@@ -36,19 +36,23 @@ private:
 	virtual bool set_param(const core::Parameter& param) override;
 
 	void process_nal(x264_nal_t& nal);
-	core::pFrame generate_frame(x264_nal_t& nal);
 	x264_param_t params_;
 	x264_picture_t picture_in_;
 	x264_picture_t picture_out_;
-//	x264_nal_t* nals_;
 	x264_t* encoder_;
 	size_t frame_number_;
 
 	std::string preset_;
 	std::string tune_;
 	std::string profile_;
-	std::vector<core::pFrame> headers_;
+	int bitrate_;
+	int max_bitrate_;
+	bool cabac_;
+	int threads_;
+	fraction_t fps_;
 	std::vector<uint8_t> frame_data_;
+	duration_t encoding_time_;
+	size_t encoded_frames_;
 };
 
 } /* namespace x264 */
