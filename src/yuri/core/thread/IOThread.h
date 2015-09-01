@@ -244,6 +244,7 @@ private:
 
 	yuri::size_t 				fps_stats_;
 	std::vector<yuri::size_t> 	streamed_frames_;
+	std::vector<yuri::size_t> 	frame_sizes_;
 	std::vector<timestamp_t>	first_frame_;
 	Timer 						pts_timer_;
 	std::vector<size_t>			next_indices_;

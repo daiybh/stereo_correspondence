@@ -141,6 +141,9 @@ bool IOThread::push_frame(position_t index, pFrame frame)
 		next_indices_[index] = cur_idx+1;
 	}
 	if (index >= 0 && index < get_no_out_ports() && out_[index]) {
+		if (fps_stats_) {
+			frame_sizes_[index]+=frame->get_size();
+		}
 		while (!out_[index]->push_frame(std::move(frame))) {
 			wait_for(latency_);
 			if (!still_running()) return false;
@@ -150,9 +153,11 @@ bool IOThread::push_frame(position_t index, pFrame frame)
 			const timestamp_t start = first_frame_[index];
 			const timestamp_t now;
 			const duration_t dur = now-start;
-			log[log::info] << "Streamed " << frames << " in " << dur << ", that's " << (frames*1e6/dur.value) << " fps.";
+			const auto brate = static_cast<double>(frame_sizes_[index])*1.0e3/dur.value;
+			log[log::info] << "Streamed " << frames << " in " << dur << ", that's " << (frames*1e6/dur.value) << " fps, bitrate " << std::setprecision(3) << brate << " kB/s";
 			first_frame_[index] = now;
 			streamed_frames_[index] = 0;
+			frame_sizes_[index] = 0;
 		}
 		return true;
 	}
@@ -179,6 +184,7 @@ void IOThread::resize(position_t inp, position_t outp)
 	streamed_frames_.resize(out_ports_,0);
 	first_frame_.resize(out_ports_);
 	next_indices_.resize(out_ports_, 0);
+	frame_sizes_.resize(out_ports_, 0);
 }
 
 void IOThread::close_pipes()
