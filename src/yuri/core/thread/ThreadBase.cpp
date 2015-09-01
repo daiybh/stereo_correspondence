@@ -44,7 +44,7 @@ Parameters ThreadBase::configure()
 ThreadBase::ThreadBase(const log::Log &_log, pwThreadBase parent, const std::string& id):log(_log),parent_(parent),
 	ending_(false),interrupted_(false), join_timeout(2.5_s),
 	/*lastChild(0),*//*finishWhenChildEnds(false),*//*quitWhenChildsEnd(true),*///own_tid(0),
-	running_(false),node_id_(id)
+	cpu_affinity_(-1),running_(false),node_id_(id)
 {
 }
 
@@ -61,6 +61,9 @@ void ThreadBase::operator()()
 	auto pname = std::string(node_id_).substr(0,15);
     pthread_setname_np(pthread_self(), pname.c_str());
 #endif
+    if (cpu_affinity_ >= 0) {
+    	bind_to_cpu(static_cast<size_t>(cpu_affinity_));
+    }
 	running_ = true;
 	log[verbose_debug] << "Starting thread";
 	run();
