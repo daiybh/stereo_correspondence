@@ -172,6 +172,12 @@ inline /* constexpr */  duration_t operator+(duration_t a, const duration_t& b)
 {
 	return duration_t(a.value+b.value);
 }
+
+inline detail::duration_rep operator/(const duration_t& a, const duration_t& b)
+{
+	return a.value/b.value;
+}
+
 template<typename T>
 inline /* constexpr */ 
 typename std::enable_if<std::is_arithmetic<T>::value,duration_t>::type
