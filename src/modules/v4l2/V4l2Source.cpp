@@ -67,6 +67,7 @@ core::Parameters V4l2Source::configure()
 	p["illumination"]["Enable illumination (if present)"]=true;
 	p["combine"]["Combine frames (if camera sends them in chunks)."]=false;
 	p["fps"]["Number of frames per second requested. The closest LOWER supported value will be selected."]=fraction_t{30,1};
+	p["repeat_headers"]["Repeat headers for compressed formats (H264)"]=true;
 	return p;
 }
 
@@ -293,7 +294,8 @@ bool V4l2Source::set_param(const core::Parameter &param)
 			(illuminator_, "illumination")
 			(combine_frames_, "combine")
 			(fps_, "fps")
-			(method_, "method", [](const core::Parameter& p){return parse_method(p.get<std::string>());})
+				.parsed<std::string>(method_, "method", parse_method)
+			(repeat_headers_, "repeat_headers")
 			)
 		return true;
 
@@ -361,7 +363,28 @@ bool V4l2Source::prepare_frame(uint8_t *data, yuri::size_t size)
 		}
 	}
 	catch (std::runtime_error& ) {
-		core::pCompressedVideoFrame cframe = core::CompressedVideoFrame::create_empty(format_, resolution_, data, size);
+		core::pCompressedVideoFrame cframe;
+		bool add_headers = false;
+		if (format_ == core::compressed_frame::h264) {
+			if (headers_.empty()) {
+				headers_.insert(headers_.end(), data, data + size);
+				cframe = core::CompressedVideoFrame::create_empty(format_, resolution_, data, size);
+			} else {
+				// Let's try to find IDR
+				if ((size > 4 && data[0]==0 && data[1]==0 && data[2]==1 && (data[3]&0x1F) == 5) ||
+					(size > 5 && data[0]==0 && data[1]==0 && data[2] == 0 && data[3]==1 && (data[4]&0x1F) == 5))
+				{
+					add_headers = true;
+				}
+			}
+		}
+		if (add_headers) {
+			cframe = core::CompressedVideoFrame::create_empty(format_, resolution_, size + headers_.size());
+			std::copy(headers_.begin(), headers_.end(), cframe->begin());
+			std::copy(data, data+size, cframe->begin() + headers_.size());
+		} else {
+			cframe = core::CompressedVideoFrame::create_empty(format_, resolution_, data, size);
+		}
 		buffer_free_ = 0;//frame_size;
 		output_frame_ = cframe;
 

@@ -69,6 +69,10 @@ private:
 	std::vector<controls::control_info> controls_;
 	std::map<std::string, event::pBasicEvent> control_tmp_;
 	bool illuminator_;
+
+	bool repeat_headers_;
+	// Used to store SPS/PPS for H264
+	std::vector<uint8_t> headers_;
 };
 
 }

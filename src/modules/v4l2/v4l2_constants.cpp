@@ -31,7 +31,8 @@ std::map<yuri::format_t, uint32_t> formats_map= {
 		{bayer_gbrg,V4L2_PIX_FMT_SGBRG8},
 
 		{mjpg, 		V4L2_PIX_FMT_MJPEG},
-		{jpeg, 		V4L2_PIX_FMT_JPEG}};
+		{jpeg, 		V4L2_PIX_FMT_JPEG},
+		{h264, 		V4L2_PIX_FMT_H264}};
 
 
 std::map<std::string, uint32_t> special_formats = {
