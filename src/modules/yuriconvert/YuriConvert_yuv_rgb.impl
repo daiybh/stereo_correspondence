@@ -512,3 +512,99 @@ void convert_line<core::raw_format::uyvy422, core::raw_format::rgb24>
 	bool full_range = conv.get_full_range();
 	convert_rgb_yuv_dispatch<convert_line_uyvy422_rgb>(src, dest, width, col, full_range);
 }
+
+
+template<class colorimetry, bool full_range>
+struct convert_line_rgba_yuva4444{
+static void eval
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		const double r = (*src++)/255.0;
+		const double g = (*src++)/255.0;
+		const double b = (*src++)/255.0;
+		set_yuv444_from_rgb<colorimetry, full_range>(dest, r, g, b);
+		*dest++ = *src++;
+	}
+}
+};
+
+template<>
+void convert_line<core::raw_format::rgba32, core::raw_format::yuva4444>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_rgba_yuva4444>(src, dest, width, col, full_range);
+}
+
+template<class colorimetry, bool full_range>
+struct convert_line_bgra_yuva4444{
+static void eval
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		const double b = (*src++)/255.0;
+		const double g = (*src++)/255.0;
+		const double r = (*src++)/255.0;
+		set_yuv444_from_rgb<colorimetry, full_range>(dest, r, g, b);
+		*dest++ = *src++;
+	}
+}
+};
+
+template<>
+void convert_line<core::raw_format::bgra32, core::raw_format::yuva4444>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_bgra_yuva4444>(src, dest, width, col, full_range);
+}
+
+template<class colorimetry, bool full_range>
+struct convert_line_argb_yuva4444{
+static void eval
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++ = *src++;
+		const double r = (*src++)/255.0;
+		const double g = (*src++)/255.0;
+		const double b = (*src++)/255.0;
+		set_yuv444_from_rgb<colorimetry, full_range>(dest, r, g, b);
+	}
+}
+};
+
+template<>
+void convert_line<core::raw_format::argb32, core::raw_format::yuva4444>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_argb_yuva4444>(src, dest, width, col, full_range);
+}
+template<class colorimetry, bool full_range>
+struct convert_line_abgr_yuva4444{
+static void eval
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		*dest++ = *src++;
+		const double b = (*src++)/255.0;
+		const double g = (*src++)/255.0;
+		const double r = (*src++)/255.0;
+		set_yuv444_from_rgb<colorimetry, full_range>(dest, r, g, b);
+	}
+}
+};
+
+template<>
+void convert_line<core::raw_format::abgr32, core::raw_format::yuva4444>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width, const YuriConvertor& conv)
+{
+	colorimetry_t col = conv.get_colorimetry();
+	bool full_range = conv.get_full_range();
+	convert_rgb_yuv_dispatch<convert_line_abgr_yuva4444>(src, dest, width, col, full_range);
+}
