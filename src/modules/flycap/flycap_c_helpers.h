@@ -17,6 +17,7 @@
 #ifdef CAN_DISABLE_PEDANTIC
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #endif
 
 #include "C/FlyCapture2_C.h"
@@ -57,8 +58,8 @@ struct flycap_camera_t {
 		core::ThreadBase::sleep(100_ms);
 	}
 
-	flycap(const flycap_camera_t&) = delete;
-	flycap(flycap_camera_t&&) = delete;
+	flycap_camera_t(const flycap_camera_t&) = delete;
+	flycap_camera_t(flycap_camera_t&&) = delete;
 	flycap_camera_t& operator=(const flycap_camera_t&) = delete;
 	flycap_camera_t& operator=(flycap_camera_t&&) = delete;
 	operator ctx_ref_t() {

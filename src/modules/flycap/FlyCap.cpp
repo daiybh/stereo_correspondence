@@ -132,8 +132,9 @@ exposure_(-100.0f), sharpness_(-1),
 #if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 7))
 strobes_({false, false, false, false}),
 polarities_({false, false, false, false}),delays_({0.0f, 0.0f, 0.0f, 0.0f}),
-durations_({0.0f, 0.0f, 0.0f, 0.0f}),pause_(false)
+durations_({0.0f, 0.0f, 0.0f, 0.0f}),
 #endif
+pause_(false)
 {
 	IOTHREAD_INIT(parameters)
 
