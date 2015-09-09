@@ -454,9 +454,11 @@ template<bool rewrite>
 core::pRawVideoFrame get_out_frame(core::pRawVideoFrame& frame, format_t format, resolution_t res0);
 
 template<>
-core::pRawVideoFrame get_out_frame<false>(core::pRawVideoFrame&, format_t format, resolution_t res)
+core::pRawVideoFrame get_out_frame<false>(core::pRawVideoFrame& frame, format_t format, resolution_t res)
 {
-	return core::RawVideoFrame::create_empty(format, res);
+	auto f = core::RawVideoFrame::create_empty(format, res);
+	f->copy_video_params(*frame);
+	return f;
 }
 template<>
 core::pRawVideoFrame get_out_frame<true>(core::pRawVideoFrame& frame, format_t format, resolution_t res)
@@ -529,7 +531,9 @@ std::vector<core::pFrame> Overlay::do_special_step(param_type frames)
 	std::get<0>(frames).reset();
 	if (!f0 || !f1) return {};
 	core::pRawVideoFrame outframe = dispatch(*this, std::move(f0), f1);
-	if (outframe) return {outframe};
+	if (outframe) {
+		return {std::move(outframe)};
+	}
 	return {};
 }
 bool Overlay::set_param(const core::Parameter& param)
