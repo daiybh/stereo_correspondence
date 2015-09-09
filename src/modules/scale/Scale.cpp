@@ -257,6 +257,7 @@ core::pRawVideoFrame scale_image(const core::pRawVideoFrame& frame, const resolu
 			res.width,
 			unscale_x,
 			0.0);
+	outframe->copy_video_params(*frame);
 	return outframe;
 }
 
@@ -293,6 +294,7 @@ core::pRawVideoFrame scale_image_fast(const core::pRawVideoFrame& frame, const r
 			res.width,
 			unscale_x,
 			0.0);
+	outframe->copy_video_params(*frame);
 	return outframe;
 }
 
