@@ -22,7 +22,7 @@
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/frame/compressed_frame_params.h"
 #include "yuri/core/frame/raw_audio_frame_params.h"
-
+#include "yuri/core/utils/string_generator.h"
 
 #include <map>
 #include <vector>
@@ -39,6 +39,7 @@ void list_registered_items(yuri::log::Log& l_, const std::string& list_what, int
 	else if (iequals(list_what,"converters")) list_converters(l_, verbosity);
 	else if (iequals(list_what,"pipes")) list_pipes(l_, verbosity);
 	else if (iequals(list_what,"input")) list_inputs(l_, verbosity);
+	else if (iequals(list_what,"specifiers")) list_specifiers(l_, verbosity);
 	else list_registered(l_, verbosity);
 }
 
@@ -335,6 +336,18 @@ void list_input_class(yuri::log::Log& l_, const std::string& name, int /*verbosi
 	catch (...) {
 		l_[log::info] << "No input thread found for " << name;
 	}
+}
+
+
+void list_specifiers(yuri::log::Log& l_, int )
+{
+	const auto& spec = core::utils::enumerate_string_generator_specifiers();
+	l_[log::info] << "Valid string generator specifiers:";
+	for (const auto& s: spec) {
+		l_[log::info] << "\t%" << s.placeholder << "\t" << s.description << (s.accepts_width?" (*)":"");
+	}
+	l_[log::info] << "Specifiers marked with (*) also accept extended syntax in form %[[0]width]X, for example: %05i";
+
 }
 
 }

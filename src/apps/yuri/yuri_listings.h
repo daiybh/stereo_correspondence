@@ -31,6 +31,7 @@ void list_functions(yuri::log::Log& l_, int verbosity = 0);
 void list_pipes(yuri::log::Log& l_, int verbosity = 0);
 void list_converters(yuri::log::Log& l_, int verbosity = 0);
 void list_inputs(yuri::log::Log& l_, int verbosity = 0);
+void list_specifiers(yuri::log::Log& l_, int verbosity = 0);
 
 
 
