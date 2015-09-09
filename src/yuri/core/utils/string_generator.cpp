@@ -321,6 +321,61 @@ std::string generate_string(const std::string& pattern, index_t sequence, const 
 }
 #endif
 
+namespace {
+const std::vector<string_generator_placeholder_info_t> specifier_list = {
+		{"t",	"timestamp from the incomming frame", false},
+		{"f",	"frame type (short)", false},
+		{"F",	"frame type (long)", false},
+		{"T",	"timestamp at the time of dump", false},
+		{"r",	"resolution of video frame", false},
+		{"m",	"milliseconds since start (from frame timestamp)", true},
+		{"M",	"microseconds since start (from frame timestamp)", true},
+		{"o",	"seconds since start (from frame timestamp)", true},
+		{"s",	"sequence number", true},
+		{"i",	"frame index", true},
+		{"e",	"milliseconds since start (current time)", true},
+		{"E",	"microseconds since start (current time)", true},
+		{"c",	"seconds since start (current time)", true},
+		{"d",	"milliseconds as a difference of frame time and current time (== frame's actual lifetime)", true},
+
+		{"lY",	"Current year (localtime)", false},
+		{"lM",	"Current month (localtime)", false},
+		{"ld",	"Current day in month (localtime)", false},
+		{"lD",	"Current day of year (localtime)", false},
+		{"lH",	"Current hour 0-23 (localtime)", false},
+		{"lh",	"Current hour 0-11 (localtime)", false},
+		{"lm",	"Current minute (localtime)", false},
+		{"ls",	"Current second (localtime)", false},
+		{"lT",	"Curent date (YYYY-MM-DD)", false},
+		{"lt",	"Current time (HH:MM:SS)", false},
+		{"lx",	"Current date time (YYY-MM-DD HH:MM:SS)", false},
+		{"n",	"module name (currently unsupported)", false},
+		{"H",	"local hostname", false},
+		{"D",	"local domain", false},
+		{"S",	"system name (eg. Linux-3.19.0)", false},
+		{"O",	"OS (eg. Linux)", false},
+		{"v",	"yuri version", false},
+		{"",	"literal %", false},
+		{"qY",	"Start up year (localtime)", false},
+		{"qM",	"Start up month (localtime)", false},
+		{"qd",	"Start up day in month (localtime)", false},
+		{"qD",	"Start up day of year (localtime)", false},
+		{"qH",	"Start up hour 0-23 (localtime)", false},
+		{"qh",	"Start up hour 0-11 (localtime)", false},
+		{"qm",	"Start up minute (localtime)", false},
+		{"qs",	"Start up second (localtime)", false},
+		{"qT",	"Start up date (YYYY-MM-DD)", false},
+		{"qt",	"Start up time (HH:MM:SS)", false},
+		{"qx",	"Start up time (YYY-MM-DD HH:MM:SS)", false},
+
+
+};
+}
+
+
+std::vector<string_generator_placeholder_info_t> enumerate_string_generator_specifiers() {
+	return specifier_list;
+}
 
 }
 }

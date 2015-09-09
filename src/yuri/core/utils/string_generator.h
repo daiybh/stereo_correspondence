@@ -138,6 +138,13 @@ Stream& print_formated_value(Stream& os, const Value& value, int width = 0, bool
 }
 
 
+struct string_generator_placeholder_info_t {
+	std::string placeholder;
+	std::string description;
+	bool accepts_width;
+};
+
+std::vector<string_generator_placeholder_info_t> enumerate_string_generator_specifiers();
 
 }
 }
