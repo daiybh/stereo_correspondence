@@ -48,7 +48,7 @@ bool is_extended_generator_supported()
 
 namespace {
 
-const boost::regex specifier_pattern ("%(0?\\d+[simMo]|[simMontfFTrHDSOv%]|0?\\d?[lq][YMdDhHmstTx])");
+const boost::regex specifier_pattern ("%(0?\\d+[simMoeEcd]|[simMoeEcdntfFTrHDSOv%]|0?\\d?[lq][YMdDhHmstTx])");
 
 template<class S1, class S2>
 std::string to_s(const std::pair<S1, S2>& p)
@@ -263,6 +263,22 @@ std::string generate_string(const std::string& pattern, index_t sequence, const 
 				case 'o':
 					if (frame) ss << parse_and_replace(to_s(what[0]),
 							(frame->get_timestamp() - core::utils::get_global_start_time()).value/1000000);
+					break;
+				case 'e':
+					if (frame) ss << parse_and_replace(to_s(what[0]),
+							(timestamp_t{} - core::utils::get_global_start_time()).value/1000);
+					break;
+				case 'E':
+					if (frame) ss << parse_and_replace(to_s(what[0]),
+							(timestamp_t{} - core::utils::get_global_start_time()).value);
+					break;
+				case 'c':
+					if (frame) ss << parse_and_replace(to_s(what[0]),
+							(timestamp_t{} - core::utils::get_global_start_time()).value/1000000);
+					break;
+				case 'd':
+					if (frame) ss << parse_and_replace(to_s(what[0]),
+							(timestamp_t{} - frame->get_timestamp()).value/1000);
 					break;
 				case 'H':
 					ss << core::utils::get_hostname();

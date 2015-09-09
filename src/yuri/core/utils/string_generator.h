@@ -25,11 +25,15 @@ namespace utils {
  * 	%F - frame type (long)
  * 	%T - timestamp at the time of dump
  * 	%r - resolution of video frame
- * 	%m - (*) milliseconds since start
- * 	%M - (*) microseconds since start
- * 	%o - (*) seconds since start
+ * 	%m - (*) milliseconds since start (from frame timestamp)
+ * 	%M - (*) microseconds since start (from frame timestamp)
+ * 	%o - (*) seconds since start (from frame timestamp)
  * 	%s - (*) sequence number
  * 	%i - (*) frame index
+ * 	%e - (*) milliseconds since start (current time)
+ * 	%E - (*) microseconds since start (current time)
+ * 	%c - (*) seconds since start (current time)
+ * 	%d - (*) milliseconds as a difference of frame time and current time (== frame's actual lifetime)
  *
  * Complex specifiers
  *
