@@ -272,13 +272,6 @@ public combine_base<2, 3, 3, yuv444, 2> {
 	ovr_pix+=6;
 	dest_pix+=6;
 	src_pix+=4;
-//	*dest_pix++ =*(ovr_pix+0);
-//	*dest_pix++ =*(ovr_pix+1);
-//	*dest_pix++ =*(ovr_pix+3);
-//	*dest_pix++ =*(ovr_pix+2);
-//	*dest_pix++ =*(ovr_pix+1);
-//	*dest_pix++ =*(ovr_pix+3);
-//	ovr_pix+=4;
 }
 };
 
@@ -325,13 +318,49 @@ public combine_base<2, 4, 4, yuva4444, 2> {
 	*dest_pix++ = 255;
 }
 };
+
+template<>
+struct combine_kernel<yuva4444, yuva4444>:
+public combine_kernel<rgba32, rgba32>{
+	static format_t output_format() { return yuva4444; }
+};
+
+
+template<>
+struct combine_kernel<yuva4444, yuv444>:
+public combine_kernel<rgba32, rgb24>{
+	static format_t output_format() { return yuva4444; }
+};
+
+template<>
+struct combine_kernel<yuva4444, yuyv422>:
+public combine_base<4, 2, 4, yuva4444, 2> {
+	static void compute
+(plane_t::const_iterator& src_pix, plane_t::const_iterator& ovr_pix, plane_t::iterator& dest_pix)
+{
+		// Skip 2 pixels from input
+		src_pix += 8;
+		const auto y1 = *ovr_pix++;
+		const auto u  = *ovr_pix++;
+		const auto y2 = *ovr_pix++;
+		const auto v  = *ovr_pix++;
+		*dest_pix++ = y1;
+		*dest_pix++ = u;
+		*dest_pix++ = v;
+		*dest_pix++ = 255;
+		*dest_pix++ = y2;
+		*dest_pix++ = u;
+		*dest_pix++ = v;
+		*dest_pix++ = 255;
+
+}
+};
 template<class kernel>
 core::pRawVideoFrame dispatch_unique(Overlay& overlay, core::pRawVideoFrame frame_0, const core::pRawVideoFrame& frame_1)
 {
+	// The check fo is_frame_unique is important, otherwise we end up doing unnecessary copies.
 	if (is_frame_unique(frame_0) && kernel::output_format() == frame_0->get_format()) {
-		auto f0 = std::dynamic_pointer_cast<core::RawVideoFrame>(get_frame_unique(frame_0));
-		frame_0.reset();
-		return overlay.combine<true, kernel>(std::move(f0), frame_1);
+		return overlay.combine<true, kernel>(get_frame_unique(frame_0), frame_1);
 	}
 	return overlay.combine<false, kernel>(std::move(frame_0), frame_1);
 }
@@ -384,6 +413,8 @@ core::pRawVideoFrame dispatch(Overlay& overlay, core::pRawVideoFrame frame_0, co
 			return dispatch2<abgr32>(overlay, std::move(frame_0), frame_1);
 		case yuyv422:
 			return dispatch2_yuv<yuyv422>(overlay, std::move(frame_0), frame_1);
+		case yuva4444:
+			return dispatch2_yuv<yuva4444>(overlay, std::move(frame_0), frame_1);
 		default:
 			return core::pRawVideoFrame();
 	}
