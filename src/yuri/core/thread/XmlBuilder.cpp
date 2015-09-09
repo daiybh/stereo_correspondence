@@ -289,9 +289,13 @@ void XmlBuilder::builder_pimpl_t::process_routing()
 {
 	TiXmlElement * node = nullptr;
 	while((node = dynamic_cast<TiXmlElement*>(root->IterateChildren(event_tag, node)))) {
-		const char* text = node->GetText();
-		//if (text) routing_info.push_back(text);
-		if (text) routing.append(text);
+		TiXmlNode* tnode = nullptr;
+		while((tnode = node->IterateChildren(tnode))) {
+			if (auto text_node = tnode->ToText()) {
+				auto text = text_node->Value();
+				if (text) routing.append(text);
+			}
+		}
 	}
 }
 
