@@ -62,12 +62,14 @@ struct combine_base {
 	static format_t output_format() { return fmt; }
 
 	static void fill(plane_t::const_iterator& src_pix, plane_t::iterator& dest_pix) {
-		size_t i = 0;
-		for (; i < s; ++i) {
-			*dest_pix++ = *src_pix++;
-		}
-		for (; i < d; ++i) {
-			*dest_pix++ = 255;
+		for (int x = 0; x < pix_step; ++x) {
+			size_t i = 0;
+			for (; i < s; ++i) {
+				*dest_pix++ = *src_pix++;
+			}
+			for (; i < d; ++i) {
+				*dest_pix++ = 255;
+			}
 		}
 	}
 	static void advance(plane_t::const_iterator& src_pix, plane_t::iterator& dest_pix) {
@@ -306,6 +308,22 @@ public combine_base<2, 4, 4, yuva4444, 2> {
 	*dest_pix++ = 255;
 	ovr_pix++;
 }
+
+	static void fill(plane_t::const_iterator& src_pix, plane_t::iterator& dest_pix)
+{
+	const auto y1 = *src_pix++;
+	const auto u = *src_pix++;
+	const auto y2 = *src_pix++;
+	const auto v = *src_pix++;
+	*dest_pix++ = y1;
+	*dest_pix++ = u;
+	*dest_pix++ = v;
+	*dest_pix++ = 255;
+	*dest_pix++ = y2;
+	*dest_pix++ = u;
+	*dest_pix++ = v;
+	*dest_pix++ = 255;
+}
 };
 template<class kernel>
 core::pRawVideoFrame dispatch_unique(Overlay& overlay, core::pRawVideoFrame frame_0, const core::pRawVideoFrame& frame_1)
@@ -376,7 +394,7 @@ core::pRawVideoFrame dispatch(Overlay& overlay, core::pRawVideoFrame frame_0, co
 template<class kernel>
 inline void fill_line(ssize_t& pixel, const ssize_t& max_pixel, plane_t::const_iterator& src_pix, plane_t::iterator& dest_pix)
 {
-	for (; pixel < max_pixel; ++pixel) {
+	for (; pixel < max_pixel; pixel+=kernel::pix_step) {
 		kernel::fill(src_pix, dest_pix);
 	}
 }
