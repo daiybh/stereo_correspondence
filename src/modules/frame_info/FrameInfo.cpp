@@ -17,6 +17,7 @@
 #include "yuri/core/frame/raw_audio_frame_params.h"
 #include "yuri/core/frame/EventFrame.h"
 #include "yuri/core/utils/global_time.h"
+#include "yuri/core/utils/string_generator.h"
 namespace yuri {
 namespace frame_info {
 
@@ -33,6 +34,8 @@ core::Parameters FrameInfo::configure()
 	p.set_description("FrameInfo");
 	p["print_all"]["Print info about every frame. If set to false, only frames after change will be printed"]=false;
 	p["print_time"]["Print timestamps of the siplayed frames"]=false;
+	p["info_string"]["Generate string and send it as an event 'info'."]="";
+	p["print_string"]["Generate string and print it to output every frame."]="";
 	return p;
 }
 
@@ -148,7 +151,8 @@ bool same_format(const core::pFrame& a, const core::pFrame& b)
 
 FrameInfo::FrameInfo(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters):
 core::IOFilter(log_,parent,std::string("frame_info")),
-print_all_(false)
+event::BasicEventProducer(log),
+print_all_(false),frame_count_(0)
 {
 	IOTHREAD_INIT(parameters)
 }
@@ -167,16 +171,25 @@ core::pFrame FrameInfo::do_simple_single_step(core::pFrame frame)
 			}
 
 		}
+		if (!print_string_.empty()) {
+			log[log::info] << core::utils::generate_string(print_string_, frame_count_, frame);
+		}
+		if (!info_string_.empty()) {
+			emit_event("info", core::utils::generate_string(info_string_, frame_count_, frame));
+		}
 	}
 	catch (std::exception&){}
 	last_frame_ = frame;
+	++frame_count_;
 	return frame;
 }
 bool FrameInfo::set_param(const core::Parameter& param)
 {
 	if(assign_parameters(param)
 			(print_all_, "print_all")
-			(print_time_, "print_time"))
+			(print_time_, "print_time")
+			(info_string_, "info_string")
+			(print_string_, "print_string"))
 		return true;
 	return core::IOFilter::set_param(param);
 }

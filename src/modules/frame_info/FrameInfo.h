@@ -11,11 +11,12 @@
 #define FRAMEINFO_H_
 
 #include "yuri/core/thread/IOFilter.h"
+#include "yuri/event/BasicEventProducer.h"
 
 namespace yuri {
 namespace frame_info {
 
-class FrameInfo: public core::IOFilter
+class FrameInfo: public core::IOFilter, public event::BasicEventProducer
 {
 public:
 	IOTHREAD_GENERATOR_DECLARATION
@@ -29,6 +30,10 @@ private:
 	core::pFrame last_frame_;
 	bool print_all_;
 	bool print_time_;
+
+	size_t frame_count_;
+	std::string info_string_;
+	std::string print_string_;
 };
 
 } /* namespace frame_info */
