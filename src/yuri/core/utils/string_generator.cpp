@@ -355,7 +355,7 @@ const std::vector<string_generator_placeholder_info_t> specifier_list = {
 		{"S",	"system name (eg. Linux-3.19.0)", false},
 		{"O",	"OS (eg. Linux)", false},
 		{"v",	"yuri version", false},
-		{"",	"literal %", false},
+		{"%",	"literal %", false},
 		{"qY",	"Start up year (localtime)", false},
 		{"qM",	"Start up month (localtime)", false},
 		{"qd",	"Start up day in month (localtime)", false},
