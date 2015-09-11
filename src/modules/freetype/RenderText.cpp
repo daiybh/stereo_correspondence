@@ -34,6 +34,7 @@ core::Parameters RenderText::configure()
 	p["size"]["Font size in pixels"]=64;
 	p["resolution"]["Image resolution for generated image"]=resolution_t{800,600};
 	p["position"]["Text position"]=coordinates_t{0,0};
+	p["line_height"]["Height of a line (used only for multiline text). If 0, font_size is used instead"]=0;
 	p["spacing"]["Additional spacing between characters"]=0;
 	p["generate"]["Generate blank image. Set to false to put text on incomming images"]=false;
 	p["kerning"]["Enable/disable kerning."]=true;
@@ -467,12 +468,13 @@ std::tuple<uint32_t, int> utf8_char(char c, uint32_t unicode_char, int remaining
 
 void RenderText::draw_text(const std::string& text, core::pRawVideoFrame& frame)
 {
-	//coordinates_t pos = position_;
+	coordinates_t position = position_;
 	double horiz_pos = 0.0;
 	uint32_t prev = 0;
 	bool do_kerning = kerning_ && FT_HAS_KERNING(face_);
 	uint32_t unicode_character = 0;
 	int remaining = 0;
+	bool backslash = false;
 	for (auto c: text) {
 		//log[log::info] << "c: " << static_cast<uint8_t>(c);
 		if (utf8_) {
@@ -481,6 +483,29 @@ void RenderText::draw_text(const std::string& text, core::pRawVideoFrame& frame)
 			unicode_character = c&0xFF;
 		}
 		if (remaining > 0) continue;
+		if (unicode_character == '\\') {
+			if (!backslash) {
+				backslash = true;
+				continue;
+			}
+
+		}
+
+		if (backslash) {
+			backslash = false;
+			switch (unicode_character) {
+				case 'n':
+					horiz_pos = 0;
+					position.y += line_height_?line_height_:font_size_;
+					continue;
+				case 'r':
+					horiz_pos = 0;
+					continue;
+				default:
+					break;
+			}
+		}
+
 		FT_Load_Char(face_, unicode_character, FT_LOAD_RENDER);
 		auto& glyph = face_->glyph;
 		if (do_kerning) {
@@ -494,7 +519,7 @@ void RenderText::draw_text(const std::string& text, core::pRawVideoFrame& frame)
 			prev = idx;
 
 		}
-		auto coord = coordinates_t{static_cast<position_t>(horiz_pos) + glyph->bitmap_left, - glyph->bitmap_top} + position_;
+		auto coord = coordinates_t{static_cast<position_t>(horiz_pos) + glyph->bitmap_left, - glyph->bitmap_top} + position;
 		draw_glyph(glyph, frame, coord, edge_blend_ && !generate_, color_);
 		const double advance = ((glyph->linearHoriAdvance&0xFFFF0000)>>16) + static_cast<double>(glyph->linearHoriAdvance&0xFFFF)/0xFFFF;
 		horiz_pos+=advance;
@@ -510,6 +535,7 @@ bool RenderText::set_param(const core::Parameter& param)
 			(position_, 	"position")
 			(resolution_, 	"resolution")
 			(char_spacing_,	"spacing")
+			(line_height_,	"line_height")
 			(generate_, 	"generate")
 			(kerning_,		"kerning")
 			(edge_blend_,	"blend")

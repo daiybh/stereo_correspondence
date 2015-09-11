@@ -47,6 +47,7 @@ private:
 	resolution_t resolution_;
 	coordinates_t position_;
 	position_t char_spacing_;
+	position_t line_height_;
 	bool generate_;
 	bool kerning_;
 	double fps_;
