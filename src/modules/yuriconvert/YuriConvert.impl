@@ -1149,7 +1149,23 @@ core::pRawVideoFrame allocate_frame(size_t width, size_t height)
 //}
 
 template<format_t fmt_in, format_t fmt_out>
-core::pRawVideoFrame convert_formats(const core::pRawVideoFrame& frame, const YuriConvertor& conv)
+void convert_multiple_lines(const size_t linesize_in, 
+							const size_t linesize_out,
+							core::Plane::const_iterator src,
+							core::Plane::iterator dest,
+							const size_t width,
+							const YuriConvertor& conv,
+							size_t lines)
+{
+	for (size_t line = 0; line < lines; ++line) {
+		convert_line<fmt_in, fmt_out>(src, dest, width, conv);
+		src+=linesize_in;
+		dest+=linesize_out;
+	}
+}
+
+template<format_t fmt_in, format_t fmt_out>
+core::pRawVideoFrame convert_formats(const core::pRawVideoFrame& frame, const YuriConvertor& conv, size_t threads)
 {
 	const size_t width 			= frame->get_width();
 	const size_t height			= frame->get_height();
@@ -1161,10 +1177,41 @@ core::pRawVideoFrame convert_formats(const core::pRawVideoFrame& frame, const Yu
 	const size_t linesize_out 	= PLANE_DATA(outframe,0).get_line_size();
 	core::Plane::const_iterator src	= PLANE_DATA(frame,0).begin();
 	core::Plane::iterator dest		= PLANE_DATA(outframe,0).begin();
-	for (size_t line = 0; line < height; ++line) {
-		convert_line<fmt_in, fmt_out>(src, dest, width, conv);
-		src+=linesize_in;
-		dest+=linesize_out;
+	
+	if (!threads || threads == 1) {	
+		for (size_t line = 0; line < height; ++line) {
+			convert_line<fmt_in, fmt_out>(src, dest, width, conv);
+			src+=linesize_in;
+			dest+=linesize_out;
+		}
+	} else {
+		size_t task_lines = height / threads;
+		std::vector<std::future<void>> results;
+		size_t start_line = 0;
+		size_t remaining = height;
+		auto f = [&](size_t s, size_t r) {
+			return convert_multiple_lines<fmt_in, fmt_out>( 
+					linesize_in, 
+					linesize_out,
+					src + s * linesize_in,
+					dest + s * linesize_out,
+					width,
+					conv,
+					std::min(task_lines, r)
+				);
+		};
+		for (auto t: irange(threads)) {
+			(void)t;
+			results.push_back(
+					std::async(std::launch::async,
+						f, start_line, remaining)
+					);
+			start_line += task_lines;
+			remaining -= task_lines;		
+		}
+		for (auto& t: results) {
+			t.get();
+		}
 	}
 	return outframe;
 }

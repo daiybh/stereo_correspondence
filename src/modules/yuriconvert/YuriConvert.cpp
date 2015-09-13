@@ -14,6 +14,8 @@
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/frame/raw_frame_params.h"
 #include "yuri/core/thread/ConverterRegister.h"
+#include "yuri/core/utils/irange.h"
+#include <future>
 #include <cassert>
 namespace yuri {
 
@@ -197,7 +199,7 @@ namespace {
 	const size_t Wb_2020 	=  593;
 
 
-	using converter_t = std::function<core::pRawVideoFrame(const core::pRawVideoFrame&, const YuriConvertor&)>;
+	using converter_t = std::function<core::pRawVideoFrame(const core::pRawVideoFrame&, const YuriConvertor&, size_t)>;
 	using format_pair_t = std::pair<yuri::format_t, yuri::format_t>;
 
 //	inline unsigned int convY(unsigned int Y) { return (Y*219+4128) >> 6; }
@@ -212,7 +214,8 @@ namespace {
 	template<format_t fmt_in, format_t fmt_out>
 		void convert_line(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width);
 	template<format_t fmt_in, format_t fmt_out>
-		core::pRawVideoFrame convert_formats( const core::pRawVideoFrame& frame, const YuriConvertor&);
+		core::pRawVideoFrame convert_formats( const core::pRawVideoFrame& frame, const YuriConvertor&, size_t threads );
+
 
 	#include "YuriConvert.impl"
 
@@ -383,11 +386,13 @@ core::Parameters YuriConvertor::configure()
 	p["colorimetry"]["Colorimetry to use when converting from RGB (BT709, BT601, BT2020)"]="BT709";
 	p["format"]["Output format"]=std::string("YUV422");
 	p["full"]["Assume YUV values in full range"]=true;
+	p["threads"]["[EXPERIMENTAL] Number of threads to use. (use 1 to keep old behaviour)"]=1;
 	return p;
 }
 
 YuriConvertor::YuriConvertor(log::Log &log_, core::pwThreadBase parent, const core::Parameters& parameters)
-	:core::SpecializedIOFilter<core::RawVideoFrame> (log_,parent,"YuriConv"),colorimetry_(YURI_COLORIMETRY_REC709),full_range_(true)
+	:core::SpecializedIOFilter<core::RawVideoFrame> (log_,parent,"YuriConv"),
+	 colorimetry_(YURI_COLORIMETRY_REC709),full_range_(true),threads_(0)
 {
 	IOTHREAD_INIT(parameters)
 		log[log::info] << "Initialized " << converters.size() << " converters";
@@ -413,16 +418,12 @@ core::pFrame YuriConvertor::do_convert_frame(core::pFrame input_frame, format_t 
 
 	if (converters.count(conv_pair)) converter = converters[conv_pair];
 	if (converter) {
-		outframe = converter(frame, *this);
-		outframe->set_duration(input_frame->get_duration());
-		outframe->set_timestamp(input_frame->get_timestamp());
+		outframe = converter(frame, *this, threads_);
 	} else if (in_fmt == target_format) {
 		outframe = frame;
 	} else {
-
 		log[log::debug] << "Unknown format combination " << core::raw_format::get_format_name(frame->get_format()) << " -> "
 				<< core::raw_format::get_format_name(target_format);
-		return outframe;
 	}
 
 	if (outframe) {
@@ -439,30 +440,34 @@ core::pFrame YuriConvertor::do_special_single_step(core::pRawVideoFrame frame)
 	return convert_frame(frame, format_);
 }
 
-
+namespace {
+colorimetry_t parse_colorimetry(const std::string& clr) {
+	if (iequals(clr,"BT709") || iequals(clr,"REC709") || iequals(clr,"BT.709") || iequals(clr,"REC.709")) {
+		return YURI_COLORIMETRY_REC709;
+	} else if (iequals(clr,"BT601") || iequals(clr,"REC601") || iequals(clr,"BT.601") || iequals(clr,"REC.601")) {
+		return YURI_COLORIMETRY_REC601;
+	} else if (iequals(clr,"BT2020") || iequals(clr,"REC2020") || iequals(clr,"BT.2020") || iequals(clr,"REC.2020")) {
+		return YURI_COLORIMETRY_REC2020;
+	} else {
+//		log[log::warning] << "Unrecognized colorimetry type " << clr << ". Falling back to REC.709";
+		return YURI_COLORIMETRY_REC709;
+	}
+}
+}
 bool YuriConvertor::set_param(const core::Parameter &p)
 {
-	if (iequals(p.get_name(),"colorimetry")) {
-		std::string clr = p.get<std::string>();
-		if (iequals(clr,"BT709") || iequals(clr,"REC709") || iequals(clr,"BT.709") || iequals(clr,"REC.709")) {
-			colorimetry_=YURI_COLORIMETRY_REC709;
-		} else if (iequals(clr,"BT601") || iequals(clr,"REC601") || iequals(clr,"BT.601") || iequals(clr,"REC.601")) {
-			colorimetry_=YURI_COLORIMETRY_REC601;
-		} else if (iequals(clr,"BT2020") || iequals(clr,"REC2020") || iequals(clr,"BT.2020") || iequals(clr,"REC.2020")) {
-			colorimetry_=YURI_COLORIMETRY_REC2020;
-		} else {
-			log[log::warning] << "Unrecognized colorimetry type " << clr << ". Falling back to REC.709";// << std::endl;
-			colorimetry_=YURI_COLORIMETRY_REC709;
-		}
-	} else if (iequals(p.get_name(),"format")) {
-		format_ = core::raw_format::parse_format(p.get<std::string>());
-//		format_ = core::BasicPipe::get_format_from_string(p.get<std::string>(),YURI_TYPE_VIDEO);
-		if (format_==core::raw_format::unknown) format_= core::raw_format::yuyv422;
-		log[log::info] << "Output format " << core::raw_format::get_format_name(format_);
-	} else if (iequals(p.get_name(),"full")) {
-		full_range_ = p.get<bool>();
-	} else return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(p);
-	return true;
+	if (assign_parameters(p)
+			.parsed<std::string>
+				(colorimetry_, "colorimetry", parse_colorimetry)
+			.parsed<std::string>
+				(format_, "format", core::raw_format::parse_format)
+			(full_range_, "full")
+			(threads_, "threads")) {
+		if (!format_) format_ = core::raw_format::yuyv422;
+		return true;
+	}
+	return core::SpecializedIOFilter<core::RawVideoFrame>::set_param(p);
+
 }
 
 }

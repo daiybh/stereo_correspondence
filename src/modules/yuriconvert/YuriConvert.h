@@ -41,6 +41,7 @@ private:
 	colorimetry_t colorimetry_;
 	bool full_range_;
 	yuri::format_t format_;
+	size_t threads_;
 };
 
 }
