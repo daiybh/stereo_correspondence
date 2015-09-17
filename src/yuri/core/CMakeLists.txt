@@ -41,6 +41,7 @@ SET(YURI_SRC ${YURI_SRC}
 	core/utils/string.h
 	core/utils/color.cpp core/utils/color.h
 	core/utils/color_events.cpp
+	core/utils/any.h
 	
 	core/thread/builder_utils.cpp
 	core/thread/builder_utils.h
