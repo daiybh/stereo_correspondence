@@ -49,6 +49,7 @@ core::Parameters X264Encoder::configure()
 	p["cabac"]["Use cabac coder"]=false;
 	p["threads"]["Number of threads to use (0 for default)"]=0;
 	p["fps"]["Override framerate in incomming frames. (set to 0 to use value specified in frames)"]=fraction_t{25,1};
+	p["bframes"]["Override bframe count, use -1 for default value, 0 to disable bframes."] = -1;
 	return p;
 }
 
@@ -90,7 +91,7 @@ X264Encoder::X264Encoder(const log::Log &log_, core::pwThreadBase parent, const 
 base_type(log_,parent,std::string("x264")),encoder_(nullptr),
 frame_number_(0),preset_("ultrafast"),tune_("zerolatency"),profile_("baseline"),bitrate_(-1),
 max_bitrate_(-1),cabac_(true),threads_(0),
-encoded_frames_(0)
+encoded_frames_(0),bframes_(-1)
 {
 	IOTHREAD_INIT(parameters)
 	set_supported_formats(supported_formats);
@@ -131,6 +132,9 @@ core::pFrame X264Encoder::do_special_single_step(core::pRawVideoFrame frame)
 		params_.b_repeat_headers = 1;
 		params_.pf_log = &yuri_log;
 		params_.p_log_private = &log;
+		if (bframes_ >= 0) {
+			params_.i_bframe = bframes_;
+		}
 
 		params_.i_threads = threads_;
 		params_.b_cabac = cabac_?1:0;
@@ -208,7 +212,8 @@ bool X264Encoder::set_param(const core::Parameter& param)
 			(max_bitrate_, "max_bitrate")
 			(cabac_, "cabac")
 			(threads_, "threads")
-			(fps_, "fps"))
+			(fps_, "fps")
+			(bframes_, "bframes"))
 		return true;
 	return base_type::set_param(param);
 }

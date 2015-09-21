@@ -53,6 +53,7 @@ private:
 	std::vector<uint8_t> frame_data_;
 	duration_t encoding_time_;
 	size_t encoded_frames_;
+	int bframes_;
 };
 
 } /* namespace x264 */
