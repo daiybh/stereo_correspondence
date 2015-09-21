@@ -67,7 +67,7 @@ modified_{true},utf8_{true},color_(core::color_t::create_rgb(0xFF,0xFF,0xFF))
 		log[log::warning] << "Kerning requested but not supported by current font...";
 	}
 	using namespace core::raw_format;
-	set_supported_formats({y8, rgb24, bgr24, rgba32, bgra32, argb32, abgr32, yuv444, yuyv422, yvyu422, uyvy422, vyuy422});
+	set_supported_formats({y8, rgb24, bgr24, rgba32, bgra32, argb32, abgr32, yuv444, yuyv422, yvyu422, uyvy422, vyuy422, yuva4444});
 }
 
 RenderText::~RenderText() noexcept
@@ -328,6 +328,27 @@ struct draw_kernel<vyuy422, blend> {
 	}
 };
 
+template<bool blend>
+struct draw_kernel<yuva4444, blend> {
+	template<typename T, typename T2>
+	static void draw(T in, const T in_end, T2 out, const std::array<uint8_t, 4>& color, bool)
+	{
+		const auto out_max = std::numeric_limits<
+				typename std::remove_reference<decltype(*out)>::type>::max();
+		while(in != in_end) {
+			const auto p = *in;
+			if (p) {
+				*(out+0) = compute_value<blend>::eval(p, out+0, color[0]);
+				*(out+1) = compute_value<blend>::eval(p, out+1, color[1]);
+				*(out+2) = compute_value<blend>::eval(p, out+2, color[2]);
+				*(out+3) = out_max;
+			}
+			++in;
+			out+=4;
+		}
+	}
+};
+
 template<format_t fmt>
 void draw_glyph_impl(core::pRawVideoFrame frame, const FT_Bitmap& bmp,
 		coordinates_t position, geometry_t draw_rect, bool blend, const std::array<uint8_t, 4>& color)
@@ -387,6 +408,9 @@ bool draw_glyph(FT_GlyphSlot glyph, core::pRawVideoFrame frame,
 			break;
 		case vyuy422:
 			draw_glyph_impl<vyuy422>(frame, bitmap, position, draw_rect, blend, color.get_yuva());
+			break;
+		case yuva4444:
+			draw_glyph_impl<yuva4444>(frame, bitmap, position, draw_rect, blend, color.get_yuva());
 			break;
 		default:
 			return false;
