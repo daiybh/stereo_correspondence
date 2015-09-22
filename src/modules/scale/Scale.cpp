@@ -38,7 +38,7 @@ resolution_(resolution_t{800,600}),fast_(true)
 	IOTHREAD_INIT(parameters)
 	using namespace core::raw_format;
 	set_supported_formats({rgb24, bgr24, rgba32, argb32, bgra32, abgr32, yuv444,
-							yuyv422,yvyu422, uyvy422, vyuy422});
+							yuyv422,yvyu422, uyvy422, vyuy422, yuva4444});
 //	set_latency(1_ms);
 }
 
@@ -316,6 +316,7 @@ core::pFrame Scale::do_special_single_step(core::pRawVideoFrame frame)
 			case argb32:
 			case bgra32:
 			case abgr32:
+			case yuva4444:
 				return scale_image_fast<scale_line_bilinear_fast<4>>(frame, resolution_);
 			case yuyv422:
 			case yvyu422:
@@ -335,6 +336,7 @@ core::pFrame Scale::do_special_single_step(core::pRawVideoFrame frame)
 			case argb32:
 			case bgra32:
 			case abgr32:
+			case yuva4444:
 				return scale_image<scale_line_bilinear<4>>(frame, resolution_);
 			case yuyv422:
 			case yvyu422:
