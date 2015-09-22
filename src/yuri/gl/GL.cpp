@@ -74,6 +74,7 @@ std::string get_yuv_shader(const format_t fmt)
 {
 	switch (fmt) {
 		case raw_format::yuv444:
+		case raw_format::yuva4444:
 			return shaders::fs_get_yuv444;
 		case raw_format::yuyv422:
 			return shaders::fs_get_yuyv422;
@@ -127,6 +128,7 @@ const std::vector<format_t> gl_supported_formats = {
 		raw_format::bgr24,
 		raw_format::bgra32,
 		raw_format::yuv444,
+		raw_format::yuva4444,
 		raw_format::yuyv422,
 		raw_format::yvyu422,
 		raw_format::uyvy422,
@@ -267,6 +269,7 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, 
 		}break;
 
 		case raw_format::yuv444:
+		case raw_format::yuva4444:
 		case raw_format::yuyv422:
 		case raw_format::yvyu422:
 		case raw_format::uyvy422:
@@ -275,6 +278,8 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, 
 			if (wh != textures[tid].wh) {
 				if (frame_format==raw_format::yuv444) {
 					prepare_texture(tid, 0, nullptr, 0, {wh, wh}, GL_RGB, GL_RGB, false);
+				} else if (frame_format==raw_format::yuva4444) {
+					prepare_texture(tid, 0, nullptr, 0, {wh, wh}, GL_RGB, GL_RGBA, false);
 				} else {
 					prepare_texture(tid, 0, nullptr, 0, {wh/2, wh}, GL_RGBA, GL_RGBA, false);
 					prepare_texture(tid, 1, nullptr, 0, {wh, wh}, GL_LUMINANCE8_ALPHA8, GL_LUMINANCE_ALPHA, false);
@@ -284,6 +289,8 @@ void GL::generate_texture(index_t tid, const core::pFrame& gframe, bool flip_x, 
 
 			if (frame_format ==raw_format::yuv444) {
 				prepare_texture(tid, 0, PLANE_RAW_DATA(frame,0), PLANE_SIZE(frame,0), {w, h},GL_RGB,GL_RGB,true);
+			} else if (frame_format ==raw_format::yuva4444) {
+				prepare_texture(tid, 0, PLANE_RAW_DATA(frame,0), PLANE_SIZE(frame,0), {w, h},GL_RGBA,GL_RGBA,true);
 			} else {
 				prepare_texture(tid, 0, PLANE_RAW_DATA(frame,0), PLANE_SIZE(frame,0), {w/2, h}, GL_RGBA, GL_RGBA, true);
 				prepare_texture(tid, 1, PLANE_RAW_DATA(frame,0), PLANE_SIZE(frame,0), {w, h}, GL_LUMINANCE8_ALPHA8, GL_LUMINANCE_ALPHA, true);
