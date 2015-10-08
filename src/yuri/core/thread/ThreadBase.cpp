@@ -435,6 +435,10 @@ bool ThreadBase::set_params(const Parameters &parameters)
 			log[log::warning] << "Error processing parameter " << parameter.get_name() << ": " << e.what();
 			all_ok = false;
 		}
+        catch(std::exception& e) {
+            log[log::warning] << "Generic error processing parameter " << parameter.get_name() << ": " << e.what();
+            all_ok = false;
+        }
 	}
 	return all_ok;
 }
