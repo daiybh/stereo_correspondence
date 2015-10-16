@@ -89,6 +89,26 @@ bool CountLimitedPolicy<true>::impl_push_frame(const pFrame &frame)
 	return true;
 }
 
+template<>
+bool UnreliableSingleFramePolicy<false>::impl_push_frame(const pFrame &frame)
+{
+	if(distribution_(generator_) <= probability_)
+		return true;
+	drop_frame(frame_);
+    frame_ = frame;
+    return true;
+}
+template<>
+bool UnreliableSingleFramePolicy<true>::impl_push_frame(const pFrame &frame)
+{
+    if (frame_) return false;
+    if(distribution_(generator_) <= probability_)
+    		return true;
+    frame_ = frame;
+    return true;
+}
+
+
 
 }
 } /* namespace core */

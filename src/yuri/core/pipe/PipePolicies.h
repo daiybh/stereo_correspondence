@@ -13,6 +13,7 @@
 #include "yuri/core/utils/new_types.h"
 #include "yuri/core/frame/Frame.h"
 #include "yuri/core/parameter/Parameters.h"
+#include "yuri/core/utils/assign_parameters.h"
 #include <deque>
 #include <cassert>
 namespace yuri {
@@ -190,6 +191,51 @@ private:
 	yuri::size_t max_count_;
 	yuri::size_t first_index_;
 	yuri::size_t count_;
+};
+
+/*!
+ * Policy for pipes able to hold only a single frame.
+ * This kind of pipe is intended for testing.
+ * Frames are thrown away by pipe randomly.
+ */
+
+template<bool blocking>
+class UnreliableSingleFramePolicy {
+public:
+    static Parameters configure() {
+        Parameters p;
+        p.set_description(std::string("Pipe storing only single frame, dropping frames with defined probability")+(blocking?" (blocking).":"."));
+        p["probability"]["Probability, that the frame will be lost <0.0, 1.0>"]=0.5;
+        return p;
+    }
+
+protected:
+    UnreliableSingleFramePolicy(const Parameters& parameters): generator_(std::random_device()()), distribution_(0.0, 1.0) {
+    	for (const auto& param: parameters) {
+    		assign_parameters (param.second)
+					(probability_, "probability");
+    	}
+    }
+    ~UnreliableSingleFramePolicy() noexcept {}
+    EXPORT bool impl_push_frame(const pFrame &frame);
+    pFrame impl_pop_frame()
+    {
+        pFrame frame = frame_;
+        frame_.reset();
+        return frame;
+    }
+    size_t impl_get_size() const {
+        return frame_?1:0;
+    }
+    bool impl_is_full() const noexcept {
+        return frame_?true:false;
+    }
+private:
+    virtual void drop_frame(const pFrame& frame) = 0;
+    std::mt19937 generator_;
+    std::uniform_real_distribution<float> distribution_;
+    double probability_;
+    pFrame frame_;
 };
 
 

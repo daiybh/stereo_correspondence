@@ -53,14 +53,16 @@ private:
 	}
 };
 
-using BlockingUnlimitedPipe 		= SpecialPipe<pipe::UnlimitedPolicy, 	true>;
-using BlockingSingleFramePipe 		= SpecialPipe<pipe::SingleFramePolicy, 	true>;
-using BlockingSizeLimitedPipe 		= SpecialPipe<pipe::SizeLimitedPolicy, 	true>;
-using BlockingCountLimitedPipe 		= SpecialPipe<pipe::CountLimitedPolicy, true>;
-using NonBlockingUnlimitedPipe 		= SpecialPipe<pipe::UnlimitedPolicy, 	false>;
-using NonBlockingSingleFramePipe 	= SpecialPipe<pipe::SingleFramePolicy, 	false>;
-using NonBlockingSizeLimitedPipe 	= SpecialPipe<pipe::SizeLimitedPolicy, 	false>;
-using NonBlockingCountLimitedPipe 	= SpecialPipe<pipe::CountLimitedPolicy, false>;
+using BlockingUnlimitedPipe                 = SpecialPipe<pipe::UnlimitedPolicy, true>;
+using BlockingSingleFramePipe               = SpecialPipe<pipe::SingleFramePolicy, true>;
+using BlockingSizeLimitedPipe               = SpecialPipe<pipe::SizeLimitedPolicy, true>;
+using BlockingCountLimitedPipe              = SpecialPipe<pipe::CountLimitedPolicy, true>;
+using BlockingUnreliableSingleFramePipe     = SpecialPipe<pipe::UnreliableSingleFramePolicy, true>;
+using NonBlockingUnlimitedPipe              = SpecialPipe<pipe::UnlimitedPolicy, false>;
+using NonBlockingSingleFramePipe            = SpecialPipe<pipe::SingleFramePolicy, false>;
+using NonBlockingSizeLimitedPipe            = SpecialPipe<pipe::SizeLimitedPolicy, false>;
+using NonBlockingCountLimitedPipe           = SpecialPipe<pipe::CountLimitedPolicy, false>;
+using NonBlockingUnreliableSingleFramePipe  = SpecialPipe<pipe::UnreliableSingleFramePolicy, false>;
 
 }
 }
