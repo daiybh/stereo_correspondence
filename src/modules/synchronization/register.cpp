@@ -11,6 +11,10 @@
 #include "TimestampObserver.h"
 #include "OnepcProtocolCohort.h"
 #include "OnepcProtocolCoordinator.h"
+#include "TwopcProtocolCohort.h"
+#include "TwopcProtocolCoordinator.h"
+#include "TwopcTimeoutProtocolCohort.h"
+#include "TwopcTimeoutProtocolCoordinator.h"
 namespace yuri {
 namespace synchronization {
 
@@ -19,6 +23,11 @@ MODULE_REGISTRATION_BEGIN("synchronization")
 		REGISTER_IOTHREAD("onepc_protocol_cohort", OnepcProtocolCohort)
 		REGISTER_IOTHREAD("onepc_protocol_coordinator", OnepcProtocolCoordinator)
 		REGISTER_IOTHREAD("timestamp_observer",TimestampObserver)
+
+		REGISTER_IOTHREAD("twopc_protocol_cohort",                  TwopcProtocolCohort)
+		REGISTER_IOTHREAD("twopc_protocol_coordinator",             TwopcProtocolCoordinator)
+		REGISTER_IOTHREAD("twopc_timeout_protocol_cohort",          TwopcTimeoutProtocolCohort)
+		REGISTER_IOTHREAD("twopc_timeout_protocol_coordinator",     TwopcTimeoutProtocolCoordinator)
 MODULE_REGISTRATION_END()
 
 }
