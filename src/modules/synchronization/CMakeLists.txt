@@ -5,7 +5,9 @@ SET (MODULE synchronization)
 SET (SRC 
     DelayEstimation.cpp
     DelayEstimation.h
-    
+    TimestampObserver.cpp
+	TimestampObserver.h
+    	
     register.cpp)
  
 add_library(${MODULE} MODULE ${SRC})
