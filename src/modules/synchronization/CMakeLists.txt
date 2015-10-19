@@ -5,6 +5,10 @@ SET (MODULE synchronization)
 SET (SRC 
     DelayEstimation.cpp
     DelayEstimation.h
+    OnepcProtocolCohort.cpp
+    OnepcProtocolCohort.h
+    OnepcProtocolCoordinator.cpp
+    OnepcProtocolCoordinator.h
     TimestampObserver.cpp
 	TimestampObserver.h
     	
