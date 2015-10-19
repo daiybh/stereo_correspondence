@@ -282,6 +282,10 @@ IF (HAVE_FREI0R_H)
 	add_subdirectory(frei0r)
 ENDIF()
 
+IF(NOT YURI_DISABLE_SYNCHRONIZATION)
+    add_subdirectory(synchronization)
+ENDIF()
+
 ENDIF(YURI_BUILD_EXPERIMENTAL_MODULES)
 
 #################################################################
