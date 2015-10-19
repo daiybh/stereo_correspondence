@@ -14,6 +14,8 @@ SET (TWOPC_SRC
 	TwopcProtocolCoordinator.h
 	TwopcProtocolCohort.cpp
 	TwopcProtocolCohort.h
+	TwopcTimeoutProtocolCoordinator.cpp
+	TwopcTimeoutProtocolCoordinator.h
 	)
 
 
