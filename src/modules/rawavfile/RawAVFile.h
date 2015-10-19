@@ -13,6 +13,7 @@
 #include "yuri/libav/libav.h"
 #include "yuri/core/thread/IOFilter.h"
 #include "yuri/event/BasicEventConsumer.h"
+#include "yuri/event/BasicEventProducer.h"
 #include "yuri/core/utils/managed_resource.h"
 extern "C" {
 	#include <libavformat/avformat.h>
@@ -75,6 +76,7 @@ private:
 	bool				reset_;
 	bool				allow_empty_;
 	bool				enable_experimental_;
+	bool				ignore_timestamps_;
 };
 
 } /* namespace video */

@@ -22,6 +22,7 @@
 #include "yuri/core/utils/assign_events.h"
 #include <cassert>
 #include "libavcodec/version.h"
+#include "yuri/event/EventHelpers.h"
 namespace yuri {
 namespace rawavfile {
 
@@ -73,16 +74,17 @@ core::Parameters RawAVFile::configure()
 	p["loop"]["Loop the video"]=true;
 	p["allow_empty"]["Allow empty input file"]=false;
 	p["enable_experimental"]["Enable experimental codecs"]=true;
+    p["ignore_timestamps"]["Ignore fps (similar to fps < 0), switchable at runtime"]=false;
 	return p;
 }
 
 // TODO: number of output streams should be -1 and custom connect_out should be implemented.
 RawAVFile::RawAVFile(const log::Log &_log, core::pwThreadBase parent, const core::Parameters &parameters)
-	:IOThread(_log,parent,0,1024,"RawAVSource"),
+    :IOThread(_log,parent,0,1024,"RawAVSource"),
 	 BasicEventConsumer(log),
 	fmtctx_(nullptr,[](AVFormatContext* ctx){avformat_close_input(&ctx);}),video_format_out_(0),
 	decode_(true),fps_(0.0),max_video_streams_(1),max_audio_streams_(1),
-	loop_(true),reset_(false),allow_empty_(false),enable_experimental_(true)
+    loop_(true),reset_(false),allow_empty_(false),enable_experimental_(true), ignore_timestamps_(false)
 {
 	IOTHREAD_INIT(parameters)
 	set_latency (10_us);
@@ -119,7 +121,6 @@ bool RawAVFile::open_file(const std::string& filename)
 	video_streams_.clear();
 	audio_streams_.clear();
 	frames_.clear();
-
 	// ffmpeg needs locking of open/close functions...
 	auto lock = libav::get_libav_lock();
 	if (fmtctx_) {
@@ -241,7 +242,7 @@ bool RawAVFile::push_ready_frames()
 	bool ready = false;
 	for (auto i: irange(video_streams_.size())) {
 		if (frames_[i]) {
-			if (fps_>=0) {
+			if (fps_>=0 && !ignore_timestamps_) {
 				timestamp_t curr_time;
 				if (curr_time < next_times_[i]) {
 					continue;
@@ -492,7 +493,8 @@ bool RawAVFile::set_param(const core::Parameter &parameter)
 			(max_audio_streams_,"max_audio")
 			(loop_, 			"loop")
 			(allow_empty_,		"allow_empty")
-			(enable_experimental_,"enable_experimental"))
+			(enable_experimental_,"enable_experimental")
+            (ignore_timestamps_, "ignore_timestamps"))
 		return true;
 	return IOThread::set_param(parameter);
 }
@@ -507,7 +509,12 @@ bool RawAVFile::do_process_event(const std::string& event_name, const event::pBa
 	}
 	if (assign_events(event_name, event)
 		(next_filename_, "filename")
-		(reset_, "reset")) {
+        (reset_, "reset")
+		(ignore_timestamps_, "ignore_timestamps"))
+		return true;
+	// Compatibility with old name
+	if (event_name == "observe_timestamp") {
+		ignore_timestamps_ = !event::lex_cast_value<bool>(event);
 		return true;
 	}
 
