@@ -8,6 +8,11 @@ SET (ONEPC_SRC
     OnepcProtocolCoordinator.cpp
     OnepcProtocolCoordinator.h)
 
+SET (TWOPC_SRC
+    TwopcProtocol.h
+	TwopcProtocolCoordinator.cpp
+	TwopcProtocolCoordinator.h
+	)
 
 
 SET (SRC 
@@ -18,7 +23,7 @@ SET (SRC
 	
 	${ONEPC_SRC}
 	
-	TwopcProtocol.h
+	${TWOPC_SRC}
 	
     register.cpp)
  
