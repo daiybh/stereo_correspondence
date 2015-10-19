@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef PLAYBACKCONTROLLER_H_
-#define PLAYBACKCONTROLLER_H_
+#ifndef TIMESTAMPOBSERVER_H_
+#define TIMESTAMPOBSERVER_H_
 
 #include "yuri/core/Module.h"
 
@@ -58,4 +58,4 @@ private:
 }
 }
 
-#endif /* PLAYBACKCONTROLLER_H_ */
+#endif /* TIMESTAMPOBSERVER_H_ */
