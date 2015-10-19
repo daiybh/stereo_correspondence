@@ -15,6 +15,7 @@
 #include "TwopcProtocolCoordinator.h"
 #include "TwopcTimeoutProtocolCohort.h"
 #include "TwopcTimeoutProtocolCoordinator.h"
+#include "PlaybackController.h"
 namespace yuri {
 namespace synchronization {
 
@@ -22,6 +23,7 @@ MODULE_REGISTRATION_BEGIN("synchronization")
 		REGISTER_IOTHREAD("delay_estimation", DelayEstimation)
 		REGISTER_IOTHREAD("onepc_protocol_cohort", OnepcProtocolCohort)
 		REGISTER_IOTHREAD("onepc_protocol_coordinator", OnepcProtocolCoordinator)
+		REGISTER_IOTHREAD("playback_controller", PlaybackController)
 		REGISTER_IOTHREAD("timestamp_observer",TimestampObserver)
 
 		REGISTER_IOTHREAD("twopc_protocol_cohort",                  TwopcProtocolCohort)

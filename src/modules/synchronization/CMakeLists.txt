@@ -31,6 +31,9 @@ SET (SRC
 	
 	${TWOPC_SRC}
 	
+	PlaybackController.cpp
+	PlaybackController.h
+	
     register.cpp)
  
 add_library(${MODULE} MODULE ${SRC})
