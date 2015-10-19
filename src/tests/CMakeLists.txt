@@ -12,7 +12,10 @@ add_executable(yuri_test_suite test_base.cpp
 								test_string_generator.cpp
 								test_string.cpp
 								test_color.cpp
-								test_any.cpp)
+								test_any.cpp
+								
+								test_state_table.cpp
+								)
 target_link_libraries (yuri_test_suite ${LIBNAME})
 
 add_executable(yuri_test_register test_register.cpp)
