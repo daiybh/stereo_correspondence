@@ -17,7 +17,9 @@ SET (SRC
 	TimestampObserver.h
 	
 	${ONEPC_SRC}
-    	
+	
+	TwopcProtocol.h
+	
     register.cpp)
  
 add_library(${MODULE} MODULE ${SRC})
