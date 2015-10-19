@@ -23,6 +23,16 @@ namespace network {
 YuriDatagram::YuriDatagram(const log::Log &log_, const std::string&, int domain):
 core::socket::DatagramSocket(log_),socket_(domain, SOCK_DGRAM, 0)
 {
+ int optval = 1;
+ if(setsockopt(get_socket(), SOL_SOCKET, SO_REUSEADDR,(void *) &optval, sizeof(optval)) <0){
+ 		log[log::warning] << "Failed to set SO_REUSEADDR";
+ }
+#ifdef SO_REUSEPORT
+ optval = 1;
+ if(setsockopt(get_socket(), SOL_SOCKET, SO_REUSEPORT,(void *) &optval, sizeof(optval)) <0){
+  		log[log::warning] << "Failed to set SO_REUSEPORT";
+ }
+#endif
 }
 
 YuriDatagram::~YuriDatagram() noexcept
