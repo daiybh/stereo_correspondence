@@ -1,0 +1,63 @@
+<?xml version="1.0" ?>
+<app name="twopc_protocol_test">
+
+  <!-- Specify variables for command line substitution -->
+  <variable name="global_dir" description="The directory that contains the player folder"/>
+  <variable name="dir" description="The name of directory that contains the the glx_window files"/>
+  <variable name="geometry1" description="Geometry to crop"/>
+  <variable name="resolution1" description="Resolution of output window"/>
+  <variable name="position1" description="Window position"/>
+
+  <variable name="geometry2" description="Geometry to crop"/>
+  <variable name="resolution2" description="Resolution of output window"/>
+  <variable name="position2" description="Window position"/>
+
+  <variable name="geometry3" description="Geometry to crop"/>
+  <variable name="resolution3" description="Resolution of output window"/>
+  <variable name="position3" description="Window position"/>
+
+  <variable name="geometry4" description="Geometry to crop"/>
+  <variable name="resolution4" description="Resolution of output window"/>
+  <variable name="position4" description="Window position"/>
+
+  <variable name="stereo" description="Stereoscopic method (none, anaglyph, quadbuffer, side_by_side, top_bottom)"/>
+  <variable name="flip_x" description="Flip around vertical axis"/>
+
+  <variable name="flip_y" description="Flip around horizontal axis"/>
+  <variable name="swap_eyes" description="Swap stereo eyes"/>
+  <variable name="on_top" description="Stay on top"/>
+
+  <variable name="count_of_windows" description="Count of GLX windows"/>
+
+
+  <node class="xml_builder" name="screening">
+    <!-- Cohort -->
+    <parameter name="filename">add(add(@global_dir, @dir),
+      select(@count_of_windows,["null.xml","glx_window_with_crop.xml","glx_window2_with_crop.xml","glx_window3_with_crop.xml","glx_window4_with_crop.xml"]))</parameter>
+    <parameter name="geometry1">@geometry1</parameter>
+    <parameter name="resolution1">@resolution1</parameter>
+    <parameter name="position1">@position1</parameter>
+    
+    <parameter name="geometry2">@geometry2</parameter>
+    <parameter name="resolution2">@resolution2</parameter>
+    <parameter name="position2">@position2</parameter>
+
+    <parameter name="geometry3">@geometry3</parameter>
+    <parameter name="resolution3">@resolution3</parameter>
+    <parameter name="position3">@position3</parameter>
+
+    <parameter name="geometry4">@geometry4</parameter>
+    <parameter name="resolution4">@resolution4</parameter>
+    <parameter name="position4">@position4</parameter>
+
+    <parameter name="stereo">@stereo</parameter>
+    <parameter name="flip_x">@flip_x</parameter>
+    <parameter name="flip_y">@flip_y</parameter>
+    <parameter name="swap_eyes">@swap_eyes</parameter>
+    <parameter name="on_top">@on_top</parameter>
+  </node>
+
+
+   <link name="renderer" class="single_blocking" source="@:0" target="screening:0"/>
+
+</app>

@@ -1,0 +1,67 @@
+<?xml version="1.0" ?>
+<app name="glx_window3">
+
+  <!-- Specify variables for command line substitution -->
+  <variable name="global_dir" description="The directory that contains the player folder"/>
+  <variable name="dir" description="The name of directory that contains the glx_window files"/>
+  <variable name="resolution1" description="Resolution of output window"/>
+  <variable name="position1" description="Window position"/>
+
+  <variable name="resolution2" description="Resolution of output window"/>
+  <variable name="position2" description="Window position"/>
+
+  <variable name="resolution3" description="Resolution of output window"/>
+  <variable name="position3" description="Window position"/>
+
+  <variable name="stereo" description="Stereoscopic method (none, anaglyph, quadbuffer, side_by_side, top_bottom)"/>
+  <variable name="flip_x" description="Flip around vertical axis"/>
+
+  <variable name="flip_y" description="Flip around horizontal axis"/>
+  <variable name="swap_eyes" description="Swap stereo eyes"/>
+  <variable name="on_top" description="Stay on top"/>
+
+
+  <!-- Nodes -->
+  <node class="dup" name="dup"/>
+
+  <node class="xml_builder" name="glx_window1">
+    <parameter name="filename">add(add(@global_dir, @dir),"glx_window.xml")</parameter>
+    <parameter name="resolution">@resolution1</parameter>
+    <parameter name="position">@position1</parameter>
+    <parameter name="stereo">@stereo</parameter>
+    <parameter name="flip_x">@flip_x</parameter>
+    <parameter name="flip_y">@flip_y</parameter>
+    <parameter name="swap_eyes">@swap_eyes</parameter>
+    <parameter name="on_top">@on_top</parameter>
+  </node>
+
+  <node class="xml_builder" name="glx_window2">
+    <parameter name="filename">add(add(@global_dir, @dir),"glx_window.xml")</parameter>
+    <parameter name="resolution">@resolution2</parameter>
+    <parameter name="position">@position2</parameter>
+    <parameter name="stereo">@stereo</parameter>
+    <parameter name="flip_x">@flip_x</parameter>
+    <parameter name="flip_y">@flip_y</parameter>
+    <parameter name="swap_eyes">@swap_eyes</parameter>
+    <parameter name="on_top">@on_top</parameter>
+  </node>
+
+  <node class="xml_builder" name="glx_window3">
+    <parameter name="filename">add(add(@global_dir, @dir),"glx_window.xml")</parameter>
+    <parameter name="resolution">@resolution3</parameter>
+    <parameter name="position">@position3</parameter>
+    <parameter name="stereo">@stereo</parameter>
+    <parameter name="flip_x">@flip_x</parameter>
+    <parameter name="flip_y">@flip_y</parameter>
+    <parameter name="swap_eyes">@swap_eyes</parameter>
+    <parameter name="on_top">@on_top</parameter>
+  </node>
+
+
+  <link name="dup" class="single" source="@:0" target="dup:0"/>
+
+  <link name="dup1" class="single" source="dup:-1" target="glx_window1:0"/>
+  <link name="dup2" class="single" source="dup:-1" target="glx_window2:0"/>
+  <link name="dup3" class="single" source="dup:-1" target="glx_window3:0"/>
+
+</app>

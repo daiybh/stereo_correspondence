@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<app name="distributed_data">
+
+<!-- Specify variables for command line substitution -->
+<variable name="global_dir" description="The directory that contains the player folder"/>
+<variable name="dir" required="1" description="Relative path from the player folder"/>
+
+<variable name="stream_address" description="Target address (hostname or IP address (4 or 6))"/>
+<variable name="rx_port" description="RX port number"/>
+<variable name="tx_port" description="TX port number"/>
+<variable name="ttl" description="TTL"/>
+<variable name="decoder_format" description="Output format"/>
+<variable name="decoder_fast" description="Faster decoding with slightly worse quality"/>
+
+<!-- General settings -->
+<general>
+  <parameter name="run_limit">-1</parameter>
+  <parameter name="debug">0</parameter>
+</general>
+
+<!-- Nodes -->
+
+<node class="xml_builder" name="streaming">
+    <parameter name="filename">add(add(@global_dir, @dir),"streaming_in.xml")</parameter>
+    <parameter name="stream_address">@stream_address</parameter>
+    <parameter name="rx_port">@rx_port</parameter>
+    <parameter name="tx_port">@tx_port</parameter>
+    <parameter name="ttl">@ttl</parameter>
+    <parameter name="quality">@quality</parameter>
+    <parameter name="force_mjpeg">@force_mjpeg</parameter>
+</node>
+
+<link name="streaming_in" class="single_blocking" source="streaming:0" target="@:0"/>
+
+</app>
+
+

@@ -1,0 +1,76 @@
+<?xml version="1.0" ?>
+<app name="twopc_protocol_coordinator">
+
+  <!-- Specify variables for command line substitution -->
+  <variable name="coordinator" description="Sets coordinator mode"/>
+  <variable name="fps" description="Explicit framerate. Set to 0 for default."/>
+
+  <variable name="cohorts" description="Count of cohorts"/>
+  <variable name="strict" description="Sets strict mode. The frame will be displaying if all of cohorts have had frame."/>
+  <variable name="confirmation" description="Required count of confirmations from cohorts.[per cent]"/>
+  <variable name="variable_cohorts" description="Allow variable count of cohorts."/>
+  <variable name="frame_index" description="Using default frame index."/>
+  <variable name="wait_for_replies" description="Maximum waiting time for replies from cohorts"/>
+  <variable name="missing_confirmation" description="Set the maximum respected count of missing confirmations from cohorts."/>
+  <variable name="port_sender" description="Set port for using in localhost"/>
+  <variable name="port_receiver" description="Set port for using in localhost"/>
+  <variable name="address" required="1"  description="Group address"/>
+  <variable name="webserver_path" description="The path to directory that contains webplayer files"/>
+  <variable name="observe_timestamp" />
+  <!-- Nodes -->
+
+  <node class="timestamp_observer" name="timestamp_observer">
+    <parameter name="fps">@fps</parameter>
+    <parameter name="observe_timestamp">@observe_timestamp</parameter>
+  </node>
+
+  <node class="playback_controller" name="controller">
+    <parameter name="coordinator">@coordinator</parameter>
+    <parameter name="fps">@fps</parameter>
+  </node>
+
+  <node class="osc_receiver" name="receiver">
+    <parameter name="port">@port_receiver</parameter>
+  </node>
+
+  <node class="osc_sender" name="sender">
+    <parameter name="port">@port_sender</parameter>
+    <parameter name="address">@address</parameter>
+  </node>
+
+  <node class="twopc_protocol_coordinator" name="twopc_protocol">
+    <parameter name="cohorts">@cohorts</parameter>
+    <parameter name="confirmation">@confirmation</parameter>
+    <parameter name="strict">@strict</parameter>
+    <parameter name="variable_cohorts">@variable_cohorts</parameter>
+    <parameter name="frame_index">@frame_index</parameter>
+    <parameter name="wait_for_replies">@wait_for_replies</parameter>
+    <parameter name="missing_confirmation">@missing_confirmation</parameter>
+  </node>
+
+  <node class="xml_builder" name="screening">
+    <parameter name="filename">
+      add(add(@global_dir, @dir), "webserver_gui.xml")
+    </parameter>
+    <parameter name="webserver_path">@webserver_path</parameter>
+  </node>  
+
+  <node class="event_info" name="einfo"/>
+  <event>
+
+    route(twopc_protocol:prepare)->sender:prepare;
+    route(twopc_protocol:perform)->sender:perform;
+
+    route(receiver:yes)->twopc_protocol:yes_reply;
+    route(receiver:no)->twopc_protocol:no_reply;
+
+    route(screening:*)->controller:*;
+    route(controller:*)->@:*;
+    route(controller:*)->timestamp_observer:*;
+  </event>
+
+  <link name="observer" class="single_blocking" source="@:0" target="timestamp_observer:0"/>
+  <link name="playback_controller" class="single_blocking" source="timestamp_observer:0" target="controller:0"/>
+  <link name="synchronization" class="single_blocking" source="controller:0" target="twopc_protocol:0"/>
+  <link name="screening" class="single" source="twopc_protocol:0" target="screening:0"/>
+</app>

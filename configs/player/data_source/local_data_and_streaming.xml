@@ -1,0 +1,69 @@
+<?xml version="1.0" ?>
+<app name="local_data_and_streaming">
+
+<!-- Specify variables for command line substitution -->
+<variable name="global_dir" description="The directory that contains the player folder"/>
+<variable name="dir" required="1" description="Relative path from the player folder"/>
+
+<variable name="path" required="1" description="Path to the file to be played."/>
+<variable name="fps" description="Explicit framerate. Set to 0 for default."/>
+<variable name="block" description="Threat output pipes as blocking. Specify as max number of frames in output pipe."/>
+<variable name="format" description="Format to decode to"/>
+
+<variable name="stream_address" description="Target address (hostname or IP address (4 or 6))"/>
+<variable name="rx_port" description="RX port number"/>
+<variable name="tx_port" description="TX port number"/>
+<variable name="ttl" description="TTL"/>
+<variable name="quality" description="Jpeg quality"/>
+<variable name="force_mjpeg" description="Force MJPEG format"/>
+<variable name="coordinator"/>
+<variable name="own_resolution"/>
+<variable name="resolution" required="1" description="Resolution of the destination image."/>
+<variable name="halign" description="Horizontal alignment of the image inside the canvas. (center, left, right)"/>
+<variable name="valign" description="Vertical alignment of the image inside the canvas. (center, top, bottom)"/>
+<variable name="observe_timestamp" />
+<!-- General settings -->
+<general>
+  <parameter name="run_limit">-1</parameter>
+  <parameter name="debug">0</parameter>
+</general>
+
+
+
+<!-- Nodes -->
+<node class="xml_builder" name="source">
+    <parameter name="filename">add(add(@global_dir, @dir), "local_data.xml")</parameter>
+    <parameter name="global_dir">@global_dir</parameter>
+    <parameter name="dir">@dir</parameter>
+    <parameter name="path">@path</parameter>
+    <parameter name="coordinator">@coordinator</parameter>
+    <parameter name="fps">@fps</parameter>
+    <parameter name="block">@block</parameter>
+    <parameter name="format">@format</parameter>
+    <parameter name="own_resolution">@own_resolution</parameter>
+    <parameter name="resolution">@resolution</parameter>
+    <parameter name="halign">@halign</parameter>
+    <parameter name="valign">@valign</parameter>
+    <parameter name="observe_timestamp">@observe_timestamp</parameter>
+</node>
+
+<node class="dup" name="dup"/>
+
+<node class="xml_builder" name="streaming">
+    <parameter name="filename">add(add(@global_dir, @dir),"streaming_out.xml")</parameter>
+    <parameter name="stream_address">@stream_address</parameter>
+    <parameter name="rx_port">@rx_port</parameter>
+    <parameter name="tx_port">@tx_port</parameter>
+    <parameter name="ttl">@ttl</parameter>
+    <parameter name="quality">@quality</parameter>
+    <parameter name="force_mjpeg">@force_mjpeg</parameter>
+</node>
+
+<link name="source" class="single_blocking" source="source:0" target="dup:0"/>
+
+<link name="screening" class="single_blocking" source="dup:-1" target="@:0"/>
+<link name="streaming" class="single_blocking" source="dup:-1" target="streaming:0"/>
+
+</app>
+
+

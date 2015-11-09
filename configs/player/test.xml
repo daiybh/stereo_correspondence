@@ -1,0 +1,191 @@
+<?xml version="1.0" ?>
+<app name="player">
+
+    <!-- Nodes -->
+    <variable name="global_dir" description="The directory that contains configs and webplayer folders">../yuri/</variable>
+    <variable name="source_dir" description="The path to directory that contains the source files">configs/player/data_source/</variable>
+    <variable name="synch_method_dir" description="The path to directory that contains the synch_method files">configs/player/synchronization/</variable>
+    <variable name="screening_dir" description="The path to directory that contains the screening files">configs/player/representation/</variable>
+    
+    <variable name="webserver_path" description="The path to directory that contains webplayer files">webcontroller/</variable>
+
+    <variable name="coordinator" required="1">FALSE</variable>
+    <variable name="synch_method" required="1" description="Chooses the method of synchronization among nodes: One-Phase commit protocol = 1, Two-Phase commit protocol = 2, Two-Phase commit protocol with timeout = 3">1</variable>
+
+    <!-- Node source -->
+    <variable name="data_distribution" description="Chooses the method of data distribution among nodes: Local distribution = 1, Local distribution and streaming = 2, Distributed distribution(receives stream) = 3">1</variable>
+    <variable name="stream_address" description="Target address (hostname or IP address (4 or 6))"/>
+    <variable name="rx_port" description="RX port number"/>
+    <variable name="tx_port" description="TX port number"/>
+    <variable name="ttl" description="TTL"/>
+    <variable name="decoder_format" description="Output format"/>
+    <variable name="decoder_fast" description="Faster decoding with slightly worse quality"/>
+    <variable name="path" required="1" description="Path to the file to be played."/>
+    <variable name="fps" description="Explicit framerate. Set to 0 for default."/>
+    <variable name="block" description="Threat output pipes as blocking. Specify as max number of frames in output pipe."/>
+    <variable name="format" description="Format to decode to"/>
+    <variable name="own_resolution">FALSE</variable>
+    <variable name="resolution" required="1" description="Resolution of the destination image."/>
+    <variable name="halign" description="Horizontal alignment of the image inside the canvas. (center, left, right)"/>
+    <variable name="valign" description="Vertical alignment of the image inside the canvas. (center, top, bottom)"/>
+    <variable name="quality" description="Jpeg quality"/>
+    <variable name="force_mjpeg" description="Force MJPEG format"/>
+
+    <!-- Node synch method -->
+    <variable name="frame_index" description="Using default frame index."/>
+    <variable name="port" required="1" description="Set port">2009</variable>
+    <variable name="address" required="1"  description="Group address">224.2.2.6</variable>
+    <variable name="central_tendency" description="Sets central tendency type. Average, mode, none"/>
+    <variable name="waiting_frame" description="It is the maximal period in which frame must be prepared. Change this period in the case of untrustworthy transfer."/>
+    <variable name="cohorts" description="Count of cohorts"/>
+    <variable name="strict" description="Sets strict mode. The frame will be displaying if all of cohorts have had frame."/>
+    <variable name="confirmation" description="Required count of confirmations from cohorts.[per cent]"/>
+    <variable name="wait_for_replies" description="Maximum waiting time for replies from cohorts"/>
+    <variable name="missing_confirmation" description="Set the maximum respected count of missing confirmations from cohorts."/>
+    <variable name="variable_cohorts" description="Allow variable count of cohorts."/>
+
+    <!-- Node representation -->
+    <variable name="use_sdl_window" required="1" description="Sets using SDL window. SDL does not allow opening several SDL windows at the same time.">TRUE</variable>
+
+    <variable name="use_crop" required="1" description="Allow crop module.">TRUE</variable>
+
+    <variable name="count_of_windows" description="Count of GLX windows"/>
+
+    <variable name="opengl" description="Use OpenGL for rendering">TRUE</variable>
+    <variable name="resolution" description="Resolution of output window"/>
+    <variable name="fullscreen" description="Start in fullscreen"/>
+    <variable name="position" description="Window position"/>
+    <variable name="geometry" description="Geometry to crop"/>
+    <variable name="geometry1" description="Geometry to crop">@geometry</variable>
+    <variable name="resolution1" description="Resolution of output window">@resolution</variable>
+    <variable name="position1" description="Window position">@position</variable>
+
+    <variable name="geometry2" description="Geometry to crop"/>
+    <variable name="resolution2" description="Resolution of output window">@resolution</variable>
+    <variable name="position2" description="Window position">@position</variable>
+
+    <variable name="geometry3" description="Geometry to crop"/>
+    <variable name="resolution3" description="Resolution of output window">@resolution</variable>
+    <variable name="position3" description="Window position">@position</variable>
+
+    <variable name="geometry4" description="Geometry to crop"/>
+    <variable name="resolution4" description="Resolution of output window">@resolution</variable>
+    <variable name="position4" description="Window position">@position</variable>
+
+    <variable name="stereo" description="Stereoscopic method (none, anaglyph, quadbuffer, side_by_side, top_bottom)"/>
+    <variable name="flip_x" description="Flip around vertical axis"/>
+
+    <variable name="flip_y" description="Flip around horizontal axis"/>
+    <variable name="swap_eyes" description="Swap stereo eyes"/>
+    <variable name="on_top" description="Stay on top"/>
+
+
+
+    <!-- General settings -->
+    <general>
+      <parameter name="run_limit">-1</parameter>
+      <parameter name="debug">0</parameter>
+  </general>
+
+  <!-- Nodes -->
+  <node class="xml_builder" name="source">
+    <parameter name="filename">add(add(@global_dir, @source_dir),
+     select(@data_distribution,["none","local_data.xml", "local_data_and_streaming.xml", "distributed_data.xml"]))</parameter>
+     <parameter name="global_dir">@global_dir</parameter>
+     <parameter name="dir">@source_dir</parameter>
+
+     <parameter name="stream_address">@stream_address</parameter>
+     <parameter name="rx_port">@rx_port</parameter>
+     <parameter name="tx_port">@tx_port</parameter>
+     <parameter name="ttl">@ttl</parameter>
+     <parameter name="quality">@quality</parameter>
+     <parameter name="force_mjpeg">@force_mjpeg</parameter>
+     <parameter name="path">@path</parameter>
+     <parameter name="coordinator">@coordinator</parameter>
+     <parameter name="fps">@fps</parameter>
+     <parameter name="block">@block</parameter>
+     <parameter name="decoder_format">@decoder_format</parameter>
+     <parameter name="fast">@decoder_fast</parameter>
+     <parameter name="format">@format</parameter>
+     <parameter name="resolution">@resolution</parameter>
+     <parameter name="halign">@halign</parameter>
+     <parameter name="valign">@valign</parameter>
+     <parameter name="own_resolution">@own_resolution</parameter>
+ </node>
+
+
+ <node class="xml_builder" name="synchronization">
+    <parameter name="filename">add(add(@global_dir, @synch_method_dir),
+        select(@synch_method,["none",select(@coordinator,["1pc_protocol_coordinator.xml", "1pc_protocol_cohort.xml"]), select(@coordinator,["2pc_protocol_coordinator.xml", "2pc_protocol_cohort.xml"]), select(@coordinator,["2pc_timeout_coordinator.xml", "2pc_timeout_cohort.xml"])]))</parameter>
+
+
+        <parameter name="global_dir">@global_dir</parameter>
+
+        <parameter name="fps">@fps</parameter>
+        <parameter name="coordinator">@coordinator</parameter>
+        <parameter name="period">@period</parameter>
+        <parameter name="timeout">@timeout</parameter>
+        <parameter name="central_tendency">@central_tendency</parameter>
+        <parameter name="frame_index">@frame_index</parameter>
+        <parameter name="port">@port</parameter>
+        <parameter name="address">@address</parameter>
+        <parameter name="waiting_frame">@waiting_frame</parameter>
+
+        <parameter name="cohorts">@cohorts</parameter>
+        <parameter name="confirmation">@confirmation</parameter>
+        <parameter name="strict">@strict</parameter>
+        <parameter name="variable_cohorts">@variable_cohorts</parameter>
+        <parameter name="wait_for_replies">@wait_for_replies</parameter>
+        <parameter name="missing_confirmation">@missing_confirmation</parameter>
+    </node>
+
+    <node class="xml_builder" name="screening">
+        <parameter name="filename">
+            add(add(@global_dir, @screening_dir), 
+            select(@coordinator,["webserver_gui.xml",
+            select(@use_sdl_window, [select(@use_crop, ["sdl_window_with_crop.xml", "sdl_window.xml"]),
+            select(@use_crop, ["glx_window_reprezentation_with_crop.xml", "glx_window_reprezentation.xml"])])]))
+        </parameter>
+
+        <parameter name="global_dir">@global_dir</parameter>
+        <parameter name="dir">@screening_dir</parameter>
+
+        <parameter name="webserver_path">add(@global_dir, @webserver_path)</parameter>
+        <parameter name="opengl">@opengl</parameter>
+        <parameter name="resolution">@resolution</parameter>
+        <parameter name="window_title">"Yuri-light player"</parameter>
+        <parameter name="fullscreen">@fullscreen</parameter>
+        <parameter name="position">@position</parameter>
+        <parameter name="geometry1">@geometry1</parameter>
+        <parameter name="resolution1">@resolution1</parameter>
+        <parameter name="position1">@position1</parameter>
+
+        <parameter name="geometry2">@geometry2</parameter>
+        <parameter name="resolution2">@resolution2</parameter>
+        <parameter name="position2">@position2</parameter>
+
+        <parameter name="geometry3">@geometry3</parameter>
+        <parameter name="resolution3">@resolution3</parameter>
+        <parameter name="position3">@position3</parameter>
+
+        <parameter name="geometry4">@geometry4</parameter>
+        <parameter name="resolution4">@resolution4</parameter>
+        <parameter name="position4">@position4</parameter>
+
+        <parameter name="stereo">@stereo</parameter>
+        <parameter name="flip_x">@flip_x</parameter>
+        <parameter name="flip_y">@flip_y</parameter>
+        <parameter name="swap_eyes">@swap_eyes</parameter>
+        <parameter name="on_top">@on_top</parameter>
+    </node>
+
+    <event>
+        route(screening:*)->synchronization:*;
+        route(synchronization:*)->source:*;
+    </event>
+
+
+    <link name="data_source" class="single_blocking" source="source:0" target="synchronization:0"/>
+    <link name="synch" class="single" source="synchronization:0" target="screening:0"/>
+
+</app>

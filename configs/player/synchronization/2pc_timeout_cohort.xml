@@ -1,0 +1,78 @@
+<?xml version="1.0" ?>
+<app name="twopc_protocol_cohort">
+
+  <variable name="fps" description="Explicit framerate. Set to 0 for default."/>
+  <variable name="frame_index" description="Using default frame index."/>
+  <variable name="timeout" description="Maximum waiting time for replies"/>
+  <variable name="port_sender" description="Set port for using in localhost"/>
+  <variable name="port_receiver" description="Set port for using in localhost"/>
+  <variable name="address" required="1"  description="Group address"/>
+
+  <node class="osc_receiver" name="receiver">
+    <parameter name="port">@port_receiver</parameter>
+  </node>
+
+  <node class="osc_sender" name="sender">
+    <parameter name="port">@port_sender</parameter>
+    <parameter name="address">@address</parameter>
+  </node>
+
+  <node class="twopc_timeout_protocol_cohort" name="twopc_protocol">
+    <parameter name="fps">@fps</parameter>
+    <parameter name="frame_index">@frame_index</parameter>
+    <parameter name="timeout">@timeout</parameter>
+  </node>
+
+  <node class="event_info" name="einfo"/>
+
+
+  <node class="xml_builder" name="screening">
+    <!-- Problem with true and false detection, using negation. In this case true equals 0, false equals 1.
+    For example: (@coordinator,[-1, @fps]), if coordinator==true then fps=default else fps=-1 -->
+    <parameter name="filename">
+      add(add(@global_dir, @dir), select(@use_sdl_window, [select(@use_crop, ["glx_window_reprezentation.xml", "glx_window_reprezentation_with_crop.xml"]), select(@use_crop, ["sdl_window.xml", "sdl_window_with_crop.xml"])]))</parameter>
+
+      <parameter name="global_dir">@global_dir</parameter>
+      <parameter name="dir">@dir</parameter>
+      <parameter name="webserver_path">add(@global_dir, @webserver_path)</parameter>
+      <parameter name="opengl">@opengl</parameter>
+      <parameter name="resolution">@resolution</parameter>
+      <parameter name="window_title">"Yuri-light player"</parameter>
+      <parameter name="fullscreen">@fullscreen</parameter>
+      <parameter name="position">@position</parameter>
+      <parameter name="geometry1">@geometry1</parameter>
+      <parameter name="resolution1">@resolution1</parameter>
+      <parameter name="position1">@position1</parameter>
+
+      <parameter name="geometry2">@geometry2</parameter>
+      <parameter name="resolution2">@resolution2</parameter>
+      <parameter name="position2">@position2</parameter>
+
+      <parameter name="geometry3">@geometry3</parameter>
+      <parameter name="resolution3">@resolution3</parameter>
+      <parameter name="position3">@position3</parameter>
+
+      <parameter name="geometry4">@geometry4</parameter>
+      <parameter name="resolution4">@resolution4</parameter>
+      <parameter name="position4">@position4</parameter>
+
+      <parameter name="stereo">@stereo</parameter>
+      <parameter name="flip_x">@flip_x</parameter>
+      <parameter name="flip_y">@flip_y</parameter>
+      <parameter name="swap_eyes">@swap_eyes</parameter>
+      <parameter name="on_top">@on_top</parameter>
+      <parameter name="count_of_windows">@count_of_windows</parameter>
+    </node>
+
+    <event>
+     
+     route(receiver:prepare)->twopc_protocol:prepare_req;
+     route(receiver:perform)->twopc_protocol:perform_req;
+     route(twopc_protocol:yes)->sender:yes;
+     route(twopc_protocol:no)->sender:no;
+   </event>
+
+   <link name="synchronization" class="single_blocking" source="@:0" target="twopc_protocol:0"/>
+   <link name="renderer" class="single_blocking" source="twopc_protocol:0" target="screening:0"/>
+
+ </app>

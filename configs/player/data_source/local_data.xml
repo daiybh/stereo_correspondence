@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<app name="local_data">
+
+<!-- Specify variables for command line substitution -->
+<variable name="global_dir" description="The directory that contains the player folder"/>
+<variable name="dir" required="1" description="Relative path from the player folder"/>
+
+<variable name="path" required="1" description="Path to the file to be played."/>
+<variable name="fps" description="Explicit framerate. Set to 0 for default."/>
+<variable name="block" description="Threat output pipes as blocking. Specify as max number of frames in output pipe."/>
+<variable name="format" description="Format to decode to"/>
+<variable name="coordinator"/>
+<variable name="own_resolution"/>
+<variable name="resolution" required="1" description="Resolution of the destination image."/>
+<variable name="halign" description="Horizontal alignment of the image inside the canvas. (center, left, right)"/>
+<variable name="valign" description="Vertical alignment of the image inside the canvas. (center, top, bottom)"/>
+<variable name="observe_timestamp" />
+
+<!-- General settings -->
+<general>
+  <parameter name="run_limit">-1</parameter>
+  <parameter name="debug">0</parameter>
+</general>
+
+
+<!-- Nodes -->
+
+<node class="xml_builder" name="source">
+    <parameter name="filename">add(add(@global_dir, @dir), select(@own_resolution, ["rawavsource.xml", "rawavsource_and_pad.xml"]))</parameter>
+    <parameter name="path">@path</parameter>
+    <parameter name="coordinator">@coordinator</parameter>
+    <parameter name="fps">@fps</parameter>
+    <parameter name="block">@block</parameter>
+    <parameter name="format">@format</parameter>
+    <parameter name="resolution">@resolution</parameter>
+    <parameter name="halign">@halign</parameter>
+    <parameter name="valign">@valign</parameter>
+    <parameter name="observe_timestamp">@observe_timestamp</parameter>
+</node>
+
+<link name="file" class="single_blocking" source="source:0" target="@:0"/>
+
+</app>

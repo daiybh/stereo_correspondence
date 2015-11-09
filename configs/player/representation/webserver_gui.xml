@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<app name="webserver_gui">
+
+  <!-- Specify variables for command line substitution -->
+  <variable name="webserver_path" required="1" description="Server name"/>
+  <!-- General settings -->
+  <general>
+    <parameter name="run_limit">-1</parameter>
+    <parameter name="debug">0</parameter>
+  </general>
+
+  <!-- Nodes -->
+
+  <!-- Webserver nodes -->
+  <node class="webserver" name="webserver">
+    <parameter name="port">8080</parameter>
+    <parameter name="address">0.0.0.0</parameter>
+    <parameter name="server_name">"Yuri-light player"</parameter>
+  </node>
+
+  <node class="web_image" name="img">
+    <parameter name="path">/image.jpg</parameter>
+  </node>
+
+  <node class="web_directory" name="html">
+    <parameter name="dir">@webserver_path</parameter>
+    <parameter name="path">/</parameter>
+    <parameter name="index_file">index.html</parameter>
+  </node>
+
+  <node class="web_control" name="control">
+    <parameter name="path">/control</parameter>
+    <parameter name="redirect">/</parameter>
+  </node>
+
+  <node class="event_info" name="einfo"/>
+
+  <event>
+    route(control:*)->@:*;
+  </event>
+
+  <link name="presentation" class="single" source="@:0" target="img:0"/>
+
+</app>

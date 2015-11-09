@@ -1,0 +1,83 @@
+<?xml version="1.0" ?>
+<app name="onepc_protocol_coordinator">
+
+  <!-- Specify variables for command line substitution --> 
+  <variable name="coordinator" description="Sets coordinator mode"/>
+  <variable name="period" description="Sets the duration of one cycle."/>
+  <variable name="timeout" description="Sets maximal waiting period for a response from the coordinator."/>
+  <variable name="frame_index" description="Using default frame index."/>
+  <variable name="fps" description="Explicit framerate. Set to 0 for default."/>
+  <variable name="port_sender" description="Set port for using in localhost"/>
+  <variable name="port_receiver" description="Set port for using in localhost"/>
+  <variable name="address" required="1"  description="Group address"/>
+  <variable name="webserver_path" description="The path to directory that contains webplayer files"/>
+  <variable name="observe_timestamp" />
+  <!-- General settings -->
+  <general>
+    <parameter name="run_limit">-1</parameter>
+    <parameter name="debug">0</parameter>
+  </general>
+
+  <node class="timestamp_observer" name="timestamp_observer">
+    <parameter name="fps">@fps</parameter>
+    <parameter name="observe_timestamp">@observe_timestamp</parameter>
+  </node>
+
+  <node class="playback_controller" name="controller">
+    <parameter name="coordinator">@coordinator</parameter>
+    <parameter name="fps">@fps</parameter>
+  </node>
+
+
+  <node class="delay_estimation" name="delay_estimation">
+    <parameter name="coordinator">@coordinator</parameter>
+    <parameter name="period">@period</parameter>
+    <parameter name="timeout">@timeout</parameter>
+  </node>
+
+  <node class="onepc_protocol_coordinator" name="onepc_protocol">
+    <parameter name="frame_index">@frame_index</parameter>
+  </node>
+
+
+  <node class="osc_receiver" name="receiver">
+    <parameter name="port">@port_receiver</parameter>
+  </node>
+
+  <node class="osc_sender" name="sender">
+    <parameter name="port">@port_sender</parameter>
+    <parameter name="address">@address</parameter>
+  </node>
+
+  <node class="event_info" name="einfo"/>
+
+
+
+  <node class="xml_builder" name="screening">
+    <parameter name="filename">
+      add(add(@global_dir, @dir), "webserver_gui.xml")
+    </parameter>
+    <parameter name="webserver_path">@webserver_path</parameter>
+  </node>  
+
+  <event>
+
+    route(controller:*)->einfo:*;
+    route(control:*)->einfo:*;
+    route(onepc_protocol:perform)->sender:perform;
+    route(receiver:perform)->onepc_protocol:perform;
+
+    route(delay_estimation:*)->sender:*;
+    route(receiver:connection_test)->delay_estimation:connection_test;
+
+    route(screening:*)->controller:*;
+
+    route(controller:observe_timestamp)->timestamp_observer:observe_timestamp;
+  </event>
+
+  <link name="observer" class="single_blocking" source="@:0" target="timestamp_observer:0"/>
+  <link name="playback_controller" class="single_blocking" source="timestamp_observer:0" target="controller:0"/>
+  <link name="synchronization" class="single_blocking" source="controller:0" target="onepc_protocol:0"/>
+  <link name="renderer" class="single" source="onepc_protocol:0" target="screening:0"/>
+
+</app>

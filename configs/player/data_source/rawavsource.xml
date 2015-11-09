@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<app name="local_data">
+
+<!-- Specify variables for command line substitution -->
+<variable name="path" required="1" description="Path to the file to be played."/>
+<variable name="fps" description="Explicit framerate. Set to 0 for default."/>
+<variable name="block" description="Threat output pipes as blocking. Specify as max number of frames in output pipe."/>
+<variable name="format" description="Format to decode to"/>
+<variable name="coordinator"/>
+<variable name="observe_timestamp" />
+<!-- General settings -->
+<general>
+  <parameter name="run_limit">-1</parameter>
+  <parameter name="debug">0</parameter>
+</general>
+
+<!-- Nodes -->
+
+<node class="rawavsource" name="source">
+        <parameter name="decode">1</parameter>
+        <parameter name="filename">@path</parameter>
+        <parameter name="fps">-1</parameter>
+        <parameter name="block">@block</parameter>
+        <parameter name="format">@format</parameter>
+        <parameter name="max_audio">0</parameter>
+        <parameter name="observe_timestamp">@observe_timestamp</parameter>
+</node>
+
+<link name="file" class="single_blocking" source="source:0" target="@:0"/>
+
+</app>

@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<app name="glx_window">
+
+<!-- Specify variables for command line substitution -->
+<variable name="geometry" description="Geometry to crop"/>
+<variable name="resolution" description="Resolution of output window"/>
+<variable name="position" description="Window position"/>
+
+<variable name="stereo" description="Stereoscopic method (none, anaglyph, quadbuffer, side_by_side, top_bottom)"/>
+<variable name="flip_x" description="Flip around vertical axis"/>
+
+<variable name="flip_y" description="Flip around horizontal axis"/>
+<variable name="swap_eyes" description="Swap stereo eyes"/>
+<variable name="on_top" description="Stay on top"/>
+
+<!-- General settings -->
+<general>
+  <parameter name="run_limit">-1</parameter>
+  <parameter name="debug">0</parameter>
+</general>
+
+
+<node class="convert" name="convert">
+    <parameter name="format">YUV</parameter>
+</node>
+
+<node class="crop" name="crop">
+      <parameter name="geometry">@geometry</parameter>
+</node>
+
+<node class="glx_window" name="renderer">
+        <parameter name="resolution">@resolution</parameter>
+        <parameter name="position">@position</parameter>
+        <parameter name="stereo">@stereo</parameter>
+        <parameter name="flip_x">@flip_x</parameter>
+        <parameter name="flip_y">@flip_y</parameter>
+        <parameter name="swap_eyes">@swap_eyes</parameter>
+        <parameter name="on_top">@on_top</parameter>
+</node>
+
+<link name="convert" class="single" source="@:0" target="convert:0"/>
+<link name="crop" class="single" source="convert:0" target="crop:0"/>
+<link name="screening" class="single" source="crop:0" target="renderer:0"/>
+
+</app>

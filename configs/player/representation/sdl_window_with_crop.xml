@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<app name="sdl_window">
+
+<!-- Specify variables for command line substitution -->
+<variable name="opengl" description="Use OpenGL for rendering"/>
+<variable name="resolution" description="Resolution of output window"/>
+<variable name="fullscreen" description="Start in fullscreen"/>
+<variable name="position" description="Window position"/>
+<variable name="geometry" description="Geometry to crop"/>
+
+<!-- General settings -->
+<general>
+  <parameter name="run_limit">-1</parameter>
+  <parameter name="debug">0</parameter>
+</general>
+
+<node class="convert" name="convert">
+    <parameter name="format">YUV</parameter>
+</node>
+
+<node class="crop" name="crop">
+      <parameter name="geometry">@geometry</parameter>
+</node>
+
+<!-- Windows -->
+<node class="sdl_window" name="renderer">
+        <parameter name="opengl">@opengl</parameter>
+        <parameter name="resolution">@resolution</parameter>
+        <parameter name="window_title">"Yuri-light player"</parameter>
+        <parameter name="fullscreen">@fullscreen</parameter>
+        <parameter name="position">@position</parameter>
+</node>
+
+<link name="convert" class="single" source="@:0" target="convert:0"/>
+<link name="crop" class="single" source="convert:0" target="crop:0"/>
+<link name="dup" class="single" source="crop:0" target="renderer:0"/>
+
+</app>

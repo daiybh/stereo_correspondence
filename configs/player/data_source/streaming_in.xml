@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<app name="streaming_in">
+
+<!-- Specify variables for command line substitution -->
+<variable name="stream_address" description="Target address (hostname or IP address (4 or 6))"/>
+<variable name="rx_port" description="RX port number"/>
+<variable name="tx_port" description="TX port number"/>
+<variable name="ttl" description="TTL"/>
+<variable name="decoder_format" description="Output format"/>
+<variable name="decoder_fast" description="Faster decoding with slightly worse quality"/>
+
+<!-- General settings -->
+<general>
+  <parameter name="run_limit">-1</parameter>
+  <parameter name="debug">0</parameter>
+</general>
+
+<!-- Nodes -->
+<node class="jpeg_decoder" name="decoder">
+	<parameter name="format">@decoder_format</parameter>
+    <parameter name="fast">@decoder_fast</parameter>
+</node>
+
+<node class="uv_rtp_receiver" name="rtp_receiver">
+        <parameter name="address">@stream_address</parameter>
+        <parameter name="rx_port">@rx_port</parameter>
+        <parameter name="tx_port">@tx_port</parameter>
+        <parameter name="ttl">@ttl</parameter>
+</node>
+
+
+<link name="streaming" class="single_blocking" source="rtp_receiver:0" target="decoder:0"/>
+<link name="decoder" class="single_blocking" source="decoder:0" target="@:0"/>
+
+</app>
+
+
+
