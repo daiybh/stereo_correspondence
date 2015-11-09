@@ -2,7 +2,9 @@
 SET (MODULE event_info)
 
 # Set all source files module uses
-SET (SRC register.cpp 
+SET (SRC register.cpp
+         EventDelay.cpp
+         EventDelay.h
          EventInfo.cpp
 		 EventInfo.h
 		 EventTimer.cpp
