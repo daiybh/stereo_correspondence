@@ -32,7 +32,7 @@ wrapper::WrapperLoader& get_wrap_builder()
 }
 
 }
-
+extern "C" {
 typedef void (*glXSwapBuffers_t)(Display * dpy,	GLXDrawable drawable);
 
 void glXSwapBuffers(Display * dpy,	GLXDrawable drawable)
@@ -67,6 +67,7 @@ void SDL_GL_SwapBuffers()
 	get_wrap_builder().post_swap();
 }
 
+}
 
 
 //extern "C" void *__libc_dlsym  (void *__map, __const char *__name);
