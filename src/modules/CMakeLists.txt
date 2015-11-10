@@ -286,6 +286,10 @@ IF(NOT YURI_DISABLE_SYNCHRONIZATION)
     add_subdirectory(synchronization)
 ENDIF()
 
+pkg_check_modules(XCB_XTEST xcb-xtest)
+IF(XCB_XTEST_FOUND)
+    add_subdirectory(x11_control)
+ENDIF()
 ENDIF(YURI_BUILD_EXPERIMENTAL_MODULES)
 
 #################################################################
