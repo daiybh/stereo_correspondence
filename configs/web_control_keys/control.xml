@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<app name="web_control_keys">
+
+	<variable name="display" description="X11 connection string"></variable>
+	<variable name="delay" description="Keyboard release delay">0.5</variable>
+	<variable name="data_dir" description="Path to data directory">../configs/web_control_keys/data</variable>
+
+
+<node class="webserver" name="web"/>
+
+<node class="web_control" name="wc">
+</node>
+
+<node class="web_directory" name="ws">
+	<parameter name="path">/</parameter>
+	<parameter name="dir">@data_dir</parameter>
+</node>
+
+<node class="event_info" name="einfo"/>
+
+<node class="x11_control" name="ctrl">
+	<parameter name="debug">0</parameter>
+	<parameter name="display">@display</parameter>
+</node>
+
+<node class="event_delay" name="edelay">
+	<parameter name="delay">@delay</parameter>
+</node>
+
+<event>
+
+route(wc:key)->ctrl:key_down,einfo:key_down,edelay:key;
+route(edelay:key)->ctrl:key_up,einfo:key_up;
+
+</event>
+
+</app>
