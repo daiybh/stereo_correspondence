@@ -15,7 +15,6 @@
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "yuri/core/utils/color.h"
-#include "opencv2/core/types_c.h"
 #include "opencv2/imgproc/imgproc.hpp"
 namespace yuri {
 namespace opencv {
