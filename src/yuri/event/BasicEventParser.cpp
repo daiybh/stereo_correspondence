@@ -78,6 +78,7 @@ namespace {
 			if (ch >= 'A' && ch <= 'Z') {id+=ch;continue;}
 			if (ch == '_') {id+=ch;continue;}
 			if (ch == '/') {id+=ch;continue;}
+			if (ch == '-') {id+=ch;continue;}
 			// TODO: this is obviously broken...
 			for (const auto& c: id_allowed_characters) { if (ch==c) {id+=ch;continue;}}
 			if (!first_lex) {if (ch >= '0' && ch <= '9') {id+=ch;continue;}}
