@@ -72,7 +72,41 @@ bool ArtNet::do_process_event(const std::string& event_name, const event::pBasic
 		const uint16_t universe = static_cast<uint16_t>(std::stoul(std::string{what[1].first, what[1].second}));
 		const uint16_t channel = static_cast<uint16_t>(std::stoul(std::string{what[2].first, what[2].second}));
 		const uint8_t value = event::lex_cast_value<uint8_t>(event);
-		universes_[universe][channel]=value;
+		auto u = universes_.find(universe);
+		if (u != universes_.end()) {
+			u->second[channel]=value;
+		} else {
+			universes_[universe] = ArtNetPacket(universe);
+			universes_[universe][channel]=value;
+		}
+//		universes_[universe][channel]=value;
+		changed_ = true;
+	} else if (boost::regex_match(event_name,what,universe_value_range, boost::match_default)) {
+		const uint16_t universe = static_cast<uint16_t>(std::stoul(std::string{what[1].first, what[1].second}));
+		const uint16_t channel_start = static_cast<uint16_t>(std::stoul(std::string{what[2].first, what[2].second}));
+		const uint16_t channel_end = static_cast<uint16_t>(std::stoul(std::string{what[3].first, what[3].second}));
+
+		std::vector<uint8_t> values;
+		if (event->get_type() != event::event_type_t::vector_event) {
+			values.push_back(event::lex_cast_value<uint8_t>(event));
+		} else {
+			const auto& vec = event::get_value<event::EventVector>(event);
+			for (const auto& v: vec) {
+				values.push_back(event::lex_cast_value<uint8_t>(v));
+			}
+			log[log::verbose_debug] << "Routing " << values.size() << " values to channels " << channel_start << " to " << channel_end;
+		}
+		auto u = universes_.find(universe);
+		if (u == universes_.end()) {
+			universes_[universe] = ArtNetPacket(universe);
+		}
+		auto& target_universe = universes_[universe];
+		auto it = values.cbegin();
+		for (auto i = channel_start; i < channel_end + 1; ++i) {
+			target_universe[i]=*it++;
+			if (it >= values.cend()) it = values.cbegin();
+		}
+
 		changed_ = true;
 	}
 	return false;
