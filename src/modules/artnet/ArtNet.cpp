@@ -67,6 +67,7 @@ void ArtNet::run()
 bool ArtNet::do_process_event(const std::string& event_name, const event::pBasicEvent& event)
 {
 	boost::regex universe_value("/([0-9]+)/([0-9]+)");
+	boost::regex universe_value_range("/([0-9]+)/([0-9]+)-([0-9]+)");
 	boost::smatch what;
 	if (boost::regex_match(event_name,what,universe_value, boost::match_default)) {
 		const uint16_t universe = static_cast<uint16_t>(std::stoul(std::string{what[1].first, what[1].second}));
