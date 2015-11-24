@@ -73,19 +73,19 @@ ColorPicker::~ColorPicker() noexcept
 core::pFrame ColorPicker::do_special_single_step(core::pRawVideoFrame frame)
 {
 	process_events();
-	core::pRawVideoFrame out_frame = frame;
 
 	try {
 		core::color_t color;
-		std::tie(out_frame, color) = process_rect(frame, geometry_, show_color_);
+		std::tie(frame, color) = process_rect(std::move(frame), geometry_, show_color_);
 		log[log::verbose_debug] << "Found color: " << color;
 		emit_event("color", lexical_cast<std::string>(color));
 	}
 	catch (std::exception&) {
 		log[log::warning] << "Failed to get color";
+
 	}
 
-	return out_frame;
+	return frame;
 }
 bool ColorPicker::set_param(const core::Parameter& param)
 {

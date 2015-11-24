@@ -15,7 +15,7 @@ namespace yuri {
 namespace color_picker {
 
 std::tuple<core::pRawVideoFrame, core::color_t>
-process_rect(const core::pRawVideoFrame& frame, const geometry_t& geometry, bool show_color);
+process_rect(core::pRawVideoFrame frame, const geometry_t& geometry, bool show_color);
 
 }
 }
