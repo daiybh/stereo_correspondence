@@ -45,6 +45,7 @@ private:
 	size_t						incomming_max_size_ = 1024;
 	log::Log					log_c_;
 	std::condition_variable		incomming_notification_;
+	size_t						lost_events_;
 };
 
 }

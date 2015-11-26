@@ -12,14 +12,16 @@
 namespace yuri {
 namespace event {
 
-BasicEventConsumer::BasicEventConsumer(log::Log& log):log_c_(log)
+BasicEventConsumer::BasicEventConsumer(log::Log& log):log_c_(log),lost_events_(0)
 {
 
 }
 
 BasicEventConsumer::~BasicEventConsumer()
 {
-
+	if (lost_events_ > 0) {
+		log_c_[log::warning] << "Discarded " << lost_events_ << " events";
+	}
 }
 
 
@@ -35,6 +37,7 @@ bool BasicEventConsumer::do_receive_event(const std::string& event_name, const p
 	incomming_events_.push_back(rec);
 	while (incomming_events_.size() > incomming_max_size_) {
 		incomming_events_.pop_front();
+		++lost_events_;
 	}
 	incomming_notification_.notify_all();
 	receive_event_hook();
