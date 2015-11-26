@@ -30,6 +30,7 @@ core::Parameters ColorPicker::configure()
 	core::Parameters p = base_type::configure();
 	p.set_description("ColorPicker");
 	p["geometry"]["Rectangle to get the color from"]=geometry_t{10,10,0,0};
+	p["matrix"]["Divide the rectangle into a matrix (use 1x1 to disable)"]=resolution_t{1,1};
 	return p;
 }
 
@@ -76,9 +77,28 @@ core::pFrame ColorPicker::do_special_single_step(core::pRawVideoFrame frame)
 
 	try {
 		core::color_t color;
-		std::tie(frame, color) = process_rect(std::move(frame), geometry_, show_color_);
-		log[log::verbose_debug] << "Found color: " << color;
-		emit_event("color", lexical_cast<std::string>(color));
+
+		const auto w = geometry_.width / matrix_.width;
+		const auto h = geometry_.height / matrix_.height;
+		for (auto x: irange(matrix_.width)) {
+			for (auto y: irange(matrix_.height)) {
+				geometry_t g = {
+						w,
+						h,
+						static_cast<position_t>(geometry_.x + x * w),
+						static_cast<position_t>(geometry_.y + y * h)
+				};
+				std::tie(frame, color) = process_rect(std::move(frame), g, show_color_);
+
+				emit_event("color_"+std::to_string(x)+"_"+std::to_string(y), lexical_cast<std::string>(color));
+			}
+		}
+
+
+		if (matrix_.width == 1 && matrix_.height == 1) {
+			log[log::verbose_debug] << "Found color: " << color;
+			emit_event("color", lexical_cast<std::string>(color));
+		}
 	}
 	catch (std::exception&) {
 		log[log::warning] << "Failed to get color";
@@ -90,7 +110,8 @@ core::pFrame ColorPicker::do_special_single_step(core::pRawVideoFrame frame)
 bool ColorPicker::set_param(const core::Parameter& param)
 {
 	if (assign_parameters(param)
-			(geometry_, "geometry"))
+			(geometry_, "geometry")
+			(matrix_, "matrix"))
 		return true;
 	return base_type::set_param(param);
 }
@@ -105,7 +126,8 @@ bool ColorPicker::do_process_event(const std::string& event_name, const event::p
 			(geometry_.x, 		"x")
 			(geometry_.y, 		"y")
 			(geometry_.width, 	"width")
-			(geometry_.height, 	"height"))
+			(geometry_.height, 	"height")
+			(matrix_,			"matrix"))
 		return true;
 	return false;
 }

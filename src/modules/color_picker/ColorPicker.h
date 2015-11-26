@@ -33,6 +33,7 @@ private:
 	virtual bool do_process_event(const std::string& event_name, const event::pBasicEvent& event) override;
 	geometry_t geometry_;
 	bool show_color_;
+	resolution_t matrix_;
 };
 
 } /* namespace color_picker */
