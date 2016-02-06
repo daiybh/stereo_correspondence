@@ -173,6 +173,8 @@ MODULE_REGISTRATION_BEGIN("yuri_convert")
 		REGISTER_CONVERTER(core::raw_format::rgb48, 	core::raw_format::bgr24, "yuri_convert", 30)
 		REGISTER_CONVERTER(core::raw_format::bgr48, 	core::raw_format::rgb24, "yuri_convert", 30)
 
+		REGISTER_CONVERTER(core::raw_format::rgb24,  	core::raw_format::rgb16, "yuri_convert", 10)
+		REGISTER_CONVERTER(core::raw_format::rgb24,  	core::raw_format::bgr16, "yuri_convert", 10)
 
 
 MODULE_REGISTRATION_END()
@@ -375,7 +377,8 @@ namespace {
 		ADD_CONVERSION(core::raw_format::rgb48,			core::raw_format::bgr24)
 		ADD_CONVERSION(core::raw_format::bgr48,			core::raw_format::rgb24)
 
-
+		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::rgb16)
+		ADD_CONVERSION(core::raw_format::rgb24, 		core::raw_format::bgr16)
 	};
 
 }

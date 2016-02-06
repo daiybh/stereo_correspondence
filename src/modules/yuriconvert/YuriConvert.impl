@@ -384,6 +384,35 @@ void convert_line<core::raw_format::bgr48, core::raw_format::rgb24>
 	rgb48_bgr(src, dest, width);
 }
 
+template<>
+void convert_line<core::raw_format::rgb24, core::raw_format::rgb16>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		const uint16_t col = 
+			((src[0]>>3)<<11) |
+			((src[1]>>2)<<5) |
+			((src[2]>>3)<<0);
+		*dest++ = col & 0xFF;
+		*dest++ = col >> 8;
+		src+=3;
+	}
+}
+template<>
+void convert_line<core::raw_format::rgb24, core::raw_format::bgr16>
+(core::Plane::const_iterator src, core::Plane::iterator dest, size_t width)
+{
+	for (size_t pixel = 0; pixel < width; ++pixel) {
+		const uint16_t col = 
+			((src[2]>>3)<<11) |
+			((src[1]>>2)<<5) |
+			((src[0]>>3)<<0);
+		*dest++ = col & 0xFF;
+		*dest++ = col >> 8;
+		src+=3;
+	}
+}
+
 /* ***************************************************************************
  * 					YUV conversions
  *************************************************************************** */
