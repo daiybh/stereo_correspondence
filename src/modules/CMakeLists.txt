@@ -290,6 +290,12 @@ pkg_check_modules(XCB_XTEST xcb-xtest)
 IF(XCB_XTEST_FOUND)
     add_subdirectory(x11_control)
 ENDIF()
+
+CHECK_INCLUDE_FILE_CXX(linux/fb.h HAVE_LINUX_FB_H)
+IF (HAVE_LINUX_FB_H)
+	add_subdirectory(framebuffer)
+ENDIF()
+
 ENDIF(YURI_BUILD_EXPERIMENTAL_MODULES)
 
 #################################################################
