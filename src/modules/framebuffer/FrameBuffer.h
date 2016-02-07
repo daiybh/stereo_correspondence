@@ -68,6 +68,7 @@ private:
 	virtual bool set_param(const core::Parameter& param) override;
 
 	int handle_;
+	std::string device_;
 	format_t format_;
 	resolution_t resolution_;
 	mmap_handle_t<uint8_t> memory_;

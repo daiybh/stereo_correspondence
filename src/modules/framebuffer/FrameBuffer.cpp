@@ -12,6 +12,7 @@
 #include "yuri/core/frame/raw_frame_types.h"
 #include "yuri/core/utils/irange.h"
 #include "yuri/core/utils/frame_info.h"
+#include "yuri/core/utils/environment.h"
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -35,6 +36,8 @@ core::Parameters FrameBuffer::configure()
 	p.set_description("FrameBuffer");
 	p["flip"]["Flip picture upside down"]=false;
 	p["clear"]["Clear framebuffer on start"]=true;
+	p["device"]["Path to framebuffer device. Empty value uses either env. variable FRAMEBUFFER or /dev/fb0"]="";
+
 	return p;
 }
 namespace {
@@ -79,7 +82,11 @@ base_type(log_,parent,std::string("framebuffer")),
 flip_{false}
 {
 	IOTHREAD_INIT(parameters)
-	handle_ = open("/dev/fb0",O_RDWR);
+	if (device_.empty()) {
+		device_ = core::utils::get_environment_variable("FRAMEBUFFER", "/dev/fb0");
+	}
+	log[log::info] << "Using framebuffer device " << device_;
+	handle_ = open(device_.c_str(),O_RDWR);
 	if (ioctl(handle_, FBIOGET_FSCREENINFO, &info_)) {
 		throw exception::InitializationFailed("Failed to query screen info");
 	}
@@ -148,6 +155,7 @@ bool FrameBuffer::set_param(const core::Parameter& param)
 	if (assign_parameters(param)
 			(flip_, "flip")
 			(clear_, "clear")
+			(device_, "device")
 		) 
 		return true;
 	return base_type::set_param(param);
