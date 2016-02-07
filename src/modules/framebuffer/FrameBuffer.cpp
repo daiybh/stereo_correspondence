@@ -43,18 +43,26 @@ constexpr uint64_t mask_offset(uint64_t num, int mask, int offset)
 {
 	return (num & (0xffffffffffffffff >> mask)) << offset;
 }
+// Return proper mask, if num !=0 ,zero otherwise
+// Zero width channels should return the same value independently on their position
+constexpr uint64_t mask_offset_pair(uint64_t num, int mask, int offset, uint64_t num2, int mask2, int offset2)
+{
+	return 	num?mask_offset(num, mask, offset) |
+				mask_offset(num2, mask2, offset2):
+				0;
+}
 
 constexpr uint64_t pack_fmt(uint8_t bpp, uint8_t red_w, uint8_t red_o, uint8_t green_w, uint8_t green_o, uint8_t blue_w, uint8_t blue_o, uint8_t alpha_w, uint8_t alpha_o)
 {
 	return	mask_offset(bpp, 	6, 48) |
-		mask_offset(red_w, 	6, 42) |
-		mask_offset(red_o, 	6, 36) |
-		mask_offset(green_w, 	6, 30) |
-		mask_offset(green_o, 	6, 24) |
-		mask_offset(blue_w, 	6, 18) |
-		mask_offset(blue_o, 	6, 12) |
-		mask_offset(alpha_w, 	6,  6) |
-		mask_offset(alpha_o, 	6,  0);
+		mask_offset_pair(red_w, 	6, 42,
+						red_o, 	6, 36) |
+		mask_offset_pair(green_w, 	6, 30,
+						green_o, 	6, 24) |
+		mask_offset_pair(blue_w, 	6, 18,
+						blue_o, 	6, 12) |
+		mask_offset_pair(alpha_w, 	6,  6,
+						alpha_o, 	6,  0);
 
 }
 
@@ -76,7 +84,13 @@ flip_{false}
 		throw exception::InitializationFailed("Failed to query screen info");
 	}
 	log[log::info] << "Opened device " << info_.id << ", with " << info_.smem_len << " bytes memory";		
-	
+	if (info_.type != FB_TYPE_PACKED_PIXELS) {
+		throw exception::InitializationFailed("Device doesn't use packed pixels!");
+	}
+	if (info_.visual != FB_VISUAL_TRUECOLOR) {
+		throw exception::InitializationFailed("Device doesn't use truecolor!");
+	}
+
 	if (ioctl(handle_, FBIOGET_VSCREENINFO, &vinfo_)) {
 		throw exception::InitializationFailed("Failed to query variable screen info");
 	}
