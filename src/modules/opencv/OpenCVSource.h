@@ -29,6 +29,7 @@ private:
 	std::string device_path_;
 
 	cv::VideoCapture capture_;
+        int width,height;
 };
 
 

@@ -17,6 +17,8 @@ core::Parameters OpenCVSource::configure()
 	auto p = IOThread::configure();
 	p.set_description("Source from OpenCV ViceoCapture");
 	p["index"]["Camera index"]=0;
+        p["width"]["Capture width"]=640;
+        p["height"]["Capture height"]=480;
 	p["path"]["Source path. Overrides device index, if specified."]="";
 	return p;
 }
@@ -27,9 +29,11 @@ OpenCVSource::OpenCVSource(const log::Log& log_, core::pwThreadBase parent, cons
 :IOThread(log_, parent, 0, 1, "opencv_source"),device_index_(0)
 {
 	IOTHREAD_INIT(parameters)
+        
 	if (device_path_.empty()) capture_.open(device_index_);
 	else capture_.open(device_path_);
-
+        capture_.set(CV_CAP_PROP_FRAME_HEIGHT,height);
+        capture_.set(CV_CAP_PROP_FRAME_WIDTH,width);
 	if (!capture_.isOpened()) {
 		throw exception::InitializationFailed("Failed to open video device");
 	}
@@ -58,7 +62,9 @@ bool OpenCVSource::set_param(const core::Parameter& param)
 {
 	if (assign_parameters(param)
 			(device_index_, "index")
-			(device_path_, "path"))
+			(device_path_, "path")
+                        (height,"height")
+                        (width,"width"))
 		return true;
 	return IOThread::set_param(param);
 }
