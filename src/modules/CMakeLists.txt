@@ -148,6 +148,7 @@ pkg_check_modules(OpenCV opencv>=2.3.0)
 IF(OpenCV_FOUND AND NOT YURI_DISABLE_OPENCV)
 	add_subdirectory(opencv)
 	#add_subdirectory(opencv_calib)
+        add_subdirectory(opencv_stereo_calib)
 ENDIF()
 
 IF(NOT YURI_DISABLE_SAGE)
