@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<app name="webcam" xmlns="urn:library:yuri:xmlschema:2001"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<variable name="device">/dev/video0</variable>
+	<node class="v4l2source" name="webcam">
+		<!--<parameter name="index">0</parameter>
+                <parameter name="width">1024</parameter>
+                <parameter name="height">576</parameter>-->
+                <parameter name="resolution">640x480</parameter>
+	</node>
+        <node class="opencv_stereo_calib" name="cal">
+            <parameter name="fps_stats">0</parameter>
+            <parameter name="calibration_frames">12</parameter>
+        </node>
+	<node class="sdl2_window" name="sdl">
+            <parameter name="resolution">1280x720</parameter>
+        </node>
+        <node class="dup" name="dup"/>
+        <!--<node class="blank" name="blank">
+            <parameter name="format">YUV422</parameter>
+        </node>-->
+	<link name="yuyv_image1" class="single" source="webcam:0" target="dup:0"/>
+        <link name="yuyv_image3" class="single" source="dup:-1" target="cal:0"/>
+        <link name="yuyv_image4" class="single" source="cal:0" target="sdl:0"/>
+        <link name="yuyv_image2" class="single" source="dup:-1" target="cal:1>"/>
+</app>
