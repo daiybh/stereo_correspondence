@@ -81,7 +81,7 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
     }
     if(left_found_points.size() == target_pairs && !calibrated){
         log[log::info] << "Calibrating now...";
-        cv::Size imageSize(left_mat.rows,left_mat.cols);
+        cv::Size imageSize(left_mat.cols,left_mat.rows);
         calibrate(imageSize);
         log[log::info] << "Calibration finished";
         calibrated = true;

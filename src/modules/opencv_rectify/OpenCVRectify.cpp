@@ -63,7 +63,6 @@ core::pFrame OpenCVRectify::do_special_single_step(core::pRawVideoFrame frame){
     
     cv::Mat new_mat;
     cv::remap(frame_mat, new_mat, mat1, mat2, cv::INTER_LINEAR);
-    log[log::info]<< new_mat.rows;
     
     core::pRawVideoFrame output = core::RawVideoFrame::create_empty(core::raw_format::bgr24,
                                             {static_cast<dimension_t>(new_mat.cols), static_cast<dimension_t>(new_mat.rows)},
