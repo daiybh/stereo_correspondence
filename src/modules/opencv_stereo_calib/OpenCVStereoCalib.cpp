@@ -69,15 +69,16 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
         right_mat=cv::Mat(height,width,CV_8UC3,PLANE_RAW_DATA(right_frame,0));
     }
     
-    std::vector<cv::Point2f> corners;
-    bool found_left = cv::findChessboardCorners(left_mat,cv::Size(7,5),corners);
-    bool found_right = cv::findChessboardCorners(right_mat,cv::Size(7,5),corners);
+    std::vector<cv::Point2f> left_corners;
+    std::vector<cv::Point2f> right_corners;
+    bool found_left = cv::findChessboardCorners(left_mat,cv::Size(7,5),left_corners);
+    bool found_right = cv::findChessboardCorners(right_mat,cv::Size(7,5),right_corners);
     //log[log::info] << found << " Found :" <<corners.size()<<" corners";
     
     if(found_left && found_right && !calibrated && left_found_points.size() < target_pairs && (frames_processed%20)==0){
         log[log::info] << "Storing corners";
-        left_found_points.push_back(corners);
-        right_found_points.push_back(corners);
+        left_found_points.push_back(left_corners);
+        right_found_points.push_back(right_corners);
     }
     if(left_found_points.size() == target_pairs && !calibrated){
         log[log::info] << "Calibrating now...";
@@ -86,7 +87,7 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
         log[log::info] << "Calibration finished";
         calibrated = true;
     }
-    cv::drawChessboardCorners(left_mat,cv::Size(7,5),corners,found_left);
+    cv::drawChessboardCorners(left_mat,cv::Size(7,5),left_corners,found_left);
     core::pRawVideoFrame output = core::RawVideoFrame::create_empty(core::raw_format::bgr24,
                                             {static_cast<dimension_t>(left_mat.cols), static_cast<dimension_t>(left_mat.rows)},
 											left_mat.data,
