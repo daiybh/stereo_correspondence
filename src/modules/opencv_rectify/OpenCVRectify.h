@@ -15,6 +15,7 @@
 #define OPENCVRECTIFY_H
 #include "yuri/core/thread/SpecializedIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include <opencv2/imgproc/imgproc.hpp>
 
 namespace yuri{
 namespace opencvrectify{
@@ -28,6 +29,10 @@ public:
 private:
     virtual core::pFrame do_special_single_step(core::pRawVideoFrame frame) override;
     virtual bool set_param(const core::Parameter& param) override;
+    std::string map_path;
+    bool left;
+    cv::Mat mat1;
+    cv::Mat mat2;
 };
 }
 }
