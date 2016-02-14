@@ -36,6 +36,7 @@ core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, p
     sgbm->setSpeckleWindowSize(100);
     sgbm->setSpeckleRange(32);
     sgbm->setDisp12MaxDiff(1);
+    sgbm->setMode(cv::StereoSGBM::MODE_SGBM_3WAY);
 }
 
 core::Parameters OpenCVSGBM::configure(){
