@@ -61,8 +61,8 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
         //log[log::debug]<< "Converting";
         cv::Mat left_yuv(height,width,CV_8UC2,PLANE_RAW_DATA(left_frame,0));
         cv::Mat right_yuv(height,width,CV_8UC2,PLANE_RAW_DATA(right_frame,0));
-        cv::cvtColor(left_yuv,left_mat,CV_YUV2BGR_YUYV);
-        cv::cvtColor(right_yuv,right_mat,CV_YUV2BGR_YUYV);
+        cv::cvtColor(left_yuv,left_mat,CV_YUV2GRAY_YUYV);
+        cv::cvtColor(right_yuv,right_mat,CV_YUV2GRAY_YUYV);
     }else{
         //log[log::debug]<< "Not converting";
         left_mat=cv::Mat(height,width,CV_8UC3,PLANE_RAW_DATA(left_frame,0));
@@ -71,11 +71,17 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
     
     std::vector<cv::Point2f> left_corners;
     std::vector<cv::Point2f> right_corners;
-    bool found_left = cv::findChessboardCorners(left_mat,cv::Size(7,5),left_corners);
-    bool found_right = cv::findChessboardCorners(right_mat,cv::Size(7,5),right_corners);
+    bool found_left = cv::findChessboardCorners(left_mat,cv::Size(7,5),left_corners, cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE);
+    bool found_right = cv::findChessboardCorners(right_mat,cv::Size(7,5),right_corners,cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE);
     //log[log::info] << found << " Found :" <<corners.size()<<" corners";
     
-    if(found_left && found_right && !calibrated && left_found_points.size() < target_pairs && (frames_processed%20)==0){
+    if(found_left && found_right && !calibrated && left_found_points.size() < target_pairs && (frames_processed%30)==0){
+        cv::cornerSubPix(left_mat, left_corners, cv::Size(11,11), cv::Size(-1,-1),
+                         cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS,
+                                      30, 0.01));
+        cv::cornerSubPix(right_mat, right_corners, cv::Size(11,11), cv::Size(-1,-1),
+                         cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS,
+                                      30, 0.01));
         log[log::info] << "Storing corners";
         left_found_points.push_back(left_corners);
         right_found_points.push_back(right_corners);
@@ -88,7 +94,7 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
         calibrated = true;
     }
     cv::drawChessboardCorners(left_mat,cv::Size(7,5),left_corners,found_left);
-    core::pRawVideoFrame output = core::RawVideoFrame::create_empty(core::raw_format::bgr24,
+    core::pRawVideoFrame output = core::RawVideoFrame::create_empty(core::raw_format::g8,
                                             {static_cast<dimension_t>(left_mat.cols), static_cast<dimension_t>(left_mat.rows)},
 											left_mat.data,
 											left_mat.total() * left_mat.elemSize());
@@ -139,7 +145,7 @@ void OpenCVStereoCalib::calibrate(cv::Size imageSize){
     stereoRectify(leftCameraMatrix, leftDistCoefs,
                   rightCameraMatrix, rightDistCoefs,
                   imageSize, R, T, R1, R2, P1, P2, Q,
-                  cv::CALIB_ZERO_DISPARITY, 1, imageSize, &validRoi[0], &validRoi[1]);
+                  cv::CALIB_ZERO_DISPARITY, 0, imageSize, &validRoi[0], &validRoi[1]);
 
     fs.open("./extrinsics.yml", cv::FileStorage::WRITE);
     if( fs.isOpened() )
