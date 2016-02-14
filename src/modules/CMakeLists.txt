@@ -151,6 +151,7 @@ IF(OpenCV_FOUND AND NOT YURI_DISABLE_OPENCV)
         add_subdirectory(opencv_stereo_calib)
         add_subdirectory(opencv_rectify)
         add_subdirectory(opencv_sgbm)
+        add_subdirectory(opencv_cudabm)
 ENDIF()
 
 IF(NOT YURI_DISABLE_SAGE)
