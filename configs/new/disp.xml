@@ -1,34 +1,40 @@
 <?xml version="1.0" ?>
-<app name="webcam" xmlns="urn:library:yuri:xmlschema:2001"
+<app name="rectify" xmlns="urn:library:yuri:xmlschema:2001"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<variable name="device">/dev/video0</variable>
 	<node class="v4l2source" name="webcam">
 		<!--<parameter name="index">0</parameter>
                 <parameter name="width">1024</parameter>
                 <parameter name="height">576</parameter>-->
-                <parameter name="resolution">1280x720</parameter>
                 <parameter name="path">/dev/video1</parameter>
+                <parameter name="resolution">1280x720</parameter>
 	</node>
         <node class="v4l2source" name="webcam2">
 		<!--<parameter name="index">0</parameter>
                 <parameter name="width">1024</parameter>
                 <parameter name="height">576</parameter>-->
-                <parameter name="resolution">1280x720</parameter>
                 <parameter name="path">/dev/video2</parameter>
+                <parameter name="resolution">1280x720</parameter>
 	</node>
-        <node class="opencv_stereo_calib" name="cal">
+        <node class="opencv_rectify" name="rect">
+            
+        </node>
+        <node class="opencv_sgbm" name="disp"></node>
+        <node class="opencv_rectify" name="rect2">
+            <parameter name="left">false</parameter>
             <parameter name="fps_stats">0</parameter>
-            <parameter name="calibration_frames">20</parameter>
         </node>
 	<node class="sdl2_window" name="sdl">
             <parameter name="resolution">1280x720</parameter>
         </node>
         
-        <!--<node class="blank" name="blank">
-            <parameter name="format">YUV422</parameter>
-        </node>-->
-	<link name="yuyv_image1" class="single" source="webcam:0" target="cal:0"/>
-        <link name="yuyv_image3" class="single" source="webcam2:0" target="cal:1"/>
-        <link name="yuyv_image4" class="single" source="cal:0" target="sdl:0"/>
         
+	<link name="yuyv_image1" class="single" source="webcam:0" target="rect:0"/>
+       
+        <link name="yuyv_image2" class="single" source="rect:0" target="disp:0"/>
+        <link name="yuyv_image3" class="single" source="webcam2:0" target="rect2:0"/>
+       
+        <link name="yuyv_image4" class="single" source="rect2:0" target="disp:1"/>
+        <link name="yuyv_image5" class="single" source="disp:0" target="sdl:0"/>
 </app>
+
