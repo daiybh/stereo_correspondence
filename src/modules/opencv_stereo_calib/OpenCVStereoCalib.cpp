@@ -31,6 +31,9 @@ core::Parameters OpenCVStereoCalib::configure(){
     core::Parameters p = base_type::configure();
     p.set_description("OpenCV Stereo Calibration");
     p["calibration_frames"]["Number of frames to calibrate with"]=10;
+    p["frame_delay"]["Every n-th frame will be saved"]=10;
+    p["chessboard_x"]["Number of horizontal corners"]=9;
+    p["chessboard_y"]["Number of vertical corners"]=6;
     return p;
 }
     
@@ -71,11 +74,11 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
     
     std::vector<cv::Point2f> left_corners;
     std::vector<cv::Point2f> right_corners;
-    bool found_left = cv::findChessboardCorners(left_mat,cv::Size(7,5),left_corners, cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE);
-    bool found_right = cv::findChessboardCorners(right_mat,cv::Size(7,5),right_corners,cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE);
+    bool found_left = cv::findChessboardCorners(left_mat,cv::Size(chessboard_x,chessboard_y),left_corners, cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE);
+    bool found_right = cv::findChessboardCorners(right_mat,cv::Size(chessboard_x,chessboard_y),right_corners,cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE);
     //log[log::info] << found << " Found :" <<corners.size()<<" corners";
     
-    if(found_left && found_right && !calibrated && left_found_points.size() < target_pairs && (frames_processed%30)==0){
+    if(found_left && found_right && !calibrated && left_found_points.size() < target_pairs && (frames_processed%frame_delay)==0){
         cv::cornerSubPix(left_mat, left_corners, cv::Size(11,11), cv::Size(-1,-1),
                          cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS,
                                       30, 0.01));
@@ -93,7 +96,7 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
         log[log::info] << "Calibration finished";
         calibrated = true;
     }
-    cv::drawChessboardCorners(left_mat,cv::Size(7,5),left_corners,found_left);
+    cv::drawChessboardCorners(left_mat,cv::Size(chessboard_x,chessboard_y),left_corners,found_left);
     core::pRawVideoFrame output = core::RawVideoFrame::create_empty(core::raw_format::g8,
                                             {static_cast<dimension_t>(left_mat.cols), static_cast<dimension_t>(left_mat.rows)},
 											left_mat.data,
@@ -104,7 +107,7 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
 
 void OpenCVStereoCalib::calibrate(cv::Size imageSize){
     std::vector<std::vector<cv::Point3f> > objectPoints;
-    cv::Size boardSize(7,5);
+    cv::Size boardSize(chessboard_x,chessboard_y);
     objectPoints.resize(target_pairs);
     for(unsigned int i=0;i<target_pairs;i++){
         for(int j=0;j<boardSize.height;j++)
@@ -173,7 +176,10 @@ void OpenCVStereoCalib::calibrate(cv::Size imageSize){
 
 bool OpenCVStereoCalib::set_param(const core::Parameter& param){
     if (assign_parameters(param)
-			(target_pairs,"calibration_frames"))
+			(target_pairs,"calibration_frames"),
+                        (chessboard_x,"chessboard_x"),
+                        (chessboard_y,"chessboard_y"),
+                        (frame_delay,"frame_delay"))
 		return true;
     return core::MultiIOFilter::set_param(param);
 }

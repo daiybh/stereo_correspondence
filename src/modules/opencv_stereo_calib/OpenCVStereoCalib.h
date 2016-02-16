@@ -34,6 +34,9 @@ private:
     std::vector<std::vector<cv::Point2f>> right_found_points;
     int frames_processed;
     unsigned int target_pairs;
+    unsigned int chessboard_x;
+    unsigned int chessboard_y;
+    unsigned int frame_delay;
 };
 }
 }
