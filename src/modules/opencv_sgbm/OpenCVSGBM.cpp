@@ -27,11 +27,11 @@ OpenCVSGBM::OpenCVSGBM(const log::Log& log_, core::pwThreadBase parent, const co
 core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, parent, 1, std::string("opencv_sgbm")){
     IOTHREAD_INIT(parameters)
     //set_supported_formats({core::raw_format::rgba32});
-    sgbm = cv::StereoSGBM::create(0,32,5);
-    sgbm->setP1(8*3*5*5);
-    sgbm->setP2(32*3*5*5);
-    sgbm->setMinDisparity(0);
-    sgbm->setNumDisparities(32);
+    sgbm = cv::StereoSGBM::create(min_disparity,num_disparities,window_size);
+    sgbm->setP1(8*3*window_size*window_size);
+    sgbm->setP2(32*3*window_size*window_size);
+    sgbm->setMinDisparity(min_disparity);
+    sgbm->setNumDisparities(num_disparities);
     sgbm->setUniquenessRatio(10);
     sgbm->setSpeckleWindowSize(100);
     sgbm->setSpeckleRange(32);
@@ -42,6 +42,10 @@ core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, p
 core::Parameters OpenCVSGBM::configure(){
     core::Parameters p = base_type::configure();
     p.set_description("OpenCV SGBM");
+    p["min_disparity"]["Min disparity"]=0;
+    p["num_disparities"]["Number of disparities"]=16;
+    p["window_size"]["Window size"]=3;
+    
     return p;
 }
 
@@ -65,7 +69,11 @@ std::vector<core::pFrame> OpenCVSGBM::do_special_step(std::tuple<core::pRawVideo
 }
 
 bool OpenCVSGBM::set_param(const core::Parameter& param){
-    
+    if (assign_parameters(param)
+			(min_disparity,"min_disparity"),
+                        (num_disparities,"num_disparities"),
+                        (window_size,"window_size"))
+		return true;
     return core::MultiIOFilter::set_param(param);
 }
 

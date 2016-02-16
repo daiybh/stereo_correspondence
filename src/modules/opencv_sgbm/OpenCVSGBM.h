@@ -30,6 +30,9 @@ private:
     virtual std::vector<core::pFrame> do_special_step(std::tuple<core::pRawVideoFrame, core::pRawVideoFrame> frames) override;
     virtual bool set_param(const core::Parameter& param) override;
     cv::Ptr<cv::StereoSGBM> sgbm;
+    int min_disparity;
+    int num_disparities;
+    int window_size;
 };
 }
 }
