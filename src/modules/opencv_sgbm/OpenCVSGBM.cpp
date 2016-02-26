@@ -33,10 +33,10 @@ core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, p
     sgbm->setMinDisparity(min_disparity);
     sgbm->setNumDisparities(num_disparities);
     sgbm->setUniquenessRatio(10);
-    sgbm->setSpeckleWindowSize(100);
+    sgbm->setSpeckleWindowSize(300);
     sgbm->setSpeckleRange(32);
     sgbm->setDisp12MaxDiff(1);
-    sgbm->setMode(cv::StereoSGBM::MODE_SGBM_3WAY);
+    sgbm->setMode(cv::StereoSGBM::MODE_SGBM);
 }
 
 core::Parameters OpenCVSGBM::configure(){
@@ -70,8 +70,8 @@ std::vector<core::pFrame> OpenCVSGBM::do_special_step(std::tuple<core::pRawVideo
 
 bool OpenCVSGBM::set_param(const core::Parameter& param){
     if (assign_parameters(param)
-			(min_disparity,"min_disparity"),
-                        (num_disparities,"num_disparities"),
+			(min_disparity,"min_disparity")
+                        (num_disparities,"num_disparities")
                         (window_size,"window_size"))
 		return true;
     return core::MultiIOFilter::set_param(param);
