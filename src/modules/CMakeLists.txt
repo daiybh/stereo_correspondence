@@ -153,7 +153,7 @@ IF(OpenCV_FOUND AND NOT YURI_DISABLE_OPENCV)
         add_subdirectory(opencv_sgbm)
         add_subdirectory(opencv_cudabm)
 ENDIF()
-
+add_subdirectory(cuda_asw)
 IF(NOT YURI_DISABLE_SAGE)
 	find_package(SAGE)
 ENDIF()
