@@ -29,12 +29,14 @@ core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, p
     IOTHREAD_INIT(parameters)
     //set_supported_formats({core::raw_format::rgba32});
     
-    bm = cv::cuda::createStereoBM(32,11);
+    bm = cv::cuda::createStereoBM(num_disparities,window_size);
 }
 
 core::Parameters OpenCVCudaBM::configure(){
     core::Parameters p = base_type::configure();
     p.set_description("OpenCV Cuda BM");
+    p["num_disparites"]["Number of disparities"]=16;
+    p["window_size"]["Window size"]=3;
     return p;
 }
 
@@ -65,7 +67,10 @@ std::vector<core::pFrame> OpenCVCudaBM::do_special_step(std::tuple<core::pRawVid
 }
 
 bool OpenCVCudaBM::set_param(const core::Parameter& param){
-    
+    if (assign_parameters(param)
+                        (num_disparities,"num_disparities")
+                        (window_size,"window_size"))
+		return true;
     return core::MultiIOFilter::set_param(param);
 }
 
