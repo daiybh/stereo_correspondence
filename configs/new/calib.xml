@@ -2,26 +2,30 @@
 <app name="webcam" xmlns="urn:library:yuri:xmlschema:2001"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<variable name="device">/dev/video0</variable>
+        <variable name="res">1280x720</variable>
 	<node class="v4l2source" name="webcam">
 		<!--<parameter name="index">0</parameter>
                 <parameter name="width">1024</parameter>
                 <parameter name="height">576</parameter>-->
-                <parameter name="resolution">1280x720</parameter>
+                <parameter name="resolution">@res</parameter>
                 <parameter name="path">/dev/video1</parameter>
 	</node>
         <node class="v4l2source" name="webcam2">
 		<!--<parameter name="index">0</parameter>
                 <parameter name="width">1024</parameter>
                 <parameter name="height">576</parameter>-->
-                <parameter name="resolution">1280x720</parameter>
+                <parameter name="resolution">@res</parameter>
                 <parameter name="path">/dev/video2</parameter>
 	</node>
         <node class="opencv_stereo_calib" name="cal">
             <parameter name="fps_stats">0</parameter>
             <parameter name="calibration_frames">20</parameter>
+            <parameter name="frame_delay">20</parameter>
+            <parameter name="chessboard_x">5</parameter>
+            <parameter name="chessboard_y">7</parameter>
         </node>
 	<node class="sdl2_window" name="sdl">
-            <parameter name="resolution">1280x720</parameter>
+            <parameter name="resolution">@res</parameter>
         </node>
         
         <!--<node class="blank" name="blank">

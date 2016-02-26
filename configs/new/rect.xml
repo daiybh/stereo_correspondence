@@ -2,19 +2,20 @@
 <app name="rectify" xmlns="urn:library:yuri:xmlschema:2001"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<variable name="device">/dev/video0</variable>
+        <variable name="res">1280x720</variable>
 	<node class="v4l2source" name="webcam">
 		<!--<parameter name="index">0</parameter>
                 <parameter name="width">1024</parameter>
                 <parameter name="height">576</parameter>-->
                 <parameter name="path">/dev/video1</parameter>
-                <parameter name="resolution">1280x720</parameter>
+                <parameter name="resolution">@res</parameter>
 	</node>
         <node class="v4l2source" name="webcam2">
 		<!--<parameter name="index">0</parameter>
                 <parameter name="width">1024</parameter>
                 <parameter name="height">576</parameter>-->
                 <parameter name="path">/dev/video2</parameter>
-                <parameter name="resolution">1280x720</parameter>
+                <parameter name="resolution">@res</parameter>
 	</node>
         <node class="opencv_rectify" name="rect">
             
@@ -25,10 +26,10 @@
             <parameter name="fps_stats">1</parameter>
         </node>
 	<node class="sdl2_window" name="sdl">
-            <parameter name="resolution">1280x720</parameter>
+            <parameter name="resolution">@res</parameter>
         </node>
         <node class="sdl2_window" name="sdl2">
-            <parameter name="resolution">1280x720</parameter>
+            <parameter name="resolution">@res</parameter>
         </node>
         
 	<link name="yuyv_image1" class="single" source="webcam:0" target="rect:0"/>
