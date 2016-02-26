@@ -61,7 +61,7 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
     cv::Mat right_mat;
     
     if(left_frame->get_format() == core::raw_format::yuyv422){
-        //log[log::debug]<< "Converting";
+        log[log::debug]<< "Converting";
         cv::Mat left_yuv(height,width,CV_8UC2,PLANE_RAW_DATA(left_frame,0));
         cv::Mat right_yuv(height,width,CV_8UC2,PLANE_RAW_DATA(right_frame,0));
         cv::cvtColor(left_yuv,left_mat,CV_YUV2GRAY_YUYV);
@@ -96,7 +96,9 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
         log[log::info] << "Calibration finished";
         calibrated = true;
     }
-    cv::drawChessboardCorners(left_mat,cv::Size(chessboard_x,chessboard_y),left_corners,found_left);
+    if(found_left && found_right)
+        cv::drawChessboardCorners(left_mat,cv::Size(chessboard_x,chessboard_y),left_corners,found_left);
+    
     core::pRawVideoFrame output = core::RawVideoFrame::create_empty(core::raw_format::g8,
                                             {static_cast<dimension_t>(left_mat.cols), static_cast<dimension_t>(left_mat.rows)},
 											left_mat.data,
@@ -176,9 +178,9 @@ void OpenCVStereoCalib::calibrate(cv::Size imageSize){
 
 bool OpenCVStereoCalib::set_param(const core::Parameter& param){
     if (assign_parameters(param)
-			(target_pairs,"calibration_frames"),
-                        (chessboard_x,"chessboard_x"),
-                        (chessboard_y,"chessboard_y"),
+			(target_pairs,"calibration_frames")
+                        (chessboard_x,"chessboard_x")
+                        (chessboard_y,"chessboard_y")
                         (frame_delay,"frame_delay"))
 		return true;
     return core::MultiIOFilter::set_param(param);
