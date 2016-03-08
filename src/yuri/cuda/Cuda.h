@@ -26,51 +26,50 @@
 #pragma GCC  diagnostic pop
 #endif
 
+#include <memory>
+#include <cstdint>
+#include <vector>
 
-
-#ifdef YURI_HAVE_X11
-#include "yuri/graphics/GL.h"
-#endif
-
-using yuri::log::Log;
-
-#ifdef YURI_HAVE_X11
-using yuri::graphics::GL;
-#endif
 namespace yuri {
-namespace graphics {
+namespace cuda {
 
-class Cuda {
-public:
-	struct _tex_data {
-		cudaGraphicsResource* resource;
-		cudaArray *array;
-	};
-	Cuda(Log &log_);
-	virtual ~Cuda();
-	static shared_ptr<void> cuda_alloc(yuri::size_t size);
-	static void *_cuda_alloc(yuri::size_t size);
-	static void _cuda_dealloc(void *);
-	static bool copy_to_gpu(void *dest, const void *src, yuri::size_t size);
-	static bool copy_to_cpu(void *dest, const void *src, yuri::size_t size);
-	bool lock_mem(void *mem, yuri::size_t size);
-	bool unlock_mem(void *mem, yuri::size_t size);
-	void *map_mem(void *mem, yuri::size_t size);
-	void unmap_mem(void *mem);
-	static void sync();
-	static std::string uint_fs, uint_vs;
-	bool set_device(yuri::uint_t id);
-#ifdef YURI_HAVE_X11
-	bool prepare_texture(GL &gl, yuri::uint_t tid, yuri::size_t width, yuri::size_t height);
-	bool register_texture(GL &gl, uint_t tid);
-	bool map_texture(GL &gl, uint_t tid);
-	bool unmap_texture(GL &gl, uint_t tid);
-	bool copy_to_texture(GL &gl, yuri::uint_t tid, shared_ptr<void>src, yuri::size_t size);
-	std::map<yuri::uint_t, _tex_data> textures;
-#endif
-protected:
-	Log log;
-};
+
+namespace detail {
+void *cuda_alloc_impl(size_t size);
+void cuda_dealloc_impl(void *mem);
+}
+
+template<typename T>
+std::shared_ptr<T> cuda_alloc(size_t size)
+{
+	using ptr_type = typename std::add_pointer<T>::type;
+	return {	reinterpret_cast<ptr_type>(detail::cuda_alloc_impl(size * sizeof(T))),
+				detail::cuda_dealloc_impl};
+}
+
+
+
+template<typename T>
+bool copy_to_gpu(std::shared_ptr<T>& dest, const int *src, yuri::size_t size)
+{
+	return cudaMemcpy(dest.get(), src, size * sizeof(T), cudaMemcpyHostToDevice) == cudaSuccess;
+}
+template<typename T>
+bool copy_to_cpu(void *dest, const std::shared_ptr<T>& src, yuri::size_t size)
+{
+	return cudaMemcpy(dest, src.get(), size * sizeof(T), cudaMemcpyDeviceToHost) == cudaSuccess;
+}
+template<typename T>
+bool copy_to_gpu(std::shared_ptr<T>& dest, const std::vector<T>& src)
+{
+	return copy_to_gpu(dest, &src[0], src.size());
+}
+template<typename T>
+bool copy_to_cpu(std::vector<T>& dest, const std::shared_ptr<T>& src)
+{
+	return copy_to_cpu(&dest[0], src, dest.size());
+}
+
 
 } /* namespace graphics */
 } /* namespace yuri */
