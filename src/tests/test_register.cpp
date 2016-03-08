@@ -5,7 +5,6 @@
  *      Author: neneko
  */
 
-#define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 #include "yuri/log/Log.h"
 

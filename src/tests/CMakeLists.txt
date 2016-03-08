@@ -3,7 +3,9 @@ include( CTest )
 include_directories ( ${Boost_INCLUDE_DIRS} )
 link_directories (${Boost_LIBRARY_DIRS})
 
-add_executable(yuri_test_suite test_base.cpp
+add_library(yuri_test_main STATIC test_main.cpp)
+
+add_executable(yuri_test_suite  test_base.cpp
 								time_tests.cpp
 								test_irange.cpp
 								test_make_list.cpp
@@ -16,10 +18,12 @@ add_executable(yuri_test_suite test_base.cpp
 								
 								test_state_table.cpp
 								)
-target_link_libraries (yuri_test_suite ${LIBNAME})
+								
+target_link_libraries (yuri_test_suite yuri_test_main ${LIBNAME})
 
 add_executable(yuri_test_register test_register.cpp)
-target_link_libraries (yuri_test_register ${LIBNAME})
+								
+target_link_libraries (yuri_test_register yuri_test_main ${LIBNAME})
 
 
 add_test (core_test ${EXECUTABLE_OUTPUT_PATH}/yuri_test_suite )
