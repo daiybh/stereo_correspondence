@@ -29,7 +29,7 @@
 #include <memory>
 #include <cstdint>
 #include <vector>
-
+#include "yuri/core/utils/uvector.h"
 namespace yuri {
 namespace cuda {
 
@@ -69,7 +69,16 @@ bool copy_to_cpu(std::vector<T>& dest, const std::shared_ptr<T>& src)
 {
 	return copy_to_cpu(&dest[0], src, dest.size());
 }
-
+template<typename T>
+bool copy_to_gpu(std::shared_ptr<T>& dest, const uvector<T>& src)
+{
+	return copy_to_gpu(dest, &src[0], src.size());
+}
+template<typename T>
+bool copy_to_cpu(uvector<T>& dest, const std::shared_ptr<T>& src)
+{
+	return copy_to_cpu(&dest[0], src, dest.size());
+}
 
 } /* namespace graphics */
 } /* namespace yuri */
