@@ -28,3 +28,14 @@ target_link_libraries (yuri_test_register yuri_test_main ${LIBNAME})
 
 add_test (core_test ${EXECUTABLE_OUTPUT_PATH}/yuri_test_suite )
 add_test (register_test ${EXECUTABLE_OUTPUT_PATH}/yuri_test_register )
+
+if (CORE_CUDA)
+
+SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
+list(APPEND CUDA_NVCC_FLAGS "-std=c++11;-O2")
+CUDA_INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src )
+cuda_add_executable(yuri_test_cuda test_cuda.cu)
+target_link_libraries (yuri_test_cuda yuri_test_main ${LIBNAME} ${LIBNAME_HELPER_CUDA})
+
+add_test (cuda_test ${EXECUTABLE_OUTPUT_PATH}/yuri_test_cuda )
+endif()
