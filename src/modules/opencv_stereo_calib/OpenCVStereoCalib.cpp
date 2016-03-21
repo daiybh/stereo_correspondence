@@ -85,9 +85,9 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
         cv::cornerSubPix(right_mat, right_corners, cv::Size(11,11), cv::Size(-1,-1),
                          cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS,
                                       30, 0.01));
-        log[log::info] << "Storing corners";
         left_found_points.push_back(left_corners);
         right_found_points.push_back(right_corners);
+        log[log::info] << "Storing corners - "<<left_found_points.size() ;
     }
     if(left_found_points.size() == target_pairs && !calibrated){
         log[log::info] << "Calibrating now...";
