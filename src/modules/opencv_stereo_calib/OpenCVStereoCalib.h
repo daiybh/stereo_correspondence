@@ -37,6 +37,7 @@ private:
     unsigned int chessboard_x;
     unsigned int chessboard_y;
     unsigned int frame_delay;
+    std::string path;
 };
 }
 }

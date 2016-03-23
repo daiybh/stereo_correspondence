@@ -34,12 +34,13 @@ core::Parameters OpenCVStereoCalib::configure(){
     p["frame_delay"]["Every n-th frame will be saved"]=10;
     p["chessboard_x"]["Number of horizontal corners"]=9;
     p["chessboard_y"]["Number of vertical corners"]=6;
+    p["path"]["Path to which export the files"]="./";
     return p;
 }
     
 OpenCVStereoCalib::OpenCVStereoCalib(const log::Log& log_, core::pwThreadBase parent, const core::Parameters& parameters):
 core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, parent, 1, std::string("opencv_stereo_calib")),
-calibrated(false),frames_processed(0){
+calibrated(false),frames_processed(0),path("./"){
     IOTHREAD_INIT(parameters)
     //set_supported_formats({core::raw_format::rgba32});
     log[log::info]<< "Target pairs: "<<target_pairs;
@@ -134,7 +135,7 @@ void OpenCVStereoCalib::calibrate(cv::Size imageSize){
                     cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 100, 1e-5) );
     log[log::info] << "Error: " << rms;
     
-    cv::FileStorage fs("./intrinsics.yml", cv::FileStorage::WRITE);
+    cv::FileStorage fs(path+"intrinsics.yml", cv::FileStorage::WRITE);
     if( fs.isOpened() )
     {
         fs << "M1" << leftCameraMatrix << "D1" << leftDistCoefs <<
@@ -152,7 +153,7 @@ void OpenCVStereoCalib::calibrate(cv::Size imageSize){
                   imageSize, R, T, R1, R2, P1, P2, Q,
                   cv::CALIB_ZERO_DISPARITY, 0, imageSize, &validRoi[0], &validRoi[1]);
 
-    fs.open("./extrinsics.yml", cv::FileStorage::WRITE);
+    fs.open(path+"extrinsics.yml", cv::FileStorage::WRITE);
     if( fs.isOpened() )
     {
         fs << "R" << R << "T" << T << "R1" << R1 << "R2" << R2 << "P1" << P1 << "P2" << P2 << "Q" << Q;
@@ -166,7 +167,7 @@ void OpenCVStereoCalib::calibrate(cv::Size imageSize){
     initUndistortRectifyMap(leftCameraMatrix, leftDistCoefs, R1, P1, imageSize, CV_16SC2, leftUndistortMap[0], leftUndistortMap[1]);
     initUndistortRectifyMap(rightCameraMatrix, rightDistCoefs, R2, P2, imageSize, CV_16SC2, rightUndistortMap[0], rightUndistortMap[1]);
     
-    fs.open("./undistort.yml", cv::FileStorage::WRITE);
+    fs.open(path+"undistort.yml", cv::FileStorage::WRITE);
     if( fs.isOpened() )
     {
         fs << "L1" << leftUndistortMap[0] << "L2" << leftUndistortMap[1] << "R1" << rightUndistortMap[0] << "R2" << rightUndistortMap[1];
@@ -181,7 +182,8 @@ bool OpenCVStereoCalib::set_param(const core::Parameter& param){
 			(target_pairs,"calibration_frames")
                         (chessboard_x,"chessboard_x")
                         (chessboard_y,"chessboard_y")
-                        (frame_delay,"frame_delay"))
+                        (frame_delay,"frame_delay")
+                        (path,"path"))
 		return true;
     return core::MultiIOFilter::set_param(param);
 }
