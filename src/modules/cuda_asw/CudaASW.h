@@ -1,39 +1,41 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
- * File:   CudaASW.h
- * Author: user
+/*!
+ * @file 		CudaASW.h
+ * @author 		Your name <lhotamir@fit.cvut.cz>
+ * @date 		10.03.2016
+ * @copyright	Institute of Intermedia, CTU in Prague, 2016
+ * 				Distributed under modified BSD Licence, details in file doc/LICENSE
  *
- * Created on 26. února 2016, 12:20
  */
 
-#ifndef CUDAASW_H
-#define CUDAASW_H
+#ifndef CUDAASW_H_
+#define CUDAASW_H_
 
 #include "yuri/core/thread/SpecializedMultiIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/thread/Convert.h"
 
-namespace yuri{
-namespace cudaasw{
-class CudaASW: public core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>{
+namespace yuri {
+namespace cuda_asw {
+
+class CudaASW: public core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>
+{
     using base_type = core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>;
 public:
-    IOTHREAD_GENERATOR_DECLARATION
-    static core::Parameters configure();
-    CudaASW(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
-    virtual ~CudaASW() noexcept;
+	IOTHREAD_GENERATOR_DECLARATION
+	static core::Parameters configure();
+	CudaASW(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
+	virtual ~CudaASW() noexcept;
 private:
-    virtual std::vector<core::pFrame> do_special_step(std::tuple<core::pRawVideoFrame, core::pRawVideoFrame> frames) override;
-    virtual bool set_param(const core::Parameter& param) override;
-    int num_disparities;
-    int window_size;
+	
+	virtual std::vector<core::pFrame> do_special_step(std::tuple<core::pRawVideoFrame, core::pRawVideoFrame> frames) override;
+	virtual bool set_param(const core::Parameter& param) override;
+        int num_disparities;
+        int iterations;
+        std::shared_ptr<core::Convert> converter_left;
+        std::shared_ptr<core::Convert> converter_right;
+        std::vector<format_t>	supported_formats_;
 };
-}
-}
 
-#endif /* CUDAASW_H */
-
+} /* namespace cuda_asw */
+} /* namespace yuri */
+#endif /* CUDAASW_H_ */
