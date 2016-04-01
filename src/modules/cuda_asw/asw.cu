@@ -478,7 +478,7 @@ __global__ void disparityFill(int* disp, int * out_disp, int width,
 }
 
 int* disparity(const unsigned char* left, const unsigned char* right,
-        int max_disp, int width, int height, int iterations, int fill_iterations) {
+        int max_disp, int width, int height, int iterations, int fill_iterations, bool left_map) {
 
     size_t padded_size = (width + 32) * (height + 32);
     unsigned char *left_image_dev;
@@ -603,29 +603,28 @@ int* disparity(const unsigned char* left, const unsigned char* right,
         }
         cudaDeviceSynchronize();
     }
+    int* final_map;
+    if(left_map){
+        final_map=d_left;
+    }else{
+        final_map=d_right;
+    }
     int* outDisp;
     cudaMalloc((void**) &outDisp, width * height * sizeof (int));
     for (int i = 0; i < fill_iterations; i++) {
-        disparityFill << <blocks, threads>>>(d_left, outDisp, width, height);
+        disparityFill << <blocks, threads>>>(final_map, outDisp, width, height);
 
-        cudaMemcpy(d_left, outDisp, width * height * sizeof (int),
+        cudaMemcpy(final_map, outDisp, width * height * sizeof (int),
                 cudaMemcpyDeviceToDevice);
         cudaDeviceSynchronize();
     }
-    disparityMedianFilter << <blocks, threads>>>(d_left, outDisp, width, height);
+    disparityMedianFilter << <blocks, threads>>>(final_map, outDisp, width, height);
     cudaDeviceSynchronize();
     int* resv;
     resv = new int[width * height];
     cudaMemcpy(resv, outDisp, width * height * sizeof (int),
             cudaMemcpyDeviceToHost);
     cudaDeviceSynchronize();
-    //	for (int i = 0; i < height; i++) {
-    //		for (int j = 0; j < width; j++) {
-    //			std::cout << i << "," << j << ": "
-    //					<< resv[i * width + j] << std::endl;
-    //		}
-    //
-    //	}
     cudaFree(left_image_dev);
     cudaFree(right_image_dev);
     cudaFree(V_left);

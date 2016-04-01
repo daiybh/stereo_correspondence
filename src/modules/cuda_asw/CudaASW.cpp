@@ -30,11 +30,12 @@ namespace yuri {
             p["num_disparities"]["Number of disparities"]=16;
             p["iterations"]["Number of refinement iterations"]=6;
             p["fill_iterations"]["Iterations of filling filter"]=1;
+            p["left"]["True if disparity for left image, false if right"]=true;
             return p;
         }
 
         CudaASW::CudaASW(const log::Log& log_, core::pwThreadBase parent, const core::Parameters& parameters) :
-        core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, parent, 2, std::string("cuda_asw")),num_disparities(16),iterations(6),fill_iterations(1) {
+        core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, parent, 2, std::string("cuda_asw")),num_disparities(16),iterations(6),fill_iterations(1),left(true) {
             IOTHREAD_INIT(parameters)
             supported_formats_.push_back(core::raw_format::y8);
         }
@@ -57,7 +58,7 @@ namespace yuri {
                 memcpy(&left_data[(i+16)*(w+32)+16],&left_p[i*w],w*sizeof(unsigned char));
                 memcpy(&right_data[(i+16)*(w+32)+16],&right_p[i*w],w*sizeof(unsigned char));
             }
-            int* d = disparity(left_data, right_data, num_disparities, w, h, iterations, fill_iterations);
+            int* d = disparity(left_data, right_data, num_disparities, w, h, iterations, fill_iterations,left);
             delete [] left_data;
             delete [] right_data;
             unsigned char* out = new unsigned char[w * h];
@@ -68,14 +69,21 @@ namespace yuri {
             core::pRawVideoFrame map_frame = core::RawVideoFrame::create_empty(core::raw_format::y8,{static_cast<dimension_t> (w), static_cast<dimension_t> (h)},
             out,w * h * sizeof (unsigned char));
             core::pRawVideoFrame output = std::dynamic_pointer_cast<core::RawVideoFrame>(converter_left->convert_to_cheapest(map_frame, {std::get<0>(frames)->get_format()}));
-            return{output, std::get<0>(frames)};
+            core::pRawVideoFrame orig_frame;
+            if(left){
+                orig_frame = std::get<0>(frames);
+            }else{
+                orig_frame = std::get<1>(frames);
+            }
+            return{output, orig_frame };
         }
 
         bool CudaASW::set_param(const core::Parameter& param) {
             if (assign_parameters(param)
                     (num_disparities, "num_disparities")
                     (iterations, "iterations")
-                    (fill_iterations, "fill_iterations"))
+                    (fill_iterations, "fill_iterations")
+                    (left,"left"))
                 return true;
             return core::IOThread::set_param(param);
         }
