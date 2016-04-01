@@ -7,6 +7,8 @@
  *
  */
 
+#include <string.h>
+
 #include "CudaASW.h"
 #include "yuri/core/Module.h"
 #include "asw.h"
@@ -46,9 +48,17 @@ namespace yuri {
             core::pRawVideoFrame right_frame = std::dynamic_pointer_cast<core::RawVideoFrame>(converter_right->convert_to_cheapest(std::get<1>(frames), supported_formats_));
             size_t w = left_frame->get_width();
             size_t h = left_frame->get_height();
-            const unsigned char *left_data = PLANE_RAW_DATA(left_frame, 0);
-            const unsigned char *right_data = PLANE_RAW_DATA(right_frame, 0);
+            unsigned char *left_p=PLANE_RAW_DATA(left_frame,0);
+            unsigned char *right_p=PLANE_RAW_DATA(right_frame,0);
+            unsigned char *left_data = new unsigned char[(w+32)*(h+32)]();
+            unsigned char *right_data = new unsigned char[(w+32)*(h+32)]();
+            for(unsigned int i=0;i<h;i++){
+                memcpy(&left_data[(i+16)*(w+32)+16],&left_p[i*w],w*sizeof(unsigned char));
+                memcpy(&right_data[(i+16)*(w+32)+16],&right_p[i*w],w*sizeof(unsigned char));
+            }
             int* d = disparity(left_data, right_data, num_disparities, w, h, iterations);
+            delete [] left_data;
+            delete [] right_data;
             unsigned char* out = new unsigned char[w * h];
             int coef = 256 / num_disparities;
             for (unsigned int i = 0; i < (w * h); i++) {
