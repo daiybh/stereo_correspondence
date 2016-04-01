@@ -24,7 +24,7 @@ IOTHREAD_GENERATOR(OpenCVSGBM)
     REGISTER_IOTHREAD("opencv_sgbm",OpenCVSGBM)
     MODULE_REGISTRATION_END()
 OpenCVSGBM::OpenCVSGBM(const log::Log& log_, core::pwThreadBase parent, const core::Parameters& parameters):
-core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, parent, 1, std::string("opencv_sgbm")){
+core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, parent, 2, std::string("opencv_sgbm")){
     IOTHREAD_INIT(parameters)
     //set_supported_formats({core::raw_format::rgba32});
     sgbm = cv::StereoSGBM::create(min_disparity,num_disparities,window_size);
@@ -55,17 +55,18 @@ std::vector<core::pFrame> OpenCVSGBM::do_special_step(std::tuple<core::pRawVideo
     const size_t width = left_frame->get_width();
     const size_t height = left_frame->get_height();
     cv::Mat disp, disp8,left_mat,right_mat;
-    
+    convert = std::make_shared<core::Convert>(log, get_this_ptr(), core::Convert::configure());
     left_mat=cv::Mat(height,width,CV_8UC3,PLANE_RAW_DATA(left_frame,0));
     right_mat=cv::Mat(height,width,CV_8UC3,PLANE_RAW_DATA(right_frame,0));
     
     sgbm->compute(left_mat,right_mat,disp);
     disp.convertTo(disp8, CV_8U);
-    core::pRawVideoFrame output = core::RawVideoFrame::create_empty(core::raw_format::g8,
+    core::pRawVideoFrame map = core::RawVideoFrame::create_empty(core::raw_format::g8,
                                             {static_cast<dimension_t>(disp8.cols), static_cast<dimension_t>(disp8.rows)},
 											disp8.data,
 											disp8.total() * disp8.elemSize());
-    return {output};
+    core::pRawVideoFrame output = std::dynamic_pointer_cast<core::RawVideoFrame>(convert->convert_to_cheapest(map, {std::get<0>(frames)->get_format()}));
+    return {output,left_frame};
 }
 
 bool OpenCVSGBM::set_param(const core::Parameter& param){

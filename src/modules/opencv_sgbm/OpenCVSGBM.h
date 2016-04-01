@@ -16,6 +16,7 @@
 
 #include "yuri/core/thread/SpecializedMultiIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
+#include "yuri/core/thread/Convert.h"
 
 namespace yuri{
 namespace opencvsgbm{
@@ -30,6 +31,7 @@ private:
     virtual std::vector<core::pFrame> do_special_step(std::tuple<core::pRawVideoFrame, core::pRawVideoFrame> frames) override;
     virtual bool set_param(const core::Parameter& param) override;
     cv::Ptr<cv::StereoSGBM> sgbm;
+    std::shared_ptr<core::Convert> convert;
     int min_disparity;
     int num_disparities;
     int window_size;
