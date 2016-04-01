@@ -31,6 +31,7 @@ private:
 	virtual bool set_param(const core::Parameter& param) override;
         int num_disparities;
         int iterations;
+        int fill_iterations;
         std::shared_ptr<core::Convert> converter_left;
         std::shared_ptr<core::Convert> converter_right;
         std::vector<format_t>	supported_formats_;

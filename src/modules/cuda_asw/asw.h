@@ -15,7 +15,7 @@
 #ifndef ASW_H
 #define ASW_H
 
-int* disparity(const unsigned char* left,const unsigned char* right, int max_disp, int width, int height, int iterations);
+int* disparity(const unsigned char* left,const unsigned char* right, int max_disp, int width, int height, int iterations, int fill_iterations);
 
 #endif /* ASW_H */
 

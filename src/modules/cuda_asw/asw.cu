@@ -356,7 +356,7 @@ __global__ void WTA2(float* V, int* disp, float* D, float* F, float* eps,
     float min1 = CUDART_INF;
     float min2 = CUDART_INF;
     for (int d = 0; d < max_disp; d++) {
-        float lambda = ALPHA * D[idx] * abs(eps[idx] - d);
+        float lambda = ALPHA * D[idx] * fabsf(eps[idx] - d);
         //		int vidx = y * width * max_disp + x * max_disp + d;
         int vidx = d * width * height + y * width + x;
         if (min1 > (V[vidx] + lambda)) {
@@ -478,7 +478,7 @@ __global__ void disparityFill(int* disp, int * out_disp, int width,
 }
 
 int* disparity(const unsigned char* left, const unsigned char* right,
-        int max_disp, int width, int height, int iterations) {
+        int max_disp, int width, int height, int iterations, int fill_iterations) {
 
     size_t padded_size = (width + 32) * (height + 32);
     unsigned char *left_image_dev;
@@ -605,16 +605,13 @@ int* disparity(const unsigned char* left, const unsigned char* right,
     }
     int* outDisp;
     cudaMalloc((void**) &outDisp, width * height * sizeof (int));
-    disparityFill << <blocks, threads>>>(d_left, outDisp, width, height);
+    for (int i = 0; i < fill_iterations; i++) {
+        disparityFill << <blocks, threads>>>(d_left, outDisp, width, height);
 
-    cudaMemcpy(d_left, outDisp, width * height * sizeof (int),
-            cudaMemcpyDeviceToDevice);
-    cudaDeviceSynchronize();
-    disparityFill << <blocks, threads>>>(d_left, outDisp, width, height);
-
-    cudaMemcpy(d_left, outDisp, width * height * sizeof (int),
-            cudaMemcpyDeviceToDevice);
-    cudaDeviceSynchronize();
+        cudaMemcpy(d_left, outDisp, width * height * sizeof (int),
+                cudaMemcpyDeviceToDevice);
+        cudaDeviceSynchronize();
+    }
     disparityMedianFilter << <blocks, threads>>>(d_left, outDisp, width, height);
     cudaDeviceSynchronize();
     int* resv;
