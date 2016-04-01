@@ -25,7 +25,7 @@ IOTHREAD_GENERATOR(OpenCVCudaBM)
     REGISTER_IOTHREAD("opencv_cudabm",OpenCVCudaBM)
     MODULE_REGISTRATION_END()
 OpenCVCudaBM::OpenCVCudaBM(const log::Log& log_, core::pwThreadBase parent, const core::Parameters& parameters):
-core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, parent, 1, std::string("opencv_cudabm")){
+core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, parent, 2, std::string("opencv_cudabm")){
     IOTHREAD_INIT(parameters)
     //set_supported_formats({core::raw_format::rgba32});
     
@@ -47,7 +47,7 @@ std::vector<core::pFrame> OpenCVCudaBM::do_special_step(std::tuple<core::pRawVid
     const size_t height = left_frame->get_height();
     cv::Mat left_mat,right_mat,left,right;
     cv::cuda::GpuMat d_left,d_right;
-    
+    convert = std::make_shared<core::Convert>(log, get_this_ptr(), core::Convert::configure());
     left_mat=cv::Mat(height,width,CV_8UC3,PLANE_RAW_DATA(left_frame,0));
     right_mat=cv::Mat(height,width,CV_8UC3,PLANE_RAW_DATA(right_frame,0));
     cv::cvtColor(left_mat, left, cv::COLOR_BGR2GRAY);
@@ -58,12 +58,16 @@ std::vector<core::pFrame> OpenCVCudaBM::do_special_step(std::tuple<core::pRawVid
     d_right.upload(right);
     bm->compute(d_left,d_right,d_disp);
     d_disp.download(disp8);
-    
-    core::pRawVideoFrame output = core::RawVideoFrame::create_empty(core::raw_format::g8,
-                                            {static_cast<dimension_t>(disp8.cols), static_cast<dimension_t>(disp8.rows)},
-											disp8.data,
-											disp8.total() * disp8.elemSize());
-    return {output};
+    cv::Mat out;
+    cv::medianBlur(disp8,out,5);
+    int coef=256/num_disparities;
+    out = coef*out;
+    core::pRawVideoFrame map = core::RawVideoFrame::create_empty(core::raw_format::y8,
+                                            {static_cast<dimension_t>(out.cols), static_cast<dimension_t>(out.rows)},
+											out.data,
+											out.total() * out.elemSize());
+    core::pRawVideoFrame output = std::dynamic_pointer_cast<core::RawVideoFrame>(convert->convert_to_cheapest(map, {std::get<0>(frames)->get_format()}));
+    return {output,left_frame};
 }
 
 bool OpenCVCudaBM::set_param(const core::Parameter& param){

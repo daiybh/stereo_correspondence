@@ -17,6 +17,7 @@
 #include "yuri/core/thread/SpecializedMultiIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
 #include "opencv2/cudastereo.hpp"
+#include "yuri/core/thread/Convert.h"
 
 namespace yuri{
 namespace opencvcudabm{
@@ -31,6 +32,7 @@ private:
     virtual std::vector<core::pFrame> do_special_step(std::tuple<core::pRawVideoFrame, core::pRawVideoFrame> frames) override;
     virtual bool set_param(const core::Parameter& param) override;
     cv::Ptr<cv::cuda::StereoBM> bm;
+    std::shared_ptr<core::Convert> convert;
     int num_disparities;
     int window_size;
 };
