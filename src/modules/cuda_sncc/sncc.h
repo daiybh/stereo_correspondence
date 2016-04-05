@@ -14,7 +14,7 @@
 #ifndef SNCC_H
 #define SNCC_H
 
-unsigned char* disparity(unsigned char* source, unsigned char* target, int width, int height, int numDisparities, int avgWindow);
+unsigned char* disparity(float* source, float* target, int width, int height, int numDisparities, int avgWindow);
 
 #endif /* SNCC_H */
 

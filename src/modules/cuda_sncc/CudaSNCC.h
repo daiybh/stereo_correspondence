@@ -11,8 +11,8 @@
  * Created on 4. dubna 2016, 10:52
  */
 
-#ifndef SNCC_H
-#define SNCC_H
+#ifndef CUDASNCC_H
+#define CUDASNCC_H
 
 #include "yuri/core/thread/SpecializedMultiIOFilter.h"
 #include "yuri/core/frame/RawVideoFrame.h"
@@ -28,9 +28,6 @@ public:
     CudaSNCC(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
     virtual ~CudaSNCC() noexcept;
 private:
-    unsigned char* computeDisparity(unsigned char *left, unsigned char *right, int width, int height, int maxDisparity, int avgWindow);
-    float getPixel(unsigned char *image,int x,int y, int width, int height);
-    float getPixel(float *image,int x,int y, int width, int height);
     virtual std::vector<core::pFrame> do_special_step(std::tuple<core::pRawVideoFrame, core::pRawVideoFrame> frames) override;
     virtual bool set_param(const core::Parameter& param) override;
     std::shared_ptr<core::Convert> converter_left;
