@@ -75,14 +75,10 @@ __global__ void verticalCostAggregation(unsigned char* source,
     //	int p_t = getPixel(target,x+disp,y,width,height);
 
     for (int i = -16; i < 16; i++) {
-        if (i != 0) {
             int y_q = y + i;
 
             int q_s = block_region_source[threadIdx.y + 16 + i][threadIdx.x];
-            //			int q_s = getPixel(source,x,y_q,width,height);
             int q_t = block_region_target[threadIdx.y + 16 + i][threadIdx.x];
-            //			int q_t = getPixel(target,x+disp,y_q,width,height);
-
             float delta_c = float(abs(p_s - q_s));
             float delta_g = float(abs(y_q - y));
             float w1 = __expf(
@@ -97,8 +93,6 @@ __global__ void verticalCostAggregation(unsigned char* source,
             float d = (abs(q_s - q_t));
             sum1 += w1 * w2 * d;
             sum2 += w1 * w2;
-        }
-
     }
     //printf("%f\n",sum1);
     //			V[y * width * max_disp + x * (max_disp) + abs(disp)] = sum1 / sum2;
