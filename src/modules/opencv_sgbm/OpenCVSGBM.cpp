@@ -24,9 +24,11 @@ IOTHREAD_GENERATOR(OpenCVSGBM)
     REGISTER_IOTHREAD("opencv_sgbm",OpenCVSGBM)
     MODULE_REGISTRATION_END()
 OpenCVSGBM::OpenCVSGBM(const log::Log& log_, core::pwThreadBase parent, const core::Parameters& parameters):
-core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, parent, 2, std::string("opencv_sgbm")){
+core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, parent, 2, std::string("opencv_sgbm")),hh_mode(false){
     IOTHREAD_INIT(parameters)
     //set_supported_formats({core::raw_format::rgba32});
+    log[log::info]<<num_disparities;
+    log[log::info]<<min_disparity;
     sgbm = cv::StereoSGBM::create(min_disparity,num_disparities,window_size);
     sgbm->setP1(8*3*window_size*window_size);
     sgbm->setP2(32*3*window_size*window_size);
@@ -36,7 +38,11 @@ core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, p
     sgbm->setSpeckleWindowSize(300);
     sgbm->setSpeckleRange(32);
     sgbm->setDisp12MaxDiff(1);
-    sgbm->setMode(cv::StereoSGBM::MODE_SGBM);
+    if(hh_mode){
+        sgbm->setMode(cv::StereoSGBM::MODE_HH);
+    }else{
+        sgbm->setMode(cv::StereoSGBM::MODE_SGBM);
+    }
 }
 
 core::Parameters OpenCVSGBM::configure(){
@@ -45,6 +51,7 @@ core::Parameters OpenCVSGBM::configure(){
     p["min_disparity"]["Min disparity"]=0;
     p["num_disparities"]["Number of disparities"]=16;
     p["window_size"]["Window size"]=3;
+    p["hh_mode"]["Enable HH mode"]=false;
     
     return p;
 }
@@ -60,8 +67,8 @@ std::vector<core::pFrame> OpenCVSGBM::do_special_step(std::tuple<core::pRawVideo
     right_mat=cv::Mat(height,width,CV_8UC3,PLANE_RAW_DATA(right_frame,0));
     
     sgbm->compute(left_mat,right_mat,disp);
-    disp.convertTo(disp8, CV_8U);
-    core::pRawVideoFrame map = core::RawVideoFrame::create_empty(core::raw_format::g8,
+    disp.convertTo(disp8,CV_8U,255/(num_disparities*16.));
+    core::pRawVideoFrame map = core::RawVideoFrame::create_empty(core::raw_format::y8,
                                             {static_cast<dimension_t>(disp8.cols), static_cast<dimension_t>(disp8.rows)},
 											disp8.data,
 											disp8.total() * disp8.elemSize());
@@ -73,7 +80,8 @@ bool OpenCVSGBM::set_param(const core::Parameter& param){
     if (assign_parameters(param)
 			(min_disparity,"min_disparity")
                         (num_disparities,"num_disparities")
-                        (window_size,"window_size"))
+                        (window_size,"window_size")
+                        (hh_mode,"hh_mode"))
 		return true;
     return core::MultiIOFilter::set_param(param);
 }

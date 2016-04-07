@@ -35,6 +35,7 @@ private:
     int min_disparity;
     int num_disparities;
     int window_size;
+    bool hh_mode;
 };
 }
 }
