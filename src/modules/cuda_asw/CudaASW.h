@@ -35,6 +35,7 @@ private:
         bool left;
         std::shared_ptr<core::Convert> converter_left;
         std::shared_ptr<core::Convert> converter_right;
+        std::shared_ptr<core::Convert> converter_out;
         std::vector<format_t>	supported_formats_;
 };
 

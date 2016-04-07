@@ -46,6 +46,7 @@ namespace yuri {
         std::vector<core::pFrame> CudaASW::do_special_step(std::tuple<core::pRawVideoFrame, core::pRawVideoFrame> frames) {
             converter_left = std::make_shared<core::Convert>(log, get_this_ptr(), core::Convert::configure());
             converter_right = std::make_shared<core::Convert>(log, get_this_ptr(), core::Convert::configure());
+            converter_out = std::make_shared<core::Convert>(log, get_this_ptr(), core::Convert::configure());
             core::pRawVideoFrame left_frame = std::dynamic_pointer_cast<core::RawVideoFrame>(converter_left->convert_to_cheapest(std::get<0>(frames), supported_formats_));
             core::pRawVideoFrame right_frame = std::dynamic_pointer_cast<core::RawVideoFrame>(converter_right->convert_to_cheapest(std::get<1>(frames), supported_formats_));
             size_t w = left_frame->get_width();
@@ -68,7 +69,7 @@ namespace yuri {
             }
             core::pRawVideoFrame map_frame = core::RawVideoFrame::create_empty(core::raw_format::y8,{static_cast<dimension_t> (w), static_cast<dimension_t> (h)},
             out,w * h * sizeof (unsigned char));
-            core::pRawVideoFrame output = std::dynamic_pointer_cast<core::RawVideoFrame>(converter_left->convert_to_cheapest(map_frame, {std::get<0>(frames)->get_format()}));
+            core::pRawVideoFrame output = std::dynamic_pointer_cast<core::RawVideoFrame>(converter_out->convert_to_cheapest(map_frame, {std::get<0>(frames)->get_format()}));
             core::pRawVideoFrame orig_frame;
             if(left){
                 orig_frame = std::get<0>(frames);
