@@ -39,7 +39,7 @@ core::Parameters OpenCVStereoCalib::configure(){
 }
     
 OpenCVStereoCalib::OpenCVStereoCalib(const log::Log& log_, core::pwThreadBase parent, const core::Parameters& parameters):
-core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, parent, 1, std::string("opencv_stereo_calib")),
+core::SpecializedMultiIOFilter<core::RawVideoFrame, core::RawVideoFrame>(log_, parent, 2, std::string("opencv_stereo_calib")),
 calibrated(false),frames_processed(0),path("./"){
     IOTHREAD_INIT(parameters)
     //set_supported_formats({core::raw_format::rgba32});
@@ -97,15 +97,25 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
         log[log::info] << "Calibration finished";
         calibrated = true;
     }
-    if(found_left && found_right)
-        cv::drawChessboardCorners(left_mat,cv::Size(chessboard_x,chessboard_y),left_corners,found_left);
+    cv::Mat out_left;
+    cv::Mat out_right;
+    cv::cvtColor(left_mat,out_left,CV_GRAY2RGB);
+    cv::cvtColor(right_mat,out_right,CV_GRAY2RGB);
+    if(found_left && found_right){
+        cv::drawChessboardCorners(out_left,cv::Size(chessboard_x,chessboard_y),left_corners,found_left);
+        cv::drawChessboardCorners(out_right,cv::Size(chessboard_x,chessboard_y),right_corners,found_right);
+    }
     
-    core::pRawVideoFrame output = core::RawVideoFrame::create_empty(core::raw_format::g8,
-                                            {static_cast<dimension_t>(left_mat.cols), static_cast<dimension_t>(left_mat.rows)},
-											left_mat.data,
-											left_mat.total() * left_mat.elemSize());
+    core::pRawVideoFrame output_left = core::RawVideoFrame::create_empty(core::raw_format::rgb24,
+                                            {static_cast<dimension_t>(out_left.cols), static_cast<dimension_t>(out_left.rows)},
+											out_left.data,
+											out_left.total() * out_left.elemSize());
+    core::pRawVideoFrame output_right = core::RawVideoFrame::create_empty(core::raw_format::rgb24,
+                                            {static_cast<dimension_t>(out_right.cols), static_cast<dimension_t>(out_right.rows)},
+											out_right.data,
+											out_right.total() * out_right.elemSize());
     frames_processed++;
-    return {output};
+    return {output_left, output_right};
 }
 
 void OpenCVStereoCalib::calibrate(cv::Size imageSize){
