@@ -41,8 +41,8 @@ __global__ void boxFilter3x3(float* in, float* out, int width) {
     sum += block_window[by + 1][bx - 1];
     sum += block_window[by + 1][bx];
     sum += block_window[by + 1][bx + 1];
-//    out[y * width + x] = __fdividef(sum, 9.0);
-    out[y * width + x] = sum/9.0;
+    //    out[y * width + x] = __fdividef(sum, 9.0);
+    out[y * width + x] = sum / 9.0;
     __syncthreads();
 
 }
@@ -87,7 +87,7 @@ __global__ void sdFilter3x3(float* in, float* out, float* means, int width) {
     sum += __powf(block_window[by + 1][bx], 2);
     sum += __powf(block_window[by + 1][bx + 1], 2);
     sum /= 9.0;
-    sum -= __powf(mean,2.0);
+    sum -= __powf(mean, 2.0);
     out[y * width + x] = sqrtf(sum);
     __syncthreads();
 
@@ -156,10 +156,10 @@ __global__ void correlationFilter3x3(float *source, float *target, float *cor, f
     float sd_source = sds_source[y * width + x];
     float sd_target = sds_target[y * width + x - disp];
 
-//    float mean_source = 1;
-//    float mean_target = 1;
-//    float sd_source = 1;
-//    float sd_target = 1;
+    //    float mean_source = 1;
+    //    float mean_target = 1;
+    //    float sd_source = 1;
+    //    float sd_target = 1;
     float sum = 0.0;
     sum += block_source_window[by - 1][bx - 1] * block_target_window[by - 1][bx - 1];
     sum += block_source_window[by - 1][bx] * block_target_window[by - 1][bx];
@@ -170,9 +170,9 @@ __global__ void correlationFilter3x3(float *source, float *target, float *cor, f
     sum += block_source_window[by + 1][bx - 1] * block_target_window[by + 1][bx - 1];
     sum += block_source_window[by + 1][bx] * block_target_window[by + 1][bx];
     sum += block_source_window[by + 1][bx + 1] * block_target_window[by + 1][bx + 1];
-    sum = sum/9.0;
+    sum = __fdividef(sum, 9.0);
     sum -= mean_source*mean_target;
-    sum = sum / (sd_source * sd_target);
+    sum = __fdividef(sum , (sd_source * sd_target));
     cor[img_y * (width + 32) + img_x] = sum;
 }
 
@@ -188,21 +188,134 @@ __global__ void WTA(float *cor, float *bestCor, unsigned char *disparity, int wi
     //disparity[idx] = image[(y+16)*(width+32)+x+16];
 }
 
-__global__ void boxFilter(float *in, float *out, int width, int avgWindow){
+__global__ void boxFilter5x9(float *in, float *out, int width) {
     int x = (blockIdx.x * blockDim.x + threadIdx.x);
     int y = (blockIdx.y * blockDim.y) + threadIdx.y;
-    int in_x=x+16;
-    int in_y=y+16;
+    int in_x = x + 16;
+    int in_y = y + 16;
+    int b_x = threadIdx.x + 4;
+    int b_y = threadIdx.y + 2;
     
-    int win2=avgWindow/2;
-    float sum=0.0;
-    for(int i=in_y-win2; i<=(in_y+win2);i++){
-        for(int j=in_x-win2; j<=(in_x+win2);j++){
-            sum+=in[i*(width+32)+j];
+    __shared__ float block_region[20][24];
+    // loading center part
+    block_region[b_y][b_x]=in[in_y*(width+32)+in_x];
+    // loading corners
+    if(threadIdx.x < 4 && threadIdx.y < 2){
+        block_region[b_y-2][b_x-4]=in[(in_y-2)*(width+32)+(in_x-4)];
+    }
+    if(threadIdx.x >= 12 && threadIdx.y < 2){
+        block_region[b_y-2][b_x+4]=in[(in_y-2)*(width+32)+(in_x+4)];
+    }
+    if(threadIdx.x < 4 && threadIdx.y >= 14){
+        block_region[b_y+2][b_x-4]=in[(in_y+2)*(width+32)+(in_x-4)];
+    }
+    if(threadIdx.x >= 12 && threadIdx.y >= 14){
+        block_region[b_y+2][b_x+4]=in[(in_y+2)*(width+32)+(in_x+4)];
+    }
+    // loading sides
+    if(threadIdx.x < 4){
+        block_region[b_y][b_x-4]=in[(in_y)*(width+32)+(in_x-4)];
+    }
+    if(threadIdx.x >= 12){
+        block_region[b_y][b_x+4]=in[(in_y)*(width+32)+(in_x+4)];
+    }
+    // loading bottom and top
+    if(threadIdx.y < 2){
+        block_region[b_y - 2][b_x]=in[(in_y-2)*(width+32)+(in_x)];
+    }
+    if(threadIdx.y >= 14){
+        block_region[b_y + 2][b_x]=in[(in_y+2)*(width+32)+(in_x)];
+    }
+    __syncthreads();
+
+    float sum = 0.0;
+    for (int i = b_y - 2; i <= (b_y + 2); i++) {
+        for (int j = b_x - 4; j <= (b_x + 4); j++) {
+            sum += block_region[i][j];
         }
     }
-    float avg=sum/(avgWindow*avgWindow);
-    out[y*width+x]=avg;
+    float avg = __fdividef(sum, 45.0);
+    out[y * width + x] = avg;
+}
+
+__global__ void consistencyCheck(unsigned char* d_left, unsigned char* d_right, int width) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+
+    int d_p = d_left[y * width + x];
+    if ((x - d_p) < 0) {
+        __syncthreads();
+        return;
+    }
+    int d_pt = d_right[y * width + x - d_p];
+
+    if (abs(d_p - d_pt) > 1) {
+        d_left[y * width + x] = 0;
+        d_right[y * width + x - d_p] = 0;
+    }
+    __syncthreads();
+}
+
+__device__ unsigned char getPixelD(unsigned char* image, int x, int y, int width, int height) {
+    if (x < 0) {
+        return 0;
+    }
+
+    if (y < 0) {
+        return 0;
+    }
+    if (x >= width) {
+        return 0;
+    }
+
+    if (y >= height) {
+        return 0;
+    }
+    return image[y * width + x];
+}
+
+__global__ void disparityFill(unsigned char* disp, unsigned char* out_disp, int width, int height) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = (blockIdx.y * blockDim.y) + threadIdx.y;
+
+    __shared__ int block_region[16][48];
+    int xb = x - 16;
+    block_region[threadIdx.y][threadIdx.x] = getPixelD(disp, xb, y, width,
+            height);
+    block_region[threadIdx.y][threadIdx.x + 16] = getPixelD(disp, xb + 16, y,
+            width, height);
+    block_region[threadIdx.y][threadIdx.x + 32] = getPixelD(disp, xb + 32, y,
+            width, height);
+    __syncthreads();
+
+    int left_i = -1, right_i = 1;
+    int possible_disp = 0;
+    while ((left_i > -16) && (right_i < 16)) {
+        int left_v = block_region[threadIdx.y][threadIdx.x + 16 + left_i];
+        int right_v = block_region[threadIdx.y][threadIdx.x + 16 + right_i];
+        if (left_v != 0 && right_v != 0) {
+            //possible_disp = (left_v + right_v) / 2;
+            if (abs(left_i) < right_i) {
+                possible_disp = left_v;
+            } else {
+                possible_disp = right_v;
+            }
+            break;
+        }
+        if (left_v == 0) {
+            left_i--;
+        }
+        if (right_v == 0) {
+            right_i++;
+        }
+    }
+    if (block_region[threadIdx.y][threadIdx.x + 16] == 0) {
+        out_disp[y * width + x] = possible_disp;
+    } else {
+        out_disp[y * width + x] = block_region[threadIdx.y][threadIdx.x + 16];
+    }
+
 }
 
 unsigned char* disparity(float* source, float* target, int width, int height, int numDisparities, int avgWindow) {
@@ -262,38 +375,46 @@ unsigned char* disparity(float* source, float* target, int width, int height, in
         std::cout << "CUDA error occured after sd filters :" << cudaGetErrorString(cudaStatus)
                 << std::endl;
     }
-    float *bestCorrelation;
-    cudaMalloc((void**) &bestCorrelation, size * sizeof (float));
-    setCorrelation << <blocks, threads>>>(bestCorrelation, width);
+    float *bestCorrelation_left, *bestCorrelation_right;
+    cudaMalloc((void**) &bestCorrelation_left, size * sizeof (float));
+    cudaMalloc((void**) &bestCorrelation_right, size * sizeof (float));
+    setCorrelation << <blocks, threads>>>(bestCorrelation_left, width);
+    setCorrelation << <blocks, threads>>>(bestCorrelation_right, width);
     cudaDeviceSynchronize();
     cudaStatus = cudaGetLastError();
-        if (cudaStatus != cudaSuccess) {
-            std::cout << "CUDA error occured after setting best cor :" << cudaGetErrorString(cudaStatus)
-                    << std::endl;
-        }
-    float *cor;
-    float *cor2;
-    unsigned char *disparityMap;
-    cudaMalloc((void**) &cor, padded_size * sizeof (float));
-    cudaMalloc((void**) &cor2, size * sizeof (float));
-    cudaMalloc((void**) &disparityMap, size * sizeof (unsigned char));
-    cudaMemset(disparityMap,0,size*sizeof(unsigned char));
+    if (cudaStatus != cudaSuccess) {
+        std::cout << "CUDA error occured after setting best cor :" << cudaGetErrorString(cudaStatus)
+                << std::endl;
+    }
+    float *cor_left, *cor_right;
+    float *cor2_left, *cor2_right;
+    unsigned char *disparityMap_left, *disparityMap_right;
+    cudaMalloc((void**) &cor_left, padded_size * sizeof (float));
+    cudaMalloc((void**) &cor2_left, size * sizeof (float));
+    cudaMalloc((void**) &disparityMap_left, size * sizeof (unsigned char));
+    cudaMalloc((void**) &cor_right, padded_size * sizeof (float));
+    cudaMalloc((void**) &cor2_right, size * sizeof (float));
+    cudaMalloc((void**) &disparityMap_right, size * sizeof (unsigned char));
+    cudaMemset(disparityMap_left, 0, size * sizeof (unsigned char));
     for (int disp = 0; disp < numDisparities; disp++) {
-        correlationFilter3x3 << <blocks, threads>>>(left_image_dev, right_image_dev, cor, means_source, means_target, sds_source, sds_target, disp, height, width);
+        correlationFilter3x3 << <blocks, threads>>>(left_image_dev, right_image_dev, cor_left, means_source, means_target, sds_source, sds_target, disp, height, width);
+        correlationFilter3x3 << <blocks, threads>>>(right_image_dev, left_image_dev, cor_right, means_target, means_source, sds_target, sds_source, -disp, height, width);
         cudaDeviceSynchronize();
         cudaStatus = cudaGetLastError();
         if (cudaStatus != cudaSuccess) {
             std::cout << "CUDA error occured after correlation filter :" << cudaGetErrorString(cudaStatus)
                     << std::endl;
         }
-        boxFilter<< <blocks, threads>>>(cor, cor2, width, 15);
+        boxFilter5x9 << <blocks, threads>>>(cor_left, cor2_left, width);
+        boxFilter5x9 << <blocks, threads>>>(cor_right, cor2_right, width);
         cudaDeviceSynchronize();
         cudaStatus = cudaGetLastError();
         if (cudaStatus != cudaSuccess) {
             std::cout << "CUDA error occured after box :" << cudaGetErrorString(cudaStatus)
                     << std::endl;
         }
-        WTA << <blocks, threads>>>(cor2, bestCorrelation, disparityMap, width, disp, left_image_dev);
+        WTA << <blocks, threads>>>(cor2_left, bestCorrelation_left, disparityMap_left, width, disp, left_image_dev);
+        WTA << <blocks, threads>>>(cor2_right, bestCorrelation_right, disparityMap_right, width, disp, right_image_dev);
         cudaDeviceSynchronize();
         cudaStatus = cudaGetLastError();
         if (cudaStatus != cudaSuccess) {
@@ -301,14 +422,25 @@ unsigned char* disparity(float* source, float* target, int width, int height, in
                     << std::endl;
         }
     }
+    consistencyCheck << <blocks, threads>>>(disparityMap_left, disparityMap_right, width);
+    cudaDeviceSynchronize();
+    cudaStatus = cudaGetLastError();
+    if (cudaStatus != cudaSuccess) {
+        std::cout << "CUDA error occured after WTA :" << cudaGetErrorString(cudaStatus)
+                << std::endl;
+    }
+    unsigned char *disparityMap_out;
+    cudaMalloc((void**) &disparityMap_out, size * sizeof (unsigned char));
+    disparityFill<<<blocks,threads>>>(disparityMap_left,disparityMap_out,width,height);
+    cudaDeviceSynchronize();
     unsigned char* disparityMapHost;
     disparityMapHost = new unsigned char[width * height];
-    cudaMemcpy(disparityMapHost, disparityMap, size * sizeof (unsigned char), cudaMemcpyDeviceToHost);
-//    unsigned char *out;
-//    out=new unsigned char[size];
-//    for(int i=0;i<size;i++){
-//        out[i]=char(disparityMapHost[i]);
-//    }
+    cudaMemcpy(disparityMapHost, disparityMap_out, size * sizeof (unsigned char), cudaMemcpyDeviceToHost);
+    //    unsigned char *out;
+    //    out=new unsigned char[size];
+    //    for(int i=0;i<size;i++){
+    //        out[i]=char(disparityMapHost[i]);
+    //    }
     cudaDeviceSynchronize();
     cudaFree(left_image_dev);
     cudaFree(right_image_dev);
@@ -316,10 +448,15 @@ unsigned char* disparity(float* source, float* target, int width, int height, in
     cudaFree(means_target);
     cudaFree(sds_source);
     cudaFree(sds_target);
-    cudaFree(bestCorrelation);
-    cudaFree(disparityMap);
-    cudaFree(cor);
-    cudaFree(cor2);
+    cudaFree(bestCorrelation_left);
+    cudaFree(bestCorrelation_right);
+    cudaFree(disparityMap_left);
+    cudaFree(disparityMap_right);
+    cudaFree(disparityMap_out);
+    cudaFree(cor_left);
+    cudaFree(cor_right);
+    cudaFree(cor2_left);
+    cudaFree(cor2_right);
     return disparityMapHost;
 
 }
