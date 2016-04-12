@@ -29,7 +29,7 @@ namespace yuri {
             DimencoOut(const log::Log &log_, core::pwThreadBase parent, const core::Parameters &parameters);
             virtual ~DimencoOut() noexcept;
         private:
-
+            virtual void set_service_bits(uint8_t* frame_data);
             virtual core::pFrame do_special_single_step(core::pRawVideoFrame frame) override;
             virtual bool set_param(const core::Parameter& param) override;
         };
