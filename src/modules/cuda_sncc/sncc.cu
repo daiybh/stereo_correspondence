@@ -170,9 +170,9 @@ __global__ void correlationFilter3x3(float *source, float *target, float *cor, f
     sum += block_source_window[by + 1][bx - 1] * block_target_window[by + 1][bx - 1];
     sum += block_source_window[by + 1][bx] * block_target_window[by + 1][bx];
     sum += block_source_window[by + 1][bx + 1] * block_target_window[by + 1][bx + 1];
-    sum = __fdividef(sum, 9.0);
+    sum = sum/ 9.0;
     sum -= mean_source*mean_target;
-    sum = __fdividef(sum , (sd_source * sd_target));
+    sum = sum / (sd_source * sd_target);
     cor[img_y * (width + 32) + img_x] = sum;
 }
 
@@ -181,7 +181,7 @@ __global__ void WTA(float *cor, float *bestCor, unsigned char *disparity, int wi
     int y = (blockIdx.y * blockDim.y) + threadIdx.y;
     int idx = y * width + x;
     float correlation = cor[idx];
-    if (correlation > bestCor[idx]) {
+    if (correlation > bestCor[idx] && correlation <= 1.0) {
         bestCor[idx] = correlation;
         disparity[idx] = disp;
     }
@@ -236,6 +236,58 @@ __global__ void boxFilter5x9(float *in, float *out, int width) {
     }
     float avg = __fdividef(sum, 45.0);
     out[y * width + x] = avg;
+} 
+
+__global__ void boxFilterMxN(float *in, float *out, int width, int M, int N, int mHalf, int nHalf) {
+    int x = (blockIdx.x * blockDim.x + threadIdx.x);
+    int y = (blockIdx.y * blockDim.y) + threadIdx.y;
+    int in_x = x + 16;
+    int in_y = y + 16;
+    int b_x = threadIdx.x + nHalf;
+    int b_y = threadIdx.y + mHalf;
+    int blockWidth = 16 + N -1;
+    extern __shared__ float block_region[];
+    block_region[b_y*blockWidth + b_x]=in[in_y*(width+32)+in_x];
+    
+    // loading corners
+    if(threadIdx.x < nHalf && threadIdx.y < mHalf){
+        block_region[(b_y-mHalf)*blockWidth + b_x-nHalf]=in[(in_y-mHalf)*(width+32)+(in_x-nHalf)];
+    }
+    if(threadIdx.x >= (16-nHalf) && threadIdx.y < mHalf){
+        block_region[(b_y-mHalf)*blockWidth + b_x+nHalf]=in[(in_y-mHalf)*(width+32)+(in_x+nHalf)];
+    }
+    if(threadIdx.x < nHalf && threadIdx.y >= (16-mHalf)){
+        block_region[(b_y+mHalf)*blockWidth + b_x-nHalf]=in[(in_y+mHalf)*(width+32)+(in_x-nHalf)];
+    }
+    if(threadIdx.x >= (16-nHalf) && threadIdx.y >= (16-mHalf)){
+        block_region[(b_y+mHalf)*blockWidth + b_x+nHalf]=in[(in_y+mHalf)*(width+32)+(in_x+nHalf)];
+    }
+    // loading sides
+    if(threadIdx.x < nHalf){
+        block_region[b_y*blockWidth+b_x-nHalf]=in[(in_y)*(width+32)+(in_x-nHalf)];
+    }
+    if(threadIdx.x >= (16-nHalf)){
+        block_region[b_y*blockWidth+b_x+nHalf]=in[(in_y)*(width+32)+(in_x+nHalf)];
+    }
+    // loading bottom and top
+    if(threadIdx.y < mHalf){
+        block_region[(b_y-mHalf)*blockWidth + b_x]=in[(in_y-mHalf)*(width+32)+(in_x)];
+    }
+    if(threadIdx.y >= (16-mHalf)){
+        block_region[(b_y+mHalf)*blockWidth + b_x]=in[(in_y+mHalf)*(width+32)+(in_x)];
+    }
+    __syncthreads();
+    
+    float sum = 0.0;
+    for (int i = b_y - mHalf; i <= (b_y + mHalf); i++) {
+        for (int j = b_x - nHalf; j <= (b_x + nHalf); j++) {
+            sum += block_region[i*blockWidth + j];
+        }
+    }
+    int size=M*N;
+//    float avg = __fdividef(sum, size);
+    float avg = sum/ float(size);
+    out[y * width + x] = avg; 
 }
 
 __global__ void consistencyCheck(unsigned char* d_left, unsigned char* d_right, int width) {
@@ -275,11 +327,11 @@ __device__ unsigned char getPixelD(unsigned char* image, int x, int y, int width
     return image[y * width + x];
 }
 
-__global__ void disparityFill(unsigned char* disp, unsigned char* out_disp, int width, int height) {
+__global__ void disparityFill(unsigned char* disp, unsigned char* out_disp, int width, int height, int maxDisp) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = (blockIdx.y * blockDim.y) + threadIdx.y;
 
-    __shared__ int block_region[16][48];
+    __shared__ unsigned char block_region[16][48];
     int xb = x - 16;
     block_region[threadIdx.y][threadIdx.x] = getPixelD(disp, xb, y, width,
             height);
@@ -290,7 +342,7 @@ __global__ void disparityFill(unsigned char* disp, unsigned char* out_disp, int 
     __syncthreads();
 
     int left_i = -1, right_i = 1;
-    int possible_disp = 0;
+    unsigned char possible_disp = 0;
     while ((left_i > -16) && (right_i < 16)) {
         int left_v = block_region[threadIdx.y][threadIdx.x + 16 + left_i];
         int right_v = block_region[threadIdx.y][threadIdx.x + 16 + right_i];
@@ -315,10 +367,65 @@ __global__ void disparityFill(unsigned char* disp, unsigned char* out_disp, int 
     } else {
         out_disp[y * width + x] = block_region[threadIdx.y][threadIdx.x + 16];
     }
+    if(x < maxDisp){
+        out_disp[y * width + x] = 0;
+    }
 
 }
 
-unsigned char* disparity(float* source, float* target, int width, int height, int numDisparities, int avgWindow) {
+__global__ void disparityMedianFilter(unsigned char * disp, unsigned char* out_disp, int width,
+        int height) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = (blockIdx.y * blockDim.y) + threadIdx.y;
+
+    __shared__ unsigned char block_window[18][18];
+    block_window[threadIdx.y + 1][threadIdx.x + 1] = getPixelD(disp, x, y,
+            width, height);
+
+    if (threadIdx.x == 0 && threadIdx.y == 0)
+        block_window[0][0] = getPixelD(disp, x - 1, y - 1, width, height);
+    if (threadIdx.x == 15 && threadIdx.y == 0)
+        block_window[0][17] = getPixelD(disp, x + 1, y - 1, width, height);
+    if (threadIdx.x == 0 && threadIdx.y == 15)
+        block_window[17][0] = getPixelD(disp, x - 1, y + 1, width, height);
+    if (threadIdx.x == 15 && threadIdx.y == 15)
+        block_window[17][17] = getPixelD(disp, x + 1, y + 1, width, height);
+    if (threadIdx.x == 0)
+        block_window[threadIdx.y + 1][0] = getPixelD(disp, x - 1, y + 1, width,
+            height);
+    if (threadIdx.x == 15)
+        block_window[threadIdx.y + 1][17] = getPixelD(disp, x + 1, y + 1, width,
+            height);
+    if (threadIdx.y == 0)
+        block_window[0][threadIdx.x + 1] = getPixelD(disp, x + 1, y - 1, width,
+            height);
+    if (threadIdx.y == 15)
+        block_window[17][threadIdx.x + 1] = getPixelD(disp, x + 1, y + 1, width,
+            height);
+
+    __syncthreads();
+    unsigned char v[9] = {block_window[threadIdx.y][threadIdx.x],
+        block_window[threadIdx.y][threadIdx.x + 1],
+        block_window[threadIdx.y][threadIdx.x + 2], block_window[threadIdx.y
+        + 1][threadIdx.x], block_window[threadIdx.y + 1][threadIdx.x
+        + 1], block_window[threadIdx.y + 1][threadIdx.x + 2],
+        block_window[threadIdx.y + 2][threadIdx.x], block_window[threadIdx.y
+        + 2][threadIdx.x + 1],
+        block_window[threadIdx.y + 2][threadIdx.x + 2]};
+
+    for (int i = 0; i < 5; i++) {
+        for (int j = i + 1; j < 9; j++) {
+            if (v[i] > v[j]) {
+                unsigned char tmp = v[i];
+                v[i] = v[j];
+                v[j] = tmp;
+            }
+        }
+    }
+    out_disp[y * width + x] = v[4];
+}
+
+unsigned char* disparity(float* source, float* target, int width, int height, int numDisparities, int avgWindowHeight, int avgWindowWidth) {
     size_t padded_size = (width + 32) * (height + 32);
     size_t size = width*height;
     float *left_image_dev;
@@ -351,6 +458,7 @@ unsigned char* disparity(float* source, float* target, int width, int height, in
                 << std::endl;
     }
     boxFilter3x3 << <blocks, threads>>>(left_image_dev, means_source, width);
+//    boxFilterMxN <<<blocks, threads,sizeof(float)*18*18>>>(left_image_dev, means_source, width,3,3,1,1);
     cudaDeviceSynchronize();
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
@@ -358,6 +466,7 @@ unsigned char* disparity(float* source, float* target, int width, int height, in
                 << std::endl;
     }
     boxFilter3x3 << <blocks, threads>>>(right_image_dev, means_target, width);
+//    boxFilterMxN <<<blocks, threads,sizeof(float)*18*18>>>(right_image_dev, means_target, width,3,3,1,1);
     cudaDeviceSynchronize();
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
@@ -405,10 +514,15 @@ unsigned char* disparity(float* source, float* target, int width, int height, in
             std::cout << "CUDA error occured after correlation filter :" << cudaGetErrorString(cudaStatus)
                     << std::endl;
         }
-        boxFilter5x9 << <blocks, threads>>>(cor_left, cor2_left, width);
-        boxFilter5x9 << <blocks, threads>>>(cor_right, cor2_right, width);
-        cudaDeviceSynchronize();
+//        boxFilter5x9 << <blocks, threads>>>(cor_left, cor2_left, width);
+//        boxFilter5x9 << <blocks, threads>>>(cor_right, cor2_right, width);
+        int mHalf=avgWindowHeight/2;
+        int nHalf=avgWindowWidth/2;
+        boxFilterMxN<<<blocks,threads,sizeof(float)*(16+avgWindowHeight-1)*(16+avgWindowWidth-1)>>>(cor_left,cor2_left,width,avgWindowHeight,avgWindowWidth,mHalf,nHalf);
+        boxFilterMxN<<<blocks,threads,sizeof(float)*(16+avgWindowHeight-1)*(16+avgWindowWidth-1)>>>(cor_right,cor2_right,width,avgWindowHeight,avgWindowWidth,mHalf,nHalf);
         cudaStatus = cudaGetLastError();
+        cudaDeviceSynchronize();
+        
         if (cudaStatus != cudaSuccess) {
             std::cout << "CUDA error occured after box :" << cudaGetErrorString(cudaStatus)
                     << std::endl;
@@ -431,7 +545,9 @@ unsigned char* disparity(float* source, float* target, int width, int height, in
     }
     unsigned char *disparityMap_out;
     cudaMalloc((void**) &disparityMap_out, size * sizeof (unsigned char));
-    disparityFill<<<blocks,threads>>>(disparityMap_left,disparityMap_out,width,height);
+    disparityMedianFilter<<<blocks,threads>>>(disparityMap_left,disparityMap_out,width,height);
+    cudaMemcpy(disparityMap_left,disparityMap_out,sizeof(unsigned char)*width*height, cudaMemcpyDeviceToDevice);
+    disparityFill<<<blocks,threads>>>(disparityMap_left,disparityMap_out,width,height, numDisparities);
     cudaDeviceSynchronize();
     unsigned char* disparityMapHost;
     disparityMapHost = new unsigned char[width * height];

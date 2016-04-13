@@ -29,12 +29,30 @@ namespace yuri {
             IOTHREAD_INIT(parameters)
             //set_supported_formats({core::raw_format::rgba32});
             supported_formats_.push_back(core::raw_format::y8);
+            if((filter_height%2)==0){
+                log[log::info]<<"Filter height must be odd. Ading 1 to filter_height value.";
+                filter_height++;
+            }
+            if((filter_width%2)==0){
+                log[log::info]<<"Filter width must be odd. Ading 1 to filter_width value.";
+                filter_width++;
+            }
+            if(filter_width > 33){
+                log[log::info]<<"Maximum filter size is 33, setting value to 33.";
+                filter_width=33;
+            }
+            if(filter_height > 33){
+                log[log::info]<<"Maximum filter size is 33, setting value to 33.";
+                filter_height=33;
+            }
         }
 
         core::Parameters CudaSNCC::configure() {
             core::Parameters p = base_type::configure();
             p.set_description("SNCC Disparity computation");
             p["num_disparities"]["Number of disparities"] = 16;
+            p["filter_width"]["Width of correlation filter"] = 9;
+            p["filter_height"]["Height of correlation filter"] = 9;
             return p;
         }
 
@@ -45,7 +63,6 @@ namespace yuri {
             core::pRawVideoFrame right_frame = std::dynamic_pointer_cast<core::RawVideoFrame>(converter_right->convert_to_cheapest(std::get<1>(frames), supported_formats_));
             size_t w = left_frame->get_width();
             size_t h = left_frame->get_height();
-            log[log::info]<<left_frame->get_format();
             unsigned char *left_p = PLANE_RAW_DATA(left_frame, 0);
             unsigned char *right_p = PLANE_RAW_DATA(right_frame, 0);
             float *left_data = new float[(w + 32)*(h + 32)]();
@@ -56,7 +73,7 @@ namespace yuri {
                     right_data[(i+16)*(w+32)+j+16]=float(right_p[i*w+j]);
                 }
             }
-            unsigned char* d = disparity(left_data,right_data,w,h,num_disparities,5);
+            unsigned char* d = disparity(left_data,right_data,w,h,num_disparities, filter_height, filter_width);
             delete [] left_data;
             delete [] right_data;
             unsigned char* out = new unsigned char[w * h];
@@ -73,7 +90,9 @@ namespace yuri {
 
         bool CudaSNCC::set_param(const core::Parameter& param) {
             if (assign_parameters(param)
-                    (num_disparities, "num_disparities"))
+                    (num_disparities, "num_disparities")
+                    (filter_width, "filter_width")
+                    (filter_height, "filter_height"))
                 return true;
             return core::MultiIOFilter::set_param(param);
         }

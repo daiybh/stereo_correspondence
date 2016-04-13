@@ -34,6 +34,8 @@ private:
     std::shared_ptr<core::Convert> converter_right;
     std::vector<format_t>	supported_formats_;
     int num_disparities;
+    int filter_width;
+    int filter_height;
 };
 }
 }
