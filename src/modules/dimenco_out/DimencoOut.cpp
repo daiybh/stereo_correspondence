@@ -44,8 +44,8 @@ namespace yuri {
         core::pFrame DimencoOut::do_special_single_step(core::pRawVideoFrame frame) {
             int height = frame->get_height();
             int width = frame->get_width();
-
-                if(width != 3840 && height != 1080 && height != 2160){
+            
+                if(width != 3840 || (height != 1080 && height != 2160)){
                     log[log::info]<<"Not adding service bits";
                     return frame;
                 }
