@@ -11,6 +11,8 @@
  * Created on 12. dubna 2016, 13:50
  */
 
+#include <string.h>
+
 #include "DimencoOut.h"
 #include "yuri/core/Module.h"
 #include "yuri/core/frame/raw_frame_types.h"
@@ -49,8 +51,16 @@ namespace yuri {
                     log[log::info]<<"Not adding service bits";
                     return frame;
                 }
-            set_service_bits(PLANE_RAW_DATA(frame,0));
-            return frame;
+            core::pRawVideoFrame output = core::RawVideoFrame::create_empty(core::raw_format::rgb24,frame->get_resolution());
+            uint8_t *frame_data=PLANE_RAW_DATA(frame,0);
+            uint8_t *out_data=PLANE_RAW_DATA(output,0);
+            for(int i=0;i<height;i++){
+                if(i % 2 == 0){
+                    memcpy(&out_data[i*width*3],&frame_data[i*width*3],sizeof(uint8_t)*width*3);
+                }
+            }
+            set_service_bits(PLANE_RAW_DATA(output,0));
+            return output;
         }
 
         void DimencoOut::set_service_bits(uint8_t* frame_data) {
