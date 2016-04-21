@@ -54,9 +54,11 @@ namespace yuri {
             core::pRawVideoFrame output = core::RawVideoFrame::create_empty(core::raw_format::rgb24,frame->get_resolution());
             uint8_t *frame_data=PLANE_RAW_DATA(frame,0);
             uint8_t *out_data=PLANE_RAW_DATA(output,0);
-            for(int i=0;i<height;i++){
+            memset(out_data,0,sizeof(uint8_t)*width*height*3);
+            memset(out_data,16,sizeof(uint8_t)*width*3);
+            for(int i=1;i<height;i++){
                 if(i % 2 == 0){
-                    memcpy(&out_data[i*width*3],&frame_data[i*width*3],sizeof(uint8_t)*width*3);
+                    memcpy(out_data+i*width*3,frame_data+i*width*3,sizeof(uint8_t)*width*3);
                 }
             }
             set_service_bits(PLANE_RAW_DATA(output,0));
