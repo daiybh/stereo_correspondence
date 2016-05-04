@@ -51,7 +51,7 @@ OpenCVStereoCalib::~OpenCVStereoCalib()noexcept{
 }
 
 std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pRawVideoFrame, core::pRawVideoFrame> frames){
-    //log[log::info]  << std::get<0>(frames)->get_format_name();
+//    log[log::info]  << std::get<0>(frames)->get_format();
     core::pRawVideoFrame left_frame = std::get<0>(frames);
     core::pRawVideoFrame right_frame = std::get<1>(frames);
     
@@ -60,7 +60,7 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
     //log[log::info] << width;
     cv::Mat left_mat;
     cv::Mat right_mat;
-    
+
     if(left_frame->get_format() == core::raw_format::yuyv422){
         log[log::debug]<< "Converting";
         cv::Mat left_yuv(height,width,CV_8UC2,PLANE_RAW_DATA(left_frame,0));
@@ -69,8 +69,10 @@ std::vector<core::pFrame> OpenCVStereoCalib::do_special_step(std::tuple<core::pR
         cv::cvtColor(right_yuv,right_mat,CV_YUV2GRAY_YUYV);
     }else{
         //log[log::debug]<< "Not converting";
-        left_mat=cv::Mat(height,width,CV_8UC3,PLANE_RAW_DATA(left_frame,0));
-        right_mat=cv::Mat(height,width,CV_8UC3,PLANE_RAW_DATA(right_frame,0));
+        cv::Mat left_rgb=cv::Mat(height,width,CV_8UC3,PLANE_RAW_DATA(left_frame,0));
+        cv::Mat right_rgb=cv::Mat(height,width,CV_8UC3,PLANE_RAW_DATA(right_frame,0));
+        cv::cvtColor(left_rgb, left_mat, CV_RGB2GRAY);
+        cv::cvtColor(right_rgb, right_mat, CV_RGB2GRAY);
     }
     
     std::vector<cv::Point2f> left_corners;
