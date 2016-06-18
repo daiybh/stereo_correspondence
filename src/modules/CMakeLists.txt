@@ -157,7 +157,7 @@ ENDIF()
 find_package(CUDA)
 add_subdirectory(cuda_asw)
 add_subdirectory(cuda_sncc)
-add_subdirectory(sncc)
+
 IF(NOT YURI_DISABLE_SAGE)
 	find_package(SAGE)
 ENDIF()
